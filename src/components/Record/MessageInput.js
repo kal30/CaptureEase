@@ -4,7 +4,7 @@ import AttachFileIcon from '@mui/icons-material/AttachFile';
 import SendIcon from '@mui/icons-material/Send';
 import { useTheme } from '@mui/material/styles';
 
-const MessageInput = ({ text, setText, handleFileChange, handleSubmit, uploading }) => {
+const MessageInput = ({ text, setText, handleFileChange, handleSubmit, uploading, mediaPreview, mediaFile }) => {
   const theme = useTheme();
 
   return (
@@ -16,7 +16,6 @@ const MessageInput = ({ text, setText, handleFileChange, handleSubmit, uploading
         padding: theme.spacing(1),
         marginTop: theme.spacing(1),
         borderRadius: theme.shape.borderRadius,
-        backgroundColor: theme.palette.background.input,  // Use the input background from the theme
       }}
     >
       <IconButton component="label" sx={{ color: theme.palette.secondary.main }}>
@@ -33,20 +32,15 @@ const MessageInput = ({ text, setText, handleFileChange, handleSubmit, uploading
         sx={{
           marginLeft: theme.spacing(1),
           marginRight: theme.spacing(1),
-          paddingLeft: theme.spacing(1),
-          height: '40px',  // Adjust height for a clean look
-          backgroundColor: '#fff',  // White background for the text input area
           '& .MuiOutlinedInput-root': {
-            borderRadius: theme.shape.borderRadius,  // Set border radius from theme
-            height: '40px',  // Enforce height within the input itself
-            paddingLeft: theme.spacing(1),  // Padding inside the input
+            borderRadius: theme.shape.borderRadius,
+            height: '40px',
           },
           '& .MuiOutlinedInput-notchedOutline': {
-            border: 'none',  // Remove the border from the input box
+            border: 'none',
           },
         }}
       />
-
 
       <IconButton
         type="submit"
@@ -57,6 +51,20 @@ const MessageInput = ({ text, setText, handleFileChange, handleSubmit, uploading
       >
         <SendIcon />
       </IconButton>
+
+      {/* Show a small preview of the selected file */}
+      {mediaPreview && (
+        <Box sx={{ ml: 2 }}>
+          {mediaFile.type.startsWith('video') ? (
+            <video width="50" height="50" controls>
+              <source src={mediaPreview} />
+              Your browser does not support the video tag.
+            </video>
+          ) : (
+            <img src={mediaPreview} alt="preview" style={{ width: '50px', height: '50px', objectFit: 'cover' }} />
+          )}
+        </Box>
+      )}
     </Paper>
   );
 };
