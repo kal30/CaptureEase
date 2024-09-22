@@ -11,7 +11,10 @@ const AppRoutes = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/record-entry" element={<RecordEntry />} />    </Routes>
+      <Route path="/record-entry" element={<RecordEntry />} />    
+      {/* Add a test route for troubleshooting */}
+      <Route path="/test" element={<div>Test Page</div>} />
+      </Routes>
   );
 };
 
