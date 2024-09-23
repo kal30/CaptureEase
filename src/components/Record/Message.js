@@ -1,69 +1,52 @@
 import React from 'react';
-import { Box, Typography, CardContent, useTheme } from '@mui/material';
+import { Box, Typography, CardContent } from '@mui/material';
 import dayjs from 'dayjs';
 
 const Message = ({ message }) => {
-  const theme = useTheme();
+  const formattedTime = message.timestamp ? dayjs(message.timestamp.toDate()).format('h:mm A') : '';
 
   return (
     <Box
       sx={{
         display: 'flex',
-        justifyContent: 'flex-end',  // Align message bubble to the right
+        justifyContent: message.userId === 'currentUserId' ? 'flex-end' : 'flex-start',
         mb: 1.5,
         maxWidth: '100%',
       }}
     >
       <Box
         sx={{
-          maxWidth: '85%',  // Adjust to control the width of the message bubble
-          backgroundColor: theme.palette.background.paper,
-          padding: theme.spacing(1.5),
-          borderRadius: theme.shape.borderRadius,
-          boxShadow: theme.shadows[2],
-          wordWrap: 'break-word',  // Ensure text wraps when needed
+          maxWidth: '70%',  // Ensure enough space for both text and media
+          backgroundColor: '#f0f0f0',
+          padding: 2,
+          borderRadius: 4,
           textAlign: 'left',
-          position: 'relative',  // Allows us to position the time relative to the bubble
+          boxShadow: 1,
+          wordWrap: 'break-word',
         }}
       >
         <CardContent sx={{ padding: 0 }}>
-          {/* Display media if available */}
-          {message.mediaURL && (
-            <Box sx={{ mb: theme.spacing(1) }}>
-              {message.mediaURL.includes('video') ? (
-                <video controls width="100%">
-                  <source src={message.mediaURL} />
-                  Your browser does not support the video tag.
-                </video>
-              ) : (
-                <img
-                  src={message.mediaURL}
-                  alt="Uploaded media"
-                  style={{ width: '100%', borderRadius: theme.shape.borderRadius }}
-                />
-              )}
-            </Box>
-          )}
-
-          {/* Display message text */}
+          {/* Display the message text */}
           {message.text && (
-            <Typography variant="body1" color={theme.palette.text.primary}>
+            <Typography variant="body1" color="textPrimary">
               {message.text}
             </Typography>
           )}
 
-          {/* Display the message time aligned to the right */}
-          <Typography
-            variant="caption"
-            color={theme.palette.text.secondary}
-            sx={{
-              position: 'absolute',
-              bottom: theme.spacing(0.5),
-              right: theme.spacing(1),  // Align time to the right
-              marginBottom: 0,  // Remove any extra margin below the time
-            }}
-          >
-            {dayjs(message.timestamp.toDate()).format('h:mm A')}
+          {/* Display the media (image or video) if available */}
+          {message.mediaURL && (
+            <Box sx={{ mt: 1 }}>
+              <img
+                src={message.mediaURL}
+                alt="Uploaded media"
+                style={{ maxWidth: '100%', borderRadius: 4 }}
+              />
+            </Box>
+          )}
+
+          {/* Display the message time */}
+          <Typography variant="caption" color="textSecondary" align="right" sx={{ display: 'block', mt: 1 }}>
+            {formattedTime}
           </Typography>
         </CardContent>
       </Box>
