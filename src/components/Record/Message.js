@@ -1,55 +1,81 @@
-import React from 'react';
-import { Box, Typography, CardContent } from '@mui/material';
-import dayjs from 'dayjs';
+import React, { useState } from 'react';
+import { Box, Typography } from '@mui/material';
+import MessageBubble from './MessageBubble';
+import MessageMenu from './MessageMenu';
+import { doc, deleteDoc, updateDoc } from 'firebase/firestore';
+import { db } from '../../firebase';
 
-const Message = ({ message }) => {
-  const formattedTime = message.timestamp ? dayjs(message.timestamp.toDate()).format('h:mm A') : '';
+const Message = ({ message, showDate }) => {
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedText, setEditedText] = useState(message.text);
+
+  // Open menu on right-click
+  const handleContextMenu = (event) => {
+    event.preventDefault();
+    setAnchorEl(event.currentTarget);
+  };
+
+  // Close the context menu
+  const handleCloseMenu = () => {
+    setAnchorEl(null);
+  };
+
+  const handleDelete = async () => {
+    try {
+      await deleteDoc(doc(db, 'entries', message.id));
+      handleCloseMenu();
+    } catch (error) {
+      console.error('Error deleting message:', error);
+    }
+  };
+
+  const handleEdit = async () => {
+    if (isEditing) {
+      try {
+        await updateDoc(doc(db, 'entries', message.id), { text: editedText });
+        setIsEditing(false);
+      } catch (error) {
+        console.error('Error updating message:', error);
+      }
+    } else {
+      setIsEditing(true);
+    }
+    handleCloseMenu();
+  };
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        justifyContent: message.userId === 'currentUserId' ? 'flex-end' : 'flex-start',
-        mb: 1.5,
-        maxWidth: '100%',
-      }}
-    >
-      <Box
-        sx={{
-          maxWidth: '70%',  // Ensure enough space for both text and media
-          backgroundColor: '#f0f0f0',
-          padding: 2,
-          borderRadius: 4,
-          textAlign: 'left',
-          boxShadow: 1,
-          wordWrap: 'break-word',
-        }}
-      >
-        <CardContent sx={{ padding: 0 }}>
-          {/* Display the message text */}
-          {message.text && (
-            <Typography variant="body1" color="textPrimary">
-              {message.text}
-            </Typography>
-          )}
+    <Box onContextMenu={handleContextMenu} sx={{ mb: 1.5, position: 'relative' }}>
+      {/* Show date if applicable */}
+      {showDate && (
+        <Typography
+          variant="caption"
+          sx={{
+            textAlign: 'center',
+            color: '#666',
+            backgroundColor: '#f0f0f0',
+            padding: '5px 10px',
+            borderRadius: '12px',
+            fontWeight: 'bold',
+            marginBottom: '8px',
+          }}
+        >
+          {message.timestamp.toDate().toDateString()}
+        </Typography>
+      )}
 
-          {/* Display the media (image or video) if available */}
-          {message.mediaURL && (
-            <Box sx={{ mt: 1 }}>
-              <img
-                src={message.mediaURL}
-                alt="Uploaded media"
-                style={{ maxWidth: '100%', borderRadius: 4 }}
-              />
-            </Box>
-          )}
+      {/* Message bubble with text, image, and time */}
+      <MessageBubble message={message} />
 
-          {/* Display the message time */}
-          <Typography variant="caption" color="textSecondary" align="right" sx={{ display: 'block', mt: 1 }}>
-            {formattedTime}
-          </Typography>
-        </CardContent>
-      </Box>
+      {/* Context menu for edit/delete */}
+      <MessageMenu
+        anchorEl={anchorEl}
+        handleCloseMenu={handleCloseMenu}
+        handleDelete={handleDelete}
+        handleEdit={handleEdit}
+        isEditing={isEditing}
+        message={message}
+      />
     </Box>
   );
 };
