@@ -1,101 +1,131 @@
 import React, { useState } from 'react';
-import { Card, CardContent, Typography, IconButton, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button, Box } from '@mui/material';
+import { Accordion, AccordionSummary, AccordionDetails, Typography, Avatar, Box,Button, IconButton, Menu, MenuItem, List, ListItemButton, ListItemIcon, ListItemText, Chip } from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';  // Add Edit Icon
-import { doc, deleteDoc } from 'firebase/firestore';
-import { db } from '../../services/firebase';  // Adjust the path as necessary
+import LinkOffIcon from '@mui/icons-material/LinkOff';
+import MessageIcon from '@mui/icons-material/Message';
+import AssignmentIcon from '@mui/icons-material/Assignment';
+import MoodIcon from '@mui/icons-material/Mood';
+import HealthAndSafetyIcon from '@mui/icons-material/HealthAndSafety';
+import { useNavigate } from 'react-router-dom';
 
-const ChildCard = ({ child, onAssignCaregiver, onEditChild }) => {
-  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);  // State to manage the delete confirmation dialog
+const ChildCard = ({ child, onEditChild, onDeleteChild, onUnlinkCaregiver, onAssignCaregiver }) => {
+  const [anchorEl, setAnchorEl] = useState(null);
+  const navigate = useNavigate();
 
-  // Handle opening the delete confirmation dialog
-  const handleOpenDeleteDialog = () => {
-    setOpenDeleteDialog(true);
+  // Handle opening the action menu
+  const handleMenuOpen = (event) => {
+    event.stopPropagation();  // Prevent accordion from expanding
+    setAnchorEl(event.currentTarget);
   };
 
-  // Handle closing the delete confirmation dialog
-  const handleCloseDeleteDialog = () => {
-    setOpenDeleteDialog(false);
-  };
-
-  // Handle deleting the child
-  const handleDeleteChild = async () => {
-    try {
-      await deleteDoc(doc(db, 'children', child.id));
-      console.log('Child deleted successfully');
-      handleCloseDeleteDialog();  // Close the dialog after deleting
-    } catch (error) {
-      console.error('Error deleting child:', error);
-    }
+  // Handle closing the action menu
+  const handleMenuClose = () => {
+    setAnchorEl(null);
   };
 
   return (
-    <>
-      <Card sx={{ mb: 2 }}>
-        <CardContent>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            {/* Child Name and Age */}
-            <Box>
-              <Typography variant="h6">{child.name}</Typography>
-              <Typography variant="body2">Age: {child.age}</Typography>
-            </Box>
+    <Accordion>
+      <AccordionSummary expandIcon={<ExpandMoreIcon />}
+       sx={{ backgroundColor: '#A9DFBF' }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', }}>
+          <Avatar src={child.photoURL || 'https://via.placeholder.com/150'} alt={child.name} sx={{ width: 56, height: 56, mr: 2 }} />
+          <Box sx={{ flexGrow: 1 }}>
+            <Typography variant="h6" sx={{ color: '#333333' }}>{child.name}</Typography>
+            <Typography variant="body1" sx={{ color: '#333333' }}>Age: {child.age}</Typography>
 
-            {/* Action Buttons: Edit and Delete */}
-            <Box>
-              <IconButton 
-                onClick={() => onEditChild(child)}  // Trigger edit functionality
-                color="primary"
-              >
-                <EditIcon />
-              </IconButton>
-              <IconButton 
-                onClick={handleOpenDeleteDialog}  // Open confirmation dialog on click
+            {/* Caregiver Info */}
+            {child.caregiver ? (
+              <Chip
+                label={`Caregiver: ${child.caregiver.name} (${child.caregiver.email})`}
                 color="secondary"
-              >
-                <DeleteIcon />
-              </IconButton>
-            </Box>
-          </Box>
-
-          {/* Caregiver Info */}
-          {child.caregiver ? (
-            <Typography variant="body2" color="textSecondary">
-              Caregiver: {child.caregiver.name} ({child.caregiver.email})
-            </Typography>
-          ) : (
-            <Button 
-              variant="outlined" 
-              color="primary" 
-              onClick={() => onAssignCaregiver(child)}
-              sx={{ mt: 2 }}
+                sx={{ fontSize: '0.9rem', fontWeight: '500', mt: 1 }}
+              />
+            ) : (
+              <Button
+              variant="text"
+              sx={{
+                color: '#1F3A93', 
+                textTransform: 'none', 
+                fontWeight: 'bold',
+                fontSize:'18px',
+                mt: 1,
+              }}
+              onClick={(e) => {
+                e.stopPropagation();  // Prevent accordion from expanding
+                onAssignCaregiver(child);
+              }}
             >
               Assign Caregiver
             </Button>
-          )}
-        </CardContent>
-      </Card>
+            )}
+          </Box>
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog
-        open={openDeleteDialog}
-        onClose={handleCloseDeleteDialog}
-      >
-        <DialogTitle>Confirm Delete</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Are you sure you want to delete <strong>{child.name}</strong>? This action cannot be undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDeleteDialog} color="primary">
-            Cancel
-          </Button>
-          <Button onClick={handleDeleteChild} color="secondary" autoFocus>
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </>
+          {/* Three-dot menu for Edit, Delete, and Unlink */}
+          <IconButton onClick={handleMenuOpen} onFocus={(e) => e.stopPropagation()}>
+            <MoreVertIcon />
+          </IconButton>
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleMenuClose}
+            onClick={(event) => event.stopPropagation()}  // Prevent accordion from expanding when clicking the menu
+          >
+            <MenuItem onClick={() => { onEditChild(child); handleMenuClose(); }}>
+              <EditIcon sx={{ mr: 1 }} /> Edit
+            </MenuItem>
+            <MenuItem onClick={() => { onDeleteChild(child); handleMenuClose(); }}>
+              <DeleteIcon sx={{ mr: 1 }} /> Delete
+            </MenuItem>
+            {child.caregiver && (
+              <MenuItem onClick={() => { onUnlinkCaregiver(child); handleMenuClose(); }}>
+                <LinkOffIcon sx={{ mr: 1 }} /> Unlink Caregiver
+              </MenuItem>
+            )}
+          </Menu>
+        </Box>
+      </AccordionSummary>
+
+      <AccordionDetails sx={{ backgroundColor: '#E8E8E8', borderLeft: '4px solid #006766', padding: '16px' }}>
+        <Typography variant="body1" sx={{ mb: 2, color:'#006766', fontSize:'18px', fontWeight:'bold' }}>
+          Choose an option for {child.name}:
+        </Typography>
+
+        {/* Use ListItemButton instead of ListItem */}
+        <List>
+          <ListItemButton onClick={() => navigate('/messages')}>
+            <ListItemIcon>
+              <MessageIcon />
+            </ListItemIcon>
+            <ListItemText primary="Messages" />
+          </ListItemButton>
+
+          <ListItemButton onClick={() => navigate('/daily-activities')}>
+            <ListItemIcon>
+              <AssignmentIcon />
+            </ListItemIcon>
+            <ListItemText primary="Daily Activities" />
+          </ListItemButton>
+
+          <ListItemButton onClick={() => navigate('/mood-tracker')}>
+            <ListItemIcon>
+              <MoodIcon />
+            </ListItemIcon>
+            <ListItemText primary="Mood Tracker" />
+          </ListItemButton>
+
+          <ListItemButton onClick={() => navigate('/health-info')}>
+            <ListItemIcon>
+              <HealthAndSafetyIcon />
+            </ListItemIcon>
+            <ListItemText primary="Health Information" />
+          </ListItemButton>
+        </List>
+      </AccordionDetails>
+    </Accordion>
   );
 };
 
