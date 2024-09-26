@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { IconButton } from '@mui/material';
 import MicIcon from '@mui/icons-material/Mic';
 
-const SpeechInput = ({ setText }) => {
+const SpeechInput = ({ setText, handleSubmit }) => {
   const [recognition, setRecognition] = useState(null);
   const [isListening, setIsListening] = useState(false);  // Track if speech recognition is running
 
@@ -26,13 +26,14 @@ const SpeechInput = ({ setText }) => {
 
       recognitionInstance.onend = () => {
         setIsListening(false);  // Reset listening state when recognition ends
+        handleSubmit();  // Automatically submit the message after speech ends
       };
 
       setRecognition(recognitionInstance);
     } else {
       console.warn('Speech Recognition API is not supported in this browser.');
     }
-  }, [setText]);
+  }, [setText, handleSubmit]);
 
   // Start speech recognition
   const startListening = () => {
