@@ -24,7 +24,7 @@ const MessageInput = ({ setMessages }) => {
 
   // Submit a new message
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();  // Prevent page refresh
     if (!text && !mediaFile) return;  // Prevent submitting empty messages
     
     setUploading(true);
@@ -90,7 +90,7 @@ const MessageInput = ({ setMessages }) => {
       />
 
       {/* SpeechInput component (microphone for speech-to-text) */}
-      <SpeechInput setText={setText} />
+      <SpeechInput setText={setText} handleSubmit={handleSubmit} />
 
       {/* Send message icon */}
       <IconButton
