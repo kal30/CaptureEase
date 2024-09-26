@@ -48,7 +48,7 @@ const MessageBubble = ({ message }) => {
               width: '100%',
               borderRadius: '8px',  // Slightly rounded corners for images
               objectFit: 'cover',
-              maxHeight: '350px',
+              maxHeight: '500px',
             }}
           />
         </Box>

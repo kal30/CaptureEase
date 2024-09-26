@@ -9,6 +9,9 @@ const Dashboard = () => {
   const handleRecordEntryClick = () => {
     navigate('/record-entry');  // Navigate to the Record Entry page
   };
+  const handleTwitterClick = () => {
+    navigate('/twitterThread');  // Navigate to the Record Entry page
+  };
 
   return (
     <Container maxWidth="md">
@@ -28,6 +31,15 @@ const Dashboard = () => {
       >
         Record an Event
       </Button>
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={handleTwitterClick}  // When clicked, navigate to the Record Entry page
+        sx={{ mt: 3 }}
+      >
+        Twitter
+      </Button>
+      
     </Container>
   );
 };
