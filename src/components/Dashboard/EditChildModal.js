@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Button, Modal, TextField, Typography } from '@mui/material';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { updateDoc, doc } from 'firebase/firestore';
@@ -6,11 +6,20 @@ import { db } from '../../services/firebase';
 import ChildPhotoUploader from './ChildPhotoUploader';  // Assuming you already have this
 
 const EditChildModal = ({ open, onClose, child, setChildren }) => {
-  const [name, setName] = useState(child?.name || '');
-  const [age, setAge] = useState(child?.age || '');
-  const [photo, setPhoto] = useState(null);  // State for photo file
-  const [photoURL, setPhotoURL] = useState(child?.photoURL || null);  // Existing photo URL
+  const [name, setName] = useState('');
+  const [age, setAge] = useState('');
+  const [photo, setPhoto] = useState(null);  // State for new photo file
+  const [photoURL, setPhotoURL] = useState(null);  // Existing or updated photo URL
   const storage = getStorage();
+
+  // Populate the modal with the existing child data when the modal opens
+  useEffect(() => {
+    if (child) {
+      setName(child.name || '');
+      setAge(child.age || '');
+      setPhotoURL(child.photoURL || '');
+    }
+  }, [child]);
 
   // Handle form submission for editing
   const handleSubmit = async () => {
@@ -67,7 +76,7 @@ const EditChildModal = ({ open, onClose, child, setChildren }) => {
           label="Child's Name"
           variant="outlined"
           fullWidth
-          value={name}
+          value={name}  // Pre-fill the input with the child's name
           onChange={(e) => setName(e.target.value)}
           sx={{ mb: 3 }}
         />
@@ -76,7 +85,7 @@ const EditChildModal = ({ open, onClose, child, setChildren }) => {
           label="Child's Age"
           variant="outlined"
           fullWidth
-          value={age}
+          value={age}  // Pre-fill the input with the child's age
           onChange={(e) => setAge(e.target.value)}
           sx={{ mb: 3 }}
         />
