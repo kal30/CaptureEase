@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Box, Avatar } from '@mui/material';
 import { doc, deleteDoc, updateDoc } from 'firebase/firestore';
-import { db } from '../../firebase';
+import { db } from '../../services/firebase';
 import MessageContent from './MessageContent';
 import MessageActions from './MessageActions';
 
