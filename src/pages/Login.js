@@ -1,7 +1,7 @@
 // src/pages/Login.js
 import React, { useState } from 'react';
 import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
-import { auth } from '../firebase';
+import { auth } from '../services/firebase';
 import { Button, Container, Typography, Box } from '@mui/material';
 import { useNavigate } from 'react-router-dom';  // For redirection after login
 

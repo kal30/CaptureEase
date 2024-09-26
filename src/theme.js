@@ -1,35 +1,44 @@
-// src/theme.js
 import { createTheme } from '@mui/material/styles';
 
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#42a5f5',
+      main: '#94618E', // Grape
     },
     secondary: {
-      main: '#5c6bc0',
+      main: '#49274A', // Eggplant
     },
     background: {
-      default: '#f5f7fa',
-      paper: '#fff',
-      messageBox: '#e1f5fe',  // Custom color for message box background
+      default: '#F4DECB', // Sand
+      paper: '#F8EEE7',  // Shell for cards and panels
     },
     text: {
-      primary: '#000',
-      secondary: '#757575',
+      primary: '#333333',  // Dark gray for main text
+      secondary: '#757575',  // Lighter gray for secondary text
     },
   },
   typography: {
-    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+    fontFamily: 'Roboto, Arial, sans-serif',
     button: {
-      textTransform: 'none',
+      textTransform: 'none', // Disable uppercase for buttons
+    },
+    h6: {
+      fontWeight: 500,
+      color: '#49274A',  // Darker shade for headings (Eggplant)
     },
   },
   components: {
-    MuiTextField: {
+    MuiAppBar: {
       styleOverrides: {
         root: {
-          borderRadius: '4px',
+          backgroundColor: '#94618E', // Primary (Grape) for AppBar
+        },
+      },
+    },
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: '8px',  // Slightly rounded buttons for modern look
         },
       },
     },

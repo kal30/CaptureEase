@@ -3,7 +3,7 @@ import { Box, Typography } from '@mui/material';
 import MessageBubble from './MessageBubble';
 import MessageMenu from './MessageMenu';
 import { doc, deleteDoc, updateDoc } from 'firebase/firestore';
-import { db } from '../../firebase';
+import { db } from '../../services/firebase';
 
 const Message = ({ message, showDate }) => {
   const [anchorEl, setAnchorEl] = useState(null);
