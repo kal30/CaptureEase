@@ -16,6 +16,10 @@ const theme = createTheme({
       primary: '#333333',  // Dark gray for main text
       secondary: '#757575',  // Lighter gray for secondary text
     },
+    textWhite: {
+      primary: '#ffff',  // Dark gray for main text
+      secondary: '#757575',  // Lighter gray for secondary text
+    },
   },
   typography: {
     fontFamily: 'Roboto, Arial, sans-serif',

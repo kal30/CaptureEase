@@ -6,6 +6,7 @@ import EditChildModal from '../components/Dashboard/EditChildModal';  // Import 
 import ChildCard from '../components/Dashboard/ChildCard';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '../services/firebase';  // Make sure to use the correct path for firebase.js
+import theme from '../theme'
 
 const Dashboard = () => {
   const [children, setChildren] = useState([]);
@@ -51,12 +52,23 @@ const Dashboard = () => {
       </Typography>
       
       <Button 
-        variant="contained" 
-        onClick={handleAddChildOpen}
-        sx={{ mb: 3 }}
-      >
-        Add Child
-      </Button>
+  variant="contained" 
+  onClick={handleAddChildOpen}
+  sx={{
+    mb: 3,
+    backgroundColor: theme.palette.primary.main,  // Use eggplant as primary color from theme
+    color: 'white',  // Text color
+    padding: '12px 24px',  // Make the button larger
+    fontSize: '1rem',  // Increase font size for better readability
+    fontWeight: 'bold',  // Bold text
+    borderRadius: '8px',  // Slightly round the button
+    '&:hover': {
+      backgroundColor: theme.palette.secondary.main,  // Change color on hover
+    }
+  }}
+>
+  Add Child
+</Button>
 
       {/* Display child cards */}
       {children.length > 0 ? (
