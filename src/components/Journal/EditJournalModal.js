@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Modal, TextField, Button, Typography } from '@mui/material';
-import { updateJournalEntry } from '../../services/journalService';  // Import the service
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '../../services/firebase';
+import MediaUploader from './MediaUploader';
+import MediaPreview from './MediaPreview';  // Import MediaPreview
+import DeleteIcon from '@mui/icons-material/Delete';
+import UploadIcon from '@mui/icons-material/UploadFile';
 
-// Define modalStyle for positioning and styling the modal
 const modalStyle = {
   position: 'absolute',
   top: '50%',
@@ -17,20 +21,32 @@ const modalStyle = {
 };
 
 const EditJournalModal = ({ open, onClose, journal, childId }) => {
-  const [title, setTitle] = useState(journal.title);
-  const [content, setContent] = useState(journal.content);
-  const [date, setDate] = useState(new Date(journal.date.toDate()).toISOString().split('T')[0]);
+  // Initialize state with default values or journal values if available
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [date, setDate] = useState('');
+  const [mediaURL, setMediaURL] = useState('');
+  const [isMediaRemoved, setIsMediaRemoved] = useState(false);
 
-  // Handle update
+  useEffect(() => {
+    if (journal) {
+      setTitle(journal.title || '');
+      setContent(journal.content || '');
+      setDate(new Date(journal.date.toDate()).toISOString().split('T')[0] || '');
+      setMediaURL(journal.mediaURL || '');
+    }
+  }, [journal]);
+
   const handleUpdate = async () => {
     if (!title || !content) return;
 
     try {
-      // Use the service to update the journal entry
-      await updateJournalEntry(childId, journal.id, {
+      const journalRef = doc(db, 'children', childId, 'journals', journal.id);
+      await updateDoc(journalRef, {
         title,
         content,
         date: new Date(date),
+        mediaURL: isMediaRemoved ? '' : mediaURL,
       });
       onClose();  // Close modal after updating
     } catch (error) {
@@ -38,11 +54,21 @@ const EditJournalModal = ({ open, onClose, journal, childId }) => {
     }
   };
 
+  const handleRemoveMedia = () => {
+    setMediaURL('');  // Clear the media URL
+    setIsMediaRemoved(true);  // Set state to true to track removal
+  };
+
+  if (!journal) {
+    return null; // Do not render the modal if the journal object is undefined
+  }
+
   return (
     <Modal open={open} onClose={onClose}>
       <Box sx={modalStyle}>
         <Typography variant="h6">Edit Journal Entry</Typography>
 
+        {/* Title Input */}
         <TextField
           label="Title"
           fullWidth
@@ -50,6 +76,8 @@ const EditJournalModal = ({ open, onClose, journal, childId }) => {
           onChange={(e) => setTitle(e.target.value)}
           sx={{ my: 2 }}
         />
+
+        {/* Date Input */}
         <TextField
           label="Date"
           type="date"
@@ -58,6 +86,8 @@ const EditJournalModal = ({ open, onClose, journal, childId }) => {
           onChange={(e) => setDate(e.target.value)}
           sx={{ my: 2 }}
         />
+
+        {/* Content Input */}
         <TextField
           label="Content"
           multiline
@@ -68,7 +98,37 @@ const EditJournalModal = ({ open, onClose, journal, childId }) => {
           sx={{ my: 2 }}
         />
 
-        <Button variant="contained" onClick={handleUpdate}>
+        {/* Current Media Preview using MediaPreview Component */}
+        {mediaURL && !isMediaRemoved && (
+          <Box sx={{ mt: 2 }}>
+            <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>Current Media:</Typography>
+            <MediaPreview mediaURL={mediaURL} />  {/* Use MediaPreview here */}
+            <Button
+              variant="outlined"
+              color="secondary"
+              startIcon={<DeleteIcon />}
+              onClick={handleRemoveMedia}
+              sx={{ mt: 2, width: '100%' }}
+            >
+              Remove Media
+            </Button>
+          </Box>
+        )}
+
+        {/* Upload Media Button (Disabled if media exists) */}
+        <Button
+          variant="contained"
+          component="label"
+          startIcon={<UploadIcon />}
+          sx={{ mt: 2, width: '100%' }}
+          disabled={!!mediaURL && !isMediaRemoved}
+        >
+          Upload Media
+          <MediaUploader childId={childId} onUploadComplete={setMediaURL} />
+        </Button>
+
+        {/* Update Button */}
+        <Button variant="contained" onClick={handleUpdate} sx={{ mt: 3, width: '100%' }}>
           Update
         </Button>
       </Box>
