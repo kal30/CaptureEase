@@ -1,6 +1,8 @@
 // src/services/journalService.js
 import { collection, addDoc, deleteDoc, doc, updateDoc, getDocs, query, orderBy } from 'firebase/firestore';
 import { db } from './firebase'; // Adjust the path if necessary
+import { Timestamp } from 'firebase/firestore';
+
 
 // Fetch all journal entries for a specific child
 export const fetchJournals = async (childId) => {
@@ -19,7 +21,7 @@ export const fetchJournals = async (childId) => {
 export const addJournalEntry = async (childId, journalData) => {
   await addDoc(collection(db, `children/${childId}/journals`), {
     ...journalData,
-    date: journalData.date || new Date(),
+    date: Timestamp.fromDate(new Date()),
     timestamp: new Date(),
   });
 };

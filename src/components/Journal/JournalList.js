@@ -3,9 +3,10 @@ import { Box, Typography, Paper, IconButton } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditJournalModal from './EditJournalModal';
-import { deleteJournalEntry } from '../../services/journalService'; // Import the delete service
-import { collection, query, orderBy, onSnapshot } from 'firebase/firestore'; // Firebase imports
-import { db } from '../../services/firebase'; // Import your Firebase configuration
+import MediaPreview from './MediaPreview'; // Import the MediaPreview component
+import { deleteJournalEntry } from '../../services/journalService'; 
+import { collection, query, orderBy, onSnapshot } from 'firebase/firestore'; 
+import { db } from '../../services/firebase'; 
 
 const JournalList = ({ childId }) => {
   const [entries, setEntries] = useState([]);
@@ -43,19 +44,66 @@ const JournalList = ({ childId }) => {
   return (
     <Box>
       {entries.map((entry) => (
-        <Paper key={entry.id} sx={{ mb: 2, padding: 2 }}>
+        <Paper 
+          key={entry.id} 
+          elevation={3} 
+          sx={{ 
+            mb: 3, 
+            padding: 3, 
+            borderRadius: 2, 
+            backgroundColor: '#F4DECB', 
+            boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.1)', 
+            transition: '0.3s ease-in-out', 
+            '&:hover': { boxShadow: '0px 6px 18px rgba(0, 0, 0, 0.2)' } 
+          }}
+        >
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Box>
-              <Typography variant="h6">{entry.title}</Typography>
-              <Typography variant="subtitle2">{new Date(entry.date.toDate()).toLocaleDateString()}</Typography>
-              <Typography variant="body1" sx={{ mt: 1 }}>{entry.content}</Typography>
+            <Box sx={{ flex: 1, marginRight: '20px', maxWidth: '80%' }}>
+              {/* Title */}
+              <Typography 
+                variant="h6" 
+                sx={{ fontWeight: 'bold', color: '#333333' }}
+              >
+                {entry.title}
+              </Typography>
+
+              {/* Date */}
+              <Typography 
+                variant="subtitle2" 
+                sx={{ color: '#777777', mb: 1 }}
+              >
+                {new Date(entry.date.toDate()).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
+              </Typography>
+
+              {/* Content */}
+              <Typography 
+                variant="body1" 
+                sx={{ mt: 1, color: '#333333' }}
+              >
+                {entry.content}
+              </Typography>
+
+              {/* Render Media using MediaPreview */}
+              {entry.mediaURL && <MediaPreview mediaURL={entry.mediaURL} />} {/* Use MediaPreview component */}
             </Box>
-            <Box>
-              {/* Edit and Delete Buttons */}
-              <IconButton onClick={() => handleEdit(entry)}>
+
+            {/* Edit and Delete Icons */}
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', minWidth: '50px' }}>
+              <IconButton 
+                onClick={() => handleEdit(entry)} 
+                sx={{ 
+                  '&:hover': { color: '#1F3A93' },
+                  marginRight: '8px'
+                }}
+              >
                 <EditIcon />
               </IconButton>
-              <IconButton onClick={() => handleDelete(entry.id)}>
+              <IconButton 
+                onClick={() => handleDelete(entry.id)} 
+                sx={{ 
+                  '&:hover': { color: '#FF6B6B' }
+                }}
+              >
                 <DeleteIcon />
               </IconButton>
             </Box>
