@@ -1,48 +1,82 @@
-import { createTheme } from '@mui/material/styles';
+import { createTheme } from "@mui/material/styles";
 
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#94618E', // Grape
+      main: "#df4c0a", // Bright orange for primary elements
     },
     secondary: {
-      main: '#49274A', // Eggplant
+      main: "#661f8d", // Eggplant purple for secondary elements
     },
     background: {
-      default: '#F4DECB', // Sand
-      paper: '#F8EEE7',  // Shell for cards and panels
+      default: "#f5f5f5", // Soft pastel background
     },
     text: {
-      primary: '#333333',  // Dark gray for main text
-      secondary: '#757575',  // Lighter gray for secondary text
-    },
-    textWhite: {
-      primary: '#ffff',  // Dark gray for main text
-      secondary: '#757575',  // Lighter gray for secondary text
+      primary: "#000000", // Primary text color
+      secondary: "#94618E", // Muted purple for secondary text
     },
   },
   typography: {
-    fontFamily: 'Roboto, Arial, sans-serif',
-    button: {
-      textTransform: 'none', // Disable uppercase for buttons
+    fontFamily: "Poppins, sans-serif", // Set a consistent font family across the app
+    h1: {
+      fontSize: "2rem", // Example heading size
+      fontWeight: "bold",
+      color: "#FF6A33", // Primary color for headings
     },
-    h6: {
-      fontWeight: 500,
-      color: '#49274A',  // Darker shade for headings (Eggplant)
+    h2: {
+      fontSize: "1.75rem",
+      fontWeight: "bold",
+      color: "#49274A", // Secondary color for subheadings
+    },
+    body1: {
+      fontSize: "1rem",
+      fontWeight: "normal",
+      color: "#000000", // Standard black for body text
+    },
+    button: {
+      textTransform: "none", // Keep button text as entered (no uppercase transformation)
+      fontSize: "1rem", // Standard button font size
+      fontWeight: "bold",
     },
   },
   components: {
-    MuiAppBar: {
-      styleOverrides: {
-        root: {
-          backgroundColor: '#94618E', // Primary (Grape) for AppBar
-        },
-      },
-    },
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: '8px',  // Slightly rounded buttons for modern look
+          borderRadius: "8px", // Rounded button corners
+          padding: "10px 20px", // Standard padding for buttons
+        },
+        containedPrimary: {
+          backgroundColor: "#FF6A33", // Primary button color (orange)
+          color: "#FFFFFF", // White text on primary button
+          "&:hover": {
+            backgroundColor: "#E65C2D", // Darken the primary button on hover
+          },
+        },
+        containedSecondary: {
+          backgroundColor: "#49274A", // Secondary button color (eggplant)
+          color: "#FFFFFF", // White text on secondary button
+          "&:hover": {
+            backgroundColor: "#3B1F3B", // Darken the secondary button on hover
+          },
+        },
+      },
+    },
+    MuiTypography: {
+      styleOverrides: {
+        root: {
+          marginBottom: "1rem", // Standard margin below text elements
+        },
+      },
+    },
+    MuiLink: {
+      styleOverrides: {
+        root: {
+          color: "#FF6A33", // Consistent color for links
+          textDecoration: "none",
+          "&:hover": {
+            textDecoration: "underline",
+          },
         },
       },
     },
