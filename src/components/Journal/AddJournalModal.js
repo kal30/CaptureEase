@@ -1,72 +1,91 @@
-import React, { useState } from 'react';
-import { Box, Modal, TextField, Button, Typography } from '@mui/material';
-import { addDoc, collection } from 'firebase/firestore';
-import { db } from '../../services/firebase';
-import MediaUploader from './MediaUploader';  // Assuming you have a MediaUploader component
+import React, { useState, useEffect } from "react";
+import { Box, Modal, TextField, Button, Typography } from "@mui/material";
+import { addDoc, collection } from "firebase/firestore";
+import { db } from "../../services/firebase";
+import MediaUploader from "./MediaUploader";
+import TagInput from "./TagInput";
+import { fetchTags, addTag } from "../../services/tagService"; // Tag service
 
 const modalStyle = {
-  position: 'absolute',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  width: 400,
-  bgcolor: 'background.paper',
-  border: '2px solid #000',
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
+  width: "90%", // Dynamic width for responsiveness
+  maxWidth: 500, // Set a max width to avoid too much stretch on large screens
+  bgcolor: "background.paper",
+  borderRadius: 2,
   boxShadow: 24,
   p: 4,
-  borderRadius: 2,
 };
 
 const AddJournalModal = ({ open, onClose, childId }) => {
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]); // Default to today's date
-  const [mediaURL, setMediaURL] = useState('');  // Store the uploaded media URL
-  const [mediaPreview, setMediaPreview] = useState('');  // For displaying preview
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [mediaURL, setMediaURL] = useState("");
+  const [tags, setTags] = useState([]);
+  const [availableTags, setAvailableTags] = useState([]); // For tag dropdown options
 
-  // Handle Save Journal
+  // Fetch available tags for the specific child
+
+  useEffect(() => {
+    const fetchAvailableTags = async () => {
+      const fetchedTags = await fetchTags(childId); // Fetch tags from the 'tags' collection
+      setAvailableTags(fetchedTags.map((tag) => tag.name)); // Store just the tag names
+    };
+
+    fetchAvailableTags();
+  }, [childId]);
+
   const handleSave = async () => {
+    console.log("Tags before saving:", tags); // Check tag structure before saving
+
     if (!title || !content) return;
 
-    // Add journal entry to Firestore
     try {
-      await addDoc(collection(db, 'children', childId, 'journals'), {
+      // If tags are objects, extract the name field
+      const formattedTags = tags.map((tag) =>
+        typeof tag === "string" ? tag : tag.name
+      );
+
+      await addDoc(collection(db, "children", childId, "journals"), {
         title,
         content,
         date: new Date(date),
-        mediaURL,  // Save the media URL with the journal entry
-        timestamp: new Date(), // Timestamp for sorting by creation
+        mediaURL,
+        tags: formattedTags, // Save only tag names
+        timestamp: new Date(),
       });
-      onClose();  // Close the modal on save
-      resetForm();  // Reset the form
+
+      console.log("Formatted Tags after saving:", formattedTags);
+
+      // Optionally save new tags to the tags collection
+      for (let tag of formattedTags) {
+        await addTag(childId, tag);
+      }
+
+      onClose();
+      resetForm();
     } catch (error) {
-      console.error('Error saving journal entry:', error);
+      console.error("Error saving journal entry:", error);
     }
   };
 
-  // Reset form fields after submission
   const resetForm = () => {
-    setTitle('');
-    setContent('');
-    setDate(new Date().toISOString().split('T')[0]);
-    setMediaURL('');  // Reset the media URL
-    setMediaPreview('');  // Reset the media preview
-  };
-
-  // Handle media upload completion and preview
-  const handleMediaUpload = (url, file) => {
-    setMediaURL(url);  // Set the uploaded media URL
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setMediaPreview(reader.result);  // Set the preview image
-    };
-    if (file) reader.readAsDataURL(file);  // Read the file to display preview
+    setTitle("");
+    setContent("");
+    setDate(new Date().toISOString().split("T")[0]);
+    setMediaURL("");
+    setTags([]);
   };
 
   return (
     <Modal open={open} onClose={onClose}>
       <Box sx={modalStyle}>
-        <Typography variant="h6">Add Journal Entry</Typography>
+        <Typography variant="h6" gutterBottom>
+          Add Journal Entry
+        </Typography>
 
         <TextField
           label="Title"
@@ -95,18 +114,22 @@ const AddJournalModal = ({ open, onClose, childId }) => {
           sx={{ my: 2 }}
         />
 
-        {/* Media Uploader Component */}
-        <MediaUploader childId={childId} onUploadComplete={handleMediaUpload} />
+        {/* Tag Input Component */}
+        <TagInput
+          childId={childId}
+          tags={tags}
+          setTags={setTags}
+          availableTags={availableTags}
+        />
 
-        {/* Media Preview */}
-        {mediaPreview && (
-          <Box sx={{ mt: 2 }}>
-            <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>Media Preview:</Typography>
-            <img src={mediaPreview} alt="media-preview" style={{ width: '100%', borderRadius: '8px' }} />
-          </Box>
-        )}
+        <MediaUploader childId={childId} onUploadComplete={setMediaURL} />
 
-        <Button variant="contained" onClick={handleSave} sx={{ mt: 3 }}>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleSave}
+          sx={{ mt: 2 }}
+        >
           Save
         </Button>
       </Box>
