@@ -2,13 +2,16 @@ import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router } from "react-router-dom";
 import AppRoutes from "./Routes"; // Import the Routes file
 import { Link as RouterLink } from "react-router-dom";
-import { getAuth, signOut } from "firebase/auth"; // Make sure to import these functions
-import "../App.css";
+import { getAuth, signOut } from "firebase/auth"; // Firebase auth
+import NavButton from "../components/Landing/NavButton";
+import HomeIcon from "@mui/icons-material/Home";
+import InfoIcon from "@mui/icons-material/Info";
+import ContactMailIcon from "@mui/icons-material/ContactMail";
+import "../App.css"; // Your global styles
 import {
   AppBar,
   Toolbar,
   Button,
-  Typography,
   Box,
   Avatar,
   Menu,
@@ -16,19 +19,16 @@ import {
   IconButton,
 } from "@mui/material";
 import { ThemeProvider } from "@mui/material/styles";
-import theme from "../theme";
-import { auth } from "../services/firebase"; // Import Firebase authentication
+import theme from "../theme"; // Import your theme
+import { auth } from "../services/firebase"; // Firebase config
 
-// Import your logo
-import logo from "../image/niceLogo.png";
-import captureEase from "../image/captureEaseImage.png";
+import logo from "../image/oneMoreLogo.png"; // Import your logo
 
 function App() {
   const [user, setUser] = useState(null); // Track the logged-in user
-  const [anchorEl, setAnchorEl] = useState(null); // State for controlling the dropdown menu
+  const [anchorEl, setAnchorEl] = useState(null); // For avatar menu
 
   useEffect(() => {
-    // Firebase listener to track authentication state
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
         setUser(user);
@@ -36,49 +36,42 @@ function App() {
         setUser(null);
       }
     });
-
-    return () => unsubscribe(); // Cleanup listener on component unmount
+    return () => unsubscribe(); // Cleanup on unmount
   }, []);
 
-  // Handle opening the avatar menu
+  // Handle avatar menu open/close
   const handleMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
   };
-
-  // Handle closing the avatar menu
   const handleMenuClose = () => {
     setAnchorEl(null);
   };
 
-  // Handle logging out
-  // const handleLogout = () => {
-  //   auth.signOut();
-  //   handleMenuClose();
-  // };
-
+  // Handle logout
   const handleLogout = () => {
-    const auth = getAuth(); // Get the authentication instance
-
+    const auth = getAuth();
     signOut(auth)
       .then(() => {
         console.log("User logged out successfully");
-        // Redirect or update UI after logout
-        window.location.href = "/login"; // Redirect to login page (or any other route)
+        window.location.href = "/login";
       })
-      .catch((error) => {
-        console.error("Error logging out:", error);
-      });
+      .catch((error) => console.error("Error logging out:", error));
   };
 
   return (
     <ThemeProvider theme={theme}>
       <Router>
-        <Box sx={{ flexGrow: 1 }}>
-          {/* Updated AppBar to include the logo */}
+        <Box sx={{ flexGrow: 1, backgroundColor: "background.default" }}>
           <AppBar
             position="static"
             color="transparent"
-            sx={{ backgroundColor: "#ffff", boxShadow: "none", padding: 0 }}
+            sx={{
+              backgroundColor: "#FFFFFF", // White background for the header
+              boxShadow: "none",
+              borderBottom: "2px solid transparent", // Gradient as a border
+              backgroundImage: "linear-gradient(to right, #E0F7FA, #B2EBF2)", // Gradient effect as a bottom border
+              padding: "10px 0",
+            }}
           >
             <Toolbar
               sx={{
@@ -87,7 +80,7 @@ function App() {
                 justifyContent: "space-between",
               }}
             >
-              {/* Use a smaller logo inline with the app name */}
+              {/* Left Side: Logo */}
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <img
                   src={logo}
@@ -95,50 +88,24 @@ function App() {
                   style={{ height: "150px" }}
                 />
               </Box>
-              <Box
-                sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  gap: 2,
-                  mt: 5,
-                }}
-              >
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    gap: 0.5,
-                  }}
-                >
-                  <Typography
-                    variant="h1"
-                    sx={{
-                      fontWeight: 900,
-                      letterSpacing: "0.05em",
-                    }}
-                  >
-                    <span style={{ color: "#df4c0a" }}>Capture</span>
-                    <span style={{ color: "#661f8d" }}>Ease</span>
-                  </Typography>
 
-                  <Typography
-                    variant="h5"
-                    sx={{
-                      fontWeight: 500,
-                      color: "#006400",
-                      fontFamily: "'Brush Script MT', cursive", // Cursive font
-                      // letterSpacing: "normal", // Normal spacing for cursive
-                      // mt: 0.5, // Reduced margin to decrease the gap
-                    }}
-                  >
-                    Caring made simple
-                  </Typography>
-                </Box>
+              {/* Center: Navigation Links */}
+              <Box sx={{ display: "flex", gap: 4 }}>
+                <NavButton
+                  text="Features"
+                  icon={<HomeIcon />}
+                  href="#features"
+                />
+                <NavButton text="About Us" icon={<InfoIcon />} href="#about" />
+                <NavButton
+                  text="Contact"
+                  icon={<ContactMailIcon />}
+                  href="#contact"
+                />
               </Box>
+
+              {/* Right Side: Auth Links */}
               <Box sx={{ display: "flex", gap: 2 }}>
-                {/* If the user is logged in, show avatar and menu */}
                 {user ? (
                   <>
                     <IconButton onClick={handleMenuOpen}>
@@ -159,27 +126,29 @@ function App() {
                   </>
                 ) : (
                   <>
-                    {/* If the user is logged out, show Login and Register */}
                     <Button
-                      color="inherit"
-                      component={RouterLink}
-                      to="/login"
+                      variant="contained"
                       sx={{
-                        color: "#49274A",
+                        backgroundColor: "#00CFFF",
+                        color: "#fff",
                         fontWeight: "bold",
-                        fontSize: "1rem",
+                        "&:hover": {
+                          backgroundColor: "#027a79",
+                          boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)", // Add subtle hover shadow
+                        },
                       }}
                     >
                       Login
                     </Button>
                     <Button
-                      color="inherit"
+                      variant="outlined"
                       component={RouterLink}
                       to="/register"
                       sx={{
                         color: "#49274A",
                         fontWeight: "bold",
                         fontSize: "1rem",
+                        borderColor: "#49274A",
                       }}
                     >
                       Register
@@ -190,6 +159,8 @@ function App() {
             </Toolbar>
           </AppBar>
         </Box>
+
+        {/* Renders the Routes based on AppRoutes */}
         <AppRoutes />
       </Router>
     </ThemeProvider>

@@ -3,39 +3,46 @@ import { createTheme } from "@mui/material/styles";
 const theme = createTheme({
   palette: {
     primary: {
-      main: "#df4c0a", // Bright orange for primary elements
+      main: "#01a0e2", // Cerulean
     },
     secondary: {
-      main: "#661f8d", // Eggplant purple for secondary elements
+      main: "#027a79", // Pine Green
     },
     background: {
-      default: "#f5f5f5", // Soft pastel background
+      default: "#edfdfd", // Foam
     },
     text: {
-      primary: "#000000", // Primary text color
-      secondary: "#94618E", // Muted purple for secondary text
+      primary: "#04061f", // Black Pearl for primary text
+      secondary: "#6c707b", // Pale Sky for secondary text
     },
   },
   typography: {
-    fontFamily: "Poppins, sans-serif", // Set a consistent font family across the app
+    fontFamily: "Inter, sans-serif",
     h1: {
-      fontSize: "2rem", // Example heading size
+      fontSize: {
+        xs: "1.75rem", // Responsive font size
+        md: "2.5rem",
+        lg: "3rem",
+      },
       fontWeight: "bold",
-      color: "#FF6A33", // Primary color for headings
+      color: "#01a0e2", // Cerulean
     },
     h2: {
-      fontSize: "1.75rem",
+      fontSize: {
+        xs: "1.5rem",
+        md: "2rem",
+      },
       fontWeight: "bold",
-      color: "#49274A", // Secondary color for subheadings
+      color: "#027a79", // Pine Green
     },
     body1: {
       fontSize: "1rem",
-      fontWeight: "normal",
-      color: "#000000", // Standard black for body text
+      lineHeight: 1.6, // Improve readability
+      color: "#04061f", // Black Pearl for body text
     },
     button: {
-      textTransform: "none", // Keep button text as entered (no uppercase transformation)
-      fontSize: "1rem", // Standard button font size
+      textTransform: "none",
+      fontSize: "1rem",
       fontWeight: "bold",
     },
   },
@@ -43,21 +50,24 @@ const theme = createTheme({
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: "8px", // Rounded button corners
-          padding: "10px 20px", // Standard padding for buttons
+          borderRadius: "8px",
+          padding: {
+            xs: "8px 16px", // Responsive padding for mobile
+            md: "10px 20px",
+          },
         },
         containedPrimary: {
-          backgroundColor: "#FF6A33", // Primary button color (orange)
-          color: "#FFFFFF", // White text on primary button
+          backgroundColor: "#01a0e2", // Cerulean
+          color: "#FFFFFF",
           "&:hover": {
-            backgroundColor: "#E65C2D", // Darken the primary button on hover
+            backgroundColor: "#027a79", // Pine Green
           },
         },
         containedSecondary: {
-          backgroundColor: "#49274A", // Secondary button color (eggplant)
-          color: "#FFFFFF", // White text on secondary button
+          backgroundColor: "#027a79", // Pine Green
+          color: "#FFFFFF",
           "&:hover": {
-            backgroundColor: "#3B1F3B", // Darken the secondary button on hover
+            backgroundColor: "#6c707b", // Pale Sky for hover
           },
         },
       },
@@ -65,14 +75,14 @@ const theme = createTheme({
     MuiTypography: {
       styleOverrides: {
         root: {
-          marginBottom: "1rem", // Standard margin below text elements
+          marginBottom: "1rem",
         },
       },
     },
     MuiLink: {
       styleOverrides: {
         root: {
-          color: "#FF6A33", // Consistent color for links
+          color: "#01a0e2", // Cerulean
           textDecoration: "none",
           "&:hover": {
             textDecoration: "underline",
@@ -80,7 +90,19 @@ const theme = createTheme({
         },
       },
     },
+    MuiContainer: {
+      styleOverrides: {
+        root: {
+          maxWidth: "1200px", // Max width for large screens
+          marginRight: "10%",
+          marginLeft: "10%",
+          margin: "0 auto", // Center container
+          padding: "0 16px", // Responsive padding for mobile
+        },
+      },
+    },
   },
+  spacing: 8, // Base spacing for consistency
 });
 
 export default theme;
