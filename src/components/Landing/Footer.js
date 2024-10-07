@@ -8,23 +8,29 @@ const Footer = () => {
   return (
     <Box
       sx={{
-        backgroundColor: "#E0F7FA", // Light cyan background
-        padding: "20px 0",
+        backgroundColor: "#B2EBF2", // Footer background color
+        padding: "40px 0",
         textAlign: "center",
-        mt: 1, // Adds space above the footer
-        borderTop: "1px solid #B2EBF2", // Optional top border for separation
+        clipPath: "polygon(0 10%, 100% 0%, 100% 100%, 0% 100%)",
+        position: "relative",
+        mt: 0, // Ensure no extra margin on top
+        paddingBottom: 0, // Ensure no extra padding at the bottom
+        height: "auto", // Make sure the footer height is flexible
       }}
     >
-      {/* Footer content */}
       <Typography
-        variant="h6"
-        sx={{ fontWeight: "bold", color: "#027a79", mb: 2 }}
+        variant="body1"
+        sx={{
+          fontWeight: "bold",
+          color: "#027a79", // Footer text color
+          fontSize: "1rem", // Footer font size
+          mb: 2,
+        }}
       >
         CaptureEase © {new Date().getFullYear()} - Caring Made Simple
       </Typography>
 
-      {/* Links */}
-      <Box sx={{ display: "flex", justifyContent: "center", gap: 2, mb: 2 }}>
+      <Box sx={{ display: "flex", justifyContent: "center", gap: 3 }}>
         <Link
           href="/privacy-policy"
           sx={{ color: "#1F4E5F", textDecoration: "none" }}
@@ -42,19 +48,6 @@ const Footer = () => {
           sx={{ color: "#1F4E5F", textDecoration: "none" }}
         >
           Contact Us
-        </Link>
-      </Box>
-
-      {/* Social Media Icons */}
-      <Box sx={{ display: "flex", justifyContent: "center", gap: 3 }}>
-        <Link href="https://facebook.com" target="_blank">
-          <FacebookIcon sx={{ color: "#1F4E5F" }} />
-        </Link>
-        <Link href="https://twitter.com" target="_blank">
-          <TwitterIcon sx={{ color: "#1F4E5F" }} />
-        </Link>
-        <Link href="https://linkedin.com" target="_blank">
-          <LinkedInIcon sx={{ color: "#1F4E5F" }} />
         </Link>
       </Box>
     </Box>
