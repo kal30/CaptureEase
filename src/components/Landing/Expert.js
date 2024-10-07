@@ -1,5 +1,6 @@
 import React from "react";
 import { Box, Typography, Avatar, Chip } from "@mui/material";
+import image1 from "../../image/landingPageRalistic3.jpg";
 
 const ExpertProgram = () => {
   return (
@@ -20,8 +21,9 @@ const ExpertProgram = () => {
         flexDirection: { xs: "column", md: "row" }, // Stack on small screens, side-by-side on larger screens
         alignItems: "center",
         justifyContent: "space-between",
-        marginRight: "20%",
-        marginLeft: "20%",
+        marginRight: "3%",
+        marginLeft: "3%",
+        mt: "-20px",
       }}
     >
       {/* Left Side: Text */}
@@ -29,15 +31,17 @@ const ExpertProgram = () => {
         {" "}
         {/* Adjust margin for mobile responsiveness */}
         <Typography variant="h4" gutterBottom>
-          A proprietary program, built by expert therapists who understand
-          students.
+          Expert-Designed Solutions for Enhanced Autism Care
         </Typography>
         <Typography variant="body1" gutterBottom>
-          All tbh groups are facilitated by licensed, culturally-competent
-          therapists who have experience working with youth, adolescents, and
-          college-aged students. Our proprietary program, rooted in the latest
-          evidence-based therapeutic practices, provides students with a safe
-          space to deal with life’s challenges.
+          Autism Spectrum Disorder (ASD) affects each individual uniquely,
+          requiring personalized care. Early intervention can reduce lifetime
+          costs by up to two-thirds, but gathering complete data from parents
+          remains a challenge. CaptureEase Technologies simplifies this process.
+          Parents can easily log data via text or voice, which is combined with
+          video and biometric inputs to give behavior analysts a full view of
+          the child’s progress. This modular system reduces the burden on
+          parents while improving treatment outcomes and lowering costs.
         </Typography>
       </Box>
 
@@ -45,13 +49,13 @@ const ExpertProgram = () => {
       <Box sx={{ flex: 1, position: "relative" }}>
         <Avatar
           alt="Therapist"
-          src="/path_to_your_image" // Replace with your image path
+          src={image1} // Replace with your image path
           sx={{ width: "100%", height: "auto", borderRadius: 2 }}
         />
 
         {/* Tags positioned around the image */}
         <Chip
-          label="BIPOC Experience"
+          label="Autism Care"
           sx={{
             position: "absolute",
             top: "10%",
@@ -62,7 +66,7 @@ const ExpertProgram = () => {
           }}
         />
         <Chip
-          label="Trauma & PTSD"
+          label="Early Intervention"
           sx={{
             position: "absolute",
             top: "5%",
@@ -77,14 +81,14 @@ const ExpertProgram = () => {
           sx={{
             position: "absolute",
             bottom: "10%",
-            left: "20%",
+            right: "0%",
             transform: "rotate(-5deg)",
             backgroundColor: "#000",
             color: "#fff",
           }}
         />
         <Chip
-          label="Women Empowerment"
+          label="Data-Driven Support"
           sx={{
             position: "absolute",
             bottom: "10%",
@@ -97,14 +101,14 @@ const ExpertProgram = () => {
       </Box>
 
       {/* Bottom right name */}
-      <Typography
-        variant="subtitle2"
+      {/* <Typography
+        variant="Personalized Programs"
         color="textSecondary"
         align="right"
         sx={{ position: "absolute", bottom: "10px", right: "10px" }}
       >
         Kaela, LMFT
-      </Typography>
+      </Typography> */}
     </Box>
   );
 };
