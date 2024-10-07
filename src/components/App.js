@@ -17,6 +17,7 @@ import {
   Menu,
   MenuItem,
   IconButton,
+  Link,
 } from "@mui/material";
 import { ThemeProvider } from "@mui/material/styles";
 import theme from "../theme"; // Import your theme
@@ -82,11 +83,24 @@ function App() {
             >
               {/* Left Side: Logo */}
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <img
-                  src={logo}
-                  alt="CaptureEase Logo"
-                  style={{ height: "150px" }}
-                />
+                <Button
+                  component={RouterLink}
+                  to="/"
+                  sx={{
+                    padding: 0, // Remove padding so that the button only wraps the logo
+                    minWidth: "auto", // Remove the default min-width from the button
+                    borderRadius: "50%", // Optional: if you want the button to be circular or rounded
+                  }}
+                >
+                  <img
+                    src={logo}
+                    alt="CaptureEase Logo"
+                    style={{
+                      height: "150px",
+                      cursor: "pointer", // Changes the cursor to a pointer to indicate it's clickable
+                    }}
+                  />
+                </Button>
               </Box>
 
               {/* Center: Navigation Links */}
@@ -128,6 +142,8 @@ function App() {
                   <>
                     <Button
                       variant="contained"
+                      component={RouterLink}
+                      to="/login"
                       sx={{
                         backgroundColor: "#00CFFF",
                         color: "#fff",

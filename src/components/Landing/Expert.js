@@ -52,52 +52,6 @@ const ExpertProgram = () => {
           src={image1} // Replace with your image path
           sx={{ width: "100%", height: "auto", borderRadius: 2 }}
         />
-
-        {/* Tags positioned around the image */}
-        <Chip
-          label="Autism Care"
-          sx={{
-            position: "absolute",
-            top: "10%",
-            left: "-10%",
-            transform: "rotate(-5deg)",
-            backgroundColor: "#000",
-            color: "#fff",
-          }}
-        />
-        <Chip
-          label="Early Intervention"
-          sx={{
-            position: "absolute",
-            top: "5%",
-            right: "0%",
-            transform: "rotate(10deg)",
-            backgroundColor: "#000",
-            color: "#fff",
-          }}
-        />
-        <Chip
-          label="Life Transitions"
-          sx={{
-            position: "absolute",
-            bottom: "10%",
-            right: "0%",
-            transform: "rotate(-5deg)",
-            backgroundColor: "#000",
-            color: "#fff",
-          }}
-        />
-        <Chip
-          label="Data-Driven Support"
-          sx={{
-            position: "absolute",
-            bottom: "10%",
-            left: "-15%",
-            transform: "rotate(0deg)",
-            backgroundColor: "#000",
-            color: "#fff",
-          }}
-        />
       </Box>
 
       {/* Bottom right name */}
