@@ -1,8 +1,8 @@
 import React from "react";
 import Slider from "react-slick";
-import image1 from "../../image/LandingPageRealistic2.jpg";
-import image2 from "../../image/landingPageRalistic3.jpg";
-import image3 from "../../image/LandingPageRealistic1.jpg";
+import image1 from "../../assets/image/landing/LandingPageRealistic1.jpg";
+import image2 from "../../assets/image/landing/LandingPageRealistic2.jpg";
+import image3 from "../../assets/image/landing/landingPageRalistic3.jpg";
 
 const ImageCarousel = () => {
   const settings = {

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router } from "react-router-dom";
 import { getAuth, signOut } from "firebase/auth"; // Firebase auth
-import AppRoutes from "./Routes"; // Import the Routes file
+import AppRoutes from "../routes/Routes"; // Import the Routes file
 import { ThemeProvider } from "@mui/material/styles";
 import theme from "../theme";
 import Navbar from "./Landing/NavBar"; // Import the Navbar component

@@ -1,6 +1,6 @@
 import React from "react";
 import { Box, Typography, Avatar, Button } from "@mui/material";
-import image1 from "../../image/LandingPageRealistic1.jpg";
+import image1 from "../../assets/image/landing/LandingPageRealistic1.jpg";
 
 const ExpertProgram = () => {
   return (

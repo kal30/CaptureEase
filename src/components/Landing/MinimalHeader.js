@@ -1,7 +1,7 @@
 import React from "react";
 import { AppBar, Toolbar, Button, Box } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
-import logo from "../../image/oneMoreLogo.png";
+import logo from "../../assets/image/landing/oneMoreLogo.png";
 
 const MinimalHeader = () => {
   return (
