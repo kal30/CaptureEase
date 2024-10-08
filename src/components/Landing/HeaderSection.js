@@ -1,9 +1,24 @@
 import React from "react";
 import { Box, Container, Typography, Button } from "@mui/material";
-import { Link as RouterLink } from "react-router-dom";
+import { useNavigate } from "react-router-dom"; // For navigation
+import { redirectIfLoggedIn } from "../../utils/redirectIfLoggedIn";
 import image2 from "../../image/landingimageRealisitic4.jpg";
 
 const HeaderSection = () => {
+  const navigate = useNavigate();
+
+  // Handle Join Now click
+  const handleJoinNow = () => {
+    redirectIfLoggedIn(navigate); // Redirect to dashboard if logged in
+    navigate("/register"); // Otherwise, go to the register page
+  };
+
+  // Handle Login click
+  const handleLogin = () => {
+    redirectIfLoggedIn(navigate); // Redirect to dashboard if logged in
+    navigate("/login"); // Otherwise, go to the login page
+  };
+
   return (
     <Box
       sx={{
@@ -48,12 +63,12 @@ const HeaderSection = () => {
             </Typography>
 
             <Box sx={{ mt: 5 }}>
+              {/* Join Now Button */}
               <Button
                 variant="contained"
                 color="primary"
                 size="large"
-                component={RouterLink}
-                to="/register"
+                onClick={handleJoinNow} // Use common redirect logic
                 sx={{
                   backgroundColor: "#00CFFF", // Initial color
                   color: "#fff",
@@ -65,13 +80,14 @@ const HeaderSection = () => {
               >
                 Join now
               </Button>
+
+              {/* Login Button */}
               <Button
                 variant="outlined"
                 color="secondary"
                 size="large"
                 sx={{ ml: 2 }}
-                component={RouterLink}
-                to="/login"
+                onClick={handleLogin} // Use common redirect logic
               >
                 Login
               </Button>
@@ -104,7 +120,7 @@ const HeaderSection = () => {
               }}
             />
 
-            {/* Image 2 */}
+            {/* Image */}
             <img
               src={image2}
               alt="Caregiving Illustration"

@@ -1,6 +1,6 @@
 import React from "react";
-import { Box, Typography, Avatar, Chip } from "@mui/material";
-import image1 from "../../image/landingPageRalistic3.jpg";
+import { Box, Typography, Avatar, Button } from "@mui/material";
+import image1 from "../../image/LandingPageRealistic1.jpg";
 
 const ExpertProgram = () => {
   return (
@@ -27,25 +27,65 @@ const ExpertProgram = () => {
       }}
     >
       {/* Left Side: Text */}
-      <Box sx={{ flex: 1, mb: { xs: 4, md: 0 } }}>
-        {" "}
-        {/* Adjust margin for mobile responsiveness */}
-        <Typography variant="h4" gutterBottom>
+      <Box
+        sx={{
+          flex: 1,
+          paddingRight: { md: 4 },
+          marginBottom: { xs: 4, md: 0 },
+        }}
+      >
+        <Typography
+          variant="h4"
+          sx={{ fontWeight: "bold", marginBottom: "20px", color: "#000" }}
+        >
           Expert-Designed Solutions for Enhanced Autism Care
         </Typography>
-        <Typography variant="body1" gutterBottom>
-          Autism Spectrum Disorder (ASD) affects each individual uniquely,
-          requiring personalized care. Early intervention can reduce lifetime
-          costs by up to two-thirds, but gathering complete data from parents
-          remains a challenge. CaptureEase Technologies simplifies this process.
-          Parents can easily log data via text or voice, which is combined with
-          video and biometric inputs to give behavior analysts a full view of
-          the child’s progress. This modular system reduces the burden on
-          parents while improving treatment outcomes and lowering costs.
+        <Typography
+          variant="body1"
+          sx={{ marginBottom: "10px", color: "#000" }}
+        >
+          <strong>Personalized, Data-Driven Support:</strong> Autism Spectrum
+          Disorder (ASD) affects each individual uniquely, requiring
+          personalized care. With early intervention, lifetime care costs can be
+          reduced by up to two-thirds.
         </Typography>
+        <Typography
+          variant="body1"
+          sx={{ marginBottom: "10px", color: "#000" }}
+        >
+          <strong>Seamless Data Collection for Caregivers:</strong> CaptureEase
+          simplifies data gathering, making it easy for parents to log
+          information via text or voice. This comprehensive system includes
+          video and biometric data to give behavior analysts a full picture of
+          each child's progress.
+        </Typography>
+        <Typography
+          variant="body1"
+          sx={{ marginBottom: "30px", color: "#000" }}
+        >
+          <strong>Relief for Parents, Better Outcomes for Children:</strong> By
+          providing a modular system that reduces the burden on parents,
+          CaptureEase ensures improved treatment outcomes while lowering
+          long-term costs.
+        </Typography>
+        <Button
+          variant="contained"
+          color="primary"
+          sx={{
+            backgroundColor: "#027a79",
+            color: "#fff",
+            fontWeight: "bold",
+            "&:hover": {
+              backgroundColor: "#025f5b",
+            },
+          }}
+        >
+          Learn More
+        </Button>
       </Box>
 
       {/* Right Side: Image and Tags */}
+
       <Box sx={{ flex: 1, position: "relative" }}>
         <Avatar
           alt="Therapist"
