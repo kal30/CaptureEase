@@ -2,7 +2,7 @@ import React from "react";
 import { Box, Container, Typography, Button } from "@mui/material";
 import { useNavigate } from "react-router-dom"; // For navigation
 import { redirectIfLoggedIn } from "../../utils/redirectIfLoggedIn";
-import image2 from "../../image/landingimageRealisitic4.jpg";
+import image2 from "../../assets/image/landing/landingimageRealisitic4.jpg";
 
 const HeaderSection = () => {
   const navigate = useNavigate();

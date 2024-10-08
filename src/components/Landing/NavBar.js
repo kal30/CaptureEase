@@ -14,7 +14,7 @@ import InfoIcon from "@mui/icons-material/Info";
 import ContactMailIcon from "@mui/icons-material/ContactMail";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import AvatarMenu from "./AvatarMenu"; // Import the avatar menu component
-import logo from "../../image/oneMoreLogo.png";
+import logo from "../../assets/image/landing/oneMoreLogo.png";
 
 const Navbar = ({ user }) => {
   const navigate = useNavigate();

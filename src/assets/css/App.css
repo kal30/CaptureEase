@@ -1,5 +1,22 @@
+/* Global Reset and Basic Styles */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Roboto", sans-serif;
+  background-color: #edfdfd; /* Foam background from your theme */
+  color: #04061f; /* Black Pearl text color from your theme */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+    monospace;
+}
+
+/* App Specific Styles */
 .App {
-  text-align: "left";
+  text-align: left;
 }
 
 .App-logo {

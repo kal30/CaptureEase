@@ -1,5 +1,5 @@
 import React from "react";
-import GoogleAuth from "../components/Register/GoogleAuth"; // Import the reusable component
+import GoogleAuth from "../components/AuthProviders/GoogleAuth"; // Import the reusable component
 
 const Register = () => {
   return (
