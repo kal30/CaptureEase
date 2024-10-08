@@ -41,6 +41,15 @@ code {
   color: white;
 }
 
+.logo {
+  height: 100px;
+  transition: transform 0.3s ease-in-out;
+}
+
+.logo:hover {
+  transform: rotate(360deg);
+}
+
 .App-link {
   color: #61dafb;
 }

@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { Container, Typography, Button, Box } from "@mui/material";
 import JournalList from "../components/Journal/JournalList";
 import AddJournalModal from "../components/Journal/AddJournalModal";
-import theme from "../theme";
+import theme from "../assets/theme/light";
 
 const JournalPage = () => {
   const { childId } = useParams();
