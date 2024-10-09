@@ -53,15 +53,34 @@ const CustomCalendar = ({
     fetchFromFirestore,
   ]);
 
+  const dayPropGetter = (date) => {
+    const today = new Date();
+    if (
+      date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear()
+    ) {
+      return {
+        style: {
+          backgroundColor: "#f10187", // Highlight background color for today
+          borderRadius: "8px",
+          color: "white",
+        },
+      };
+    }
+    return {};
+  };
+
   return (
     <div style={{ height: "500px", margin: "20px" }}>
       <Calendar
         localizer={localizer}
         events={events} // Use events fetched from Firestore or passed externally
+        views={["month"]} // Ensure the day view is included
+        defaultView="month"
         startAccessor="start"
         endAccessor="end"
         style={{ height: 500 }}
-        defaultView="month"
         components={{
           toolbar: CalendarToolbar, // Use custom toolbar
         }}
@@ -73,6 +92,7 @@ const CustomCalendar = ({
             padding: "2px 5px",
           },
         })}
+        dayPropGetter={dayPropGetter} // Add this line to highlight today
         {...rest} // Pass additional props such as onSelectEvent, onNavigate, etc.
       />
     </div>

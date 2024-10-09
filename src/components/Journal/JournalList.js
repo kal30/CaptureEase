@@ -91,7 +91,8 @@ const JournalList = ({ childId }) => {
             marginBottom: 3,
             padding: 3,
             borderRadius: 2,
-            background: "linear-gradient(to bottom, #e0f7fa, #c9faf4)",
+            backgroundColor: "#e0f7fa",
+            //background: "linear-gradient(to bottom, #e0f7fa, #c9faf4)",
             boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
             transition: "box-shadow 0.3s ease-in-out",
             "&:hover": {

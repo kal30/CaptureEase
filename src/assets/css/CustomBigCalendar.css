@@ -76,9 +76,9 @@
 .rbc-day-bg:nth-child(1), /* Saturday */
 .rbc-day-bg:nth-child(7) {
   /* Sunday */
-  /* background-color: #cded8e; */
-  background: linear-gradient(135deg, #daf0f3 30%, #a2e3ec 100%);
-  color: #060000; /* White text for weekends */
+  /* background-color: #e0f7fa;
+  background: linear-gradient(135deg, #daf0f3 30%, #a2e3ec 100%);  */
+  color: #f10187; /* White text for weekends */
   font-weight: bold;
 }
 
