@@ -1,0 +1,102 @@
+/* Overall Calendar Styles */
+.rbc-calendar {
+  background: linear-gradient(
+    135deg,
+    #fefefe 30%,
+    #b2ebf2 100%
+  ); /* Gradient from white to California */
+
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  max-width: 100%;
+  margin: 0 auto; /* Center the calendar */
+}
+
+/* Calendar Navigation (Month/Year) */
+.rbc-toolbar {
+  background-color: #ffffff;
+  padding: 10px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* Update the buttons for navigation */
+.rbc-toolbar button {
+  background-color: #0c95e6; /* Cerulean */
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-weight: bold;
+  transition: background-color 0.2s ease;
+}
+
+.rbc-toolbar button:hover {
+  background-color: #95bf44; /* Sushi on hover */
+}
+
+/* Styling for Days in the Month View */
+.rbc-month-view {
+  border-radius: 10px;
+}
+
+.rbc-date-cell {
+  border-radius: 10px; /* Slight rounding for a cleaner look */
+  padding: 5px;
+  transition: background-color 0.3s ease;
+}
+
+.rbc-date-cell:hover {
+  background-color: #e3f2fd !important;
+}
+
+.rbc-date-cell--now {
+  background-color: #f10187; /* Rose for today's date */
+  border-radius: 50%;
+}
+
+.rbc-date-cell--active {
+  background-color: #95bf44 !important; /* Sushi for active date */
+  color: white !important;
+  border-radius: 50%;
+}
+
+/* Weekdays */
+.rbc-header {
+  font-weight: bold;
+  font-size: small;
+  color: #181938;
+  padding: 10px;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+/* Weekend Styling */
+.rbc-day-bg:nth-child(1), /* Saturday */
+.rbc-day-bg:nth-child(7) {
+  /* Sunday */
+  /* background-color: #cded8e; */
+  background: linear-gradient(135deg, #daf0f3 30%, #a2e3ec 100%);
+  color: #060000; /* White text for weekends */
+  font-weight: bold;
+}
+
+.rbc-event {
+  background-color: #0c95e6;
+  border-radius: 10px;
+  color: white;
+  padding: 5px;
+}
+
+/* Dots for days with events */
+.dot {
+  width: 6px;
+  height: 6px;
+  background-color: #81d4fa; /* Dot color */
+  border-radius: 50%;
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+}

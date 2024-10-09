@@ -1,0 +1,82 @@
+import React, { useEffect, useState } from "react";
+import { Calendar, momentLocalizer } from "react-big-calendar";
+import moment from "moment";
+import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
+import { db } from "../../../services/firebase"; // Adjust path to your Firebase service
+import "react-big-calendar/lib/css/react-big-calendar.css";
+import "../../../assets/css/CustomBigCalendar.css"; // Custom styles for calendar
+import CalendarToolbar from "./CalendarToolbar"; // Custom toolbar
+
+const localizer = momentLocalizer(moment);
+
+const CustomCalendar = ({
+  childId, // Child ID to fetch data
+  collectionName = "journals", // Collection to fetch data from
+  titleGetter = (entry) => entry.title || "Entry", // Dynamic title getter
+  eventColor = "#027a79", // Event color
+  events: externalEvents, // Option to pass external events instead of fetching
+  fetchFromFirestore = true, // Boolean to toggle Firestore fetching
+  ...rest // Additional props
+}) => {
+  const [events, setEvents] = useState([]);
+
+  useEffect(() => {
+    if (!fetchFromFirestore) {
+      setEvents(externalEvents);
+      return;
+    }
+
+    const q = query(
+      collection(db, "children", childId, collectionName),
+      orderBy("date", "desc")
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const journalEvents = snapshot.docs.map((doc) => {
+        const entry = doc.data();
+        return {
+          title: titleGetter(entry),
+          start: new Date(entry.date.toDate()),
+          end: new Date(entry.date.toDate()),
+          allDay: true,
+        };
+      });
+      setEvents(journalEvents);
+    });
+
+    return () => unsubscribe();
+  }, [
+    childId,
+    collectionName,
+    titleGetter,
+    externalEvents,
+    fetchFromFirestore,
+  ]);
+
+  return (
+    <div style={{ height: "500px", margin: "20px" }}>
+      <Calendar
+        localizer={localizer}
+        events={events} // Use events fetched from Firestore or passed externally
+        startAccessor="start"
+        endAccessor="end"
+        style={{ height: 500 }}
+        defaultView="month"
+        components={{
+          toolbar: CalendarToolbar, // Use custom toolbar
+        }}
+        eventPropGetter={() => ({
+          style: {
+            backgroundColor: eventColor, // Customize event color dynamically
+            borderRadius: "4px",
+            color: "#fff",
+            padding: "2px 5px",
+          },
+        })}
+        {...rest} // Pass additional props such as onSelectEvent, onNavigate, etc.
+      />
+    </div>
+  );
+};
+
+export default CustomCalendar;
