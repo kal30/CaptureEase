@@ -88,13 +88,15 @@ const JournalList = ({ childId }) => {
           key={entry.id}
           elevation={3}
           sx={{
-            mb: 3,
+            marginBottom: 3,
             padding: 3,
             borderRadius: 2,
-            backgroundColor: "#F4DECB",
+            background: "linear-gradient(to bottom, #e0f7fa, #c9faf4)",
             boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
-            transition: "0.3s ease-in-out",
-            "&:hover": { boxShadow: "0px 6px 18px rgba(0, 0, 0, 0.2)" },
+            transition: "box-shadow 0.3s ease-in-out",
+            "&:hover": {
+              boxShadow: "0px 6px 14px rgba(0, 0, 0, 0.15)",
+            },
           }}
         >
           <Box

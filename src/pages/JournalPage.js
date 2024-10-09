@@ -1,73 +1,50 @@
+// Existing JournalPage code
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import { Container, Typography, Button, Box } from "@mui/material";
 import JournalList from "../components/Journal/JournalList";
 import AddJournalModal from "../components/Journal/AddJournalModal";
-import theme from "../assets/theme/light";
+import JournalCalendar from "../components/Journal/JournalCalendar";
+import "../assets/css/Journal.css";
 
 const JournalPage = () => {
   const { childId } = useParams();
   const [modalOpen, setModalOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(null);
 
   const handleOpenModal = () => setModalOpen(true);
   const handleCloseModal = () => setModalOpen(false);
+  const handleDateSelect = (date) => {
+    setSelectedDate(date);
+  };
 
   return (
-    <Container
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        height: "100vh",
-        overflow: "hidden",
-      }}
-    >
-      {/* Title */}
+    <Container sx={{ padding: 3 }}>
       <Typography
         variant="h4"
         gutterBottom
-        sx={{
-          color: "#333333",
-          fontWeight: "bold",
-          fontSize: "1.8rem",
-          mb: 2,
-          mt: 5,
-        }}
+        sx={{ color: "#333", fontWeight: "bold" }}
       >
         Journal Entries
       </Typography>
-
-      {/* Add Button - Fixed at the top */}
-      <Box
-        sx={{ padding: 2, backgroundColor: theme.palette.background.default }}
-      >
+      <Box sx={{ padding: 2 }}>
         <Button
           variant="contained"
-          sx={{
-            backgroundColor: theme.palette.primary.main,
-            color: "#fff",
-            marginBottom: "1rem",
-            "&:hover": {
-              backgroundColor: theme.palette.secondary.main,
-            },
-          }}
+          className="journal-button" // Use the CSS class here
+          onClick={handleOpenModal}
         >
-          Add Child
+          Add Journal Entry
         </Button>
       </Box>
-
-      {/* Scrollable Journal Entries */}
-      <Box
-        sx={{
-          flexGrow: 1, // Makes the list take up available space
-          overflowY: "auto", // Allows scrolling when content exceeds the height
-          paddingRight: 2, // Add some padding for nicer scroll experience
-          paddingTop: 2, // Extra padding to separate from Add Button
-        }}
-      >
-        <JournalList childId={childId} />
+      <JournalCalendar childId={childId} onDateSelect={handleDateSelect} />
+      <Box sx={{ flexGrow: 1, overflowY: "auto", paddingTop: 2 }}>
+        {selectedDate && (
+          <Typography variant="h6" sx={{ marginBottom: 2 }}>
+            Entries for {selectedDate.toDateString()}
+          </Typography>
+        )}
+        <JournalList childId={childId} selectedDate={selectedDate} />
       </Box>
-
-      {/* Add Journal Modal */}
       <AddJournalModal
         open={modalOpen}
         onClose={handleCloseModal}
