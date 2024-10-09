@@ -1,9 +1,15 @@
 import React from "react";
-import { IconButton, Box, Typography } from "@mui/material";
+import {
+  IconButton,
+  Box,
+  Typography,
+  ButtonGroup,
+  Button,
+} from "@mui/material";
 import { ArrowBack, ArrowForward, Today } from "@mui/icons-material";
 
 const CalendarToolbar = (props) => {
-  const { label } = props;
+  const { label, views, onView, view } = props;
 
   const goToBack = () => {
     props.onNavigate("PREV");
@@ -25,12 +31,52 @@ const CalendarToolbar = (props) => {
       mb={2}
     >
       {/* Today Button */}
-      <IconButton onClick={goToToday}>
-        <Today />
-      </IconButton>
+      {views.length > 1 && (
+        <IconButton onClick={goToToday}>
+          <Today />
+        </IconButton>
+      )}
 
-      {/* Month Label */}
+      {/* Always show the month label */}
       <Typography variant="h6">{label}</Typography>
+
+      {/* View Switcher */}
+      {views.length > 1 && (
+        <ButtonGroup variant="outlined">
+          {views.includes("month") && (
+            <Button
+              onClick={() => onView("month")}
+              variant={view === "month" ? "contained" : "outlined"}
+            >
+              Month
+            </Button>
+          )}
+          {views.includes("week") && (
+            <Button
+              onClick={() => onView("week")}
+              variant={view === "week" ? "contained" : "outlined"}
+            >
+              Week
+            </Button>
+          )}
+          {views.includes("day") && (
+            <Button
+              onClick={() => onView("day")}
+              variant={view === "day" ? "contained" : "outlined"}
+            >
+              Day
+            </Button>
+          )}
+          {views.includes("agenda") && (
+            <Button
+              onClick={() => onView("agenda")}
+              variant={view === "agenda" ? "contained" : "outlined"}
+            >
+              Agenda
+            </Button>
+          )}
+        </ButtonGroup>
+      )}
 
       {/* Navigation Buttons */}
       <Box>
