@@ -5,10 +5,12 @@ import { Container, Typography, Button, Box } from "@mui/material";
 import JournalList from "../components/Journal/JournalList";
 import AddJournalModal from "../components/Journal/AddJournalModal";
 import JournalCalendar from "../components/Journal/JournalCalendar";
+import useChildName from "../hooks/useChildName"; // Import the custom hook
 import "../assets/css/Journal.css";
 
 const JournalPage = () => {
   const { childId } = useParams();
+  const { childName, loading, error } = useChildName(childId); // Use the custom hook
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
 
@@ -18,6 +20,9 @@ const JournalPage = () => {
     setSelectedDate(date);
   };
 
+  if (loading) return <p>Loading...</p>; // Show a loading state if needed
+  if (error) return <p>Error: {error.message}</p>; // Handle any error state
+
   return (
     <Container sx={{ padding: 3 }}>
       <Typography
@@ -25,7 +30,7 @@ const JournalPage = () => {
         gutterBottom
         sx={{ color: "#333", fontWeight: "bold" }}
       >
-        Journal Entries
+        Journal Entries for {childName}
       </Typography>
       <Box sx={{ padding: 2 }}>
         <Button

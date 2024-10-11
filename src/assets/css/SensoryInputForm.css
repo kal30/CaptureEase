@@ -1,0 +1,52 @@
+.sensory-form {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #bfedf4; /* Subtle background color to make the form stand out */
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.form-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.form-row .input-field {
+  width: 48%; /* Flex-width for two fields in a row */
+}
+
+.helper-text {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 10px;
+}
+
+input[type="submit"],
+.submit-btn {
+  background: linear-gradient(135deg, #0c95e6, #027a79);
+  color: #fff;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  padding: 10px 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  width: 100%;
+}
+
+input[type="submit"]:hover,
+.submit-btn:hover {
+  background-color: #0056b3; /* Darker blue on hover */
+}
+
+@media (max-width: 768px) {
+  .form-row {
+    flex-direction: column;
+  }
+
+  .input-field {
+    width: 100%; /* Full-width for smaller screens */
+    margin-bottom: 12px;
+  }
+}
