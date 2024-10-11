@@ -216,6 +216,15 @@ const ChildCard = ({
             <ListItemText primary="Messages" />
           </ListItemButton>
 
+          <ListItemButton
+            onClick={() => navigate(`/child/${child.id}/sensory`)}
+          >
+            <ListItemIcon>
+              <AssignmentIcon />
+            </ListItemIcon>
+            <ListItemText primary="Sensory" />
+          </ListItemButton>
+
           <ListItemButton onClick={() => navigate("/daily-activities")}>
             <ListItemIcon>
               <AssignmentIcon />

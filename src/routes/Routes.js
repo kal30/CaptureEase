@@ -10,6 +10,7 @@ import DailyActivitiesPage from "../pages/DailyActivitiesPage";
 import MoodTrackerPage from "../pages/MoodTracker";
 import TwitterThread from "../pages/TwitterThread";
 import JournalPage from "../pages/JournalPage";
+import SensoryPage from "../pages/SensoryPage";
 
 const AppRoutes = () => {
   return (
@@ -23,6 +24,7 @@ const AppRoutes = () => {
       <Route path="/mood-tracker" element={<MoodTrackerPage />} />
       <Route path="/health-info" element={<HealthInfoPage />} />
       <Route path="/child/:childId/journal" element={<JournalPage />} />
+      <Route path="/child/:childId/sensory" element={<SensoryPage />} />
       <Route path="/test" element={<div>Test Page</div>} />
     </Routes>
   );
