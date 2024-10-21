@@ -3,6 +3,7 @@ import { Container, Typography, Button, Box } from "@mui/material";
 import SensoryInputForm from "../components/SensoryLog/SensoryInputForm"; // Import the refactored component
 import { useParams } from "react-router-dom";
 import useChildName from "../hooks/useChildName"; // Import the custom hook
+import SensoryInput from "../components/SensoryLog/SensoryInput";
 
 const SensoryPage = () => {
   const { childId } = useParams();
@@ -26,6 +27,7 @@ const SensoryPage = () => {
         Sensory Input Log for {childName}
       </Typography>
       {/* Use the fetched child name */}
+      {/* <SensoryInput childId={childId} /> */}
       <SensoryInputForm childId={childId} />
     </div>
   );

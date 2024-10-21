@@ -93,11 +93,13 @@ const SensoryInputForm = ({ childId }) => {
           value={reaction}
           onChange={(e) => setReaction(e.target.value)}
           required
-          className="input-field"
           helperText="Describe how your child reacted (e.g., anxious, calm, crying)."
           fullWidth
+          multiline
+          rows={4}
         />
       </div>
+
       <div className="form-row">
         <SeverityRating severity={severity} setSeverity={setSeverity} />{" "}
       </div>

@@ -29,6 +29,8 @@ import { useTheme } from "@mui/material/styles"; // Import theme
 
 const ChildCard = ({
   child,
+  expanded,
+  onAccordionChange,
   onEditChild,
   onDeleteChild,
   onUnlinkCaregiver,
@@ -50,7 +52,7 @@ const ChildCard = ({
   };
 
   return (
-    <Accordion>
+    <Accordion expanded={expanded} onChange={onAccordionChange}>
       <AccordionSummary
         expandIcon={<ExpandMoreIcon />}
         sx={{
