@@ -13,10 +13,11 @@ const firebaseConfig = {
   storageBucket: "captureease-ef82f.appspot.com",
   messagingSenderId: "527928340509",
   appId: "1:527928340509:web:5b23265f2399f1ab7056f4",
-  measurementId: "G-LG6RDFXCDF"
+  measurementId: "G-LG6RDFXCDF",
 };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 
+//OPEN AI API - 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

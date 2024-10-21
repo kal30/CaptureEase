@@ -6,6 +6,7 @@ import { db } from "../../../services/firebase"; // Adjust path to your Firebase
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "../../../assets/css/CustomBigCalendar.css"; // Custom styles for calendar
 import CalendarToolbar from "./CalendarToolbar"; // Custom toolbar
+import { BorderColor } from "@mui/icons-material";
 
 const localizer = momentLocalizer(moment);
 

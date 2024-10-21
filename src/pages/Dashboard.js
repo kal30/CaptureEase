@@ -1,20 +1,24 @@
+// Dashboard.js
 import React, { useState, useEffect } from "react";
 import { Container, Typography, Button } from "@mui/material";
 import AddChildModal from "../components/Dashboard/AddChildModal";
 import AssignCaregiverModal from "../components/Dashboard/AssignCaregiverModal";
-import EditChildModal from "../components/Dashboard/EditChildModal"; // Import the EditChildModal
+import EditChildModal from "../components/Dashboard/EditChildModal";
 import ChildCard from "../components/Dashboard/ChildCard";
 import { collection, onSnapshot } from "firebase/firestore";
-import { db } from "../services/firebase"; // Make sure to use the correct path for firebase.js
+import { db } from "../services/firebase";
 import theme from "../assets/theme/light";
 
 const Dashboard = () => {
   const [children, setChildren] = useState([]);
-  const [caregivers, setCaregivers] = useState([]); // Initialize caregivers as an empty array
+  const [caregivers, setCaregivers] = useState([]);
   const [addChildOpen, setAddChildOpen] = useState(false);
   const [assignCaregiverOpen, setAssignCaregiverOpen] = useState(false);
-  const [editChildOpen, setEditChildOpen] = useState(false); // State for opening EditChildModal
+  const [editChildOpen, setEditChildOpen] = useState(false);
   const [selectedChild, setSelectedChild] = useState(null);
+
+  // New state for expanded child
+  const [expandedChildId, setExpandedChildId] = useState(null);
 
   // Fetch all children from Firestore in real-time
   useEffect(() => {
@@ -23,12 +27,33 @@ const Dashboard = () => {
         id: doc.id,
         ...doc.data(),
       }));
-      console.log("Fetched children:", childrenData); // Debugging log
-      setChildren(childrenData); // Set the children state
+      console.log("Fetched children:", childrenData);
+      setChildren(childrenData);
     });
 
-    return () => unsubscribe(); // Clean up the listener
+    return () => unsubscribe();
   }, []);
+
+  // Retrieve persisted expandedChildId when component mounts
+  useEffect(() => {
+    const storedExpandedChildId = localStorage.getItem("expandedChildId");
+    if (storedExpandedChildId) {
+      setExpandedChildId(storedExpandedChildId);
+    }
+  }, []);
+
+  // Handle accordion expansion
+  const handleAccordionChange = (childId) => (event, isExpanded) => {
+    const newExpandedChildId = isExpanded ? childId : null;
+    setExpandedChildId(newExpandedChildId);
+
+    // Persist the expandedChildId to localStorage
+    if (isExpanded) {
+      localStorage.setItem("expandedChildId", childId);
+    } else {
+      localStorage.removeItem("expandedChildId");
+    }
+  };
 
   const handleAddChildOpen = () => setAddChildOpen(true);
   const handleAddChildClose = () => setAddChildOpen(false);
@@ -40,10 +65,24 @@ const Dashboard = () => {
   const handleAssignCaregiverClose = () => setAssignCaregiverOpen(false);
 
   const handleEditChildOpen = (child) => {
-    setSelectedChild(child); // Set the selected child for editing
-    setEditChildOpen(true); // Open the EditChildModal
+    setSelectedChild(child);
+    setEditChildOpen(true);
   };
   const handleEditChildClose = () => setEditChildOpen(false);
+
+  // Implement the delete child handler
+  const handleDeleteChild = (child) => {
+    // Implement deletion logic here
+    console.log("Delete child:", child);
+    // For example, delete the child document from Firestore
+  };
+
+  // Implement the unlink caregiver handler
+  const handleUnlinkCaregiver = (child) => {
+    // Implement unlinking logic here
+    console.log("Unlink caregiver from child:", child);
+    // For example, update the child's document in Firestore to remove the caregiver
+  };
 
   return (
     <Container sx={{ mt: 5 }}>
@@ -56,14 +95,14 @@ const Dashboard = () => {
         onClick={handleAddChildOpen}
         sx={{
           mb: 3,
-          backgroundColor: theme.palette.primary.main, // Use eggplant as primary color from theme
-          color: "white", // Text color
-          padding: "12px 24px", // Make the button larger
-          fontSize: "1rem", // Increase font size for better readability
-          fontWeight: "bold", // Bold text
-          borderRadius: "8px", // Slightly round the button
+          backgroundColor: theme.palette.primary.main,
+          color: "white",
+          padding: "12px 24px",
+          fontSize: "1rem",
+          fontWeight: "bold",
+          borderRadius: "8px",
           "&:hover": {
-            backgroundColor: theme.palette.secondary.main, // Change color on hover
+            backgroundColor: theme.palette.secondary.main,
           },
         }}
       >
@@ -72,12 +111,16 @@ const Dashboard = () => {
 
       {/* Display child cards */}
       {children.length > 0 ? (
-        children.map((child, index) => (
+        children.map((child) => (
           <ChildCard
-            key={index}
+            key={child.id}
             child={child}
+            expanded={expandedChildId === child.id}
+            onAccordionChange={handleAccordionChange(child.id)}
             onAssignCaregiver={handleAssignCaregiverOpen}
-            onEditChild={handleEditChildOpen} // Add onEditChild for editing
+            onEditChild={handleEditChildOpen}
+            onDeleteChild={handleDeleteChild}
+            onUnlinkCaregiver={handleUnlinkCaregiver}
           />
         ))
       ) : (
@@ -94,14 +137,14 @@ const Dashboard = () => {
         open={assignCaregiverOpen}
         onClose={handleAssignCaregiverClose}
         child={selectedChild}
-        caregivers={caregivers} // Pass caregivers list
-        setCaregivers={setCaregivers} // Pass function to update caregivers
+        caregivers={caregivers}
+        setCaregivers={setCaregivers}
       />
       <EditChildModal
         open={editChildOpen}
         onClose={handleEditChildClose}
-        child={selectedChild} // Pass the selected child to the edit modal
-        setChildren={setChildren} // Pass function to update the children after editing
+        child={selectedChild}
+        setChildren={setChildren}
       />
     </Container>
   );
