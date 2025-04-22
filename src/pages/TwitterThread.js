@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Typography } from '@mui/material';
 import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db } from '../services/firebase';
 import MessageBubble from '../components/Twitter/MessageBubble';  // Import from Twitter folder
 import MessageInput from '../components/Twitter/MessageInput';  // Import updated MessageInput
 

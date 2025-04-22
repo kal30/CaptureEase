@@ -1,0 +1,60 @@
+/* Box surrounding the rating */
+.severity-box {
+  border: 1px solid #e0e0e0; /* Very light border to match other elements */
+  border-radius: 8px;
+  background-color: #fff; /* Match the form background */
+  display: inline-block;
+  text-align: center;
+  width: 100%; /* Ensure it spans the full width */
+}
+
+/* Label for severity rating */
+.severity-label {
+  display: block;
+  font-size: 16px;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+/* Rating circle container */
+.severity-rating {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+/* Styling the circles */
+.circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #e0e0e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+/* Selected (active) state */
+.circle.selected {
+  background-color: #007bff;
+  color: white;
+  transform: scale(1.1);
+}
+
+/* Hover effect */
+.circle:hover {
+  background-color: #0056b3;
+  color: white;
+}
+
+/* Helper text styling */
+.helper-text {
+  font-size: 13px;
+  color: #666;
+  margin-top: 5px;
+  line-height: 1.5;
+}

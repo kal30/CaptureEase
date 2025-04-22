@@ -3,12 +3,12 @@ import { Box, IconButton, Paper } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { addDoc, collection } from 'firebase/firestore';
-import { db, auth } from '../../firebase';
+import { db, auth } from '../../services/firebase';
 import MediaInput from './MediaInput';  // Import MediaInput component
 import MessageTextInput from './MessageTextInput';  // Import MessageTextInput component
 import SpeechInput from './SpeechInput';  // Import SpeechInput component
 
-const MessageInput = ({ setMessages }) => {
+const MessageInput = () => {
   const [text, setText] = useState('');
   const [mediaFile, setMediaFile] = useState(null);
   const [uploading, setUploading] = useState(false);
@@ -49,7 +49,8 @@ const MessageInput = ({ setMessages }) => {
       await addDoc(collection(db, 'entries'), newMessage);
       setText('');  // Clear input
       setMediaFile(null);  // Clear the media file
-      setMessages((prevMessages) => [newMessage, ...prevMessages]);  // Add new message to the list
+
+      // No need to update setMessages here, Firestore's real-time listener will handle updating the message list.
     } catch (error) {
       console.error('Error posting message:', error);
     } finally {
@@ -96,7 +97,7 @@ const MessageInput = ({ setMessages }) => {
       <IconButton
         type="submit"
         color="primary"
-        disabled={uploading || !text}
+        disabled={uploading || (!text && !mediaFile)}  // Prevent sending if no text or media
         sx={{ marginLeft: 1 }}
       >
         <SendIcon />
