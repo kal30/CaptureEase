@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Container, Box } from '@mui/material';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { addDoc, collection, onSnapshot, query, orderBy } from 'firebase/firestore';
-import { db, auth } from '../firebase';
+import { db, auth } from '../services/firebase';
 import MessageInput from '../components/Record/MessageInput';
 import MessageList from '../components/Record/MessageList';
 import dayjs from 'dayjs';

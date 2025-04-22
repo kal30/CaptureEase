@@ -27,6 +27,7 @@ const SpeechInput = ({ setText, handleSubmit }) => {
       recognitionInstance.onend = () => {
         setIsListening(false);  // Reset listening state when recognition ends
         handleSubmit();  // Automatically submit the message after speech ends
+        //setText('');  // Clear the input text after submission
       };
 
       setRecognition(recognitionInstance);
@@ -43,20 +44,8 @@ const SpeechInput = ({ setText, handleSubmit }) => {
     }
   };
 
-  // Stop speech recognition
-  const stopListening = () => {
-    if (recognition && isListening) {
-      recognition.stop();
-      setIsListening(false);  // Reset the listening flag when recognition stops
-    }
-  };
-
   return (
-    <IconButton
-      onClick={isListening ? stopListening : startListening}  // Toggle listening state on button click
-      sx={{ marginLeft: 1 }}
-      color={isListening ? 'secondary' : 'default'}  // Change button color if listening
-    >
+    <IconButton onClick={startListening} sx={{ marginLeft: 1 }} color={isListening ? 'secondary' : 'default'}>
       <MicIcon />
     </IconButton>
   );
