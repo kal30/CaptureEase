@@ -9,7 +9,8 @@ const theme = createTheme({
       main: "#027a79", // Pine Green
     },
     background: {
-      default: "#edfdfd", // Foam
+      // default: "#edfdfd", // Foam
+      //default: "#ecebea",
     },
     text: {
       primary: "#04061f", // Black Pearl for primary text

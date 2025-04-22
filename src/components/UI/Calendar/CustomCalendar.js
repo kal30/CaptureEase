@@ -5,8 +5,8 @@ import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
 import { db } from "../../../services/firebase"; // Adjust path to your Firebase service
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "../../../assets/css/CustomBigCalendar.css"; // Custom styles for calendar
+import "../../../assets/css/SensoryCalendar.css";
 import CalendarToolbar from "./CalendarToolbar"; // Custom toolbar
-import { BorderColor } from "@mui/icons-material";
 
 const localizer = momentLocalizer(moment);
 
@@ -14,7 +14,7 @@ const CustomCalendar = ({
   childId, // Child ID to fetch data
   collectionName = "journals", // Collection to fetch data from
   titleGetter = (entry) => entry.title || "Entry", // Dynamic title getter
-  eventColor = "#027a79", // Event color
+  eventColor, // Event color
   events: externalEvents, // Option to pass external events instead of fetching
   fetchFromFirestore = true, // Boolean to toggle Firestore fetching
   ...rest // Additional props
@@ -54,6 +54,10 @@ const CustomCalendar = ({
     fetchFromFirestore,
   ]);
 
+  // Conditionally apply a class based on collectionName
+  const calendarClass =
+    collectionName === "sensory_logs" ? "sensory-calendar" : "regular-calendar";
+
   const dayPropGetter = (date) => {
     const today = new Date();
     if (
@@ -73,7 +77,7 @@ const CustomCalendar = ({
   };
 
   return (
-    <div style={{ height: "500px", margin: "20px" }}>
+    <div className={calendarClass} style={{ height: "500px", margin: "20px" }}>
       <Calendar
         localizer={localizer}
         events={events} // Use events fetched from Firestore or passed externally
