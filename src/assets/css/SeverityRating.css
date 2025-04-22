@@ -1,9 +1,7 @@
 /* Box surrounding the rating */
 .severity-box {
   border: 1px solid #e0e0e0; /* Very light border to match other elements */
-  padding: 12px 20px;
   border-radius: 8px;
-  margin-bottom: 16px;
   background-color: #fff; /* Match the form background */
   display: inline-block;
   text-align: center;

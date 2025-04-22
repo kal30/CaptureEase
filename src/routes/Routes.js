@@ -13,6 +13,8 @@ import TwitterThread from "../pages/TwitterThread";
 import JournalPage from "../pages/JournalPage";
 import SensoryPage from "../pages/SensoryPage";
 
+//When you update here update breadcrumbscomponent.js
+
 const AppRoutes = () => {
   return (
     <>
@@ -38,8 +40,3 @@ const AppRoutes = () => {
 };
 
 export default AppRoutes;
-
-{
-  /* <Route path="/record-entry" element={<RecordEntry />} />   
-      <Route path="/twitterThread" element={<TwitterThread />} />  */
-}

@@ -32,6 +32,7 @@ const BreadcrumbsComponent = () => {
     dashboard: "Dashboard",
     messages: "Messages",
     journal: "Journal",
+    sensory: "Sensory",
     // Add any other mappings as needed
   };
 
@@ -101,6 +102,7 @@ const BreadcrumbsComponent = () => {
           display: "flex",
           flexWrap: "nowrap",
           alignItems: "center",
+          color: "blue",
         },
         "& li": {
           display: "flex",

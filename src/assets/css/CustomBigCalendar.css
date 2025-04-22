@@ -1,11 +1,9 @@
 /* Overall Calendar Styles */
-.rbc-calendar {
-  background: linear-gradient(
-    135deg,
-    #fefefe 30%,
-    #b2ebf2 100%
-  ); /* Gradient from white to California */
-
+.regular-calendar .rbc-calendar {
+  background: var(
+    --calendar-bg,
+    linear-gradient(135deg, #fefefe 30%, #b2ebf2 100%)
+  ); /* Use the variable or fallback to the default */
   border-radius: 16px;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
   padding: 20px;
@@ -52,7 +50,7 @@
 }
 
 .rbc-date-cell--now {
-  background-color: #f10187; /* Rose for today's date */
+  background-color: #efaed3; /* Rose for today's date */
   border-radius: 50%;
 }
 
@@ -78,7 +76,7 @@
   /* Sunday */
   /* background-color: #e0f7fa;
   background: linear-gradient(135deg, #daf0f3 30%, #a2e3ec 100%);  */
-  color: #f10187; /* White text for weekends */
+  color: #efaed3; /* White text for weekends */
   font-weight: bold;
 }
 
