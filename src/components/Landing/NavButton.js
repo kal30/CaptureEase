@@ -1,11 +1,13 @@
 import React from "react";
 import { Button } from "@mui/material";
+import { Link as RouterLink } from "react-router-dom";
 
 // NavButton Component
-const NavButton = ({ text, icon, href }) => {
+const NavButton = ({ text, icon, to }) => {
   return (
     <Button
-      href={href}
+      component={RouterLink}
+      to={to}
       startIcon={icon} // Optional icon
       sx={{
         position: "relative",

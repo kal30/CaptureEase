@@ -3,17 +3,21 @@ import React, { useState, useEffect } from "react";
 import { Container, Typography, Button } from "@mui/material";
 import AddChildModal from "../components/Dashboard/AddChildModal";
 import AssignCaregiverModal from "../components/Dashboard/AssignCaregiverModal";
+import AssignTherapistModal from "../components/Dashboard/AssignTherapistModal";
 import EditChildModal from "../components/Dashboard/EditChildModal";
 import ChildCard from "../components/Dashboard/ChildCard";
 import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "../services/firebase";
 import theme from "../assets/theme/light";
+import { getUsersByRole } from "../services/userService";
 
 const Dashboard = () => {
   const [children, setChildren] = useState([]);
   const [caregivers, setCaregivers] = useState([]);
+  const [therapists, setTherapists] = useState([]);
   const [addChildOpen, setAddChildOpen] = useState(false);
   const [assignCaregiverOpen, setAssignCaregiverOpen] = useState(false);
+  const [assignTherapistOpen, setAssignTherapistOpen] = useState(false);
   const [editChildOpen, setEditChildOpen] = useState(false);
   const [selectedChild, setSelectedChild] = useState(null);
 
@@ -32,6 +36,16 @@ const Dashboard = () => {
     });
 
     return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      const fetchedCaregivers = await getUsersByRole('caregiver');
+      setCaregivers(fetchedCaregivers);
+      const fetchedTherapists = await getUsersByRole('therapist');
+      setTherapists(fetchedTherapists);
+    };
+    fetchUsers();
   }, []);
 
   // Retrieve persisted expandedChildId when component mounts
@@ -63,6 +77,12 @@ const Dashboard = () => {
     setAssignCaregiverOpen(true);
   };
   const handleAssignCaregiverClose = () => setAssignCaregiverOpen(false);
+
+  const handleAssignTherapistOpen = (child) => {
+    setSelectedChild(child);
+    setAssignTherapistOpen(true);
+  };
+  const handleAssignTherapistClose = () => setAssignTherapistOpen(false);
 
   const handleEditChildOpen = (child) => {
     setSelectedChild(child);
@@ -117,10 +137,14 @@ const Dashboard = () => {
             child={child}
             expanded={expandedChildId === child.id}
             onAccordionChange={handleAccordionChange(child.id)}
+            
             onAssignCaregiver={handleAssignCaregiverOpen}
+            onAssignTherapist={handleAssignTherapistOpen}
             onEditChild={handleEditChildOpen}
             onDeleteChild={handleDeleteChild}
             onUnlinkCaregiver={handleUnlinkCaregiver}
+            allCaregivers={caregivers}
+            allTherapists={therapists}
           />
         ))
       ) : (
@@ -133,13 +157,22 @@ const Dashboard = () => {
         onClose={handleAddChildClose}
         setChildren={setChildren}
       />
-      <AssignCaregiverModal
-        open={assignCaregiverOpen}
-        onClose={handleAssignCaregiverClose}
-        child={selectedChild}
-        caregivers={caregivers}
-        setCaregivers={setCaregivers}
-      />
+      {selectedChild && (
+        <AssignCaregiverModal
+          open={assignCaregiverOpen}
+          onClose={handleAssignCaregiverClose}
+          child={selectedChild}
+          caregivers={caregivers}
+        />
+      )}
+      {selectedChild && (
+        <AssignTherapistModal
+          open={assignTherapistOpen}
+          onClose={handleAssignTherapistClose}
+          child={selectedChild}
+          therapists={therapists}
+        />
+      )}
       <EditChildModal
         open={editChildOpen}
         onClose={handleEditChildClose}
