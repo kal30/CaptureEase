@@ -13,6 +13,7 @@ import HomeIcon from "@mui/icons-material/Home";
 import InfoIcon from "@mui/icons-material/Info";
 import ContactMailIcon from "@mui/icons-material/ContactMail";
 import DashboardIcon from "@mui/icons-material/Dashboard";
+import GroupIcon from "@mui/icons-material/Group";
 import AvatarMenu from "./AvatarMenu"; // Import the avatar menu component
 import logo from "../../assets/image/landing/oneMoreLogo.png";
 
@@ -65,22 +66,27 @@ const Navbar = ({ user }) => {
         <Box sx={{ display: "flex", gap: 4 }}>
           {isLandingPage && (
             <>
-              <NavButton text="Features" icon={<HomeIcon />} href="#features" />
-              <NavButton text="About Us" icon={<InfoIcon />} href="#about" />
+              <NavButton text="Features" icon={<HomeIcon />} to="#features" />
+              <NavButton text="About Us" icon={<InfoIcon />} to="#about" />
               <NavButton
                 text="Contact"
                 icon={<ContactMailIcon />}
-                href="#contact"
+                to="#contact"
               />
             </>
           )}
 
-          {!isLandingPage && user && (
+          {user && (
             <>
               <NavButton
                 text="Dashboard"
                 icon={<DashboardIcon />}
-                href="/dashboard"
+                to="/dashboard"
+              />
+              <NavButton
+                text="Care Team"
+                icon={<GroupIcon />}
+                to="/care-team"
               />
             </>
           )}
@@ -104,13 +110,15 @@ const Navbar = ({ user }) => {
               >
                 Login
               </Button>
-              <Button
-                variant="outlined"
-                onClick={handleRegisterRedirect} // Handle the redirect logic here
-                sx={{ color: "#49274A", borderColor: "#49274A" }}
-              >
-                Register
-              </Button>
+              {!user && (
+                <Button
+                  variant="outlined"
+                  onClick={handleRegisterRedirect} // Handle the redirect logic here
+                  sx={{ color: "#49274A", borderColor: "#49274A" }}
+                >
+                  Register
+                </Button>
+              )}
             </>
           )}
         </Box>

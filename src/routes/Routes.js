@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import BreadcrumbsComponent from "../components/UI/BreadcrumbsComponent";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
@@ -12,21 +12,28 @@ import MoodTrackerPage from "../pages/MoodTracker";
 import TwitterThread from "../pages/TwitterThread";
 import JournalPage from "../pages/JournalPage";
 import SensoryPage from "../pages/SensoryPage";
+import CareTeamPage from "../pages/CareTeamPage";
 
 //When you update here update breadcrumbscomponent.js
 
 const AppRoutes = () => {
+  const location = useLocation();
+  const isLandingPage = location.pathname === "/";
+
   return (
     <>
-      <div style={{ display: "flex", flexDirection: "row" }}>
-        <BreadcrumbsComponent />
-      </div>
+      {!isLandingPage && (
+        <div style={{ display: "flex", flexDirection: "row" }}>
+          <BreadcrumbsComponent />
+        </div>
+      )}
 
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/care-team" element={<CareTeamPage />} />
         <Route path="/messages" element={<TwitterThread />} />
         <Route path="/daily-activities" element={<DailyActivitiesPage />} />
         <Route path="/mood-tracker" element={<MoodTrackerPage />} />

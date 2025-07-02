@@ -1,90 +1,67 @@
 import React, { useState } from 'react';
-import { Button, Dialog, DialogActions, DialogContent, TextField, MenuItem, Typography } from '@mui/material';
-import { assignCaregiver } from '../../services/childService';  // Import the Firestore function
+import { Button, Dialog, DialogActions, DialogContent, Typography, List, ListItem, ListItemText } from '@mui/material';
+import { assignCaregiver } from '../../services/childService';
+import { useNavigate } from 'react-router-dom';
 
-const AssignCaregiverModal = ({ open, onClose, child, caregivers, setCaregivers }) => {
-  const [selectedCaregiver, setSelectedCaregiver] = useState('');
-  const [newCaregiverName, setNewCaregiverName] = useState('');
-  const [newCaregiverEmail, setNewCaregiverEmail] = useState('');
+const AssignCaregiverModal = ({ open, onClose, child, caregivers }) => {
+  const [selectedCaregiver, setSelectedCaregiver] = useState(null);
+  const navigate = useNavigate();
 
-  // Handle caregiver assignment
   const handleAssignCaregiver = async () => {
-    let caregiver = selectedCaregiver;
-  
-    // Check if adding a new caregiver
-    if (newCaregiverName && newCaregiverEmail) {
-      caregiver = {
-        name: newCaregiverName,
-        email: newCaregiverEmail,
-      };
-      setCaregivers((prev) => [...prev, caregiver]);  // Add new caregiver to the list locally
-  
-      console.log("New caregiver added:", caregiver);  // Debug log for new caregiver
-    }
-  
-    // If no caregiver is selected or added, prevent submission
-    if (!caregiver) {
-      console.log("No caregiver selected or added.");  // Debug log if no caregiver
+    if (!selectedCaregiver) {
+      console.log("No caregiver selected.");
       return;
     }
-  
-    // Firestore Update
+
     try {
-      console.log("Assigning caregiver to child:", child.id, caregiver);  // Debug log before Firestore update
-      await assignCaregiver(child.id, caregiver);  // Call the Firestore update function
-  
-      console.log("Caregiver successfully assigned.");  // Debug log after successful assignment
-      onClose();  // Close the modal after successful assignment
-  
-      // Reset fields
-      setSelectedCaregiver('');
-      setNewCaregiverName('');
-      setNewCaregiverEmail('');
+      await assignCaregiver(child.id, selectedCaregiver.id);
+      console.log("Caregiver successfully assigned.");
+      onClose();
+      setSelectedCaregiver(null);
     } catch (error) {
-      console.error('Error assigning caregiver:', error);  // Log any error
+      console.error('Error assigning caregiver:', error);
     }
+  };
+
+  const handleCaregiverClick = (caregiver) => {
+    setSelectedCaregiver(caregiver);
+  };
+
+  const handleGoToCareTeam = () => {
+    onClose();
+    navigate('/care-team');
   };
 
   return (
     <Dialog open={open} onClose={onClose}>
       <DialogContent>
-        {/* Dropdown for selecting an existing caregiver */}
-        <TextField
-          select
-          label="Select Caregiver"
-          value={selectedCaregiver}
-          onChange={(e) => setSelectedCaregiver(e.target.value)}
-          fullWidth
-        >
-          {caregivers.map((caregiver, index) => (
-            <MenuItem key={index} value={caregiver}>
-              {caregiver.name} ({caregiver.email})
-            </MenuItem>
-          ))}
-        </TextField>
-
-        <Typography variant="body2" sx={{ mt: 2 }}>Or add a new caregiver:</Typography>
-
-        <TextField
-          label="New Caregiver Name"
-          value={newCaregiverName}
-          onChange={(e) => setNewCaregiverName(e.target.value)}
-          fullWidth
-          sx={{ mt: 2 }}
-        />
-
-        <TextField
-          label="New Caregiver Email"
-          value={newCaregiverEmail}
-          onChange={(e) => setNewCaregiverEmail(e.target.value)}
-          fullWidth
-          sx={{ mt: 2 }}
-        />
+        <Typography variant="h6" gutterBottom>
+          Assign Caregiver to {child.name}
+        </Typography>
+        {caregivers.length > 0 ? (
+          <List>
+            {caregivers.map((caregiver) => (
+              <ListItem
+                button
+                key={caregiver.id}
+                onClick={() => handleCaregiverClick(caregiver)}
+                selected={selectedCaregiver && selectedCaregiver.id === caregiver.id}
+              >
+                <ListItemText primary={caregiver.name} secondary={caregiver.email} />
+              </ListItem>
+            ))}
+          </List>
+        ) : (
+          <Typography>No caregivers available. Please add one from the Care Team page.</Typography>
+        )}
       </DialogContent>
 
       <DialogActions>
         <Button onClick={onClose} color="secondary">Cancel</Button>
-        <Button onClick={handleAssignCaregiver} color="primary">Assign Caregiver</Button>
+        <Button onClick={handleGoToCareTeam} color="info">Go to Care Team</Button>
+        <Button onClick={handleAssignCaregiver} color="primary" disabled={!selectedCaregiver}>
+          Assign Caregiver
+        </Button>
       </DialogActions>
     </Dialog>
   );
