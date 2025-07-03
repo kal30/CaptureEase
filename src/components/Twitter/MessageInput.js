@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, IconButton, Paper } from '@mui/material';
+import { IconButton, Paper } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { addDoc, collection } from 'firebase/firestore';

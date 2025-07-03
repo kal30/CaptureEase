@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Container, Box } from '@mui/material';
+import { Container } from '@mui/material';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { addDoc, collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { db, auth } from '../services/firebase';

@@ -6,7 +6,6 @@ import {
   doc,
   deleteDoc,
   query,
-  where,
   orderBy, // Make sure to import orderBy
 } from "firebase/firestore";
 import { db } from "./firebase"; // Adjust the path if necessary

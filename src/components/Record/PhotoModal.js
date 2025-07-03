@@ -43,7 +43,6 @@ const PhotoModal = ({ open, handleClose, mediaPreview, text, setText, handleSend
             bottom: 0,
             left: 0,
             right: 0,
-            padding: 2, // Adjust padding for a clean look
           }}
         >
           {/* Message input */}

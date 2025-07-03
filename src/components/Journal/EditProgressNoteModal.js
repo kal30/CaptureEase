@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Modal, TextField, Button, Typography } from '@mui/material';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '../../services/firebase';
+import { updateProgressNote } from '../../services/progressNotesService';
 import MediaUploader from './MediaUploader';
 import MediaPreview from './MediaPreview';  // Import MediaPreview
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -20,7 +19,7 @@ const modalStyle = {
   borderRadius: 2,
 };
 
-const EditJournalModal = ({ open, onClose, journal, childId }) => {
+const EditProgressNoteModal = ({ open, onClose, progressNote, childId }) => {
   // Initialize state with default values or journal values if available
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -29,20 +28,19 @@ const EditJournalModal = ({ open, onClose, journal, childId }) => {
   const [isMediaRemoved, setIsMediaRemoved] = useState(false);
 
   useEffect(() => {
-    if (journal) {
-      setTitle(journal.title || '');
-      setContent(journal.content || '');
-      setDate(new Date(journal.date.toDate()).toISOString().split('T')[0] || '');
-      setMediaURL(journal.mediaURL || '');
+    if (progressNote) {
+      setTitle(progressNote.title || '');
+      setContent(progressNote.content || '');
+      setDate(new Date(progressNote.date.toDate()).toISOString().split('T')[0] || '');
+      setMediaURL(progressNote.mediaURL || '');
     }
-  }, [journal]);
+  }, [progressNote]);
 
   const handleUpdate = async () => {
     if (!title || !content) return;
 
     try {
-      const journalRef = doc(db, 'children', childId, 'journals', journal.id);
-      await updateDoc(journalRef, {
+      await updateProgressNote(childId, progressNote.id, {
         title,
         content,
         date: new Date(date),
@@ -59,14 +57,14 @@ const EditJournalModal = ({ open, onClose, journal, childId }) => {
     setIsMediaRemoved(true);  // Set state to true to track removal
   };
 
-  if (!journal) {
+  if (!progressNote) {
     return null; // Do not render the modal if the journal object is undefined
   }
 
   return (
     <Modal open={open} onClose={onClose}>
       <Box sx={modalStyle}>
-        <Typography variant="h6">Edit Journal Entry</Typography>
+        <Typography variant="h6">Edit Progress Note</Typography>
 
         {/* Title Input */}
         <TextField
@@ -89,12 +87,14 @@ const EditJournalModal = ({ open, onClose, journal, childId }) => {
 
         {/* Content Input */}
         <TextField
-          label="Content"
+          label="Progress Note"
           multiline
           rows={4}
           fullWidth
           value={content}
           onChange={(e) => setContent(e.target.value)}
+          placeholder="Describe observations, interventions, and outcomes."
+          helperText="Provide a detailed progress note for this entry."
           sx={{ my: 2 }}
         />
 
@@ -136,4 +136,4 @@ const EditJournalModal = ({ open, onClose, journal, childId }) => {
   );
 };
 
-export default EditJournalModal;
+export default EditProgressNoteModal;

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, TextField } from '@mui/material';
 import MessageBubble from './MessageBubble';
 import MessageMenu from './MessageMenu';
 import { doc, deleteDoc, updateDoc } from 'firebase/firestore';
@@ -65,7 +65,21 @@ const Message = ({ message, showDate }) => {
       )}
 
       {/* Message bubble with text, image, and time */}
-      <MessageBubble message={message} />
+      {isEditing ? (
+        <TextField
+          fullWidth
+          value={editedText}
+          onChange={(e) => setEditedText(e.target.value)}
+          onBlur={handleEdit} // Save on blur
+          onKeyPress={(e) => {
+            if (e.key === 'Enter') {
+              handleEdit();
+            }
+          }}
+        />
+      ) : (
+        <MessageBubble message={message} />
+      )}
 
       {/* Context menu for edit/delete */}
       <MessageMenu

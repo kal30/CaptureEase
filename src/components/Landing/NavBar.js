@@ -5,8 +5,6 @@ import {
   Toolbar,
   Button,
   Box,
-  IconButton,
-  Avatar,
 } from "@mui/material";
 import NavButton from "./NavButton";
 import HomeIcon from "@mui/icons-material/Home";

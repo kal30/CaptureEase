@@ -1,43 +1,43 @@
 /* JournalButton.css */
 .journal-button {
-  background: linear-gradient(135deg, #0c95e6, #027a79);
-  color: #fff;
+  background: #A7D9F0; /* Calming Blue */
+  color: #4A4A4A;
   margin-bottom: 1rem;
   border-radius: 8px;
   padding: 10px 20px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .journal-button:hover {
-  background: linear-gradient(135deg, #027a79, #6c6d7b);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+  background: #FFDAB9; /* Warm Peach on hover */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
-/* JournalList.css */
+/* ProgressNoteList.css */
 
 .journal-paper {
   margin-bottom: 24px; /* 3rem */
   padding: 24px; /* 3rem */
-  border-radius: 50px; /* Slight rounding */
-  background: linear-gradient(to bottom, #e0f7fa, #a1ddf9);
-  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1); /* Light shadow */
+  border-radius: 12px; /* Softer rounding */
+  background: #FFFFFF; /* Clean white background */
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.05); /* Lighter shadow */
   transition: box-shadow 0.3s ease-in-out;
 }
 /* e0f7fa */
 /* 91e8e0 */
 .journal-paper:hover {
-  box-shadow: 0px 6px 14px rgba(0, 0, 0, 0.15); /* Softer shadow on hover */
+  box-shadow: 0px 6px 14px rgba(0, 0, 0, 0.1); /* Softer shadow on hover */
 }
 
 /* Title Styling */
 .journal-title {
   font-weight: bold;
-  color: #333333;
+  color: #4A4A4A; /* Text Primary */
 }
 
 /* Date Styling */
 .journal-date {
-  color: #777777;
+  color: #888888; /* Text Secondary */
   margin-bottom: 16px;
 }
 
@@ -58,8 +58,8 @@
 }
 
 .journal-chip {
-  background-color: #e0f7fa;
-  color: #c9faf4;
+  background-color: #C8E6C9; /* Subtle Green */
+  color: #4A4A4A; /* Text Primary */
 }
 
 /* Edit and Delete Icon Styling */
@@ -69,9 +69,9 @@
 }
 
 .journal-icon:hover {
-  color: #1f3a93;
+  color: #A7D9F0; /* Calming Blue on hover */
 }
 
 .journal-delete-icon:hover {
-  color: #ff6b6b;
+  color: #FFDAB9; /* Warm Peach on hover */
 }

@@ -349,12 +349,12 @@ const ChildCard = ({
           </ListItemButton>
 
           <ListItemButton
-            onClick={() => navigate(`/child/${child.id}/journal`)}
+            onClick={() => navigate(`/child/${child.id}/progress-notes`)}
           >
             <ListItemIcon>
               <MessageIcon />
             </ListItemIcon>
-            <ListItemText primary="Journal" />
+            <ListItemText primary="Progress Notes" />
           </ListItemButton>
         </List>
       </AccordionDetails>

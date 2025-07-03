@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import "../../assets/css/SeverityRating.css"; // Custom CSS for styling the circles
 
 const SeverityRating = ({ severity, setSeverity }) => {

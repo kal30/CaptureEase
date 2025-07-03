@@ -3,18 +3,20 @@ import { createTheme } from "@mui/material/styles";
 const theme = createTheme({
   palette: {
     primary: {
-      main: "#01a0e2", // Cerulean
+      main: "#A7D9F0", // Calming Blue
     },
     secondary: {
-      main: "#027a79", // Pine Green
+      main: "#FF4500", // Orange Red (a very bright, almost neon orange)
+    },
+    accent: {
+      main: "#C8E6C9", // Subtle Green
     },
     background: {
-      // default: "#edfdfd", // Foam
-      //default: "#ecebea",
+      default: "#F9F9F9", // Very Light Background
     },
     text: {
-      primary: "#04061f", // Black Pearl for primary text
-      secondary: "#6c707b", // Pale Sky for secondary text
+      primary: "#4A4A4A", // Soft charcoal for main text
+      secondary: "#888888", // Muted grey for secondary information
     },
   },
   typography: {
