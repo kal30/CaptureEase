@@ -4,7 +4,7 @@ import { db } from "../../services/firebase";
 import "../../assets/css/CustomBigCalendar.css";
 import CustomCalendar from "../UI/Calendar/CustomCalendar";
 
-const JournalCalendar = ({ childId }) => {
+const ProgressNoteCalendar = ({ childId }) => {
   const [events, setEvents] = useState([]);
 
   useEffect(() => {
@@ -17,7 +17,7 @@ const JournalCalendar = ({ childId }) => {
       const journalEvents = snapshot.docs.map((doc) => {
         const entry = doc.data();
         return {
-          title: entry.title || "Journal Entry",
+          title: entry.title || "Progress Note",
           start: new Date(entry.date.toDate()),
           end: new Date(entry.date.toDate()),
           allDay: true,
@@ -33,7 +33,7 @@ const JournalCalendar = ({ childId }) => {
     <div style={{ height: "500px", margin: "20px" }}>
       <CustomCalendar
         childId={childId}
-        collectionName="journals"
+        collectionName="progressNotes"
         events={events}
         fetchFromFirestore={false} // No need to fetch in CustomCalendar since you are passing events here
         eventColor="#027a79"
@@ -42,4 +42,4 @@ const JournalCalendar = ({ childId }) => {
   );
 };
 
-export default JournalCalendar;
+export default ProgressNoteCalendar;

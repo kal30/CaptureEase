@@ -1,6 +1,7 @@
 // src/components/SensoryLog/AddSensoryLogModal.js
 import React, { useState, useEffect } from "react";
-import { Box, Modal, TextField, Button, Typography } from "@mui/material";
+import { Box, Modal, TextField, Button, Typography, IconButton } from "@mui/material";
+import MicNoneIcon from '@mui/icons-material/MicNone';
 import { addDoc, collection } from "firebase/firestore";
 import { db } from "../../services/firebase";
 import SeverityRating from "../UI/Rating"; // Import your severity rating component
@@ -19,6 +20,10 @@ const modalStyle = {
   p: 4,
 };
 
+const SpeechRecognition =
+  window.SpeechRecognition || window.webkitSpeechRecognition;
+const recognition = SpeechRecognition ? new SpeechRecognition() : null;
+
 const AddSensoryLogModal = ({
   open,
   onClose,
@@ -34,6 +39,48 @@ const AddSensoryLogModal = ({
   const [copingStrategy, setCopingStrategy] = useState("");
   const [caregiverIntervention, setCaregiverIntervention] = useState("");
   const [notes, setNotes] = useState("");
+  const [isListening, setIsListening] = useState(false);
+
+  useEffect(() => {
+    if (recognition) {
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = "en-US";
+
+      recognition.onstart = () => {
+        setIsListening(true);
+      };
+
+      recognition.onresult = (event) => {
+        const transcript = Array.from(event.results)
+          .map((result) => result[0])
+          .map((result) => result.transcript)
+          .join("");
+        setNotes((prevNotes) => prevNotes + transcript);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognition.onerror = (event) => {
+        console.error("Speech recognition error:", event.error);
+        setIsListening(false);
+      };
+    }
+  }, []);
+
+  const handleVoiceInput = () => {
+    if (recognition) {
+      if (isListening) {
+        recognition.stop();
+      } else {
+        recognition.start();
+      }
+    } else {
+      alert("Speech recognition is not supported in this browser.");
+    }
+  };
 
   // Reset form whenever the modal is closed
   useEffect(() => {
@@ -146,6 +193,13 @@ const AddSensoryLogModal = ({
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           sx={{ my: 2 }}
+          InputProps={{
+            endAdornment: (
+              <IconButton onClick={handleVoiceInput} disabled={isListening}>
+                <MicNoneIcon color={isListening ? "primary" : "action"} />
+              </IconButton>
+            ),
+          }}
         />
 
         <Button

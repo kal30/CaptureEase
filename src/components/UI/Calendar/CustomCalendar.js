@@ -60,20 +60,36 @@ const CustomCalendar = ({
 
   const dayPropGetter = (date) => {
     const today = new Date();
+    const hasEvents = events.some(
+      (event) =>
+        event.start.getDate() === date.getDate() &&
+        event.start.getMonth() === date.getMonth() &&
+        event.start.getFullYear() === date.getFullYear()
+    );
+
+    let classNames = [];
+    let style = {};
+
     if (
       date.getDate() === today.getDate() &&
       date.getMonth() === today.getMonth() &&
       date.getFullYear() === today.getFullYear()
     ) {
-      return {
-        style: {
-          backgroundColor: "#f10187", // Highlight background color for today
-          borderRadius: "8px",
-          color: "white",
-        },
+      style = {
+        backgroundColor: "#FFFF00", // Bright yellow for today's date
+        borderRadius: "8px",
+        color: "white",
       };
     }
-    return {};
+
+    if (hasEvents) {
+      classNames.push("has-event");
+    }
+
+    return {
+      className: classNames.join(" "),
+      style: style,
+    };
   };
 
   return (

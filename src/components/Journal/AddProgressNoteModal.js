@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Box, Modal, TextField, Button, Typography } from "@mui/material";
-import { addDoc, collection } from "firebase/firestore";
-import { db } from "../../services/firebase";
+import { Box, Modal, TextField, Button, Typography, IconButton } from "@mui/material";
+import MicNoneIcon from '@mui/icons-material/MicNone';
+import { addProgressNote } from "../../services/progressNotesService";
+
 import MediaUploader from "./MediaUploader";
 import TagInput from "./TagInput";
 import { fetchTags, addTag } from "../../services/tagService"; // Tag service
@@ -19,13 +20,59 @@ const modalStyle = {
   p: 4,
 };
 
-const AddJournalModal = ({ open, onClose, childId }) => {
+const SpeechRecognition =
+  window.SpeechRecognition || window.webkitSpeechRecognition;
+const recognition = SpeechRecognition ? new SpeechRecognition() : null;
+
+const AddProgressNoteModal = ({ open, onClose, childId }) => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [mediaURL, setMediaURL] = useState("");
   const [tags, setTags] = useState([]);
   const [availableTags, setAvailableTags] = useState([]); // For tag dropdown options
+  const [isListening, setIsListening] = useState(false);
+
+  useEffect(() => {
+    if (recognition) {
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = "en-US";
+
+      recognition.onstart = () => {
+        setIsListening(true);
+      };
+
+      recognition.onresult = (event) => {
+        const transcript = Array.from(event.results)
+          .map((result) => result[0])
+          .map((result) => result.transcript)
+          .join("");
+        setContent((prevContent) => prevContent + transcript);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognition.onerror = (event) => {
+        console.error("Speech recognition error:", event.error);
+        setIsListening(false);
+      };
+    }
+  }, []);
+
+  const handleVoiceInput = () => {
+    if (recognition) {
+      if (isListening) {
+        recognition.stop();
+      } else {
+        recognition.start();
+      }
+    } else {
+      alert("Speech recognition is not supported in this browser.");
+    }
+  };
 
   // Fetch available tags for the specific child
 
@@ -49,7 +96,7 @@ const AddJournalModal = ({ open, onClose, childId }) => {
         typeof tag === "string" ? tag : tag.name
       );
 
-      await addDoc(collection(db, "children", childId, "journals"), {
+      await addProgressNote(childId, {
         title,
         content,
         date: new Date(date),
@@ -68,7 +115,7 @@ const AddJournalModal = ({ open, onClose, childId }) => {
       onClose();
       resetForm();
     } catch (error) {
-      console.error("Error saving journal entry:", error);
+      console.error("Error saving progress note:", error);
     }
   };
 
@@ -84,7 +131,7 @@ const AddJournalModal = ({ open, onClose, childId }) => {
     <Modal open={open} onClose={onClose}>
       <Box sx={modalStyle}>
         <Typography variant="h6" gutterBottom>
-          Add Journal Entry
+          Add Progress Note
         </Typography>
 
         <TextField
@@ -105,13 +152,22 @@ const AddJournalModal = ({ open, onClose, childId }) => {
         />
 
         <TextField
-          label="Content"
+          label="Progress Note"
           multiline
           rows={4}
           fullWidth
           value={content}
           onChange={(e) => setContent(e.target.value)}
+          placeholder="Describe observations, interventions, and outcomes."
+          helperText="Provide a detailed progress note for this entry."
           sx={{ my: 2 }}
+          InputProps={{
+            endAdornment: (
+              <IconButton onClick={handleVoiceInput} disabled={isListening}>
+                <MicNoneIcon color={isListening ? "primary" : "action"} />
+              </IconButton>
+            ),
+          }}
         />
 
         {/* Tag Input Component */}
@@ -137,4 +193,4 @@ const AddJournalModal = ({ open, onClose, childId }) => {
   );
 };
 
-export default AddJournalModal;
+export default AddProgressNoteModal;

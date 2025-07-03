@@ -1,11 +1,8 @@
 /* Overall Calendar Styles */
 .regular-calendar .rbc-calendar {
-  background: var(
-    --calendar-bg,
-    linear-gradient(135deg, #fefefe 30%, #b2ebf2 100%)
-  ); /* Use the variable or fallback to the default */
+  background: #F9F9F9; /* Very Light Background */
   border-radius: 16px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
   padding: 20px;
   max-width: 100%;
   margin: 0 auto; /* Center the calendar */
@@ -13,25 +10,26 @@
 
 /* Calendar Navigation (Month/Year) */
 .rbc-toolbar {
-  background-color: #ffffff;
+  background-color: #FFFFFF;
   padding: 10px;
   border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
 }
 
 /* Update the buttons for navigation */
 .rbc-toolbar button {
-  background-color: #0c95e6; /* Cerulean */
-  color: white;
+  background-color: #A7D9F0; /* Calming Blue */
+  color: #4A4A4A;
   border: none;
   border-radius: 6px;
   padding: 5px 10px;
   font-weight: bold;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .rbc-toolbar button:hover {
-  background-color: #95bf44; /* Sushi on hover */
+  background-color: #FFDAB9; /* Warm Peach on hover */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 /* Styling for Days in the Month View */
@@ -40,23 +38,27 @@
 }
 
 .rbc-date-cell {
-  border-radius: 10px; /* Slight rounding for a cleaner look */
+  border-radius: 8px; /* Slightly less rounded for a cleaner look */
   padding: 5px;
-  transition: background-color 0.3s ease;
+  transition: background-color 0.2s ease;
 }
 
 .rbc-date-cell:hover {
-  background-color: #e3f2fd !important;
+  background-color: transparent !important; /* Remove hover from date cell */
+}
+
+.rbc-day-bg:hover {
+  background-color: #E0F7FA !important; /* Very light blue on hover for the entire day background */
 }
 
 .rbc-date-cell--now {
-  background-color: #efaed3; /* Rose for today's date */
+  background-color: #C8E6C9; /* Subtle Green for today's date */
   border-radius: 50%;
 }
 
 .rbc-date-cell--active {
-  background-color: #95bf44 !important; /* Sushi for active date */
-  color: white !important;
+  background-color: #A7D9F0 !important; /* Calming Blue for active date */
+  color: #4A4A4A !important;
   border-radius: 50%;
 }
 
@@ -64,7 +66,7 @@
 .rbc-header {
   font-weight: bold;
   font-size: small;
-  color: #181938;
+  color: #4A4A4A; /* Text Primary */
   padding: 10px;
   text-transform: uppercase;
   text-align: center;
@@ -74,27 +76,41 @@
 .rbc-day-bg:nth-child(1), /* Saturday */
 .rbc-day-bg:nth-child(7) {
   /* Sunday */
-  /* background-color: #e0f7fa;
-  background: linear-gradient(135deg, #daf0f3 30%, #a2e3ec 100%);  */
-  color: #efaed3; /* White text for weekends */
-  font-weight: bold;
+  background-color: #FFF8F2; /* Very light peach for weekends */
+  color: #888888; /* Muted grey for weekend text */
 }
 
 .rbc-event {
-  background-color: #0c95e6;
-  border-radius: 10px;
-  color: white;
+  background-color: #A7D9F0; /* Calming Blue for events */
+  border-radius: 8px;
+  color: #4A4A4A;
   padding: 5px;
+  opacity: 0.9; /* Slightly transparent for a lighter feel */
 }
 
 /* Dots for days with events */
 .dot {
   width: 6px;
   height: 6px;
-  background-color: #81d4fa; /* Dot color */
+  background-color: #C8E6C9; /* Subtle Green for dot */
   border-radius: 50%;
   position: absolute;
   bottom: 5px;
   left: 50%;
   transform: translateX(-50%);
+}
+
+.rbc-day-bg.has-event {
+  position: relative;
+}
+
+.rbc-day-bg.has-event::after {
+  content: '';
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  width: 8px;
+  height: 8px;
+  background-color: #FF4500; /* A distinct color for the dot */
+  border-radius: 50%;
 }

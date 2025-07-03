@@ -40,7 +40,7 @@ const TagInput = ({ tags, setTags, childId }) => {
       setAvailableTags((prev) => [...prev, tag]); // Update available tags in UI
     }
 
-    // Update the tags state in AddJournalModal
+    // Update the tags state in AddProgressNoteModal
     setTags(newTags);
   };
 

@@ -5,7 +5,6 @@ import { useParams } from "react-router-dom";
 import useChildName from "../hooks/useChildName"; // Import the custom hook
 import { fetchSensoryLogs, deleteSensoryLog } from "../services/sensoryService";
 import AddSensoryLogModal from "../components/SensoryLog/AddSensoryLogModal"; // Import your new modal
-import CustomCalendar from "../components/UI/Calendar/CustomCalendar"; // Import CustomCalendar
 import SensoryCalendar from "../components/SensoryLog/SensoryCalendar";
 import "../assets/css/Sensory.css"; // Main CSS file for the page
 
@@ -14,7 +13,6 @@ const SensoryPage = () => {
   const { childName, loading, error } = useChildName(childId); // Fetch childName with your custom hook
   const [entries, setEntries] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(null);
 
   // Fetch sensory logs when childId changes
   useEffect(() => {
@@ -29,9 +27,7 @@ const SensoryPage = () => {
   if (loading) return <p>Loading...</p>; // Show a loading state if needed
   if (error) return <p>Error: {error.message}</p>; // Handle any error state
 
-  const handleDateSelect = (date) => {
-    setSelectedDate(date);
-  };
+  
 
   // Define handleLogAdded function to refresh logs when a new log is added
   const handleLogAdded = async () => {
@@ -39,10 +35,7 @@ const SensoryPage = () => {
     setEntries(updatedLogs);
   };
 
-  const handleEdit = (index) => {
-    const entryToEdit = entries[index];
-    // You can implement the logic to pass this entry to the form to edit it
-  };
+  const handleEdit = (index) => {};
 
   const handleDelete = async (index) => {
     const logId = entries[index].id;
@@ -74,7 +67,7 @@ const SensoryPage = () => {
         </Button>
       </Box>
       {/* Sensory Calendar */}
-      <SensoryCalendar childId={childId} onDateSelect={handleDateSelect} />
+      <SensoryCalendar childId={childId} />
       {/* Sensory Log List */}
       <Box mt={4}>
         {" "}
