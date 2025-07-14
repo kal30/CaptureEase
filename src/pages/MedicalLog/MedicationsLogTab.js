@@ -388,23 +388,25 @@ const MedicationsLogTab = ({ childId }) => {
             <Grid item xs={12} sm={6}>
               <TextField
                 margin="normal"
-                required
                 fullWidth
-                id="sideEffectDescription"
-                label="Description"
-                name="description"
-                value={sideEffectForm.description}
+                id="sideEffectDuration"
+                label="Duration (e.g., 2 hours, all day)"
+                name="duration"
+                value={sideEffectForm.duration}
                 onChange={handleSideEffectFormChange}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
                 margin="normal"
+                required
                 fullWidth
-                id="sideEffectDuration"
-                label="Duration (e.g., 2 hours, all day)"
-                name="duration"
-                value={sideEffectForm.duration}
+                id="sideEffectDescription"
+                label="Description"
+                name="description"
+                multiline
+                rows={2}
+                value={sideEffectForm.description}
                 onChange={handleSideEffectFormChange}
               />
             </Grid>
