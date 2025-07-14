@@ -10,7 +10,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { addMedication, fetchMedications, updateMedication, deleteMedication } from '../../services/medicationService';
 import { searchMedications } from '../../services/drugService';
-import { addSideEffect, fetchSideEffects, deleteSideEffect } from '../../services/sideEffectService';
+import { addSideEffect, fetchSideEffects, updateSideEffect, deleteSideEffect } from '../../services/sideEffectService';
 
 const style = {
   position: 'absolute',
@@ -25,48 +25,7 @@ const style = {
 };
 
 const MedicationsLogTab = ({ childId }) => {
-  const [medications, setMedications] = useState([
-    {
-      id: 'med1',
-      name: 'Amoxicillin',
-      dosage: '250mg',
-      frequency: 'Twice a day',
-      startDate: '2023-01-15',
-      prescribingDoctor: 'Dr. Smith',
-      notes: 'For ear infection. Take with food.',
-      isArchived: false,
-      sideEffects: [
-        { id: 'se1', date: '2023-01-17', description: 'Mild stomach upset', severity: 2, duration: '2 hours' },
-        { id: 'se2', date: '2023-01-18', description: 'Skin rash', severity: 4, duration: 'All day' },
-      ],
-    },
-    {
-      id: 'med2',
-      name: 'Ibuprofen',
-      dosage: '100mg',
-      frequency: 'As needed',
-      startDate: '2023-02-01',
-      prescribingDoctor: 'Dr. Jones',
-      notes: 'For fever or pain. Do not exceed 4 doses in 24 hours.',
-      isArchived: false,
-      sideEffects: [
-        { id: 'se3', date: '2023-02-05', description: 'Drowsiness', severity: 1, duration: '1 hour' },
-      ],
-    },
-    {
-      id: 'med3',
-      name: 'Vitamin D',
-      dosage: '400 IU',
-      frequency: 'Once a day',
-      startDate: '2023-03-10',
-      prescribingDoctor: 'Dr. Lee',
-      notes: 'Daily supplement.',
-      isArchived: false,
-      sideEffects: [
-        { id: 'se4', date: '2023-03-15', description: 'Nausea', severity: 2, duration: '30 minutes' },
-      ],
-    },
-  ]);
+  const [medications, setMedications] = useState([]);
   const [editingMedicationId, setEditingMedicationId] = useState(null);
   const [medicationForm, setMedicationForm] = useState({
     name: '',
@@ -81,6 +40,7 @@ const MedicationsLogTab = ({ childId }) => {
 
   const [openAddSideEffectModal, setOpenAddSideEffectModal] = useState(false);
   const [currentSideEffectMedicationId, setCurrentSideEffectMedicationId] = useState(null);
+  const [editingSideEffectId, setEditingSideEffectId] = useState(null);
   const [sideEffectForm, setSideEffectForm] = useState({
     date: '',
     description: '',
@@ -88,20 +48,22 @@ const MedicationsLogTab = ({ childId }) => {
     duration: '',
   });
 
+  
+
   const [showArchived, setShowArchived] = useState(false);
 
-  // useEffect(() => {
-  //   const loadMedications = async () => {
-  //     const fetchedMedications = await fetchMedications(childId, showArchived);
-  //     setMedications(fetchedMedications);
-  //   };
-  //   loadMedications();
-  // }, [childId, showArchived]);
+  useEffect(() => {
+    const loadMedications = async () => {
+      const fetchedMedications = await fetchMedications(childId, showArchived);
+      setMedications(fetchedMedications || []);
+    };
+    loadMedications();
+  }, [childId, showArchived]);
 
   const handleMedicationSearch = async (event, value) => {
     if (value && value.length > 2) {
       const suggestions = await searchMedications(value);
-      setMedicationSuggestions(suggestions);
+      setMedicationSuggestions(suggestions || []);
     } else {
       setMedicationSuggestions([]);
     }
@@ -142,10 +104,18 @@ const MedicationsLogTab = ({ childId }) => {
   const handleMedicationSubmit = async () => {
     if (editingMedicationId) {
       await updateMedication(editingMedicationId, medicationForm);
-      handleCancelEdit(); // For editing, still clear and reset
+      setMedications((prevMedications) =>
+        prevMedications.map((med) =>
+          med.id === editingMedicationId ? { ...med, ...medicationForm } : med
+        )
+      );
+      handleCancelEdit();
     } else {
-      await addMedication({ ...medicationForm, childId });
-      // For adding, clear the form but keep it ready for next entry
+      const newMedicationId = await addMedication({ ...medicationForm, childId });
+      setMedications((prevMedications) => [
+        ...prevMedications,
+        { id: newMedicationId, ...medicationForm, childId, isArchived: false, sideEffects: [] },
+      ]);
       setMedicationForm({
         name: '',
         dosage: '',
@@ -155,22 +125,20 @@ const MedicationsLogTab = ({ childId }) => {
         notes: '',
       });
     }
-    const fetchedMedications = await fetchMedications(childId);
-    setMedications(fetchedMedications);
   };
 
   const handleDeleteMedication = async (medicationId) => {
     if (window.confirm('Are you sure you want to delete this medication?')) {
       await deleteMedication(medicationId);
       const fetchedMedications = await fetchMedications(childId);
-      setMedications(fetchedMedications);
+      setMedications(fetchedMedications || []);
     }
   };
 
   const handleArchiveMedication = async (medicationId, isArchived) => {
     await updateMedication(medicationId, { isArchived });
     const fetchedMedications = await fetchMedications(childId);
-    setMedications(fetchedMedications);
+    setMedications(fetchedMedications || []);
   };
 
   const handleToggleExpand = async (medicationId) => {
@@ -186,15 +154,27 @@ const MedicationsLogTab = ({ childId }) => {
     }
   };
 
-  const handleOpenAddSideEffectModal = (medicationId) => {
+  const handleOpenAddSideEffectModal = (medicationId, sideEffect = null) => {
     setCurrentSideEffectMedicationId(medicationId);
-    setSideEffectForm({
-      date: new Date().toISOString().split('T')[0], // Default to today's date
-      description: '',
-      severity: 0,
-      duration: '',
-      timeOfDay: '',
-    });
+    if (sideEffect) {
+      setEditingSideEffectId(sideEffect.id);
+      setSideEffectForm({
+        date: sideEffect.date,
+        description: sideEffect.description,
+        severity: sideEffect.severity,
+        duration: sideEffect.duration,
+        timeOfDay: sideEffect.timeOfDay || '',
+      });
+    } else {
+      setEditingSideEffectId(null);
+      setSideEffectForm({
+        date: new Date().toISOString().split('T')[0], // Default to today's date
+        description: '',
+        severity: 0,
+        duration: '',
+        timeOfDay: '',
+      });
+    }
     setOpenAddSideEffectModal(true);
   };
 
@@ -218,12 +198,29 @@ const MedicationsLogTab = ({ childId }) => {
     }));
   };
 
+  const handleEditSideEffect = (sideEffect, medicationId) => {
+    setCurrentSideEffectMedicationId(medicationId);
+    setEditingSideEffectId(sideEffect.id);
+    setSideEffectForm({
+      date: sideEffect.date,
+      description: sideEffect.description,
+      severity: sideEffect.severity,
+      duration: sideEffect.duration,
+      timeOfDay: sideEffect.timeOfDay || '',
+    });
+    setOpenAddSideEffectModal(true);
+  };
+
   const handleAddSideEffectSubmit = async () => {
     if (!currentSideEffectMedicationId) {
       alert('Please select a medication for the side effect.');
       return;
     }
-    await addSideEffect({ ...sideEffectForm, medicationId: currentSideEffectMedicationId });
+    if (editingSideEffectId) {
+      await updateSideEffect(editingSideEffectId, { ...sideEffectForm, medicationId: currentSideEffectMedicationId });
+    } else {
+      await addSideEffect({ ...sideEffectForm, medicationId: currentSideEffectMedicationId });
+    }
     // Refresh side effects for the expanded medication
     const fetchedSideEffects = await fetchSideEffects(currentSideEffectMedicationId);
     setMedications((prevMedications) =>
@@ -266,10 +263,133 @@ const MedicationsLogTab = ({ childId }) => {
         <Button
           variant="contained"
           startIcon={<AddIcon />}
-          onClick={() => handleCancelEdit()} // Re-using handleCancelEdit to clear form for new medication
+          onClick={handleCancelEdit}
         >
           Add New Medication
         </Button>
+      </Box>
+
+      <Box sx={{ mb: 3, p: 2, borderRadius: '8px', boxShadow: 1, maxWidth: 1200, mx: 'auto' }}>
+        <Typography variant="subtitle1" gutterBottom>
+          {editingMedicationId ? 'Edit Medication' : 'Add New Medication'}
+        </Typography>
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={12} sx={{ width: '100%' }}>
+            <Autocomplete
+              freeSolo
+              fullWidth
+              options={medicationSuggestions}
+              onInputChange={handleMedicationSearch}
+              value={medicationForm.name}
+              onChange={(event, newValue) => {
+                setMedicationForm((prev) => ({ ...prev, name: newValue || '' }));
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  margin="normal"
+                  required
+                  fullWidth
+                  id="name"
+                  label="Medication Name"
+                  name="name"
+                  onChange={handleMedicationFormChange}
+                  sx={{ minWidth: '400px' }}
+                />
+              )}
+              sx={{ width: '100%' }}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              id="dosage"
+              label="Dosage"
+              name="dosage"
+              value={medicationForm.dosage}
+              onChange={handleMedicationFormChange}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              id="frequency"
+              label="Frequency"
+              name="frequency"
+              value={medicationForm.frequency}
+              onChange={handleMedicationFormChange}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              id="startDate"
+              label="Start Date"
+              name="startDate"
+              type="date"
+              InputLabelProps={{
+                shrink: true,
+              }}
+              value={medicationForm.startDate}
+              onChange={handleMedicationFormChange}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              margin="normal"
+              fullWidth
+              id="prescribingDoctor"
+              label="Prescribing Doctor"
+              name="prescribingDoctor"
+              value={medicationForm.prescribingDoctor}
+              onChange={handleMedicationFormChange}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              margin="normal"
+              fullWidth
+              id="notes"
+              label="Notes"
+              name="notes"
+              multiline
+              rows={1}
+              value={medicationForm.notes}
+              onChange={handleMedicationFormChange}
+              sx={{ width: '100%' }}
+            />
+          </Grid>
+        </Grid>
+        <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
+          <Button
+            type="submit"
+            variant="contained"
+            onClick={handleMedicationSubmit}
+          >
+            {editingMedicationId ? 'Update Medication' : 'Add Medication'}
+          </Button>
+          {editingMedicationId ? (
+            <Button
+              variant="outlined"
+              onClick={handleCancelEdit}
+            >
+              Cancel
+            </Button>
+          ) : (
+            <Button
+              variant="outlined"
+              onClick={handleCancelEdit}
+            >
+              Done
+            </Button>
+          )}
+        </Box>
       </Box>
 
       <List>
@@ -313,9 +433,14 @@ const MedicationsLogTab = ({ childId }) => {
                     <ListItem
                       key={se.id}
                       secondaryAction={
-                        <IconButton edge="end" aria-label="delete" onClick={() => handleDeleteSideEffect(se.id, med.id)}>
-                          <DeleteIcon />
-                        </IconButton>
+                        <>
+                          <IconButton edge="end" aria-label="edit" onClick={() => handleEditSideEffect(se, med.id)}>
+                            <EditIcon />
+                          </IconButton>
+                          <IconButton edge="end" aria-label="delete" onClick={() => handleDeleteSideEffect(se.id, med.id)}>
+                            <DeleteIcon />
+                          </IconButton>
+                        </>
                       }
                     >
                       <ListItemText
@@ -388,17 +513,6 @@ const MedicationsLogTab = ({ childId }) => {
             <Grid item xs={12} sm={6}>
               <TextField
                 margin="normal"
-                fullWidth
-                id="sideEffectDuration"
-                label="Duration (e.g., 2 hours, all day)"
-                name="duration"
-                value={sideEffectForm.duration}
-                onChange={handleSideEffectFormChange}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                margin="normal"
                 required
                 fullWidth
                 id="sideEffectDescription"
@@ -410,10 +524,21 @@ const MedicationsLogTab = ({ childId }) => {
                 onChange={handleSideEffectFormChange}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6}>
               <Rating
                 severity={sideEffectForm.severity}
                 setSeverity={(newValue) => handleSideEffectSeverityChange(null, newValue)}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                margin="normal"
+                fullWidth
+                id="sideEffectDuration"
+                label="Duration (e.g., 2 hours, all day)"
+                name="duration"
+                value={sideEffectForm.duration}
+                onChange={handleSideEffectFormChange}
               />
             </Grid>
           </Grid>
@@ -424,8 +549,18 @@ const MedicationsLogTab = ({ childId }) => {
             sx={{ mt: 3, mb: 2 }}
             onClick={handleAddSideEffectSubmit}
           >
-            Add Side Effect
+            {editingSideEffectId ? 'Update Side Effect' : 'Add Side Effect'}
           </Button>
+          {editingSideEffectId && (
+            <Button
+              fullWidth
+              variant="outlined"
+              sx={{ mb: 2 }}
+              onClick={handleCloseAddSideEffectModal}
+            >
+              Cancel
+            </Button>
+          )}
         </Box>
       </Modal>
     </Box>
