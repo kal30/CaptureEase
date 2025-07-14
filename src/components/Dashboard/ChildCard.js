@@ -24,7 +24,8 @@ import LinkOffIcon from "@mui/icons-material/LinkOff";
 import MessageIcon from "@mui/icons-material/Message";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import MoodIcon from "@mui/icons-material/Mood";
-import HealthAndSafetyIcon from "@mui/icons-material/HealthAndSafety";
+
+import CategoryIcon from "@mui/icons-material/Category";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
 import { useNavigate } from "react-router-dom";
@@ -45,6 +46,7 @@ const ChildCard = ({
   onUnlinkCaregiver,
   onAssignCaregiver,
   onAssignTherapist,
+  onLogMood,
   allCaregivers,
   allTherapists,
 }) => {
@@ -166,6 +168,19 @@ const ChildCard = ({
           </Box>
 
           <Box sx={{ display: "flex", alignItems: "center" }}>
+            <Tooltip title="Log Mood">
+              <IconButton onClick={(e) => {
+                e.stopPropagation();
+                onLogMood(child);
+              }}>
+                <MoodIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Manage Templates">
+              <IconButton onClick={() => navigate(`/child/${child.id}/templates`)}>
+                <CategoryIcon />
+              </IconButton>
+            </Tooltip>
             <Tooltip title="Assign Caregiver">
               <IconButton onClick={handleAssignCaregiverClick}>
                 <PersonAddIcon />
@@ -319,12 +334,21 @@ const ChildCard = ({
           </ListItemButton>
 
           <ListItemButton
-            onClick={() => navigate(`/child/${child.id}/sensory`)}
+            onClick={() => navigate(`/child/${child.id}/log`)}
           >
             <ListItemIcon>
               <AssignmentIcon />
             </ListItemIcon>
-            <ListItemText primary="Sensory" />
+            <ListItemText primary="Child Log" />
+          </ListItemButton>
+
+          <ListItemButton
+            onClick={() => navigate(`/child/${child.id}/medical`)}
+          >
+            <ListItemIcon>
+              <MedicalServicesIcon />
+            </ListItemIcon>
+            <ListItemText primary="Medical Log" />
           </ListItemButton>
 
           <ListItemButton onClick={() => navigate("/daily-activities")}>
@@ -334,28 +358,7 @@ const ChildCard = ({
             <ListItemText primary="Daily Activities" />
           </ListItemButton>
 
-          <ListItemButton onClick={() => navigate("/mood-tracker")}>
-            <ListItemIcon>
-              <MoodIcon />
-            </ListItemIcon>
-            <ListItemText primary="Mood Tracker" />
-          </ListItemButton>
-
-          <ListItemButton onClick={() => navigate("/health-info")}>
-            <ListItemIcon>
-              <HealthAndSafetyIcon />
-            </ListItemIcon>
-            <ListItemText primary="Health Information" />
-          </ListItemButton>
-
-          <ListItemButton
-            onClick={() => navigate(`/child/${child.id}/progress-notes`)}
-          >
-            <ListItemIcon>
-              <MessageIcon />
-            </ListItemIcon>
-            <ListItemText primary="Progress Notes" />
-          </ListItemButton>
+          
         </List>
       </AccordionDetails>
     </Accordion>

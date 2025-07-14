@@ -7,11 +7,14 @@ import Dashboard from "../pages/Dashboard";
 import LandingPage from "../pages/LandingPage";
 import HealthInfoPage from "../pages/HealthInforPage";
 import DailyActivitiesPage from "../pages/DailyActivitiesPage";
-import MoodTrackerPage from "../pages/MoodTracker";
+
 import TwitterThread from "../pages/TwitterThread";
 import ProgressNotesPage from "../pages/ProgressNotesPage";
 import SensoryPage from "../pages/SensoryPage";
 import CareTeamPage from "../pages/CareTeamPage";
+import ChildLogPage from "../pages/ChildLog/ChildLogPage";
+import TemplateLibraryPage from "../pages/TemplateLibraryPage";
+import MedicalLogPage from "../pages/MedicalLog/MedicalLogPage";
 
 //When you update here update breadcrumbscomponent.js
 
@@ -35,10 +38,12 @@ const AppRoutes = () => {
         <Route path="/care-team" element={<CareTeamPage />} />
         <Route path="/messages" element={<TwitterThread />} />
         <Route path="/daily-activities" element={<DailyActivitiesPage />} />
-        <Route path="/mood-tracker" element={<MoodTrackerPage />} />
         <Route path="/health-info" element={<HealthInfoPage />} />
         <Route path="/child/:childId/progress-notes" element={<ProgressNotesPage />} />
         <Route path="/child/:childId/sensory" element={<SensoryPage />} />
+        <Route path="/child/:childId/log" element={<ChildLogPage />} />
+        <Route path="/child/:childId/templates" element={<TemplateLibraryPage />} />
+        <Route path="/child/:childId/medical" element={<MedicalLogPage />} />
         <Route path="/test" element={<div>Test Page</div>} />
       </Routes>
     </>
