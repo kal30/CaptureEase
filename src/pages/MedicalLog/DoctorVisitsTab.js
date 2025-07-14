@@ -18,7 +18,30 @@ const style = {
 };
 
 const DoctorVisitsTab = ({ childId }) => {
-  const [visits, setVisits] = useState([]);
+  const [visits, setVisits] = useState([
+    {
+      id: 'visit1',
+      visitDate: '2024-06-10',
+      doctorName: 'Dr. Emily White',
+      specialty: 'Pediatrician',
+      reasonForVisit: 'Annual check-up',
+      diagnosis: 'Healthy child',
+      treatmentRecommendations: 'Continue healthy diet and exercise.',
+      summaryNotes: 'Child is growing well, all vaccinations up to date.',
+      followUpDate: '2025-06-10',
+    },
+    {
+      id: 'visit2',
+      visitDate: '2024-05-20',
+      doctorName: 'Dr. Alex Chen',
+      specialty: 'Dermatologist',
+      reasonForVisit: 'Rash on arm',
+      diagnosis: 'Eczema flare-up',
+      treatmentRecommendations: 'Prescribed topical cream, avoid harsh soaps.',
+      summaryNotes: 'Rash improving with new cream. Discussed triggers.',
+      followUpDate: '',
+    },
+  ]);
   const [openAddModal, setOpenAddModal] = useState(false);
   const [currentVisit, setCurrentVisit] = useState(null);
   const [visitForm, setVisitForm] = useState({
@@ -26,16 +49,19 @@ const DoctorVisitsTab = ({ childId }) => {
     doctorName: '',
     specialty: '',
     reasonForVisit: '',
+    diagnosis: '',
+    treatmentRecommendations: '',
     summaryNotes: '',
+    followUpDate: '',
   });
 
-  useEffect(() => {
-    const loadVisits = async () => {
-      const fetchedVisits = await fetchDoctorVisits(childId);
-      setVisits(fetchedVisits);
-    };
-    loadVisits();
-  }, [childId]);
+  // useEffect(() => {
+  //   const loadVisits = async () => {
+  //     const fetchedVisits = await fetchDoctorVisits(childId);
+  //     setVisits(fetchedVisits);
+  //   };
+  //   loadVisits();
+  // }, [childId]);
 
   const handleOpenAddModal = (visit = null) => {
     setCurrentVisit(visit);
@@ -45,7 +71,10 @@ const DoctorVisitsTab = ({ childId }) => {
         doctorName: visit.doctorName,
         specialty: visit.specialty,
         reasonForVisit: visit.reasonForVisit,
+        diagnosis: visit.diagnosis || '',
+        treatmentRecommendations: visit.treatmentRecommendations || '',
         summaryNotes: visit.summaryNotes,
+        followUpDate: visit.followUpDate || '',
       });
     } else {
       setVisitForm({
@@ -119,8 +148,16 @@ const DoctorVisitsTab = ({ childId }) => {
             }
           >
             <ListItemText
-              primary={`${visit.doctorName} (${visit.specialty}) on ${visit.visitDate}`}
-              secondary={visit.reasonForVisit}
+              primary={<Typography variant="subtitle1" component="span" sx={{ fontWeight: 'bold', mb: 1, color: 'primary.main' }}>{`${visit.doctorName} on ${visit.visitDate}`}</Typography>}
+              secondary={
+                <Box sx={{ mt: 1 }}>
+                  <Typography variant="body2" color="text.primary"><strong>Reason:</strong> {visit.reasonForVisit}</Typography>
+                  {visit.diagnosis && <Typography variant="body2" color="text.primary"><strong>Diagnosis:</strong> {visit.diagnosis}</Typography>}
+                  {visit.treatmentRecommendations && <Typography variant="body2" color="text.primary"><strong>Treatment:</strong> {visit.treatmentRecommendations}</Typography>}
+                  {visit.followUpDate && <Typography variant="body2" color="text.primary"><strong>Follow-up:</strong> {visit.followUpDate}</Typography>}
+                  {visit.summaryNotes && <Typography variant="body2" color="text.primary"><strong>Notes:</strong> {visit.summaryNotes}</Typography>}
+                </Box>
+              }
             />
           </ListItem>
         ))}
@@ -178,6 +215,41 @@ const DoctorVisitsTab = ({ childId }) => {
             multiline
             rows={2}
             value={visitForm.reasonForVisit}
+            onChange={handleChange}
+          />
+          <TextField
+            margin="normal"
+            fullWidth
+            id="diagnosis"
+            label="Diagnosis"
+            name="diagnosis"
+            multiline
+            rows={2}
+            value={visitForm.diagnosis}
+            onChange={handleChange}
+          />
+          <TextField
+            margin="normal"
+            fullWidth
+            id="treatmentRecommendations"
+            label="Treatment/Recommendations"
+            name="treatmentRecommendations"
+            multiline
+            rows={3}
+            value={visitForm.treatmentRecommendations}
+            onChange={handleChange}
+          />
+          <TextField
+            margin="normal"
+            fullWidth
+            id="followUpDate"
+            label="Follow-up Date"
+            name="followUpDate"
+            type="date"
+            InputLabelProps={{
+              shrink: true,
+            }}
+            value={visitForm.followUpDate}
             onChange={handleChange}
           />
           <TextField
