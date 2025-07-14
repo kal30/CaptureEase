@@ -17,7 +17,7 @@ const style = {
   top: '50%',
   left: '50%',
   transform: 'translate(-50%, -50%)',
-  width: 500,
+  width: 600,
   bgcolor: 'background.paper',
   border: '2px solid #000',
   boxShadow: 24,
@@ -36,8 +36,8 @@ const MedicationsLogTab = ({ childId }) => {
       notes: 'For ear infection. Take with food.',
       isArchived: false,
       sideEffects: [
-        { id: 'se1', date: '2023-01-17', description: 'Mild stomach upset', severity: 2, duration: '2 hours', timeOfDay: 'Morning' },
-        { id: 'se2', date: '2023-01-18', description: 'Skin rash', severity: 4, duration: 'All day', timeOfDay: 'Afternoon' },
+        { id: 'se1', date: '2023-01-17', description: 'Mild stomach upset', severity: 2, duration: '2 hours' },
+        { id: 'se2', date: '2023-01-18', description: 'Skin rash', severity: 4, duration: 'All day' },
       ],
     },
     {
@@ -50,7 +50,7 @@ const MedicationsLogTab = ({ childId }) => {
       notes: 'For fever or pain. Do not exceed 4 doses in 24 hours.',
       isArchived: false,
       sideEffects: [
-        { id: 'se3', date: '2023-02-05', description: 'Drowsiness', severity: 1, duration: '1 hour', timeOfDay: 'Evening' },
+        { id: 'se3', date: '2023-02-05', description: 'Drowsiness', severity: 1, duration: '1 hour' },
       ],
     },
     {
@@ -63,7 +63,7 @@ const MedicationsLogTab = ({ childId }) => {
       notes: 'Daily supplement.',
       isArchived: false,
       sideEffects: [
-        { id: 'se4', date: '2023-03-15', description: 'Nausea', severity: 2, duration: '30 minutes', timeOfDay: 'Morning' },
+        { id: 'se4', date: '2023-03-15', description: 'Nausea', severity: 2, duration: '30 minutes' },
       ],
     },
   ]);
@@ -86,7 +86,6 @@ const MedicationsLogTab = ({ childId }) => {
     description: '',
     severity: 0,
     duration: '',
-    timeOfDay: '',
   });
 
   const [showArchived, setShowArchived] = useState(false);
@@ -324,7 +323,6 @@ const MedicationsLogTab = ({ childId }) => {
                         secondary={
                           <Box>
                             <Typography variant="body2" color="text.secondary">Duration: {se.duration}</Typography>
-                            <Typography variant="body2" color="text.secondary">Time of Day: {se.timeOfDay}</Typography>
                             <Typography variant="body2" color="text.secondary">Severity: {se.severity}</Typography>
                           </Box>
                         }
@@ -387,7 +385,7 @@ const MedicationsLogTab = ({ childId }) => {
                 onChange={handleSideEffectFormChange}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6}>
               <TextField
                 margin="normal"
                 required
@@ -395,8 +393,6 @@ const MedicationsLogTab = ({ childId }) => {
                 id="sideEffectDescription"
                 label="Description"
                 name="description"
-                multiline
-                rows={3}
                 value={sideEffectForm.description}
                 onChange={handleSideEffectFormChange}
               />
@@ -412,19 +408,7 @@ const MedicationsLogTab = ({ childId }) => {
                 onChange={handleSideEffectFormChange}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                margin="normal"
-                fullWidth
-                id="sideEffectTimeOfDay"
-                label="Time of Day (e.g., morning, 3 PM)"
-                name="timeOfDay"
-                value={sideEffectForm.timeOfDay}
-                onChange={handleSideEffectFormChange}
-              />
-            </Grid>
             <Grid item xs={12}>
-              <Typography component="legend" sx={{ mt: 2 }}>Severity</Typography>
               <Rating
                 severity={sideEffectForm.severity}
                 setSeverity={(newValue) => handleSideEffectSeverityChange(null, newValue)}
