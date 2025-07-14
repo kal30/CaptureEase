@@ -36,8 +36,8 @@ const Navbar = ({ user }) => {
       position="static"
       sx={{
         boxShadow: "none", // Remove shadow for a flat look
-        backgroundImage: "linear-gradient(to right, #E0F7FA, #B2EBF2)", // Gradient effect
-        color: "#000", // Black text for consistency
+        backgroundImage: "linear-gradient(to right, #2A9D8F, #92C7C1)", // Gradient effect using the new primary color
+        color: "#fff", // White text for better contrast
       }}
     >
       <Toolbar

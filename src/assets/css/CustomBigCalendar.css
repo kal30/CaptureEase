@@ -114,3 +114,33 @@
   background-color: #FF4500; /* A distinct color for the dot */
   border-radius: 50%;
 }
+
+.rbc-day-bg.has-progress-note {
+  position: relative;
+}
+
+.rbc-day-bg.has-progress-note::before {
+  content: '';
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  width: 8px;
+  height: 8px;
+  background-color: #01a0e2; /* Blue for progress notes */
+  border-radius: 50%;
+}
+
+.rbc-day-bg.has-sensory-log {
+  position: relative;
+}
+
+.rbc-day-bg.has-sensory-log::after {
+  content: '';
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 8px;
+  height: 8px;
+  background-color: #FF4500; /* Orange-Red for sensory logs */
+  border-radius: 50%;
+}

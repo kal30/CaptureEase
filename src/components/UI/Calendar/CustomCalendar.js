@@ -60,8 +60,16 @@ const CustomCalendar = ({
 
   const dayPropGetter = (date) => {
     const today = new Date();
-    const hasEvents = events.some(
+    const hasProgressNote = events.some(
       (event) =>
+        event.type === "progressNote" &&
+        event.start.getDate() === date.getDate() &&
+        event.start.getMonth() === date.getMonth() &&
+        event.start.getFullYear() === date.getFullYear()
+    );
+    const hasSensoryLog = events.some(
+      (event) =>
+        event.type === "sensoryLog" &&
         event.start.getDate() === date.getDate() &&
         event.start.getMonth() === date.getMonth() &&
         event.start.getFullYear() === date.getFullYear()
@@ -82,8 +90,11 @@ const CustomCalendar = ({
       };
     }
 
-    if (hasEvents) {
-      classNames.push("has-event");
+    if (hasProgressNote) {
+      classNames.push("has-progress-note");
+    }
+    if (hasSensoryLog) {
+      classNames.push("has-sensory-log");
     }
 
     return {
@@ -105,14 +116,22 @@ const CustomCalendar = ({
         components={{
           toolbar: CalendarToolbar, // Use custom toolbar
         }}
-        eventPropGetter={() => ({
-          style: {
-            backgroundColor: eventColor, // Customize event color dynamically
+        eventPropGetter={(event) => {
+          const style = {
             borderRadius: "4px",
-            color: "#fff",
             padding: "2px 5px",
-          },
-        })}
+            color: "#fff", // Default text color
+          };
+
+          if (event.type === "aggregated") {
+            style.backgroundColor = "transparent";
+            style.color = "#000"; // Black color for icons/text on transparent background
+          } else {
+            style.backgroundColor = event.color || "#01a0e2"; // Use event.color or a default
+          }
+
+          return { style };
+        }}
         dayPropGetter={dayPropGetter} // Add this line to highlight today
         {...rest} // Pass additional props such as onSelectEvent, onNavigate, etc.
       />

@@ -17,7 +17,13 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditProgressNoteModal from "./EditProgressNoteModal";
 import { deleteProgressNote } from "../../services/progressNotesService";
-import { collection, query, orderBy, onSnapshot, getDocs } from "firebase/firestore";
+import {
+  collection,
+  query,
+  orderBy,
+  onSnapshot,
+  getDocs,
+} from "firebase/firestore";
 import { db } from "../../services/firebase";
 import MediaPreview from "./MediaPreview";
 
@@ -68,7 +74,7 @@ const ProgressNoteList = ({ childId, selectedDate }) => {
       collection(db, "children", childId, "progressNotes"),
       orderBy("date", "desc")
     );
-    const snapshot = await getDocs(q);
+    const snapshot = await q;
     const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
     setEntries(data);
   };

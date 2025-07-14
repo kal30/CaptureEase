@@ -9,6 +9,7 @@ import ChildCard from "../components/Dashboard/ChildCard";
 import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "../services/firebase";
 import theme from "../assets/theme/light";
+import LogMoodModal from "../components/Dashboard/LogMoodModal";
 import { getUsersByRole } from "../services/userService";
 
 const Dashboard = () => {
@@ -19,6 +20,7 @@ const Dashboard = () => {
   const [assignCaregiverOpen, setAssignCaregiverOpen] = useState(false);
   const [assignTherapistOpen, setAssignTherapistOpen] = useState(false);
   const [editChildOpen, setEditChildOpen] = useState(false);
+  const [logMoodOpen, setLogMoodOpen] = useState(false);
   const [selectedChild, setSelectedChild] = useState(null);
 
   // New state for expanded child
@@ -90,6 +92,12 @@ const Dashboard = () => {
   };
   const handleEditChildClose = () => setEditChildOpen(false);
 
+  const handleLogMoodOpen = (child) => {
+    setSelectedChild(child);
+    setLogMoodOpen(true);
+  };
+  const handleLogMoodClose = () => setLogMoodOpen(false);
+
   // Implement the delete child handler
   const handleDeleteChild = (child) => {
     // Implement deletion logic here
@@ -143,6 +151,7 @@ const Dashboard = () => {
             onEditChild={handleEditChildOpen}
             onDeleteChild={handleDeleteChild}
             onUnlinkCaregiver={handleUnlinkCaregiver}
+            onLogMood={handleLogMoodOpen}
             allCaregivers={caregivers}
             allTherapists={therapists}
           />
@@ -179,6 +188,13 @@ const Dashboard = () => {
         child={selectedChild}
         setChildren={setChildren}
       />
+      {selectedChild && (
+      <LogMoodModal
+        open={logMoodOpen}
+        onClose={handleLogMoodClose}
+        child={selectedChild}
+      />
+      )}
     </Container>
   );
 };

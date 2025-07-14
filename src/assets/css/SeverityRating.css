@@ -3,8 +3,7 @@
   border: 1px solid #e0e0e0; /* Very light border to match other elements */
   border-radius: 8px;
   background-color: #fff; /* Match the form background */
-  display: inline-block;
-  text-align: center;
+  display: block;
   width: 100%; /* Ensure it spans the full width */
 }
 
@@ -40,7 +39,7 @@
 
 /* Selected (active) state */
 .circle.selected {
-  background-color: #007bff;
+  background-color: #2A9D8F;
   color: white;
   transform: scale(1.1);
 }
