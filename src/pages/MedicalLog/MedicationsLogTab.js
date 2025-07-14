@@ -279,7 +279,7 @@ const MedicationsLogTab = ({ childId }) => {
               label="Notes"
               name="notes"
               multiline
-              rows={5}
+              rows={1}
               value={medicationForm.notes}
               onChange={handleMedicationFormChange}
             />
