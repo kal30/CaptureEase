@@ -22,12 +22,17 @@ export const addMedication = async (medicationData) => {
 };
 
 // Fetch all medications for a specific child
-export const fetchMedications = async (childId) => {
+export const fetchMedications = async (childId, includeArchived = false) => {
   try {
-    const q = query(
+    let q = query(
       collection(db, "medications"),
       where("childId", "==", childId)
     );
+
+    if (!includeArchived) {
+      q = query(q, where("isArchived", "==", false));
+    }
+
     const querySnapshot = await getDocs(q);
     const medications = [];
     querySnapshot.forEach((doc) => {

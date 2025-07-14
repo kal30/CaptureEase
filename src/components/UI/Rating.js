@@ -3,7 +3,9 @@ import "../../assets/css/SeverityRating.css"; // Custom CSS for styling the circ
 
 const SeverityRating = ({ severity, setSeverity }) => {
   const handleRatingClick = (value) => {
-    setSeverity(value);
+    if (setSeverity) {
+      setSeverity(value);
+    }
   };
 
   return (
@@ -14,7 +16,7 @@ const SeverityRating = ({ severity, setSeverity }) => {
           <div
             key={value}
             className={`circle ${severity >= value ? "selected" : ""}`}
-            onClick={() => handleRatingClick(value)}
+            onClick={setSeverity ? () => handleRatingClick(value) : undefined}
           >
             {value}
           </div>
