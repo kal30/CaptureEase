@@ -1,23 +1,10 @@
 import React from "react";
 import { Box, Container, Typography, Button } from "@mui/material";
 import { useNavigate } from "react-router-dom"; // For navigation
-import { redirectIfLoggedIn } from "../../utils/redirectIfLoggedIn";
 import image2 from "../../assets/image/landing/landingimageRealisitic4.jpg";
 
 const HeaderSection = () => {
   const navigate = useNavigate();
-
-  // Handle Join Now click
-  const handleJoinNow = () => {
-    redirectIfLoggedIn(navigate); // Redirect to dashboard if logged in
-    navigate("/register"); // Otherwise, go to the register page
-  };
-
-  // Handle Login click
-  const handleLogin = () => {
-    redirectIfLoggedIn(navigate); // Redirect to dashboard if logged in
-    navigate("/login"); // Otherwise, go to the login page
-  };
 
   return (
     <Box
@@ -63,34 +50,6 @@ const HeaderSection = () => {
             </Typography>
 
             <Box sx={{ mt: 5 }}>
-              {/* Join Now Button */}
-              <Button
-                variant="contained"
-                color="primary"
-                size="large"
-                onClick={handleJoinNow} // Use common redirect logic
-                sx={{
-                  backgroundColor: "#00CFFF", // Initial color
-                  color: "#fff",
-                  "&:hover": {
-                    backgroundColor: "#027a79", // Change color on hover
-                  },
-                  fontWeight: "bold",
-                }}
-              >
-                Join now
-              </Button>
-
-              {/* Login Button */}
-              <Button
-                variant="outlined"
-                color="secondary"
-                size="large"
-                sx={{ ml: 2 }}
-                onClick={handleLogin} // Use common redirect logic
-              >
-                Login
-              </Button>
             </Box>
           </Box>
 

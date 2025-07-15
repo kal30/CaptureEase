@@ -1,5 +1,7 @@
 import React from "react";
 import { Link as RouterLink, useNavigate, useLocation } from "react-router-dom";
+import { getAuth } from "firebase/auth";
+import { useEffect, useState } from "react";
 import {
   AppBar,
   Toolbar,
@@ -15,21 +17,21 @@ import GroupIcon from "@mui/icons-material/Group";
 import AvatarMenu from "./AvatarMenu"; // Import the avatar menu component
 import logo from "../../assets/image/landing/oneMoreLogo.png";
 
-const Navbar = ({ user }) => {
+const Navbar = () => {
   const navigate = useNavigate();
-  const location = useLocation(); // Get the current route
+  const location = useLocation();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const auth = getAuth();
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setIsLoggedIn(!!user);
+    });
+    return () => unsubscribe();
+  }, []);
 
   // Check if we are on the landing page
   const isLandingPage = location.pathname === "/";
-
-  // If the user is logged in and clicks "Register" or "Join Now", redirect to the dashboard
-  const handleRegisterRedirect = () => {
-    if (user) {
-      navigate("/dashboard");
-    } else {
-      navigate("/register");
-    }
-  };
 
   return (
     <AppBar
@@ -66,15 +68,10 @@ const Navbar = ({ user }) => {
             <>
               <NavButton text="Features" icon={<HomeIcon />} to="#features" />
               <NavButton text="About Us" icon={<InfoIcon />} to="#about" />
-              <NavButton
-                text="Contact"
-                icon={<ContactMailIcon />}
-                to="#contact"
-              />
             </>
           )}
 
-          {user && (
+          {isLoggedIn && (
             <>
               <NavButton
                 text="Dashboard"
@@ -92,31 +89,34 @@ const Navbar = ({ user }) => {
 
         {/* Auth Buttons or Avatar */}
         <Box sx={{ display: "flex", gap: 2 }}>
-          {user ? (
-            <AvatarMenu user={user} />
+          {isLoggedIn ? (
+            <AvatarMenu user={getAuth().currentUser} />
           ) : (
             <>
               <Button
-                variant="contained"
+                variant="outlined"
                 component={RouterLink}
                 to="/login"
                 sx={{
-                  backgroundColor: "#00CFFF",
-                  color: "#fff",
-                  "&:hover": { backgroundColor: "#027a79" },
+                  borderColor: "#fff", // White border
+                  color: "#fff", // White text
+                  "&:hover": { borderColor: "#B3E5FC", color: "#B3E5FC" }, // Consistent hover color
                 }}
               >
                 Login
               </Button>
-              {!user && (
-                <Button
-                  variant="outlined"
-                  onClick={handleRegisterRedirect} // Handle the redirect logic here
-                  sx={{ color: "#49274A", borderColor: "#49274A" }}
-                >
-                  Register
-                </Button>
-              )}
+              <Button
+                variant="contained"
+                component={RouterLink}
+                to="/register"
+                sx={{
+                  backgroundColor: "#027a79", // Darker teal for prominence
+                  color: "#fff",
+                  "&:hover": { backgroundColor: "#B3E5FC" }, // Consistent hover color // Slightly darker shade for hover
+                }}
+              >
+                Sign Up
+              </Button>
             </>
           )}
         </Box>

@@ -8,7 +8,6 @@ const NavButton = ({ text, icon, to }) => {
     <Button
       component={RouterLink}
       to={to}
-      startIcon={icon} // Optional icon
       sx={{
         position: "relative",
         fontSize: "1.1rem",
@@ -16,25 +15,29 @@ const NavButton = ({ text, icon, to }) => {
         fontFamily: "'Inter', sans-serif",
         transition:
           "color 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease",
-        padding: "10px 20px",
-        color: "#1F4E5F", // Default text color (dark blue)
+        padding: "5px 10px", // Minimal padding for text link feel
+        color: "#fff", // Default text color (white)
         display: "flex",
         alignItems: "center", // Ensure icon and text are aligned
+        backgroundColor: "transparent", // No background
+        boxShadow: "none", // No shadow
+
+        "& .MuiSvgIcon-root": {
+          // Target the SVG icon directly
+          opacity: 0, // Hide icon by default
+          transition: "opacity 0.3s ease, margin-right 0.3s ease", // Smooth transition for icon
+          marginRight: 0, // No margin by default
+        },
 
         "&:hover": {
-          backgroundColor: "#B3E5FC", // Background color on hover
-          color: "#027a79", // Change text color on hover
-          borderRadius: "8px",
-          boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)", // Subtle shadow on hover
-        },
+          backgroundColor: "transparent", // Still no background on hover
+          color: "#B3E5FC", // Consistent hover color
+          boxShadow: "none", // Still no shadow on hover
 
-        "& .MuiButton-startIcon": {
-          color: "#1F4E5F", // Icon color matching the text
-          transition: "color 0.3s ease", // Icon color transitions with text
-        },
-
-        "&:hover .MuiButton-startIcon": {
-          color: "#027a79", // Change icon color on hover
+          "& .MuiSvgIcon-root": {
+            opacity: 1, // Show icon on hover
+            marginRight: "8px", // Add margin on hover
+          },
         },
 
         "&::after": {
@@ -44,7 +47,7 @@ const NavButton = ({ text, icon, to }) => {
           height: "2px",
           left: "50%",
           bottom: "-5px",
-          backgroundColor: "#027a79", // Line color
+          backgroundColor: "#B3E5FC", // Consistent hover color
           transition: "width 0.3s ease, left 0.3s ease",
         },
 
@@ -54,6 +57,7 @@ const NavButton = ({ text, icon, to }) => {
         },
       }}
     >
+      {icon} {/* Render icon directly */}
       {text} {/* The label of the button */}
     </Button>
   );
