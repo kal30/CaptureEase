@@ -24,7 +24,7 @@ const App = () => {
   return (
     <ThemeProvider theme={theme}>
       <Router>
-        <Navbar user={user} />
+        <Navbar />
         <AppRoutes />
       </Router>
     </ThemeProvider>
