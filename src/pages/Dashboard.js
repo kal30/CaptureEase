@@ -1,12 +1,13 @@
 // Dashboard.js
 import React, { useState, useEffect } from "react";
-import { Container, Typography, Button } from "@mui/material";
+import { Container, Typography, Button, Box, Grid } from "@mui/material";
 import AddChildModal from "../components/Dashboard/AddChildModal";
 import AssignCaregiverModal from "../components/Dashboard/AssignCaregiverModal";
 import AssignTherapistModal from "../components/Dashboard/AssignTherapistModal";
 import EditChildModal from "../components/Dashboard/EditChildModal";
 import ChildCard from "../components/Dashboard/ChildCard";
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
 import { db } from "../services/firebase";
 import theme from "../assets/theme/light";
 import LogMoodModal from "../components/Dashboard/LogMoodModal";
@@ -27,17 +28,36 @@ const Dashboard = () => {
   const [expandedChildId, setExpandedChildId] = useState(null);
 
   // Fetch all children from Firestore in real-time
-  useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "children"), (snapshot) => {
-      const childrenData = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      console.log("Fetched children:", childrenData);
-      setChildren(childrenData);
-    });
+  const [userDisplayName, setUserDisplayName] = useState('');
 
-    return () => unsubscribe();
+  useEffect(() => {
+    const loadUserData = async () => {
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+
+      if (currentUser) {
+        // Force a refresh of the user token to ensure displayName is up-to-date
+        await currentUser.reload();
+        const updatedUser = auth.currentUser; // Get the reloaded user object
+        setUserDisplayName(updatedUser.displayName || updatedUser.email || 'User');
+        const unsubscribe = onSnapshot(
+          query(collection(db, "children"), where("parentId", "==", currentUser.uid)),
+          (snapshot) => {
+            const childrenData = snapshot.docs.map((doc) => ({
+              id: doc.id,
+              ...doc.data(),
+            }));
+            console.log("Fetched children for current user:", childrenData);
+            setChildren(childrenData);
+          }
+        );
+        return () => unsubscribe();
+      } else {
+        setChildren([]); // Clear children if no user is logged in
+        setUserDisplayName('');
+      }
+    };
+    loadUserData();
   }, []);
 
   useEffect(() => {
@@ -114,50 +134,58 @@ const Dashboard = () => {
 
   return (
     <Container sx={{ mt: 5 }}>
-      <Typography variant="h4" gutterBottom>
-        Welcome to Your Dashboard
+      <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+        Welcome, {userDisplayName}!
+      </Typography>
+      <Typography variant="h6" gutterBottom sx={{ mb: 3, color: 'text.secondary' }}>
+        Manage your children's profiles and track their progress.
       </Typography>
 
-      <Button
-        variant="contained"
-        onClick={handleAddChildOpen}
-        sx={{
-          mb: 3,
-          backgroundColor: theme.palette.primary.main,
-          color: "white",
-          padding: "12px 24px",
-          fontSize: "1rem",
-          fontWeight: "bold",
-          borderRadius: "8px",
-          "&:hover": {
-            backgroundColor: theme.palette.secondary.main,
-          },
-        }}
-      >
-        Add Child
-      </Button>
+      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'flex-start' }}>
+        <Button
+          variant="contained"
+          onClick={handleAddChildOpen}
+          sx={{
+            backgroundColor: theme.palette.primary.main,
+            color: "white",
+            padding: "12px 24px",
+            fontSize: "1rem",
+            fontWeight: "bold",
+            borderRadius: "8px",
+            "&:hover": {
+              backgroundColor: theme.palette.secondary.main,
+            },
+          }}
+        >
+          Add New Child
+        </Button>
+      </Box>
 
-      {/* Display child cards */}
+      {/* Display child cards in a responsive grid */}
       {children.length > 0 ? (
-        children.map((child) => (
-          <ChildCard
-            key={child.id}
-            child={child}
-            expanded={expandedChildId === child.id}
-            onAccordionChange={handleAccordionChange(child.id)}
-            
-            onAssignCaregiver={handleAssignCaregiverOpen}
-            onAssignTherapist={handleAssignTherapistOpen}
-            onEditChild={handleEditChildOpen}
-            onDeleteChild={handleDeleteChild}
-            onUnlinkCaregiver={handleUnlinkCaregiver}
-            onLogMood={handleLogMoodOpen}
-            allCaregivers={caregivers}
-            allTherapists={therapists}
-          />
-        ))
+        <Grid container spacing={3}> {/* Added Grid container */}
+          {children.map((child) => (
+            <Grid item xs={12} sm={6} md={4} key={child.id}> {/* Responsive Grid item */}
+              <ChildCard
+                child={child}
+                expanded={expandedChildId === child.id}
+                onAccordionChange={handleAccordionChange(child.id)}
+                onAssignCaregiver={handleAssignCaregiverOpen}
+                onAssignTherapist={handleAssignTherapistOpen}
+                onEditChild={handleEditChildOpen}
+                onDeleteChild={handleDeleteChild}
+                onUnlinkCaregiver={handleUnlinkCaregiver}
+                onLogMood={handleLogMoodOpen}
+                allCaregivers={caregivers}
+                allTherapists={therapists}
+              />
+            </Grid>
+          ))}
+        </Grid>
       ) : (
-        <Typography variant="body1">No children added yet.</Typography>
+        <Typography variant="body1" sx={{ mt: 4, color: 'text.secondary' }}>
+          No children added yet. Click "Add New Child" to get started.
+        </Typography>
       )}
 
       {/* Modals */}

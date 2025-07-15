@@ -15,6 +15,7 @@ import CareTeamPage from "../pages/CareTeamPage";
 import ChildLogPage from "../pages/ChildLog/ChildLogPage";
 import TemplateLibraryPage from "../pages/TemplateLibraryPage";
 import MedicalLogPage from "../pages/MedicalLog/MedicalLogPage";
+import ProfilePage from "../pages/ProfilePage";
 
 //When you update here update breadcrumbscomponent.js
 
@@ -44,6 +45,7 @@ const AppRoutes = () => {
         <Route path="/child/:childId/log" element={<ChildLogPage />} />
         <Route path="/child/:childId/templates" element={<TemplateLibraryPage />} />
         <Route path="/child/:childId/medical" element={<MedicalLogPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
         <Route path="/test" element={<div>Test Page</div>} />
       </Routes>
     </>
