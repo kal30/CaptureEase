@@ -26,7 +26,6 @@ import AssignmentIcon from "@mui/icons-material/Assignment";
 import MoodIcon from "@mui/icons-material/Mood";
 
 import CategoryIcon from "@mui/icons-material/Category";
-import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "@mui/material/styles"; // Import theme
@@ -45,10 +44,9 @@ const ChildCard = ({
   onDeleteChild,
   onUnlinkCaregiver,
   onAssignCaregiver,
-  onAssignTherapist,
+  onInviteTherapist,
   onLogMood,
-  allCaregivers,
-  allTherapists,
+  userRole,
 }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [assignedCaregivers, setAssignedCaregivers] = useState([]);
@@ -95,23 +93,9 @@ const ChildCard = ({
     setAnchorEl(null);
   };
 
-  const handleAssignCaregiverClick = (e) => {
-    e.stopPropagation();
-    if (allCaregivers.length === 0) {
-      navigate("/care-team", { state: { activeTab: 0 } });
-    } else {
-      onAssignCaregiver(child);
-    }
-  };
+  
 
-  const handleAssignTherapistClick = (e) => {
-    e.stopPropagation();
-    if (allTherapists.length === 0) {
-      navigate("/care-team", { state: { activeTab: 1 } });
-    } else {
-      onAssignTherapist(child);
-    }
-  };
+  
 
   return (
     <Accordion expanded={expanded} onChange={onAccordionChange}>
@@ -119,7 +103,7 @@ const ChildCard = ({
         expandIcon={<ExpandMoreIcon />}
         sx={{
           backgroundColor: theme.palette.background.default,
-          padding: "8px",
+          padding: "16px",
         }} // Theme colors
       >
         <Box
@@ -149,7 +133,7 @@ const ChildCard = ({
               <Typography
                 variant="h6"
                 sx={{
-                  color: theme.palette.text.primary,
+                  color: 'purple',
                   fontWeight: "bold",
                   fontSize: "1.2rem",
                 }}
@@ -181,16 +165,16 @@ const ChildCard = ({
                 <CategoryIcon />
               </IconButton>
             </Tooltip>
-            <Tooltip title="Assign Caregiver">
-              <IconButton onClick={handleAssignCaregiverClick}>
-                <PersonAddIcon />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Assign Therapist">
-              <IconButton onClick={handleAssignTherapistClick}>
-                <MedicalServicesIcon />
-              </IconButton>
-            </Tooltip>
+            {userRole === 'parent' && (
+              <>
+                
+                <Tooltip title="Invite CareTeam">
+                  <IconButton onClick={onInviteTherapist}>
+                    <MedicalServicesIcon />
+                  </IconButton>
+                </Tooltip>
+              </>
+            )}
             <IconButton
               onClick={handleMenuOpen}
               onFocus={(e) => e.stopPropagation()}

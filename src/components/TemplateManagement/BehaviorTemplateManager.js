@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -29,7 +29,7 @@ const BehaviorTemplateManager = ({ childId }) => {
   const [editedName, setEditedName] = useState('');
   const [editedDescription, setEditedDescription] = useState('');
 
-  const fetchTemplates = async () => {
+  const fetchTemplates = useCallback(async () => {
     try {
       setLoading(true);
       const fetchedTemplates = await getBehaviorTemplates(childId);
@@ -41,13 +41,13 @@ const BehaviorTemplateManager = ({ childId }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [childId]);
 
   useEffect(() => {
     if (childId) {
       fetchTemplates();
     }
-  }, [childId]);
+  }, [childId, fetchTemplates]);
 
   const handleEditClick = (template) => {
     setCurrentTemplate(template);

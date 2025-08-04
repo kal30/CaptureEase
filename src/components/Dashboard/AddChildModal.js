@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { Box, Button, Modal, TextField, Typography } from '@mui/material';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { addDoc, collection } from 'firebase/firestore';  // Import Firestore functions
+import { addDoc, collection } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';  // Import Firestore functions
 import { db } from '../../services/firebase';  // Adjust the path based on your structure
 import ChildPhotoUploader from './ChildPhotoUploader';  // Import the ChildPhotoUploader component
 
-const AddChildModal = ({ open, onClose, setChildren }) => {
+const AddChildModal = ({ open, onClose }) => {
   const [name, setName] = useState('');
   const [age, setAge] = useState('');
   const [photo, setPhoto] = useState(null);  // State for photo file
@@ -37,7 +38,8 @@ const AddChildModal = ({ open, onClose, setChildren }) => {
     const newChild = { 
       name, 
       age, 
-      photoURL: photoDownloadURL  // Store the photo URL with the child's info
+      photoURL: photoDownloadURL,
+      parentId: getAuth().currentUser.uid // Add parentId here
     };
   
     try {

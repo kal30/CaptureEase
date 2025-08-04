@@ -22,7 +22,6 @@ import {
   query,
   orderBy,
   onSnapshot,
-  getDocs,
 } from "firebase/firestore";
 import { db } from "../../services/firebase";
 import MediaPreview from "./MediaPreview";

@@ -24,7 +24,7 @@ const Login = () => {
       }, 5000);
       return () => clearTimeout(timer);
     }
-  }, [location.state, navigate]);
+  }, [location.state, navigate, location.pathname]);
 
   const handleLogin = async (e) => {
     e.preventDefault();

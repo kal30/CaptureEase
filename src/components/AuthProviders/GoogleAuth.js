@@ -1,5 +1,7 @@
 import React, { useEffect } from "react";
-import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth"; // Firebase authentication
+import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { db } from "../../services/firebase";
 import { useNavigate } from "react-router-dom";
 import { Box, Button, Typography, Container } from "@mui/material";
 import GoogleIcon from "@mui/icons-material/Google"; // Import Google Icon
@@ -20,7 +22,29 @@ const GoogleAuth = ({ buttonText }) => {
   const handleGoogleLogin = async () => {
     const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+
+      // Create a user document in Firestore if it doesn't exist
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (!userSnap.exists()) {
+        // New user: set initial data including role
+        await setDoc(userRef, {
+          displayName: user.displayName,
+          email: user.email,
+          role: 'parent', // Default role for new Google sign-ups
+          createdAt: new Date(),
+        });
+      } else {
+        // Existing user: update display name and email if they changed
+        await setDoc(userRef, {
+          displayName: user.displayName,
+          email: user.email,
+        }, { merge: true });
+      }
+
       navigate("/dashboard"); // Redirect to dashboard after successful login
     } catch (error) {
       console.error("Error during sign-in", error);

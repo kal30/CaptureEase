@@ -1,5 +1,5 @@
 import React from "react";
-import { Link as RouterLink, useNavigate, useLocation } from "react-router-dom";
+import { Link as RouterLink, useLocation } from "react-router-dom";
 import { getAuth } from "firebase/auth";
 import { useEffect, useState } from "react";
 import {
@@ -11,14 +11,12 @@ import {
 import NavButton from "./NavButton";
 import HomeIcon from "@mui/icons-material/Home";
 import InfoIcon from "@mui/icons-material/Info";
-import ContactMailIcon from "@mui/icons-material/ContactMail";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import GroupIcon from "@mui/icons-material/Group";
 import AvatarMenu from "./AvatarMenu"; // Import the avatar menu component
-import logo from "../../assets/image/landing/oneMoreLogo.png";
+import logo from "../../assets/image/landing/carelog.png";
 
 const Navbar = () => {
-  const navigate = useNavigate();
   const location = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 

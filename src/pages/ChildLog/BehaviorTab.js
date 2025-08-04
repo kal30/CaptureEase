@@ -7,7 +7,6 @@ import BehaviorList from '../../components/Behaviors/BehaviorList';
 const BehaviorTab = ({ childId, onSaveSuccess }) => {
   const [showAddForm, setShowAddForm] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [selectedTemplate, setSelectedTemplate] = useState(null);
 
   const handleSave = () => {
     setRefreshTrigger(prev => prev + 1);
@@ -40,7 +39,6 @@ const BehaviorTab = ({ childId, onSaveSuccess }) => {
         <AddBehaviorForm
           childId={childId}
           onSaveSuccess={handleSave}
-          selectedTemplate={selectedTemplate}
         />
       ) : (
         <Box sx={{ mt: 4 }}>
