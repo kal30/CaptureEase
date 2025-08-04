@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Button, List, ListItem, ListItemText, Modal, TextField, IconButton, Autocomplete, Collapse, Grid, FormControlLabel, Switch, Checkbox } from '@mui/material';
-import ExpandLess from '@mui/icons-material/ExpandLess';
-import ExpandMore from '@mui/icons-material/ExpandMore';
+import { Box, Typography, Button, List, ListItem, ListItemText, Modal, TextField, IconButton, Autocomplete, Grid, FormControlLabel, Checkbox } from '@mui/material';
+
 import ArchiveIcon from '@mui/icons-material/Archive';
 import UnarchiveIcon from '@mui/icons-material/Unarchive';
 import Rating from '../../components/UI/Rating';
@@ -36,7 +35,6 @@ const MedicationsLogTab = ({ childId }) => {
     notes: '',
   });
   const [medicationSuggestions, setMedicationSuggestions] = useState([]);
-  const [expandedMedicationId, setExpandedMedicationId] = useState(null);
 
   const [openAddSideEffectModal, setOpenAddSideEffectModal] = useState(false);
   const [currentSideEffectMedicationId, setCurrentSideEffectMedicationId] = useState(null);
@@ -141,18 +139,7 @@ const MedicationsLogTab = ({ childId }) => {
     setMedications(fetchedMedications || []);
   };
 
-  const handleToggleExpand = async (medicationId) => {
-    setExpandedMedicationId(expandedMedicationId === medicationId ? null : medicationId);
-    if (expandedMedicationId !== medicationId) {
-      // Fetch side effects when expanding
-      const fetchedSideEffects = await fetchSideEffects(medicationId);
-      setMedications((prevMedications) =>
-        prevMedications.map((med) =>
-          med.id === medicationId ? { ...med, sideEffects: fetchedSideEffects } : med
-        )
-      );
-    }
-  };
+  
 
   const handleOpenAddSideEffectModal = (medicationId, sideEffect = null) => {
     setCurrentSideEffectMedicationId(medicationId);

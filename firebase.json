@@ -1,10 +1,29 @@
 {
   "hosting": {
+    "site": "carelog",
     "public": "build",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ]
-  }
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"]
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ],
+      "predeploy": ["npm --prefix \"$RESOURCE_DIR\" run lint"],
+      "endpoints": {
+        "sendInvitationEmail": {
+          "platform": "gcfv1"
+        },
+        "sendSmsNotification": {
+          "platform": "gcfv1"
+        }
+      }
+    }
+  ]
 }

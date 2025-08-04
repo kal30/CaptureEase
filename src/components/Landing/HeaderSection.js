@@ -1,10 +1,8 @@
 import React from "react";
-import { Box, Container, Typography, Button } from "@mui/material";
-import { useNavigate } from "react-router-dom"; // For navigation
+import { Box, Container, Typography } from "@mui/material";
 import image2 from "../../assets/image/landing/landingimageRealisitic4.jpg";
 
 const HeaderSection = () => {
-  const navigate = useNavigate();
 
   return (
     <Box
@@ -44,9 +42,7 @@ const HeaderSection = () => {
             </Typography>
 
             <Typography variant="h6" sx={{ mt: 4, color: "text.primary" }}>
-              Empower caregivers with tools to track, manage, and support loved
-              ones with ease. Capture moments, behaviors, and insights— all in
-              one place, whenever it’s needed.
+              Because caring for someone shouldn’t mean juggling notebooks, sticky notes, and a photographic memory. You deserve better than scattered scraps of paper and endless text threads just to keep track of what matters most. With CaptureEase, you can finally ditch the chaos—no more frantic searching for yesterday’s notes or trying to recall every detail from memory. Everything you need is organized, accessible, and ready whenever you are, so you can focus on caring, not scrambling.
             </Typography>
 
             <Box sx={{ mt: 5 }}>

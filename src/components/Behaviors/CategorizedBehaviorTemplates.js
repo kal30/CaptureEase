@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -52,16 +52,16 @@ const CategorizedBehaviorTemplates = ({ childId, onSelectTemplate, refreshTrigge
   const [searchTerm, setSearchTerm] = useState('');
   const [userTemplates, setUserTemplates] = useState([]);
 
-  const fetchUserTemplates = async () => {
+  const fetchUserTemplates = useCallback(async () => {
     if (childId) {
       const templates = await getBehaviorTemplates(childId);
       setUserTemplates(templates.map(t => ({ ...t, icon: t.iconName ? React.createElement(iconMap[t.iconName]) : <TrackChangesIcon />, iconName: t.iconName || 'TrackChangesIcon' }))); // Default icon for user templates
     }
-  };
+  }, [childId]);
 
   useEffect(() => {
     fetchUserTemplates();
-  }, [childId, refreshTrigger]);
+  }, [childId, refreshTrigger, fetchUserTemplates]);
 
   const handleDeleteTemplate = async (templateId) => {
     try {
