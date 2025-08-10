@@ -6,6 +6,7 @@ import { ThemeProvider } from "@mui/material/styles";
 import theme from "./assets/theme/light";
 import Navbar from "./components/Landing/NavBar"; // Import the Navbar component
 import { auth } from "./services/firebase";
+import { ChildProvider } from "./contexts/ChildContext";
 
 const App = () => {
   useEffect(() => {
@@ -21,10 +22,12 @@ const App = () => {
 
   return (
     <ThemeProvider theme={theme}>
-      <Router>
-        <Navbar />
-        <AppRoutes />
-      </Router>
+      <ChildProvider>
+        <Router>
+          <Navbar />
+          <AppRoutes />
+        </Router>
+      </ChildProvider>
     </ThemeProvider>
   );
 };

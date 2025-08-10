@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Menu, MenuItem, IconButton, Avatar } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
 import { getAuth, signOut } from "firebase/auth"; // Import Firebase signOut
 
@@ -7,6 +8,7 @@ const AvatarMenu = ({ user }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const navigate = useNavigate();
   const auth = getAuth(); // Firebase auth instance
+  const theme = useTheme();
 
   const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
   const handleMenuClose = () => setAnchorEl(null);
@@ -32,7 +34,11 @@ const AvatarMenu = ({ user }) => {
       <IconButton onClick={handleMenuOpen}>
         <Avatar
           alt={user.displayName || "User"}
-          src={user.photoURL || "/default-avatar.png"}
+          src={user.photoURL || undefined}
+          sx={{
+            bgcolor: theme.palette.grey[700],
+            color: theme.palette.getContrastText(theme.palette.grey[700]),
+          }}
         />
       </IconButton>
       <Menu

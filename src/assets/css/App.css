@@ -10,8 +10,8 @@ body {
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
-    monospace;
+  font-family:
+    source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
 }
 
 /* App Specific Styles */
@@ -31,7 +31,7 @@ code {
 }
 
 .App-header {
-  background-color: #282c34;
+  background-color: #fff8ed;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -85,13 +85,14 @@ code {
 }
 
 .container {
-  background-color: #e3f2fd; /* Light blue background for the page */
+  background-color: #fff8ed; /* Light blue background for the page */
 }
 
 .card {
   margin-top: 16px;
   background-color: #fff; /* White background for cards */
   border-radius: 8px; /* Rounded corners */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .App-link {

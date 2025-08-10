@@ -1,20 +1,37 @@
 import React from "react";
-import { Box, Container, Typography } from "@mui/material";
+import { Box, Container, Typography, useTheme, Button } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 import image2 from "../../assets/image/landing/landingimageRealisitic4.jpg";
 
 const HeaderSection = () => {
+  const theme = useTheme();
+  const navigate = useNavigate();
+
+  const handleGetStarted = () => {
+    try {
+      const isLoggedIn = Boolean(
+        typeof window !== "undefined" &&
+          (localStorage.getItem("ce_user") ||
+            localStorage.getItem("authUser") ||
+            localStorage.getItem("token"))
+      );
+      if (isLoggedIn) {
+        navigate("/dashboard");
+      } else {
+        navigate("/signup");
+      }
+    } catch (e) {
+      navigate("/signup");
+    }
+  };
 
   return (
     <Box
       sx={{
         backgroundColor: "background.default",
-        minHeight: "60vh",
-        boxShadow:
-          "0px 10px 20px rgba(0, 0, 0, 0.2), 0px 5px 15px rgba(0, 0, 0, 0.1)",
         position: "relative",
-        pt: 10,
-        pb: 10,
-        clipPath: "polygon(0 0, 100% 0, 100% 90%, 0% 100%)", // Curved bottom
+        pt: { xs: 6, md: 6 },
+        pb: { xs: 6, md: 10 },
       }}
     >
       <Container maxWidth="lg">
@@ -23,7 +40,7 @@ const HeaderSection = () => {
             display: "flex",
             flexDirection: { xs: "column", md: "row" },
             alignItems: "center",
-            justifyContent: "center",
+            justifyContent: { xs: "center", md: "space-between" },
             padding: { xs: 2, md: 4 },
           }}
         >
@@ -35,17 +52,67 @@ const HeaderSection = () => {
                 color: "primary.main",
                 fontWeight: "bold",
                 fontSize: { xs: "2rem", md: "3rem" },
+                fontFamily: `"Montserrat", sans-serif`,
               }}
             >
-              Caregiving, simplified for{" "}
-              <span style={{ color: "#1673bc" }}>caregivers</span>
+              Simplifying Care for{" "}
+              <span
+                style={{
+                  fontFamily: `"Dancing Script", cursive`,
+                  fontWeight: 600,
+                  color: "#5B8C51",
+                }}
+              >
+                Caregivers
+              </span>
             </Typography>
 
-            <Typography variant="h6" sx={{ mt: 4, color: "text.primary" }}>
-              Because caring for someone shouldn’t mean juggling notebooks, sticky notes, and a photographic memory. You deserve better than scattered scraps of paper and endless text threads just to keep track of what matters most. With CaptureEase, you can finally ditch the chaos—no more frantic searching for yesterday’s notes or trying to recall every detail from memory. Everything you need is organized, accessible, and ready whenever you are, so you can focus on caring, not scrambling.
+            <Typography
+              variant="h6"
+              sx={{
+                mt: 4,
+                color: "text.primary",
+                fontWeight: 300,
+                lineHeight: 1.6,
+                fontFamily: `"Poppins", sans-serif`,
+              }}
+            >
+              Caring for someone shouldn’t mean juggling notebooks, sticky
+              notes, and endless text threads. With{" "}
+              <Box
+                component="span"
+                sx={{ color: "#5B8C51", fontWeight: "bold" }}
+              >
+                CaptureEase
+              </Box>
+              , everything—updates, notes, and reminders—is organized in one
+              place. No more frantic searching or relying on memory. Just clear,
+              accessible information whenever you need it, so you can focus on
+              caring, not scrambling.
             </Typography>
 
             <Box sx={{ mt: 5 }}>
+              <Button
+                variant="contained"
+                color="primary"
+                size="large"
+                sx={{
+                  px: 4,
+                  py: 1.5,
+                  fontSize: "1rem",
+                  borderRadius: "8px",
+                  textTransform: "none",
+                  boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)",
+                  "&:hover": {
+                    boxShadow: "0px 6px 14px rgba(0, 0, 0, 0.25)",
+                  },
+                  fontFamily: `"Poppins", sans-serif`,
+                  fontWeight: 500,
+                }}
+                onClick={handleGetStarted}
+              >
+                Get Started
+              </Button>
             </Box>
           </Box>
 
@@ -63,15 +130,16 @@ const HeaderSection = () => {
             <Box
               sx={{
                 position: "absolute",
-                width: "300px", // Increase the size
-                height: "300px",
-                backgroundColor: "#B3E5FC",
+                width: { xs: 180, md: 260 },
+                height: { xs: 180, md: 260 },
+                backgroundColor: "secondary.main",
                 borderRadius: "50%",
-                zIndex: -1,
-                opacity: 0.6, // Slightly increase opacity for better visibility
-                top: "30%",
-                right: "-10%",
+                zIndex: 0,
+                opacity: 0.12,
+                top: { xs: "-18%", md: "-22%" },
+                right: { xs: "-12%", md: "-15%" },
                 boxShadow: "0px 10px 20px rgba(0, 0, 0, 0.1)",
+                pointerEvents: "none",
               }}
             />
 
@@ -80,13 +148,14 @@ const HeaderSection = () => {
               src={image2}
               alt="Caregiving Illustration"
               style={{
-                position: "absolute", // Position the image absolutely
-                bottom: "-170px", // Move it to the bottom of the circle
-                width: "400px",
-                height: "300px",
+                position: "absolute",
+                bottom: window.innerWidth < 900 ? "-80px" : "-100px",
+                width: window.innerWidth < 900 ? 280 : 400,
+                height: window.innerWidth < 900 ? 210 : 300,
                 borderRadius: "20px",
                 objectFit: "cover",
-                boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)", // Subtle shadow
+                boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)",
+                zIndex: 1,
               }}
             />
           </Box>

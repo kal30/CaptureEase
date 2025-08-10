@@ -1,6 +1,6 @@
 /* SensoryButton.css */
 .sensory-button {
-  background: linear-gradient(135deg, #ff6f61, #ff4081);
+  background: #EB684A; /* Terracotta */
   color: #fff;
   margin-bottom: 1rem;
   border-radius: 8px;
@@ -10,7 +10,7 @@
 }
 
 .sensory-button:hover {
-  background: linear-gradient(135deg, #ff4081, #ff6f61);
+  background: #F4B860; /* Mustard */
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
 }
 
@@ -19,7 +19,7 @@
 }
 
 .sensory-list-item {
-  background: linear-gradient(135deg, #ffe5e9, #ffe0e0); /* Subtle gradient */
+  background: #FFFFFF; /* White */
   padding: 20px;
   border-radius: 15px;
   margin-bottom: 20px;
@@ -33,7 +33,7 @@
 }
 
 .sensory-list-typography {
-  color: #5f5f5f;
+  color: #333333;
   font-size: 16px;
   margin-bottom: 8px;
 }
@@ -41,7 +41,7 @@
 .sensory-list-title {
   font-size: 18px;
   font-weight: bold;
-  color: #333;
+  color: #333333;
   margin-bottom: 10px;
 }
 
@@ -51,11 +51,11 @@
 }
 
 .sensory-list-icon:hover {
-  color: #ff6f61; /* Same color as the event color for consistency */
+  color: #EB684A; /* Terracotta for consistency */
 }
 
 .sensory-list-delete-icon:hover {
-  color: #d32f2f; /* Different color for delete action */
+  color: #F4B860; /* Mustard for delete action */
 }
 
 .no-entries-message {

@@ -4,17 +4,16 @@ import SendIcon from '@mui/icons-material/Send';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { addDoc, collection } from 'firebase/firestore';
 import { db, auth } from '../../services/firebase';
-import MediaInput from './MediaInput';  // Import MediaInput component
-import MessageTextInput from './MessageTextInput';  // Import MessageTextInput component
-import SpeechInput from './SpeechInput';  // Import SpeechInput component
+import MediaInput from './MediaInput';
+import MessageTextInput from './MessageTextInput';
+import SpeechInput from './SpeechInput';
 
-const MessageInput = () => {
+const MessageInput = ({ childId }) => {
   const [text, setText] = useState('');
   const [mediaFile, setMediaFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const storage = getStorage();
 
-  // Handle file change for both file attachment and camera
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -22,15 +21,13 @@ const MessageInput = () => {
     }
   };
 
-  // Submit a new message
   const handleSubmit = async (e) => {
-    if (e) e.preventDefault();  // Prevent page refresh
-    if (!text && !mediaFile) return;  // Prevent submitting empty messages
-    
+    if (e) e.preventDefault();
+    if (!text && !mediaFile) return;
+
     setUploading(true);
     let mediaURL = null;
 
-    // Upload media file if available
     if (mediaFile) {
       const mediaRef = ref(storage, `media/${mediaFile.name}`);
       await uploadBytes(mediaRef, mediaFile);
@@ -39,18 +36,17 @@ const MessageInput = () => {
 
     try {
       const newMessage = {
+        childId: childId, // Add childId to the message
         userId: auth.currentUser.uid,
-        profilePic: 'https://via.placeholder.com/50',  // Example profile picture
+        profilePic: 'https://via.placeholder.com/50',
         text: text || '',
         mediaURL: mediaURL || '',
         timestamp: new Date(),
       };
-      
-      await addDoc(collection(db, 'entries'), newMessage);
-      setText('');  // Clear input
-      setMediaFile(null);  // Clear the media file
 
-      // No need to update setMessages here, Firestore's real-time listener will handle updating the message list.
+      await addDoc(collection(db, 'entries'), newMessage);
+      setText('');
+      setMediaFile(null);
     } catch (error) {
       console.error('Error posting message:', error);
     } finally {
@@ -58,10 +54,9 @@ const MessageInput = () => {
     }
   };
 
-  // Detect Enter key press for submission
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
-      handleSubmit(e);  // Call submit when Enter is pressed
+      handleSubmit(e);
     }
   };
 
@@ -77,27 +72,20 @@ const MessageInput = () => {
         mb: 3,
         boxShadow: 1,
         border: '1px solid #e0e0e0',
-        backgroundColor: '#f9f9f9',  // Light background
+        backgroundColor: '#f9f9f9',
       }}
     >
-      {/* MediaInput component (camera and attach icons) */}
       <MediaInput handleFileChange={handleFileChange} />
-
-      {/* MessageTextInput component (text input with Enter detection) */}
       <MessageTextInput
         text={text}
         setText={setText}
         handleKeyDown={handleKeyDown}
       />
-
-      {/* SpeechInput component (microphone for speech-to-text) */}
       <SpeechInput setText={setText} handleSubmit={handleSubmit} />
-
-      {/* Send message icon */}
       <IconButton
         type="submit"
         color="primary"
-        disabled={uploading || (!text && !mediaFile)}  // Prevent sending if no text or media
+        disabled={uploading || (!text && !mediaFile)}
         sx={{ marginLeft: 1 }}
       >
         <SendIcon />

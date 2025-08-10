@@ -1,16 +1,15 @@
+import React, { useState } from "react";
+import { Container, Typography, Box, Tabs, Tab } from "@mui/material";
+import { useChildContext } from "../contexts/ChildContext";
+import useChildName from "../hooks/useChildName";
+import BehaviorTemplateManager from "../components/TemplateManagement/BehaviorTemplateManager";
 
-import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
-import {
-  Container,
-  Typography,
-  Box,
-  Tabs,
-  Tab,
-} from '@mui/material';
-import useChildName from '../hooks/useChildName';
-
-import BehaviorTemplateManager from '../components/TemplateManagement/BehaviorTemplateManager';
+function a11yProps(index) {
+  return {
+    id: `simple-tab-${index}`,
+    "aria-controls": `simple-tabpanel-${index}`,
+  };
+}
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -19,8 +18,8 @@ function TabPanel(props) {
     <div
       role="tabpanel"
       hidden={value !== index}
-      id={`template-tabpanel-${index}`}
-      aria-labelledby={`template-tab-${index}`}
+      id={`simple-tabpanel-${index}`}
+      aria-labelledby={`simple-tab-${index}`}
       {...other}
     >
       {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
@@ -28,16 +27,9 @@ function TabPanel(props) {
   );
 }
 
-function a11yProps(index) {
-  return {
-    id: `template-tab-${index}`,
-    "aria-controls": `template-tabpanel-${index}`,
-  };
-}
-
 const TemplateLibraryPage = () => {
-  const { childId } = useParams();
-  const { childName, loading, error } = useChildName(childId);
+  const { currentChildId } = useChildContext();
+  const { childName, loading, error } = useChildName(currentChildId);
   const [value, setValue] = useState(0); // 0 for Behavior Templates, 1 for Sensory Templates
 
   const handleChange = (event, newValue) => {
@@ -47,10 +39,18 @@ const TemplateLibraryPage = () => {
   if (loading) return <Typography>Loading...</Typography>;
   if (error) return <Typography>Error: {error.message}</Typography>;
 
+  if (!currentChildId) {
+    return (
+      <Typography>
+        No child selected. Please select a child from the dashboard.
+      </Typography>
+    );
+  }
+
   return (
     <Container maxWidth="lg" sx={{ mt: 4 }}>
       <Typography variant="h4" gutterBottom align="center">
-        {childName}'s Template Library
+        {childName ? `${childName}'s Template Library` : "Template Library"}
       </Typography>
 
       <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 3 }}>
@@ -66,7 +66,7 @@ const TemplateLibraryPage = () => {
       </Box>
 
       <TabPanel value={value} index={0}>
-        <BehaviorTemplateManager childId={childId} />
+        <BehaviorTemplateManager childId={currentChildId} />
       </TabPanel>
       <TabPanel value={value} index={1}>
         {/* Sensory Template Management Component will go here */}

@@ -2,7 +2,7 @@
 .severity-box {
   border: 1px solid #e0e0e0; /* Very light border to match other elements */
   border-radius: 8px;
-  background-color: #fff; /* Match the form background */
+  background-color: #FAF5EF; /* Cream */
   display: block;
   width: 100%; /* Ensure it spans the full width */
 }
@@ -39,14 +39,14 @@
 
 /* Selected (active) state */
 .circle.selected {
-  background-color: #2A9D8F;
+  background-color: #A3B18A; /* Sage Green */
   color: white;
   transform: scale(1.1);
 }
 
 /* Hover effect */
 .circle:hover {
-  background-color: #0056b3;
+  background-color: #F4B860; /* Mustard */
   color: white;
 }
 

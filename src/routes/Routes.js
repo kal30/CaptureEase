@@ -17,6 +17,7 @@ import TemplateLibraryPage from "../pages/TemplateLibraryPage";
 import MedicalLogPage from "../pages/MedicalLog/MedicalLogPage";
 import ProfilePage from "../pages/ProfilePage";
 import InvitationPage from "../pages/InvitationPage";
+import DailyLogPage from "../pages/DailyLogPage";
 
 //When you update here update breadcrumbscomponent.js
 
@@ -41,11 +42,12 @@ const AppRoutes = () => {
         <Route path="/messages" element={<TwitterThread />} />
         <Route path="/daily-activities" element={<DailyActivitiesPage />} />
         <Route path="/health-info" element={<HealthInfoPage />} />
-        <Route path="/child/:childId/progress-notes" element={<ProgressNotesPage />} />
-        <Route path="/child/:childId/sensory" element={<SensoryPage />} />
-        <Route path="/child/:childId/log" element={<ChildLogPage />} />
-        <Route path="/child/:childId/templates" element={<TemplateLibraryPage />} />
-        <Route path="/child/:childId/medical" element={<MedicalLogPage />} />
+        <Route path="/progress-notes" element={<ProgressNotesPage />} />
+        <Route path="/sensory" element={<SensoryPage />} />
+        <Route path="/log" element={<ChildLogPage />} />
+        <Route path="/templates" element={<TemplateLibraryPage />} />
+        <Route path="/daily-log" element={<DailyLogPage />} />
+        <Route path="/medical" element={<MedicalLogPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/invitation/:invitationId" element={<InvitationPage />} />
         <Route path="/test" element={<div>Test Page</div>} />

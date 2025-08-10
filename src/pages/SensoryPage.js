@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Typography, Button, Box, Container } from "@mui/material"; // Import Container
 import SensoryInputList from "../components/SensoryLog/SensoryInputList";
-import { useParams } from "react-router-dom";
+import { useChildContext } from "../contexts/ChildContext";
 import useChildName from "../hooks/useChildName"; // Import the custom hook
 import { fetchSensoryLogs, deleteSensoryLog } from "../services/sensoryService";
 import AddSensoryLogModal from "../components/SensoryLog/AddSensoryLogModal"; // Import your new modal
@@ -9,29 +9,37 @@ import SensoryCalendar from "../components/SensoryLog/SensoryCalendar";
 import "../assets/css/Sensory.css"; // Main CSS file for the page
 
 const SensoryPage = () => {
-  const { childId } = useParams(); // Get childId from the route
-  const { childName, loading, error } = useChildName(childId); // Fetch childName with your custom hook
+  const { currentChildId } = useChildContext(); // Get childId from context
+  const { childName, loading, error } = useChildName(currentChildId); // Fetch childName with your custom hook
   const [entries, setEntries] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
 
-  // Fetch sensory logs when childId changes
+  // Fetch sensory logs when currentChildId changes
   useEffect(() => {
     const loadEntries = async () => {
-      const logs = await fetchSensoryLogs(childId);
-      setEntries(logs);
+      if (currentChildId) {
+        const logs = await fetchSensoryLogs(currentChildId);
+        setEntries(logs);
+      }
     };
 
     loadEntries();
-  }, [childId]);
+  }, [currentChildId]);
 
   if (loading) return <p>Loading...</p>; // Show a loading state if needed
   if (error) return <p>Error: {error.message}</p>; // Handle any error state
 
-  
+  if (!currentChildId) {
+    return (
+      <Typography>
+        No child selected. Please select a child from the dashboard.
+      </Typography>
+    );
+  }
 
   // Define handleLogAdded function to refresh logs when a new log is added
   const handleLogAdded = async () => {
-    const updatedLogs = await fetchSensoryLogs(childId);
+    const updatedLogs = await fetchSensoryLogs(currentChildId);
     setEntries(updatedLogs);
   };
 
@@ -39,10 +47,10 @@ const SensoryPage = () => {
 
   const handleDelete = async (index) => {
     const logId = entries[index].id;
-    await deleteSensoryLog(childId, logId);
+    await deleteSensoryLog(currentChildId, logId);
 
     // Refresh the logs after deletion
-    const updatedLogs = await fetchSensoryLogs(childId);
+    const updatedLogs = await fetchSensoryLogs(currentChildId);
     setEntries(updatedLogs);
   };
 
@@ -67,7 +75,7 @@ const SensoryPage = () => {
         </Button>
       </Box>
       {/* Sensory Calendar */}
-      <SensoryCalendar childId={childId} />
+      <SensoryCalendar childId={currentChildId} />
       {/* Sensory Log List */}
       <Box mt={4}>
         {" "}
@@ -76,14 +84,14 @@ const SensoryPage = () => {
           entries={entries}
           handleEdit={handleEdit}
           handleDelete={handleDelete}
-          childId={childId}
+          childId={currentChildId}
         />
       </Box>
       {/* Add Sensory Log Modal */}
       <AddSensoryLogModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        childId={childId}
+        childId={currentChildId}
         onLogAdded={handleLogAdded}
       />
     </Container>

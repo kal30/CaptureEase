@@ -1,7 +1,7 @@
 /* JournalButton.css */
 .journal-button {
-  background: #A7D9F0; /* Calming Blue */
-  color: #4A4A4A;
+  background: #E99787; /* Accent */
+  color: #FFFFFF;
   margin-bottom: 1rem;
   border-radius: 8px;
   padding: 10px 20px;
@@ -10,7 +10,7 @@
 }
 
 .journal-button:hover {
-  background: #FFDAB9; /* Warm Peach on hover */
+  background: #d48a7a; /* Darker Accent on hover */
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 /* ProgressNoteList.css */
@@ -32,7 +32,7 @@
 /* Title Styling */
 .journal-title {
   font-weight: bold;
-  color: #4A4A4A; /* Text Primary */
+  color: #333333; /* Dark Neutral */
 }
 
 /* Date Styling */
@@ -58,8 +58,8 @@
 }
 
 .journal-chip {
-  background-color: #C8E6C9; /* Subtle Green */
-  color: #4A4A4A; /* Text Primary */
+  background-color: #A3B18A; /* Sage Green */
+  color: #FFFFFF; /* White Text */
 }
 
 /* Edit and Delete Icon Styling */
@@ -69,9 +69,9 @@
 }
 
 .journal-icon:hover {
-  color: #A7D9F0; /* Calming Blue on hover */
+  color: #EB684A; /* Terracotta on hover */
 }
 
 .journal-delete-icon:hover {
-  color: #FFDAB9; /* Warm Peach on hover */
+  color: #F4B860; /* Mustard on hover */
 }

@@ -1,6 +1,6 @@
 /* Overall Calendar Styles */
 .regular-calendar .rbc-calendar {
-  background: #F9F9F9; /* Very Light Background */
+  background: #EED8C9; /* Page background, cards background */
   border-radius: 16px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
   padding: 20px;
@@ -18,8 +18,8 @@
 
 /* Update the buttons for navigation */
 .rbc-toolbar button {
-  background-color: #A7D9F0; /* Calming Blue */
-  color: #4A4A4A;
+  background-color: #E99787; /* Accent color */
+  color: #FFFFFF;
   border: none;
   border-radius: 6px;
   padding: 5px 10px;
@@ -28,7 +28,7 @@
 }
 
 .rbc-toolbar button:hover {
-  background-color: #FFDAB9; /* Warm Peach on hover */
+  background-color: #d48a7a; /* Darker Accent on hover */
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
@@ -48,17 +48,17 @@
 }
 
 .rbc-day-bg:hover {
-  background-color: #E0F7FA !important; /* Very light blue on hover for the entire day background */
+  background-color: #fce9e5 !important; /* Very light accent on hover for the entire day background */
 }
 
 .rbc-date-cell--now {
-  background-color: #C8E6C9; /* Subtle Green for today's date */
+  background-color: #A49592; /* Secondary color for today's date */
   border-radius: 50%;
 }
 
 .rbc-date-cell--active {
-  background-color: #A7D9F0 !important; /* Calming Blue for active date */
-  color: #4A4A4A !important;
+  background-color: #E99787 !important; /* Accent for active date */
+  color: #FFFFFF !important;
   border-radius: 50%;
 }
 
@@ -66,7 +66,7 @@
 .rbc-header {
   font-weight: bold;
   font-size: small;
-  color: #4A4A4A; /* Text Primary */
+  color: #333333; /* Dark Neutral */
   padding: 10px;
   text-transform: uppercase;
   text-align: center;
@@ -76,14 +76,14 @@
 .rbc-day-bg:nth-child(1), /* Saturday */
 .rbc-day-bg:nth-child(7) {
   /* Sunday */
-  background-color: #FFF8F2; /* Very light peach for weekends */
+  background-color: #f9f5f2; /* Very light cream for weekends */
   color: #888888; /* Muted grey for weekend text */
 }
 
 .rbc-event {
-  background-color: #A7D9F0; /* Calming Blue for events */
+  background-color: #A49592; /* Secondary color for events */
   border-radius: 8px;
-  color: #4A4A4A;
+  color: #FFFFFF;
   padding: 5px;
   opacity: 0.9; /* Slightly transparent for a lighter feel */
 }
@@ -92,7 +92,7 @@
 .dot {
   width: 6px;
   height: 6px;
-  background-color: #C8E6C9; /* Subtle Green for dot */
+  background-color: #A49592; /* Secondary color for dot */
   border-radius: 50%;
   position: absolute;
   bottom: 5px;
@@ -111,12 +111,8 @@
   right: 5px;
   width: 8px;
   height: 8px;
-  background-color: #FF4500; /* A distinct color for the dot */
+  background-color: #EB684A; /* A distinct color for the dot */
   border-radius: 50%;
-}
-
-.rbc-day-bg.has-progress-note {
-  position: relative;
 }
 
 .rbc-day-bg.has-progress-note::before {
@@ -126,12 +122,8 @@
   left: 5px;
   width: 8px;
   height: 8px;
-  background-color: #01a0e2; /* Blue for progress notes */
+  background-color: #A49592; /* Secondary for progress notes */
   border-radius: 50%;
-}
-
-.rbc-day-bg.has-sensory-log {
-  position: relative;
 }
 
 .rbc-day-bg.has-sensory-log::after {
@@ -141,6 +133,6 @@
   right: 5px;
   width: 8px;
   height: 8px;
-  background-color: #FF4500; /* Orange-Red for sensory logs */
+  background-color: #727077; /* Primary for sensory logs */
   border-radius: 50%;
 }

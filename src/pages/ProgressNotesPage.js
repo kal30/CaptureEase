@@ -1,15 +1,15 @@
 import React, { useState } from "react";
-import { useParams } from "react-router-dom";
 import { Container, Typography, Button, Box } from "@mui/material";
 import ProgressNoteList from "../components/Journal/ProgressNoteList";
 import AddProgressNoteModal from "../components/Journal/AddProgressNoteModal";
 import ProgressNoteCalendar from "../components/Journal/ProgressNoteCalendar";
 import useChildName from "../hooks/useChildName"; // Import the custom hook
+import { useChildContext } from "../contexts/ChildContext";
 import "../assets/css/ProgressNotes.css";
 
 const ProgressNotesPage = () => {
-  const { childId } = useParams();
-  const { childName, loading, error } = useChildName(childId); // Use the custom hook
+  const { currentChildId } = useChildContext();
+  const { childName, loading, error } = useChildName(currentChildId); // Use the custom hook
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
 
@@ -20,39 +20,45 @@ const ProgressNotesPage = () => {
   };
 
   if (loading) return <p>Loading...</p>; // Show a loading state if needed
-  if (error) return <p>Error: {error.message}</p>; // Handle any error state
+  if (error) return <p>Error: {error.message}</p>;
+
+  if (!currentChildId) {
+    return (
+      <Typography>
+        No child selected. Please select a child from the dashboard.
+      </Typography>
+    );
+  }
 
   return (
-    <Container sx={{ padding: 3 }}>
-      <Typography
-        variant="h4"
-        gutterBottom
-        sx={{ color: "text.primary", fontWeight: "bold" }}
-      >
-        Progress Notes for {childName}
+    <Container maxWidth="lg" sx={{ mt: 4 }}>
+      <Typography variant="h4" gutterBottom align="center">
+        {childName ? `${childName}'s Progress Notes` : "Progress Notes"}
       </Typography>
-      <Box sx={{ padding: 2 }}>
+
+      <Box sx={{ display: "flex", justifyContent: "center", mb: 3 }}>
         <Button
           variant="contained"
-          className="journal-button" // Use the CSS class here
+          color="primary"
           onClick={handleOpenModal}
+          sx={{ mr: 2 }}
         >
           Add Progress Note
         </Button>
       </Box>
-      <ProgressNoteCalendar childId={childId} onDateSelect={handleDateSelect} />
-      <Box sx={{ flexGrow: 1, overflowY: "auto", paddingTop: 2 }}>
-        {selectedDate && (
-          <Typography variant="h6" sx={{ marginBottom: 2 }}>
-            Entries for {selectedDate.toDateString()}
-          </Typography>
-        )}
-        <ProgressNoteList childId={childId} selectedDate={selectedDate} />
-      </Box>
+
+      <ProgressNoteCalendar
+        onDateSelect={handleDateSelect}
+        childId={currentChildId}
+      />
+
+      <ProgressNoteList childId={currentChildId} />
+
       <AddProgressNoteModal
         open={modalOpen}
         onClose={handleCloseModal}
-        childId={childId}
+        childId={currentChildId}
+        selectedDate={selectedDate}
       />
     </Container>
   );

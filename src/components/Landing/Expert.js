@@ -6,103 +6,169 @@ const ExpertProgram = () => {
   return (
     <Box
       sx={{
-        // backgroundColor: "#fcfb00",
-        backgroundColor: "#fea004",
-        minHeight: "60vh",
-        boxShadow:
-          "0px 10px 20px rgba(0, 0, 0, 0.2), 0px 5px 15px rgba(0, 0, 0, 0.1)",
         position: "relative",
-        pt: 10,
-        pb: 10,
-        px: 5, // Padding on the sides
-        overflow: "hidden",
-        clipPath: "polygon(0 0, 100% 10%, 100% 100%, 0% 100%)",
-        display: "flex",
-        flexDirection: { xs: "column", md: "row" }, // Stack on small screens, side-by-side on larger screens
-        alignItems: "center",
-        justifyContent: "space-between",
-        marginRight: "3%",
-        marginLeft: "3%",
-        mt: "-20px",
+        bgcolor: "background.default",
+        px: { xs: 2, md: 5 },
+        pt: { xs: 1, md: 3 },
+        pb: { xs: 8, md: 10 },
+        overflow: "visible",
+        "&::before": {
+          content: '""',
+          position: "absolute",
+          top: { xs: "10%", md: "-5%" },
+          right: { xs: "-10%", md: "-4%" },
+          width: { xs: 220, md: 360 },
+          height: { xs: 220, md: 360 },
+          backgroundImage:
+            "url(\"data:image/svg+xml;utf8,<svg width='500' height='500' viewBox='0 0 500 500' fill='none' xmlns='http://www.w3.org/2000/svg'><path fill='%23F4DECB' fill-opacity='0.15' d='M421.5 322.5Q380 405 292 428Q204 451 168.5 374.5Q133 298 106 241.5Q79 185 140 124Q201 63 272.5 98Q344 133 398 171Q452 209 421.5 322.5Z'/></svg>\")",
+          backgroundRepeat: "no-repeat",
+          backgroundSize: "contain",
+          opacity: 0.08,
+          pointerEvents: "none",
+          zIndex: 0,
+        },
       }}
     >
-      {/* Left Side: Text */}
       <Box
         sx={{
-          flex: 1,
-          paddingRight: { md: 4 },
-          marginBottom: { xs: 4, md: 0 },
+          bgcolor: "background.paper",
+          borderRadius: 3,
+          boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+          position: "relative",
+          p: { xs: 3, md: 5 },
+          maxWidth: 1200,
+          mx: "auto",
+          display: "flex",
+          flexDirection: { xs: "column", md: "row" },
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: { xs: 3, md: 6 },
         }}
       >
-        <Typography
-          variant="h4"
-          sx={{ fontWeight: "bold", marginBottom: "20px", color: "#000" }}
-        >
-          Expert-Designed Solutions for Enhanced Autism Care
-        </Typography>
-        <Typography
-          variant="body1"
-          sx={{ marginBottom: "10px", color: "#000" }}
-        >
-          <strong>Personalized, Data-Driven Support:</strong> Autism Spectrum
-          Disorder (ASD) affects each individual uniquely, requiring
-          personalized care. With early intervention, lifetime care costs can be
-          reduced by up to two-thirds.
-        </Typography>
-        <Typography
-          variant="body1"
-          sx={{ marginBottom: "10px", color: "#000" }}
-        >
-          <strong>Seamless Data Collection for Caregivers:</strong> CaptureEase
-          simplifies data gathering, making it easy for parents to log
-          information via text or voice. This comprehensive system includes
-          video and biometric data to give behavior analysts a full picture of
-          each child's progress.
-        </Typography>
-        <Typography
-          variant="body1"
-          sx={{ marginBottom: "30px", color: "#000" }}
-        >
-          <strong>Relief for Parents, Better Outcomes for Children:</strong> By
-          providing a modular system that reduces the burden on parents,
-          CaptureEase ensures improved treatment outcomes while lowering
-          long-term costs.
-        </Typography>
-        <Button
-          variant="contained"
-          color="primary"
+        {/* Left Side: Text */}
+        <Box
           sx={{
-            backgroundColor: "#027a79",
-            color: "#fff",
-            fontWeight: "bold",
-            "&:hover": {
-              backgroundColor: "#025f5b",
-            },
+            flex: 1,
+            pr: { md: 5 },
+            marginBottom: { xs: 4, md: 0 },
+            position: "relative",
+            zIndex: 1,
           }}
         >
-          Learn More
-        </Button>
+          <Typography
+            variant="h2"
+            sx={{
+              fontWeight: 900,
+              lineHeight: 1.2,
+              mb: "20px",
+              color: "text.primary",
+              fontSize: { xs: "2rem", md: "2.75rem" },
+              textShadow: "1px 1px 2px rgba(0,0,0,0.1)",
+              fontFamily: "Montserrat, sans-serif",
+            }}
+          >
+            Expert Insights on Digital, Personalized Care
+          </Typography>
+          <Typography
+            variant="body1"
+            sx={{
+              marginBottom: "10px",
+              color: "text.secondary",
+              lineHeight: 1.6,
+              fontSize: "1.05rem",
+            }}
+          >
+            Healthcare professionals report that digital care tools improve
+            coordination; a 2022 AMA survey found <strong>78%</strong> of
+            clinicians saw better patient care.
+          </Typography>
+          <Typography
+            variant="body1"
+            sx={{
+              marginBottom: "10px",
+              color: "text.secondary",
+              lineHeight: 1.6,
+              fontSize: "1.05rem",
+            }}
+          >
+            Multimedia logging (voice, photo, video) enhances patient–clinician
+            communication; research in JMIR reports up to a <strong>65%</strong>{" "}
+            improvement in effectiveness.
+          </Typography>
+          <Typography
+            variant="body1"
+            sx={{
+              marginBottom: "12px",
+              color: "text.secondary",
+              lineHeight: 1.6,
+              fontSize: "1.05rem",
+            }}
+          >
+            Reducing administrative burden by <strong>20%+</strong> is linked to
+            improved care quality and staff satisfaction, according to a 2023
+            WHO report.
+          </Typography>
+          <Typography
+            variant="body1"
+            sx={{
+              marginBottom: "10px",
+              color: "text.secondary",
+              lineHeight: 1.6,
+              fontSize: "1.05rem",
+            }}
+          >
+            Tools like <strong>CaptureEase</strong> can help achieve these
+            benefits by making it easy to log, share, and review important
+            updates in one place—streamlining communication and improving care
+            coordination.
+          </Typography>
+          <Button
+            variant="contained"
+            color="primary"
+            sx={{
+              backgroundColor: "primary.main",
+              color: "#fff",
+              fontWeight: "bold",
+              textTransform: "none",
+              px: 3,
+              py: 1.25,
+              borderRadius: 1.5,
+              "&:hover": {
+                backgroundColor: "primary.dark",
+              },
+            }}
+          >
+            See How It Works
+          </Button>
+        </Box>
+
+        {/* Right Side: Image and Tags */}
+
+        <Box sx={{ flex: 1, position: "relative", zIndex: 1 }}>
+          <Avatar
+            alt="Therapist"
+            src={image1} // Replace with your image path
+            sx={{
+              width: "100%",
+              height: "auto",
+              borderRadius: 2,
+              boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
+              maxHeight: 420,
+              objectFit: "cover",
+            }}
+          />
+        </Box>
+
+        {/* Bottom right name */}
+        {/* <Typography
+          variant="Personalized Programs"
+          color="textSecondary"
+          align="right"
+          sx={{ position: "absolute", bottom: "10px", right: "10px" }}
+        >
+          Kaela, LMFT
+        </Typography> */}
       </Box>
-
-      {/* Right Side: Image and Tags */}
-
-      <Box sx={{ flex: 1, position: "relative" }}>
-        <Avatar
-          alt="Therapist"
-          src={image1} // Replace with your image path
-          sx={{ width: "100%", height: "auto", borderRadius: 2 }}
-        />
-      </Box>
-
-      {/* Bottom right name */}
-      {/* <Typography
-        variant="Personalized Programs"
-        color="textSecondary"
-        align="right"
-        sx={{ position: "absolute", bottom: "10px", right: "10px" }}
-      >
-        Kaela, LMFT
-      </Typography> */}
     </Box>
   );
 };
