@@ -197,7 +197,7 @@ const Navbar = () => {
                       htmlColor="#E07A5F"
                     />
                   }
-                  to="#about"
+                  to="/about"
                 />
               </>
             )}

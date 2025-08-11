@@ -8,6 +8,8 @@ import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 const BreadcrumbsComponent = () => {
   const location = useLocation();
 
+  const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+
   // Get the current path and split it into an array
   const pathnames = location.pathname.split("/").filter((x) => x);
 
@@ -44,16 +46,16 @@ const BreadcrumbsComponent = () => {
           display: "flex",
           alignItems: "center",
           gap: 0.5,
-          color: "#6366F1",
+          color: "#5B8C51",
           fontWeight: 500,
           textDecoration: "none",
           "&:hover": {
-            color: "#4F46E5",
+            color: "#4B7345",
             textDecoration: "underline",
           },
         }}
       >
-        <HomeIcon sx={{ fontSize: 18 }} />
+        <HomeIcon sx={{ fontSize: 18, color: "#5B8C51" }} />
         Dashboard
       </Link>
     );
@@ -69,7 +71,7 @@ const BreadcrumbsComponent = () => {
           fontWeight: 600,
         }}
       >
-        <HomeIcon sx={{ fontSize: 18, color: "#6366F1" }} />
+        <HomeIcon sx={{ fontSize: 18, color: "#5B8C51" }} />
         Dashboard
       </Typography>
     );
@@ -85,7 +87,8 @@ const BreadcrumbsComponent = () => {
     // Build the path incrementally
     currentPath += `/${value}`;
     const isLast = index === pathnames.length - 1;
-    const name = breadcrumbNameMap[value] || value;
+    const rawName = breadcrumbNameMap[value] || value;
+    const name = capitalize(rawName);
 
     if (isLast) {
       breadcrumbsItems.push(
@@ -109,11 +112,11 @@ const BreadcrumbsComponent = () => {
           to={currentPath}
           key={currentPath}
           sx={{
-            color: "#6366F1",
+            color: "#5B8C51",
             fontWeight: 500,
             textDecoration: "none",
             "&:hover": {
-              color: "#4F46E5",
+              color: "#4B7345",
               textDecoration: "underline",
             },
           }}
@@ -127,24 +130,18 @@ const BreadcrumbsComponent = () => {
   return (
     <Box
       sx={{
-        background: "linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%)",
-        borderBottom: "1px solid #E2E8F0",
+        backgroundColor: (theme) => theme.palette.background.default,
+        borderBottom: "none",
         padding: "20px 0",
         marginBottom: 2,
         position: "relative",
-        "&::before": {
-          content: '""',
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: "1px",
-          background:
-            "linear-gradient(90deg, transparent 0%, rgba(99, 102, 241, 0.2) 50%, transparent 100%)",
-        },
       }}
     >
-      <Container maxWidth="xl">
+      <Container
+        disableGutters
+        maxWidth="xl"
+        sx={{ px: 2, background: "transparent" }}
+      >
         <Breadcrumbs
           separator={
             <NavigateNextIcon fontSize="small" sx={{ color: "#94A3B8" }} />

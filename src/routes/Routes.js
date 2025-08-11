@@ -1,8 +1,10 @@
 import React from "react";
+import { Box } from "@mui/material";
 import { Routes, Route, useLocation } from "react-router-dom";
 import BreadcrumbsComponent from "../components/UI/BreadcrumbsComponent";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
+import About from "../pages/About";
 import Dashboard from "../pages/Dashboard";
 import LandingPage from "../pages/LandingPage";
 import HealthInfoPage from "../pages/HealthInforPage";
@@ -28,15 +30,23 @@ const AppRoutes = () => {
   return (
     <>
       {!isLandingPage && (
-        <div style={{ display: "flex", flexDirection: "row" }}>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "row",
+            bgcolor: "background.default",
+            boxShadow: "none",
+          }}
+        >
           <BreadcrumbsComponent />
-        </div>
+        </Box>
       )}
 
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/about" element={<About />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/care-team" element={<CareTeamPage />} />
         <Route path="/messages" element={<TwitterThread />} />
