@@ -15,7 +15,9 @@ import {
   ListItemText,
   Chip,
   Tooltip,
+  Button,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import EditIcon from "@mui/icons-material/Edit";
@@ -24,9 +26,10 @@ import LinkOffIcon from "@mui/icons-material/LinkOff";
 import MessageIcon from "@mui/icons-material/Message";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import MoodIcon from "@mui/icons-material/Mood";
-
+import LocalOfferRoundedIcon from "@mui/icons-material/LocalOfferRounded";
 import CategoryIcon from "@mui/icons-material/Category";
 import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
+import PersonAddAlt1Icon from "@mui/icons-material/PersonAddAlt1";
 import { useNavigate } from "react-router-dom";
 import { getDoc, doc } from "firebase/firestore";
 import { db } from "../../services/firebase";
@@ -51,8 +54,7 @@ const ChildCard = ({
   iconSpacing = 1.5,
 }) => {
   const [anchorEl, setAnchorEl] = useState(null);
-  const [assignedCaregivers, setAssignedCaregivers] = useState([]);
-  const [assignedTherapists, setAssignedTherapists] = useState([]);
+  const [teamMembers, setTeamMembers] = useState([]);
   const navigate = useNavigate();
   const { setCurrentChildId } = useChildContext();
 
@@ -77,8 +79,8 @@ const ChildCard = ({
           id: doc.id,
           ...doc.data(),
         }));
-        setAssignedCaregivers(caregiversData);
-        setAssignedTherapists(therapistsData);
+        // Combine all into single array, no role label needed for display
+        setTeamMembers([...caregiversData, ...therapistsData]);
       }
     };
     fetchUsers();
@@ -101,6 +103,32 @@ const ChildCard = ({
     navigate(path);
   };
 
+  // --- Begin diagnosis/concerns normalization utilities ---
+  // Normalise concerns/diagnoses structure once
+  const rawConcerns =
+    child?.primaryConcerns ??
+    child?.diagnoses ??
+    child?.concerns ??
+    child?.primaryConcern ??
+    child?.diagnosis ??
+    [];
+
+  const toArray = (x) =>
+    Array.isArray(x) ? x : typeof x === "string" && x ? [x] : [];
+
+  const getLabel = (item) => {
+    if (typeof item === "string") return item;
+    if (item?.label) return item.label;
+    if (item?.name) return item.name;
+    if (item?.value) return String(item.value);
+    return "";
+  };
+
+  const concernsArr = toArray(rawConcerns);
+  const concernLabels = concernsArr.map(getLabel).filter(Boolean);
+  const firstConcernLabel = concernLabels[0] || "";
+  // --- End diagnosis/concerns normalization utilities ---
+
   return (
     <Accordion
       expanded={expanded}
@@ -109,7 +137,7 @@ const ChildCard = ({
         borderRadius: "16px",
         overflow: "hidden",
         boxShadow: "0 2px 6px rgba(0,0,0,0.04)",
-        background: "background.paper",
+        bgcolor: "background.paper",
         "&:before": { display: "none" },
         "&.Mui-expanded": { margin: "16px 0" },
         "&:hover": { boxShadow: "0 4px 12px rgba(0,0,0,0.06)" },
@@ -117,12 +145,18 @@ const ChildCard = ({
     >
       <AccordionSummary
         sx={{
-          backgroundColor: "background.paper",
+          bgcolor: "background.paper",
           padding: compact ? "16px 20px" : "24px",
-          minHeight: compact ? "72px" : "80px",
-          "&.Mui-expanded": { minHeight: compact ? "72px" : "80px" },
+          minHeight: compact ? "84px" : "120px",
+          "&.Mui-expanded": { minHeight: compact ? "84px" : "120px" },
           // subtle hover cue for clickability
-          "&:hover": { backgroundColor: "rgba(245, 227, 86, 0.06)" },
+          "&:hover": {
+            backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.06),
+          },
+          "& .MuiAccordionSummary-content": {
+            alignItems: "center",
+            my: 0,
+          },
         }}
       >
         <Box
@@ -141,7 +175,7 @@ const ChildCard = ({
                 width: compact ? 56 : 72,
                 height: compact ? 56 : 72,
                 mr: 2,
-                background: "secondary.main",
+                bgcolor: "secondary.main",
                 fontSize: "1.8rem",
                 fontWeight: 600,
                 border: "3px solid #FFFFFF",
@@ -173,6 +207,60 @@ const ChildCard = ({
               >
                 Age: {child.age}
               </Typography>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: "text.secondary",
+                  fontSize: "0.9rem",
+                  fontWeight: 500,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                }}
+              >
+                Diagnosis:{" "}
+                {concernLabels.length ? (
+                  concernLabels.join(", ")
+                ) : (
+                  <>
+                    <span style={{ color: "rgba(0,0,0,0.36)" }}>Not set</span>
+                    <Button
+                      variant="contained"
+                      size="small"
+                      startIcon={<PersonAddAlt1Icon />}
+                      sx={{
+                        backgroundColor: (theme) =>
+                          alpha(theme.palette.success.main, 0.08),
+                        color: "success.main",
+                        borderRadius: "999px",
+                        fontWeight: 600,
+                        px: 2,
+                        py: 0.5,
+                        minHeight: "24px",
+                        textTransform: "none",
+                        boxShadow: "none",
+                        fontSize: "0.8rem",
+                        ml: 1,
+                        transition:
+                          "background-color 120ms ease, color 120ms ease",
+                        "&:hover": {
+                          backgroundColor: (theme) =>
+                            alpha(theme.palette.success.main, 0.15),
+                          color: "success.main",
+                          boxShadow: "none",
+                        },
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (typeof onEditChild === "function")
+                          onEditChild(child);
+                      }}
+                    >
+                      Add
+                    </Button>
+                  </>
+                )}
+              </Typography>
             </Box>
           </Box>
 
@@ -188,6 +276,7 @@ const ChildCard = ({
           >
             <Tooltip title="Log Mood">
               <IconButton
+                aria-label="Log mood"
                 onClick={(e) => {
                   e.stopPropagation();
                   onLogMood(child);
@@ -195,7 +284,8 @@ const ChildCard = ({
                 sx={{
                   color: "secondary.main",
                   "&:hover": {
-                    backgroundColor: "rgba(245, 227, 86, 0.15)",
+                    backgroundColor: (theme) =>
+                      alpha(theme.palette.primary.main, 0.15),
                     color: "primary.main",
                   },
                   transition: "background-color 120ms ease, color 120ms ease",
@@ -206,11 +296,13 @@ const ChildCard = ({
             </Tooltip>
             <Tooltip title="Manage Templates">
               <IconButton
+                aria-label="Manage templates"
                 onClick={() => handleNavigate("/templates")}
                 sx={{
                   color: "secondary.main",
                   "&:hover": {
-                    backgroundColor: "rgba(245, 227, 86, 0.15)",
+                    backgroundColor: (theme) =>
+                      alpha(theme.palette.primary.main, 0.15),
                     color: "primary.main",
                   },
                   transition: "background-color 120ms ease, color 120ms ease",
@@ -219,33 +311,15 @@ const ChildCard = ({
                 <CategoryIcon />
               </IconButton>
             </Tooltip>
-            {userRole === "parent" && (
-              <>
-                <Tooltip title="Invite CareTeam">
-                  <IconButton
-                    onClick={onInviteTherapist}
-                    sx={{
-                      color: "secondary.main",
-                      "&:hover": {
-                        backgroundColor: "rgba(245, 227, 86, 0.15)",
-                        color: "primary.main",
-                      },
-                      transition:
-                        "background-color 120ms ease, color 120ms ease",
-                    }}
-                  >
-                    <MedicalServicesIcon />
-                  </IconButton>
-                </Tooltip>
-              </>
-            )}
             <IconButton
+              aria-label="Open actions"
               onClick={handleMenuOpen}
               onFocus={(e) => e.stopPropagation()}
               sx={{
                 color: "secondary.main",
                 "&:hover": {
-                  backgroundColor: "rgba(245, 227, 86, 0.15)",
+                  backgroundColor: (theme) =>
+                    alpha(theme.palette.primary.main, 0.15),
                   color: "primary.main",
                 },
                 transition: "background-color 120ms ease, color 120ms ease",
@@ -264,6 +338,7 @@ const ChildCard = ({
               >
                 <Tooltip title="Messages">
                   <IconButton
+                    aria-label="Messages"
                     size="small"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -271,7 +346,10 @@ const ChildCard = ({
                     }}
                     sx={{
                       color: "primary.main",
-                      "&:hover": { bgcolor: "rgba(245, 227, 86, 0.15)" },
+                      "&:hover": {
+                        bgcolor: (theme) =>
+                          alpha(theme.palette.primary.main, 0.15),
+                      },
                     }}
                   >
                     <MessageIcon fontSize="small" />
@@ -279,6 +357,7 @@ const ChildCard = ({
                 </Tooltip>
                 <Tooltip title="Daily Log">
                   <IconButton
+                    aria-label="Daily log"
                     size="small"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -286,7 +365,10 @@ const ChildCard = ({
                     }}
                     sx={{
                       color: "primary.main",
-                      "&:hover": { bgcolor: "rgba(245, 227, 86, 0.15)" },
+                      "&:hover": {
+                        bgcolor: (theme) =>
+                          alpha(theme.palette.primary.main, 0.15),
+                      },
                     }}
                   >
                     <AssignmentIcon fontSize="small" />
@@ -294,6 +376,7 @@ const ChildCard = ({
                 </Tooltip>
                 <Tooltip title="Medical Log">
                   <IconButton
+                    aria-label="Medical log"
                     size="small"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -301,7 +384,10 @@ const ChildCard = ({
                     }}
                     sx={{
                       color: "secondary.main",
-                      "&:hover": { bgcolor: "rgba(245, 227, 86, 0.15)" },
+                      "&:hover": {
+                        bgcolor: (theme) =>
+                          alpha(theme.palette.primary.main, 0.15),
+                      },
                     }}
                   >
                     <MedicalServicesIcon fontSize="small" />
@@ -326,14 +412,15 @@ const ChildCard = ({
           >
             <MenuItem
               onClick={() => {
-                onEditChild(child);
+                if (typeof onEditChild === "function") onEditChild(child);
                 handleMenuClose();
               }}
               sx={{
                 borderRadius: "8px",
                 margin: "4px 8px",
                 "&:hover": {
-                  backgroundColor: "rgba(245, 227, 86, 0.15)",
+                  backgroundColor: (theme) =>
+                    alpha(theme.palette.primary.main, 0.15),
                 },
               }}
             >
@@ -341,14 +428,15 @@ const ChildCard = ({
             </MenuItem>
             <MenuItem
               onClick={() => {
-                onDeleteChild(child);
+                if (typeof onDeleteChild === "function") onDeleteChild(child);
                 handleMenuClose();
               }}
               sx={{
                 borderRadius: "8px",
                 margin: "4px 8px",
                 "&:hover": {
-                  backgroundColor: "rgba(245, 227, 86, 0.15)",
+                  backgroundColor: (theme) =>
+                    alpha(theme.palette.primary.main, 0.15),
                 },
               }}
             >
@@ -357,14 +445,16 @@ const ChildCard = ({
             {child.caregiver && (
               <MenuItem
                 onClick={() => {
-                  onUnlinkCaregiver(child);
+                  if (typeof onUnlinkCaregiver === "function")
+                    onUnlinkCaregiver(child);
                   handleMenuClose();
                 }}
                 sx={{
                   borderRadius: "8px",
                   margin: "4px 8px",
                   "&:hover": {
-                    backgroundColor: "rgba(245, 227, 86, 0.15)",
+                    backgroundColor: (theme) =>
+                      alpha(theme.palette.primary.main, 0.15),
                   },
                 }}
               >
@@ -379,93 +469,143 @@ const ChildCard = ({
       {!compact && (
         <AccordionDetails
           sx={{
-            backgroundColor: "background.paper",
-            p: "24px",
+            bgcolor: "background.paper",
+            p: "20px 24px",
           }}
         >
-          <Box sx={{ marginBottom: 3 }}>
+          <Box sx={{ mb: 2 }}>
             <Typography
               variant="h6"
               sx={{
                 color: "text.secondary",
                 fontWeight: 600,
-                mb: 1.5,
+                mb: 1,
                 textTransform: "uppercase",
-                fontSize: "0.8rem",
+                fontSize: "0.78rem",
                 letterSpacing: ".06em",
               }}
             >
-              Caregivers
+              Team Members
             </Typography>
-            {assignedCaregivers.length > 0 ? (
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                {assignedCaregivers.map((caregiver) => (
-                  <Chip
-                    key={caregiver.id}
-                    label={`${caregiver.name} (${caregiver.email})`}
-                    onDelete={() => unassignCaregiver(child.id, caregiver.id)}
-                    sx={{
-                      backgroundColor: "rgba(77,133,189,0.08)",
-                      color: "info.main",
-                      fontWeight: 600,
-                      "& .MuiChip-deleteIcon": {
+            {teamMembers.length > 0 ? (
+              <>
+                <Box
+                  sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 1 }}
+                >
+                  {teamMembers.map((member) => (
+                    <Chip
+                      key={member.id}
+                      label={member.name}
+                      size="small"
+                      onDelete={() => {
+                        // Try both unassign functions for compatibility
+                        if (child.users?.caregivers?.includes(member.id)) {
+                          unassignCaregiver(child.id, member.id);
+                        } else if (
+                          child.users?.therapists?.includes(member.id)
+                        ) {
+                          unassignTherapist(child.id, member.id);
+                        }
+                      }}
+                      sx={{
+                        backgroundColor: (theme) =>
+                          alpha(theme.palette.info.main, 0.08),
                         color: "info.main",
-                        "&:hover": { color: "primary.main" },
+                        fontWeight: 600,
+                        fontSize: "0.85rem",
+                        "& .MuiChip-deleteIcon": {
+                          color: "info.main",
+                        },
+                        mb: 0.5,
+                      }}
+                    />
+                  ))}
+                </Box>
+                {userRole === "parent" && (
+                  <Button
+                    size="small"
+                    variant="contained"
+                    startIcon={<PersonAddAlt1Icon />}
+                    sx={{
+                      mt: 0,
+                      backgroundColor: (theme) =>
+                        alpha(theme.palette.success.main, 0.08),
+                      color: "success.main",
+                      borderRadius: "999px",
+                      fontWeight: 600,
+                      px: 2,
+                      py: 0.5,
+                      minHeight: "24px",
+                      textTransform: "none",
+                      boxShadow: "none",
+                      fontSize: "0.8rem",
+                      transition:
+                        "background-color 120ms ease, color 120ms ease",
+                      "&:hover": {
+                        backgroundColor: (theme) =>
+                          alpha(theme.palette.success.main, 0.15),
+                        color: "success.main",
+                        boxShadow: "none",
                       },
                     }}
-                  />
-                ))}
-              </Box>
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (typeof onAssignCaregiver === "function")
+                        onAssignCaregiver(child);
+                    }}
+                  >
+                    Add to Team
+                  </Button>
+                )}
+              </>
             ) : (
-              <Typography
-                variant="body2"
-                sx={{ color: "text.secondary", fontStyle: "italic" }}
-              >
-                No caregivers assigned.
-              </Typography>
-            )}
-          </Box>
-
-          <Box sx={{ marginBottom: 3 }}>
-            <Typography
-              variant="h6"
-              sx={{
-                color: "text.secondary",
-                fontWeight: 600,
-                mb: 1.5,
-                textTransform: "uppercase",
-                fontSize: "0.8rem",
-                letterSpacing: ".06em",
-              }}
-            >
-              Therapists
-            </Typography>
-            {assignedTherapists.length > 0 ? (
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                {assignedTherapists.map((therapist) => (
-                  <Chip
-                    key={therapist.id}
-                    label={`${therapist.name} (${therapist.specialization})`}
-                    onDelete={() => unassignTherapist(child.id, therapist.id)}
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: "text.secondary",
+                    fontStyle: "italic",
+                    fontSize: "0.92rem",
+                  }}
+                >
+                  No team members yet.
+                </Typography>
+                {userRole === "parent" && (
+                  <Button
+                    size="small"
+                    variant="contained"
+                    startIcon={<PersonAddAlt1Icon />}
                     sx={{
-                      backgroundColor: "rgba(77,133,189,0.08)",
-                      color: "info.main",
+                      backgroundColor: (theme) =>
+                        alpha(theme.palette.success.main, 0.08),
+                      color: "success.main",
+                      borderRadius: "999px",
                       fontWeight: 600,
-                      "& .MuiChip-deleteIcon": {
-                        color: "info.main",
-                        "&:hover": { color: "primary.main" },
+                      px: 2,
+                      py: 0.5,
+                      minHeight: "24px",
+                      textTransform: "none",
+                      boxShadow: "none",
+                      fontSize: "0.8rem",
+                      transition:
+                        "background-color 120ms ease, color 120ms ease",
+                      "&:hover": {
+                        backgroundColor: (theme) =>
+                          alpha(theme.palette.success.main, 0.15),
+                        color: "success.main",
+                        boxShadow: "none",
                       },
                     }}
-                  />
-                ))}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (typeof onAssignCaregiver === "function")
+                        onAssignCaregiver(child);
+                    }}
+                  >
+                    Add to Team
+                  </Button>
+                )}
               </Box>
-            ) : (
-              <Typography
-                variant="body2"
-                sx={{ color: "text.secondary", fontStyle: "italic" }}
-              >
-                No therapists assigned.
-              </Typography>
             )}
           </Box>
 
@@ -490,10 +630,11 @@ const ChildCard = ({
               sx={{
                 borderRadius: "10px",
                 mb: 1,
-                backgroundColor: "background.paper",
+                bgcolor: "background.paper",
                 boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
                 "&:hover": {
-                  backgroundColor: "rgba(245, 227, 86, 0.12)",
+                  backgroundColor: (theme) =>
+                    alpha(theme.palette.primary.main, 0.12),
                   boxShadow: "0 2px 6px rgba(0,0,0,0.06)",
                 },
                 transition: "background-color 120ms ease",
@@ -504,9 +645,8 @@ const ChildCard = ({
               </ListItemIcon>
               <ListItemText
                 primary="Messages"
-                primaryTypographyProps={{
-                  fontWeight: 600,
-                  color: "text.primary",
+                slotProps={{
+                  primary: { sx: { fontWeight: 600, color: "text.primary" } },
                 }}
               />
             </ListItemButton>
@@ -516,10 +656,11 @@ const ChildCard = ({
               sx={{
                 borderRadius: "10px",
                 mb: 1,
-                backgroundColor: "background.paper",
+                bgcolor: "background.paper",
                 boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
                 "&:hover": {
-                  backgroundColor: "rgba(245, 227, 86, 0.12)",
+                  backgroundColor: (theme) =>
+                    alpha(theme.palette.primary.main, 0.12),
                   boxShadow: "0 2px 6px rgba(0,0,0,0.06)",
                 },
                 transition: "background-color 120ms ease",
@@ -530,9 +671,8 @@ const ChildCard = ({
               </ListItemIcon>
               <ListItemText
                 primary="Child Log"
-                primaryTypographyProps={{
-                  fontWeight: 600,
-                  color: "text.primary",
+                slotProps={{
+                  primary: { sx: { fontWeight: 600, color: "text.primary" } },
                 }}
               />
             </ListItemButton>
@@ -542,10 +682,11 @@ const ChildCard = ({
               sx={{
                 borderRadius: "10px",
                 mb: 1,
-                backgroundColor: "background.paper",
+                bgcolor: "background.paper",
                 boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
                 "&:hover": {
-                  backgroundColor: "rgba(245, 227, 86, 0.12)",
+                  backgroundColor: (theme) =>
+                    alpha(theme.palette.primary.main, 0.12),
                   boxShadow: "0 2px 6px rgba(0,0,0,0.06)",
                 },
                 transition: "background-color 120ms ease",
@@ -556,9 +697,8 @@ const ChildCard = ({
               </ListItemIcon>
               <ListItemText
                 primary="Daily Log"
-                primaryTypographyProps={{
-                  fontWeight: 600,
-                  color: "text.primary",
+                slotProps={{
+                  primary: { sx: { fontWeight: 600, color: "text.primary" } },
                 }}
               />
             </ListItemButton>
@@ -568,10 +708,11 @@ const ChildCard = ({
               sx={{
                 borderRadius: "10px",
                 mb: 1,
-                backgroundColor: "background.paper",
+                bgcolor: "background.paper",
                 boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
                 "&:hover": {
-                  backgroundColor: "rgba(245, 227, 86, 0.12)",
+                  backgroundColor: (theme) =>
+                    alpha(theme.palette.primary.main, 0.12),
                   boxShadow: "0 2px 6px rgba(0,0,0,0.06)",
                 },
                 transition: "background-color 120ms ease",
@@ -582,9 +723,8 @@ const ChildCard = ({
               </ListItemIcon>
               <ListItemText
                 primary="Medical Log"
-                primaryTypographyProps={{
-                  fontWeight: 600,
-                  color: "text.primary",
+                slotProps={{
+                  primary: { sx: { fontWeight: 600, color: "text.primary" } },
                 }}
               />
             </ListItemButton>
@@ -594,10 +734,11 @@ const ChildCard = ({
               sx={{
                 borderRadius: "10px",
                 mb: 1,
-                backgroundColor: "background.paper",
+                bgcolor: "background.paper",
                 boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
                 "&:hover": {
-                  backgroundColor: "rgba(245, 227, 86, 0.12)",
+                  backgroundColor: (theme) =>
+                    alpha(theme.palette.primary.main, 0.12),
                   boxShadow: "0 2px 6px rgba(0,0,0,0.06)",
                 },
                 transition: "background-color 120ms ease",
@@ -608,9 +749,8 @@ const ChildCard = ({
               </ListItemIcon>
               <ListItemText
                 primary="Daily Activities"
-                primaryTypographyProps={{
-                  fontWeight: 600,
-                  color: "text.primary",
+                slotProps={{
+                  primary: { sx: { fontWeight: 600, color: "text.primary" } },
                 }}
               />
             </ListItemButton>

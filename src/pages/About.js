@@ -28,14 +28,19 @@ export default function About() {
       }}
     >
       <Container maxWidth="lg">
-        <Grid container spacing={{ xs: 4, md: 8 }} alignItems="flex-start">
+        <Grid
+          container
+          spacing={{ xs: 4, md: 6 }}
+          alignItems={{ xs: "flex-start", md: "center" }}
+          justifyContent="space-between"
+        >
           {/* Left: Text */}
           <Grid item xs={12} sm={7} md={7}>
             <Typography
               component="h1"
               sx={{
                 fontFamily: '"Dancing Script", cursive',
-                color: "#5B8C51",
+                color: "success.main",
                 fontWeight: 700,
                 fontSize: { xs: "2rem", md: "3rem" },
                 letterSpacing: "0.5px",
@@ -47,8 +52,7 @@ export default function About() {
             </Typography>
 
             <Typography
-              variant="body1"
-              paragraph
+              component="p"
               sx={{
                 color: "text.primary",
                 lineHeight: 1.9,
@@ -56,11 +60,12 @@ export default function About() {
                 fontFamily: '"Poppins", sans-serif',
                 fontSize: { xs: "1rem", md: "1.1rem" },
                 fontWeight: 400,
+                mb: 2,
               }}
             >
               At{" "}
               <Box component="span" sx={{ fontWeight: 700 }}>
-                CaptureEase
+                CaptureEz
               </Box>
               , our mission is simple: make care communication effortless.
               Families and care teams should spend less time chasing updates and
@@ -68,8 +73,7 @@ export default function About() {
             </Typography>
 
             <Typography
-              variant="body1"
-              paragraph
+              component="p"
               sx={{
                 color: "text.primary",
                 lineHeight: 1.9,
@@ -77,20 +81,20 @@ export default function About() {
                 fontFamily: '"Poppins", sans-serif',
                 fontSize: { xs: "1rem", md: "1.1rem" },
                 fontWeight: 400,
+                mb: 2,
               }}
             >
               We started after seeing how easily important details get lost in
               texts, emails, or memory.{" "}
               <Box component="span" sx={{ fontWeight: 700 }}>
-                CaptureEase
+                CaptureEz
               </Box>{" "}
               helps you quickly capture moments and share them securely so
               everyone stays in sync.
             </Typography>
 
             <Typography
-              variant="body1"
-              paragraph
+              component="p"
               sx={{
                 color: "text.primary",
                 lineHeight: 1.9,
@@ -98,6 +102,7 @@ export default function About() {
                 fontFamily: '"Poppins", sans-serif',
                 fontSize: { xs: "1rem", md: "1.1rem" },
                 fontWeight: 400,
+                mb: 2,
               }}
             >
               While our journey is just beginning, our vision is big. We’re
@@ -111,7 +116,7 @@ export default function About() {
               sx={{
                 mt: 2,
                 mb: 1,
-                color: "#5B8C51",
+                color: "success.main",
                 fontWeight: 800,
                 fontSize: { xs: "1.3rem", md: "1.4rem" },
                 letterSpacing: 0.6,
@@ -123,8 +128,7 @@ export default function About() {
             </Typography>
 
             <Typography
-              variant="body1"
-              paragraph
+              component="p"
               sx={{
                 color: "text.primary",
                 lineHeight: 1.9,
@@ -132,12 +136,13 @@ export default function About() {
                 fontFamily: '"Poppins", sans-serif',
                 fontSize: { xs: "1rem", md: "1.1rem" },
                 fontWeight: 400,
+                mb: 2,
               }}
             >
               Next, we aim to expand collaborations, add richer media logging,
               and bring more insights for care teams — all while keeping{" "}
               <Box component="span" sx={{ fontWeight: 700 }}>
-                CaptureEase
+                CaptureEz
               </Box>{" "}
               simple and approachable.
             </Typography>
@@ -172,9 +177,8 @@ export default function About() {
             md={5}
             sx={{
               display: "flex",
-              justifyContent: { xs: "center", md: "flex-start" },
-              alignItems: "flex-start",
-              alignSelf: "flex-start",
+              justifyContent: { xs: "center", md: "flex-end" },
+              alignItems: { xs: "flex-start", md: "center" },
             }}
           >
             <Box
@@ -185,13 +189,13 @@ export default function About() {
                 width: "100%",
                 maxWidth: { xs: 440, sm: 500, md: 600 },
                 height: "auto",
-                maxHeight: { xs: 390, md: 460 },
-                mt: { xs: 3, md: 5 },
-                ml: { xs: 3, md: 5 },
+                mt: 0,
+                ml: { xs: 0, md: 4 },
                 borderRadius: 3,
                 objectFit: "cover",
                 boxShadow: "0px 10px 24px rgba(0,0,0,0.12)",
-                alignSelf: "flex-start",
+                alignSelf: "center",
+                display: "block",
               }}
             />
           </Grid>

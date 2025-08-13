@@ -17,7 +17,7 @@
     "firebase-admin": "^12.6.0",
     "firebase-functions": "^6.4.0",
     "resend": "^4.7.0",
-    "twilio": "^5.7.3"
+    "twilio": "^5.8.0"
   },
   "devDependencies": {
     "eslint": "^8.15.0",

@@ -23,7 +23,7 @@ const Footer = () => {
           mb: 2,
         }}
       >
-        CaptureEase © {new Date().getFullYear()} - Caring Made Simple
+        CaptureEz © {new Date().getFullYear()} - Caring Made Simple
       </Typography>
 
       <Box sx={{ display: "flex", justifyContent: "center", gap: 4 }}>

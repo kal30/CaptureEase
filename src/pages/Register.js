@@ -1,26 +1,40 @@
-import React, { useState } from 'react';
-import { Box, Typography, TextField, Button, Container, Paper, CircularProgress, Alert, Divider } from '@mui/material';
-import { Link, useNavigate } from 'react-router-dom';
-import { getAuth, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import GoogleAuth from '../components/AuthProviders/GoogleAuth'; // Keep Google Auth
+import React, { useState } from "react";
+import {
+  Box,
+  Typography,
+  TextField,
+  Button,
+  Container,
+  Paper,
+  CircularProgress,
+  Alert,
+  Divider,
+} from "@mui/material";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  updateProfile,
+} from "firebase/auth";
+import GoogleAuth from "../components/AuthProviders/GoogleAuth"; // Keep Google Auth
 
 const Register = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [fullName, setFullName] = useState(''); // New state for full name
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [fullName, setFullName] = useState(""); // New state for full name
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const auth = getAuth();
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match.');
+      setError("Passwords do not match.");
       setLoading(false);
       return;
     }
@@ -31,21 +45,28 @@ const Register = () => {
       if (user) {
         await updateProfile(user, { displayName: fullName });
         await user.sendEmailVerification();
-        navigate('/login', { state: { message: 'Registration successful! Please check your email to verify your account.' } });
+        navigate("/login", {
+          state: {
+            message:
+              "Registration successful! Please check your email to verify your account.",
+          },
+        });
       } else {
-        setError('Registration successful, but could not send verification email. Please try logging in.');
+        setError(
+          "Registration successful, but could not send verification email. Please try logging in."
+        );
       }
     } catch (err) {
       console.error("Registration error:", err);
       // Firebase error codes for user feedback
-      if (err.code === 'auth/email-already-in-use') {
-        setError('The email address is already in use by another account.');
-      } else if (err.code === 'auth/invalid-email') {
-        setError('The email address is not valid.');
-      } else if (err.code === 'auth/weak-password') {
-        setError('The password is too weak. Please use at least 6 characters.');
+      if (err.code === "auth/email-already-in-use") {
+        setError("The email address is already in use by another account.");
+      } else if (err.code === "auth/invalid-email") {
+        setError("The email address is not valid.");
+      } else if (err.code === "auth/weak-password") {
+        setError("The password is too weak. Please use at least 6 characters.");
       } else {
-        setError('Failed to register. Please try again.');
+        setError("Failed to register. Please try again.");
       }
     } finally {
       setLoading(false);
@@ -53,13 +74,45 @@ const Register = () => {
   };
 
   return (
-    <Container component="main" maxWidth="xs" sx={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <Paper elevation={6} sx={{ p: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', borderRadius: '12px' }}>
-        <Typography component="h1" variant="h5" sx={{ mb: 3, fontWeight: 'bold', color: 'primary.main' }}>
-          Sign Up for CaptureEase
+    <Container
+      component="main"
+      maxWidth="xs"
+      sx={{
+        height: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <Paper
+        elevation={6}
+        sx={{
+          p: 4,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          width: "100%",
+          borderRadius: "12px",
+        }}
+      >
+        <Typography
+          component="h1"
+          variant="h5"
+          sx={{ mb: 3, fontWeight: "bold", color: "primary.main" }}
+        >
+          Sign Up for CaptureEz
         </Typography>
-        {error && <Alert severity="error" sx={{ width: '100%', mb: 2 }}>{error}</Alert>}
-        <Box component="form" onSubmit={handleRegister} noValidate sx={{ mt: 1, width: '100%' }}>
+        {error && (
+          <Alert severity="error" sx={{ width: "100%", mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+        <Box
+          component="form"
+          onSubmit={handleRegister}
+          noValidate
+          sx={{ mt: 1, width: "100%" }}
+        >
           <TextField
             margin="normal"
             required
@@ -111,16 +164,30 @@ const Register = () => {
             type="submit"
             fullWidth
             variant="contained"
-            sx={{ mt: 3, mb: 2, py: 1.5, backgroundColor: 'primary.main', '&:hover': { backgroundColor: 'primary.dark' } }}
+            sx={{
+              mt: 3,
+              mb: 2,
+              py: 1.5,
+              backgroundColor: "primary.main",
+              "&:hover": { backgroundColor: "primary.dark" },
+            }}
             disabled={loading}
           >
-            {loading ? <CircularProgress size={24} color="inherit" /> : 'Register'}
+            {loading ? (
+              <CircularProgress size={24} color="inherit" />
+            ) : (
+              "Register"
+            )}
           </Button>
         </Box>
-        <Divider sx={{ width: '100%', my: 2 }}>OR</Divider>
+        <Divider sx={{ width: "100%", my: 2 }}>OR</Divider>
         <GoogleAuth buttonText="Sign Up with Google" />
         <Box sx={{ mt: 2 }}>
-          <Link to="/login" variant="body2" style={{ textDecoration: 'none', color: '#1976d2' }}>
+          <Link
+            to="/login"
+            variant="body2"
+            style={{ textDecoration: "none", color: "#1976d2" }}
+          >
             {"Already have an account? Sign In"}
           </Link>
         </Box>

@@ -2,6 +2,7 @@ import React from "react";
 import { Box, Container, Typography, useTheme, Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import image2 from "../../assets/image/landing/landingimageRealisitic4.jpg";
+import { PRODUCT_NAME } from "../../constants/config";
 
 const HeaderSection = () => {
   const theme = useTheme();
@@ -9,19 +10,18 @@ const HeaderSection = () => {
 
   const handleGetStarted = () => {
     try {
-      const isLoggedIn = Boolean(
+      const isLoggedIn =
         typeof window !== "undefined" &&
-          (localStorage.getItem("ce_user") ||
-            localStorage.getItem("authUser") ||
-            localStorage.getItem("token"))
-      );
+        (localStorage.getItem("ce_user") ||
+          localStorage.getItem("authUser") ||
+          localStorage.getItem("token"));
       if (isLoggedIn) {
         navigate("/dashboard");
       } else {
-        navigate("/signup");
+        navigate("/login");
       }
     } catch (e) {
-      navigate("/signup");
+      navigate("/login");
     }
   };
 
@@ -56,15 +56,16 @@ const HeaderSection = () => {
               }}
             >
               Simplifying Care for{" "}
-              <span
-                style={{
-                  fontFamily: `"Dancing Script", cursive`,
+              <Box
+                component="span"
+                sx={{
+                  fontFamily: '"Dancing Script", cursive',
                   fontWeight: 600,
-                  color: "#5B8C51",
+                  color: "success.main",
                 }}
               >
                 Caregivers
-              </span>
+              </Box>
             </Typography>
 
             <Typography
@@ -81,9 +82,9 @@ const HeaderSection = () => {
               notes, and endless text threads. With{" "}
               <Box
                 component="span"
-                sx={{ color: "#5B8C51", fontWeight: "bold" }}
+                sx={{ color: "success.main", fontWeight: "bold" }}
               >
-                CaptureEase
+                {PRODUCT_NAME}
               </Box>
               , everything—updates, notes, and reminders—is organized in one
               place. No more frantic searching or relying on memory. Just clear,

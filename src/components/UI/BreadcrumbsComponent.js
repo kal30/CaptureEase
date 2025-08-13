@@ -8,6 +8,12 @@ import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 const BreadcrumbsComponent = () => {
   const location = useLocation();
 
+  const isLoggedIn = !!(
+    localStorage.getItem("authToken") ||
+    localStorage.getItem("token") ||
+    localStorage.getItem("user")
+  );
+
   const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
   // Get the current path and split it into an array
@@ -33,48 +39,80 @@ const BreadcrumbsComponent = () => {
   // Build the breadcrumbs items
   const breadcrumbsItems = [];
 
-  // Always include the Dashboard link if not on the dashboard
-  if (location.pathname !== "/dashboard") {
-    breadcrumbsItems.push(
-      <Link
-        component={RouterLink}
-        underline="hover"
-        color="inherit"
-        to="/dashboard"
-        key="dashboard"
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: 0.5,
-          color: "#5B8C51",
-          fontWeight: 500,
-          textDecoration: "none",
-          "&:hover": {
-            color: "#4B7345",
-            textDecoration: "underline",
-          },
-        }}
-      >
-        <HomeIcon sx={{ fontSize: 18, color: "#5B8C51" }} />
-        Dashboard
-      </Link>
-    );
+  // Handle first crumb based on login status
+  if (isLoggedIn) {
+    // Always include the Dashboard link if not on the dashboard
+    if (location.pathname !== "/dashboard") {
+      breadcrumbsItems.push(
+        <Link
+          component={RouterLink}
+          underline="hover"
+          color="inherit"
+          to="/dashboard"
+          key="dashboard"
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 0.5,
+            color: "#5B8C51",
+            fontWeight: 500,
+            textDecoration: "none",
+            "&:hover": {
+              color: "#4B7345",
+              textDecoration: "underline",
+            },
+          }}
+        >
+          <HomeIcon sx={{ fontSize: 18, color: "#5B8C51" }} />
+          Dashboard
+        </Link>
+      );
+    } else {
+      breadcrumbsItems.push(
+        <Typography
+          color="text.primary"
+          key="dashboard"
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 0.5,
+            fontWeight: 600,
+          }}
+        >
+          <HomeIcon sx={{ fontSize: 18, color: "#5B8C51" }} />
+          Dashboard
+        </Typography>
+      );
+    }
   } else {
-    breadcrumbsItems.push(
-      <Typography
-        color="text.primary"
-        key="dashboard"
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: 0.5,
-          fontWeight: 600,
-        }}
-      >
-        <HomeIcon sx={{ fontSize: 18, color: "#5B8C51" }} />
-        Dashboard
-      </Typography>
-    );
+    // Not logged in
+    // If pathname includes 'dashboard', skip rendering dashboard crumb
+    if (!location.pathname.includes("dashboard")) {
+      breadcrumbsItems.push(
+        <Link
+          component={RouterLink}
+          underline="hover"
+          color="inherit"
+          to="/"
+          key="home"
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 0.5,
+            color: "#5B8C51",
+            fontWeight: 500,
+            textDecoration: "none",
+            "&:hover": {
+              color: "#4B7345",
+              textDecoration: "underline",
+            },
+          }}
+        >
+          <HomeIcon sx={{ fontSize: 18, color: "#5B8C51" }} />
+          Home
+        </Link>
+      );
+    }
   }
 
   let currentPath = "";

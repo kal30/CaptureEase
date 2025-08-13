@@ -1,6 +1,7 @@
 import React from "react";
 import { Box, Typography, Avatar, Button } from "@mui/material";
 import image1 from "../../assets/image/landing/LandingPageRealistic1.jpg";
+import { PRODUCT_NAME } from "../../constants/config";
 
 const ExpertProgram = () => {
   return (
@@ -117,7 +118,7 @@ const ExpertProgram = () => {
               fontSize: "1.05rem",
             }}
           >
-            Tools like <strong>CaptureEase</strong> can help achieve these
+            Tools like <strong>{PRODUCT_NAME}</strong> can help achieve these
             benefits by making it easy to log, share, and review important
             updates in one place—streamlining communication and improving care
             coordination.

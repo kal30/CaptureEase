@@ -2,22 +2,14 @@ import React from "react";
 import { Link as RouterLink, useLocation } from "react-router-dom";
 import { getAuth } from "firebase/auth";
 import { useEffect, useState } from "react";
-import {
-  AppBar,
-  Toolbar,
-  Button,
-  Box,
-  Container,
-  Typography,
-} from "@mui/material";
+import { AppBar, Toolbar, Button, Box, Container } from "@mui/material";
 import { alpha } from "@mui/material/styles";
-import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
 import NavButton from "./NavButton";
-import HomeIcon from "@mui/icons-material/Home";
 import InfoIcon from "@mui/icons-material/Info";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import GroupIcon from "@mui/icons-material/Group";
 import AvatarMenu from "./AvatarMenu"; // Import the avatar menu component
+import Wordmark from "../../assets/image/logo/capture-ez-logo.svg";
 
 const navStyles = {
   current: {
@@ -49,10 +41,7 @@ const Navbar = () => {
     return () => unsubscribe();
   }, []);
 
-  // Check if we are on the landing page
-  const isLandingPage = location.pathname === "/";
-
-  const style = navStyles.current;
+  const style = navStyles.pastel;
 
   return (
     <AppBar
@@ -77,54 +66,40 @@ const Navbar = () => {
           <Button
             component={RouterLink}
             to="/"
+            aria-label="CaptureEz home"
             sx={{
               p: 0,
-              pl: 0,
               minWidth: "auto",
               backgroundColor: "transparent",
-              "&:hover": { backgroundColor: "transparent", opacity: 0.9 },
+              "&:hover": { backgroundColor: "transparent" },
               textTransform: "none",
               display: "flex",
               alignItems: "center",
-              height: { xs: 32, md: 40 },
+              height: { xs: 36, md: 44 },
               borderRadius: 0,
             }}
           >
-            <Typography
-              variant="h6"
+            <Box
+              component="img"
+              src={Wordmark}
+              alt="CaptureEz"
               sx={{
-                fontFamily:
-                  "'Raleway', 'Nunito', 'Poppins', 'Roboto', sans-serif",
-                fontWeight: 800,
-                letterSpacing: 0.2,
-                fontSize: { xs: "1.45rem", md: "1.7rem" },
-                display: "flex",
-                alignItems: "center",
-                height: "100%",
+                height: { xs: 52, md: 68 },
+                width: "auto",
+                display: "block",
+                objectFit: "contain",
+                objectPosition: "left center",
+                transform: "none",
+                m: 0,
               }}
-            >
-              <Box component="span" sx={{ color: "#E07A5F", fontWeight: 800 }}>
-                Capture
-              </Box>
-              <Box component="span" sx={{ color: "#5B8C51", fontWeight: 700 }}>
-                Ease
-              </Box>
-              <AssignmentOutlinedIcon
-                sx={{
-                  fontSize: { xs: 24, md: 28 },
-                  verticalAlign: "middle",
-                  strokeWidth: 1.5,
-                  color: "#E07A5F",
-                }}
-              />
-            </Typography>
+            />
           </Button>
 
           {/* Navigation Links - Right Aligned */}
           <Box
             sx={(theme) => ({
               display: "flex",
-              gap: 0.2,
+              gap: { xs: 1, md: 2.5 },
               ml: "auto",
               alignItems: "center",
               "& .MuiButton-root": {
@@ -136,6 +111,9 @@ const Navbar = () => {
                 paddingLeft: isLoggedIn ? theme.spacing(1.25) : undefined,
                 paddingRight: isLoggedIn ? theme.spacing(1.25) : undefined,
                 boxShadow: "none",
+                fontWeight: 600,
+                fontSize: { xs: "0.95rem", md: "1.05rem" },
+                px: { xs: 1, md: 1.5 },
                 "&:hover": {
                   backgroundColor: isLoggedIn
                     ? alpha(theme.palette.primary.main, 0.08)
@@ -171,21 +149,8 @@ const Navbar = () => {
               },
             })}
           >
-            {isLandingPage && (
+            {!isLoggedIn && (
               <>
-                <NavButton
-                  text="Features"
-                  icon={
-                    <HomeIcon
-                      sx={{
-                        fontSize: { xs: 24, md: 28 },
-                        verticalAlign: "middle",
-                      }}
-                      htmlColor="#E07A5F"
-                    />
-                  }
-                  to="#features"
-                />
                 <NavButton
                   text="About Us"
                   icon={
@@ -235,7 +200,7 @@ const Navbar = () => {
           </Box>
 
           {/* Auth Buttons or Avatar */}
-          <Box sx={{ display: "flex", gap: 2, ml: 2 }}>
+          <Box sx={{ display: "flex", gap: 2.5, ml: { xs: 1.5, md: 3 } }}>
             {isLoggedIn ? (
               <AvatarMenu user={getAuth().currentUser} />
             ) : (
@@ -247,7 +212,7 @@ const Navbar = () => {
                   sx={{
                     backgroundColor: (theme) => alpha("#E07A5F", 0.12),
                     color: "#B75C3B",
-                    fontWeight: 750,
+                    fontWeight: 700,
                     fontSize: "1rem",
                     borderRadius: "8px",
                     textTransform: "none",
@@ -273,7 +238,7 @@ const Navbar = () => {
                     color: "#fff",
                     fontWeight: 500,
                     borderRadius: "8px",
-                    px: 3,
+                    px: 3.25,
                     py: 1,
                     boxShadow: "0px 2px 4px rgba(224, 122, 95, 0.12)",
                     "&:hover": {

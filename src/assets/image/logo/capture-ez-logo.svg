@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 980 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    :root {
+      --accent: #E07A5F; /* orange */
+      --green:  #5B8C51; /* green */
+    }
+
+    .capture {
+      font-family: 'Pacifico', cursive;
+      font-weight: 1000;
+      font-size: 180px;
+      fill: var(--accent);
+      letter-spacing: -1px;
+    }
+    .ez {
+      font-family: 'Fredoka One', cursive;
+      font-weight: 1000;
+      font-size: 200px;     /* was 210px */
+      fill: var(--green);
+      letter-spacing: -1.5px; /* slight kerning so Ez sits tighter */
+    }
+    .clip {
+      stroke: var(--green);
+      stroke-width: 10;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+  </style>
+
+  <!-- Word “Capture” -->
+  <text x="10" y="200" class="capture">Capture</text>
+
+  <!-- “Ez” inside clipboard (nudged left/baseline aligned) -->
+  <text x="610" y="200" dominant-baseline="alphabetic" class="ez">Ez</text>
+</svg>
