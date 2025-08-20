@@ -2,8 +2,8 @@ import React from "react";
 import { Container, Typography, Box } from "@mui/material";
 import { useChildContext } from "../contexts/ChildContext";
 import useChildName from "../hooks/useChildName";
-import LogInput from "../components/DailyLog/LogInput";
-import DailyLogFeed from "../components/DailyLog/DailyLogFeed";
+import LogInput from "../components/DailyNotes/LogInput";
+import DailyLogFeed from "../components/DailyNotes/DailyLogFeed";
 
 const DailyLogPage = () => {
   const { currentChildId } = useChildContext();

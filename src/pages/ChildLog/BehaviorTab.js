@@ -42,7 +42,7 @@ const BehaviorTab = ({ childId, onSaveSuccess }) => {
         />
       ) : (
         <Box sx={{ mt: 4 }}>
-          <Typography variant="h6" gutterBottom>Defined Behaviors</Typography>
+          <Typography variant="h6" gutterBottom sx={{ mt: 4 }}>Defined Behaviors</Typography>
           <BehaviorList childId={childId} refreshTrigger={refreshTrigger} />
         </Box>
       )}

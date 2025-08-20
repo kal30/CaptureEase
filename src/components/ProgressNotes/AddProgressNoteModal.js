@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { Box, Modal, TextField, Button, Typography, IconButton } from "@mui/material";
-import MicNoneIcon from '@mui/icons-material/MicNone';
+import {
+  Box,
+  Modal,
+  TextField,
+  Button,
+  Typography,
+  IconButton,
+} from "@mui/material";
+import MicNoneIcon from "@mui/icons-material/MicNone";
 import { addProgressNote } from "../../services/progressNotesService";
+import StyledButton from "../UI/StyledButton"; // Add this line
 
 import MediaUploader from "./MediaUploader";
 import TagInput from "./TagInput";
@@ -178,16 +186,26 @@ const AddProgressNoteModal = ({ open, onClose, childId }) => {
           availableTags={availableTags}
         />
 
-        <MediaUploader childId={childId} onUploadComplete={setMediaURL} />
-
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={handleSave}
-          sx={{ mt: 2 }}
+        <Box
+          sx={{
+            mt: 2,
+            display: "flex",
+            justifyContent: "flex-end",
+            borderTop: "1px solid #e0e0e0",
+            pt: 3,
+          }}
         >
-          Save
-        </Button>
+          <MediaUploader childId={childId} onUploadComplete={setMediaURL} />
+
+          <StyledButton
+            onClick={handleSave}
+            disabled={!title || !content}
+            color="secondary"
+            sx={{ minWidth: "150px", height: "45px" }}
+          >
+            Save Progress Note
+          </StyledButton>
+        </Box>
       </Box>
     </Modal>
   );

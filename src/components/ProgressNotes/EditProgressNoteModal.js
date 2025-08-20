@@ -1,19 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Modal, TextField, Button, Typography } from '@mui/material';
-import { updateProgressNote } from '../../services/progressNotesService';
-import MediaUploader from './MediaUploader';
-import MediaPreview from './MediaPreview';  // Import MediaPreview
-import DeleteIcon from '@mui/icons-material/Delete';
-import UploadIcon from '@mui/icons-material/UploadFile';
+import React, { useState, useEffect } from "react";
+import { Box, Modal, TextField, Typography } from "@mui/material";
+import StyledButton from "../UI/StyledButton";
+import { updateProgressNote } from "../../services/progressNotesService";
+import MediaUploader from "./MediaUploader";
+import MediaPreview from "./MediaPreview"; // Import MediaPreview
+import DeleteIcon from "@mui/icons-material/Delete";
+import UploadIcon from "@mui/icons-material/UploadFile";
 
 const modalStyle = {
-  position: 'absolute',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
   width: 400,
-  bgcolor: 'background.paper',
-  border: '2px solid #000',
+  bgcolor: "background.paper",
+  border: "2px solid #000",
   boxShadow: 24,
   p: 4,
   borderRadius: 2,
@@ -21,18 +22,20 @@ const modalStyle = {
 
 const EditProgressNoteModal = ({ open, onClose, progressNote, childId }) => {
   // Initialize state with default values or journal values if available
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [date, setDate] = useState('');
-  const [mediaURL, setMediaURL] = useState('');
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [date, setDate] = useState("");
+  const [mediaURL, setMediaURL] = useState("");
   const [isMediaRemoved, setIsMediaRemoved] = useState(false);
 
   useEffect(() => {
     if (progressNote) {
-      setTitle(progressNote.title || '');
-      setContent(progressNote.content || '');
-      setDate(new Date(progressNote.date.toDate()).toISOString().split('T')[0] || '');
-      setMediaURL(progressNote.mediaURL || '');
+      setTitle(progressNote.title || "");
+      setContent(progressNote.content || "");
+      setDate(
+        new Date(progressNote.date.toDate()).toISOString().split("T")[0] || ""
+      );
+      setMediaURL(progressNote.mediaURL || "");
     }
   }, [progressNote]);
 
@@ -44,17 +47,17 @@ const EditProgressNoteModal = ({ open, onClose, progressNote, childId }) => {
         title,
         content,
         date: new Date(date),
-        mediaURL: isMediaRemoved ? '' : mediaURL,
+        mediaURL: isMediaRemoved ? "" : mediaURL,
       });
-      onClose();  // Close modal after updating
+      onClose(); // Close modal after updating
     } catch (error) {
-      console.error('Error updating journal entry:', error);
+      console.error("Error updating journal entry:", error);
     }
   };
 
   const handleRemoveMedia = () => {
-    setMediaURL('');  // Clear the media URL
-    setIsMediaRemoved(true);  // Set state to true to track removal
+    setMediaURL(""); // Clear the media URL
+    setIsMediaRemoved(true); // Set state to true to track removal
   };
 
   if (!progressNote) {
@@ -101,36 +104,42 @@ const EditProgressNoteModal = ({ open, onClose, progressNote, childId }) => {
         {/* Current Media Preview using MediaPreview Component */}
         {mediaURL && !isMediaRemoved && (
           <Box sx={{ mt: 2 }}>
-            <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>Current Media:</Typography>
-            <MediaPreview mediaURL={mediaURL} />  {/* Use MediaPreview here */}
-            <Button
+            <Typography variant="body2" sx={{ fontWeight: "bold", mb: 1 }}>
+              Current Media:
+            </Typography>
+            <MediaPreview mediaURL={mediaURL} /> {/* Use MediaPreview here */}
+            <StyledButton
               variant="outlined"
               color="secondary"
               startIcon={<DeleteIcon />}
               onClick={handleRemoveMedia}
-              sx={{ mt: 2, width: '100%' }}
+              sx={{ mt: 2, width: "100%" }}
             >
               Remove Media
-            </Button>
+            </StyledButton>
           </Box>
         )}
 
         {/* Upload Media Button (Disabled if media exists) */}
-        <Button
+        <StyledButton
           variant="contained"
           component="label"
           startIcon={<UploadIcon />}
-          sx={{ mt: 2, width: '100%' }}
+          sx={{ mt: 2, width: "100%" }}
           disabled={!!mediaURL && !isMediaRemoved}
         >
           Upload Media
           <MediaUploader childId={childId} onUploadComplete={setMediaURL} />
-        </Button>
+        </StyledButton>
 
         {/* Update Button */}
-        <Button variant="contained" onClick={handleUpdate} sx={{ mt: 3, width: '100%' }}>
+        <StyledButton
+          variant="contained"
+          onClick={handleUpdate}
+          sx={{ mt: 3, width: "100%" }}
+        >
           Update
-        </Button>
+        </StyledButton>
       </Box>
     </Modal>
   );

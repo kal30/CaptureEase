@@ -1,17 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { Box, TextField, Button, Typography, IconButton } from "@mui/material";
-import MicNoneIcon from '@mui/icons-material/MicNone';
+import { Box, TextField, Button, Typography } from "@mui/material";
 import { addSensoryLog, fetchSensoryLogs } from "../../services/sensoryService";
 import SeverityRating from "../../components/UI/Rating";
-import SensoryInputList from "../../components/SensoryLog/SensoryInputList"; // Re-use existing list
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import dayjs from 'dayjs';
-
-const SpeechRecognition =
-  window.SpeechRecognition || window.webkitSpeechRecognition;
-const recognition = SpeechRecognition ? new SpeechRecognition() : null;
+import SensoryInputList from "../../components/SensoryLog/SensoryInputList";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import dayjs from "dayjs";
+import RichTextInput from "../../components/UI/RichTextInput";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { storage } from "../../services/firebase";
 
 const SensoryLogTab = ({ childId, onSaveSuccess }) => {
   const [sensoryInputs, setSensoryInputs] = useState("");
@@ -21,11 +19,10 @@ const SensoryLogTab = ({ childId, onSaveSuccess }) => {
   const [triggerContext, setTriggerContext] = useState("");
   const [copingStrategy, setCopingStrategy] = useState("");
   const [caregiverIntervention, setCaregiverIntervention] = useState("");
-  const [notes, setNotes] = useState("");
-  const [isListening, setIsListening] = useState(false);
-  const [sensoryLogs, setSensoryLogs] = useState([]); // Re-add state for the list
+  const [sensoryLogs, setSensoryLogs] = useState([]);
   const [timestamp, setTimestamp] = useState(dayjs());
-  const [showAddForm, setShowAddForm] = useState(true); // State to toggle between add form and list
+  const [showAddForm, setShowAddForm] = useState(true);
+  const [richTextData, setRichTextData] = useState(null);
 
   useEffect(() => {
     const loadSensoryLogs = async () => {
@@ -33,51 +30,35 @@ const SensoryLogTab = ({ childId, onSaveSuccess }) => {
       setSensoryLogs(logs);
     };
     loadSensoryLogs();
-
-    if (recognition) {
-      recognition.continuous = false;
-      recognition.interimResults = false;
-      recognition.lang = "en-US";
-
-      recognition.onstart = () => {
-        setIsListening(true);
-      };
-
-      recognition.onresult = (event) => {
-        const transcript = Array.from(event.results)
-          .map((result) => result[0])
-          .map((result) => result.transcript)
-          .join("");
-        setNotes((prevNotes) => prevNotes + transcript);
-      };
-
-      recognition.onend = () => {
-        setIsListening(false);
-      };
-
-      recognition.onerror = (event) => {
-        console.error("Speech recognition error:", event.error);
-        setIsListening(false);
-      };
-    }
   }, [childId]);
-
-  const handleVoiceInput = () => {
-    if (recognition) {
-      if (isListening) {
-        recognition.stop();
-      } else {
-        recognition.start();
-      }
-    } else {
-      alert("Speech recognition is not supported in this browser.");
-    }
-  };
 
   const handleSave = async () => {
     if (!sensoryInputs || !reaction || !severity) return;
 
+    let mediaURL = "";
+    let voiceMemoURL = "";
+    let mediaType = "";
+
     try {
+      if (richTextData && richTextData.mediaFile) {
+        const mediaRef = ref(
+          storage,
+          `sensoryLogs/${childId}/${Date.now()}-${richTextData.mediaFile.file.name}`
+        );
+        await uploadBytes(mediaRef, richTextData.mediaFile.file);
+        mediaURL = await getDownloadURL(mediaRef);
+        mediaType = richTextData.mediaFile.type;
+      }
+
+      if (richTextData && richTextData.audioBlob) {
+        const audioRef = ref(
+          storage,
+          `sensoryLogs/${childId}/${Date.now()}-voice-memo.webm`
+        );
+        await uploadBytes(audioRef, richTextData.audioBlob);
+        voiceMemoURL = await getDownloadURL(audioRef);
+      }
+
       await addSensoryLog(childId, {
         sensoryInputs: sensoryInputs.split(","),
         reaction,
@@ -86,13 +67,15 @@ const SensoryLogTab = ({ childId, onSaveSuccess }) => {
         triggerContext,
         copingStrategy,
         caregiverIntervention,
-        notes,
-        timestamp: timestamp.toDate(), // Use the selected date
+        notes: richTextData ? richTextData.text : "",
+        mediaURL,
+        mediaType,
+        voiceMemoURL,
+        timestamp: timestamp.toDate(),
       });
 
       resetForm();
-      onSaveSuccess(); // Notify parent to refresh calendar
-      // Refresh the logs after adding a new one
+      onSaveSuccess();
       const updatedLogs = await fetchSensoryLogs(childId);
       setSensoryLogs(updatedLogs);
     } catch (error) {
@@ -108,27 +91,23 @@ const SensoryLogTab = ({ childId, onSaveSuccess }) => {
     setTriggerContext("");
     setCopingStrategy("");
     setCaregiverIntervention("");
-    setNotes("");
     setTimestamp(dayjs());
+    setRichTextData(null);
   };
 
   const handleEdit = (logId) => {
     console.log("Edit sensory log with ID:", logId);
-    // Implement edit logic here
   };
 
   const handleDelete = async (logId) => {
     console.log("Delete sensory log with ID:", logId);
-    // Implement delete logic here
-    // For now, just refresh the list after a simulated delete
-    // In a real app, you'd call a delete service and then refresh
     const updatedLogs = await fetchSensoryLogs(childId);
     setSensoryLogs(updatedLogs);
   };
 
   return (
     <Box>
-      <Box sx={{ mb: 2, display: 'flex', justifyContent: 'center', gap: 2 }}>
+      <Box sx={{ mb: 2, display: "flex", justifyContent: "center", gap: 2 }}>
         <Button
           variant="contained"
           onClick={() => setShowAddForm(true)}
@@ -147,84 +126,92 @@ const SensoryLogTab = ({ childId, onSaveSuccess }) => {
 
       {showAddForm ? (
         <>
-          <Typography variant="h6" gutterBottom>Add Sensory Log</Typography>
+          <Typography variant="h6" gutterBottom sx={{ mt: 4 }}>
+            Add Sensory Log
+          </Typography>
           <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <TextField
-              label="Sensory Inputs"
-              fullWidth
-              value={sensoryInputs}
-              onChange={(e) => setSensoryInputs(e.target.value)}
-              helperText="Enter sensory inputs (comma separated)"
-              sx={{ my: 2 }}
-            />
-            <DatePicker
-              label="Date"
-              value={timestamp}
-              onChange={(newValue) => setTimestamp(newValue)}
-              renderInput={(params) => <TextField {...params} fullWidth sx={{ my: 2 }} />}
-            />
+            <Box sx={{ mb: 2 }}>
+              <TextField
+                label="Sensory Inputs"
+                fullWidth
+                value={sensoryInputs}
+                onChange={(e) => setSensoryInputs(e.target.value)}
+                helperText="Enter sensory inputs (comma separated)"
+              />
+            </Box>
+            <Box sx={{ mb: 2 }}>
+              <DatePicker
+                label="Date"
+                value={timestamp}
+                onChange={(newValue) => setTimestamp(newValue)}
+                renderInput={(params) => (
+                  <TextField {...params} fullWidth />
+                )}
+              />
+            </Box>
           </LocalizationProvider>
-          <TextField
-            label="Reaction"
-            multiline
-            rows={3}
-            fullWidth
-            value={reaction}
-            onChange={(e) => setReaction(e.target.value)}
-            sx={{ my: 2 }}
-          />
-          <SeverityRating severity={severity} setSeverity={setSeverity} />
-          <TextField
-            label="Duration (minutes)"
-            fullWidth
-            value={duration}
-            onChange={(e) => setDuration(e.target.value)}
-            sx={{ my: 2 }}
-          />
-          <TextField
-            label="Trigger Context"
-            fullWidth
-            value={triggerContext}
-            onChange={(e) => setTriggerContext(e.target.value)}
-            sx={{ my: 2 }}
-          />
-          <TextField
-            label="Coping Strategy"
-            fullWidth
-            value={copingStrategy}
-            onChange={(e) => setCopingStrategy(e.target.value)}
-            sx={{ my: 2 }}
-          />
-          <TextField
-            label="Caregiver Intervention"
-            fullWidth
-            value={caregiverIntervention}
-            onChange={(e) => setCaregiverIntervention(e.target.value)}
-            sx={{ my: 2 }}
-          />
-          <TextField
-            label="Notes"
-            fullWidth
-            multiline
-            rows={3}
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            sx={{ my: 2 }}
-            InputProps={{
-              endAdornment: (
-                <IconButton onClick={handleVoiceInput} disabled={isListening}>
-                  <MicNoneIcon color={isListening ? "primary" : "action"} />
-                </IconButton>
-              ),
-            }}
-          />
-          <Button variant="contained" color="primary" onClick={handleSave} sx={{ mt: 2 }}>
+          <Box sx={{ mb: 2 }}>
+            <TextField
+              label="Reaction"
+              multiline
+              rows={3}
+              fullWidth
+              value={reaction}
+              onChange={(e) => setReaction(e.target.value)}
+            />
+          </Box>
+          <Box sx={{ mb: 2 }}>
+            <SeverityRating severity={severity} setSeverity={setSeverity} />
+          </Box>
+          <Box sx={{ mb: 2 }}>
+            <TextField
+              label="Duration (minutes)"
+              fullWidth
+              value={duration}
+              onChange={(e) => setDuration(e.target.value)}
+            />
+          </Box>
+          <Box sx={{ mb: 2 }}>
+            <TextField
+              label="Trigger Context"
+              fullWidth
+              value={triggerContext}
+              onChange={(e) => setTriggerContext(e.target.value)}
+            />
+          </Box>
+          <Box sx={{ mb: 2 }}>
+            <TextField
+              label="Coping Strategy"
+              fullWidth
+              value={copingStrategy}
+              onChange={(e) => setCopingStrategy(e.target.value)}
+            />
+          </Box>
+          <Box sx={{ mb: 2 }}>
+            <TextField
+              label="Caregiver Intervention"
+              fullWidth
+              value={caregiverIntervention}
+              onChange={(e) => setCaregiverIntervention(e.target.value)}
+            />
+          </Box>
+          <Box sx={{ mb: 2 }}>
+            <RichTextInput onDataChange={setRichTextData} />
+          </Box>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleSave}
+            sx={{ mt: 2 }}
+          >
             Save Sensory Log
           </Button>
         </>
       ) : (
         <Box sx={{ mt: 4 }}>
-          <Typography variant="h6" gutterBottom>Recent Sensory Logs</Typography>
+          <Typography variant="h6" gutterBottom sx={{ mt: 4 }}>
+            Recent Sensory Logs
+          </Typography>
           <SensoryInputList
             entries={sensoryLogs}
             handleEdit={handleEdit}

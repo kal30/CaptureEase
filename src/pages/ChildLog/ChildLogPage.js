@@ -6,6 +6,7 @@ import ProgressNoteTab from "./ProgressNoteTab";
 import SensoryLogTab from "./SensoryLogTab";
 import BehaviorTab from "./BehaviorTab";
 import MoodLogTab from "./MoodLogTab";
+import DailyNotesTab from "./DailyNotesTab";
 
 function a11yProps(index) {
   return {
@@ -33,7 +34,7 @@ function TabPanel(props) {
 const ChildLogPage = () => {
   const { currentChildId } = useChildContext();
   const { childName, loading, error } = useChildName(currentChildId);
-  const [value, setValue] = useState(0); // 0 for Progress Notes, 1 for Sensory Logs, 2 for Behaviors
+  const [value, setValue] = useState(0); // 0 for Daily Log, 1 for Progress Notes, 2 for Sensory Logs, 3 for Behaviors, 4 for Mood Logs
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
@@ -63,23 +64,27 @@ const ChildLogPage = () => {
           aria-label="child log tabs"
           centered
         >
-          <Tab label="Progress Notes" {...a11yProps(0)} />
-          <Tab label="Sensory Logs" {...a11yProps(1)} />
-          <Tab label="Behaviors" {...a11yProps(2)} />
-          <Tab label="Mood Logs" {...a11yProps(3)} />
+          <Tab label="Daily Notes" {...a11yProps(0)} />
+          <Tab label="Progress Notes" {...a11yProps(1)} />
+          <Tab label="Sensory Logs" {...a11yProps(2)} />
+          <Tab label="Behaviors" {...a11yProps(3)} />
+          <Tab label="Mood Logs" {...a11yProps(4)} />
         </Tabs>
       </Box>
 
       <TabPanel value={value} index={0}>
-        <ProgressNoteTab childId={currentChildId} />
+        <DailyNotesTab childId={currentChildId} />
       </TabPanel>
       <TabPanel value={value} index={1}>
-        <SensoryLogTab childId={currentChildId} />
+        <ProgressNoteTab childId={currentChildId} />
       </TabPanel>
       <TabPanel value={value} index={2}>
-        <BehaviorTab childId={currentChildId} />
+        <SensoryLogTab childId={currentChildId} />
       </TabPanel>
       <TabPanel value={value} index={3}>
+        <BehaviorTab childId={currentChildId} />
+      </TabPanel>
+      <TabPanel value={value} index={4}>
         <MoodLogTab childId={currentChildId} />
       </TabPanel>
     </Container>

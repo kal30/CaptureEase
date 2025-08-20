@@ -1,29 +1,24 @@
 import React, { useState, useEffect } from "react";
-import { Box, TextField, Button, Typography, IconButton } from "@mui/material";
-import MicNoneIcon from '@mui/icons-material/MicNone';
+import { Box, TextField, Button, Typography } from "@mui/material";
 import { addProgressNote } from "../../services/progressNotesService";
-import MediaUploader from "../../components/Journal/MediaUploader";
-import TagInput from "../../components/Journal/TagInput";
+import TagInput from "../../components/ProgressNotes/TagInput";
 import { fetchTags, addTag } from "../../services/tagService";
-import ProgressNoteList from "../../components/Journal/ProgressNoteList"; // Re-use existing list
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import dayjs from 'dayjs';
-
-const SpeechRecognition =
-  window.SpeechRecognition || window.webkitSpeechRecognition;
-const recognition = SpeechRecognition ? new SpeechRecognition() : null;
+import ProgressNoteList from "../../components/ProgressNotes/ProgressNoteList";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import dayjs from "dayjs";
+import RichTextInput from "../../components/UI/RichTextInput";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { storage } from "../../services/firebase";
 
 const ProgressNoteTab = ({ childId, onSaveSuccess }) => {
   const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
   const [date, setDate] = useState(dayjs());
-  const [mediaURL, setMediaURL] = useState("");
   const [tags, setTags] = useState([]);
   const [availableTags, setAvailableTags] = useState([]);
-  const [isListening, setIsListening] = useState(false);
-  const [showAddForm, setShowAddForm] = useState(true); // State to toggle between add form and list
+  const [showAddForm, setShowAddForm] = useState(true);
+  const [richTextData, setRichTextData] = useState(null);
 
   useEffect(() => {
     const fetchAvailableTags = async () => {
@@ -31,60 +26,46 @@ const ProgressNoteTab = ({ childId, onSaveSuccess }) => {
       setAvailableTags(fetchedTags.map((tag) => tag.name));
     };
     fetchAvailableTags();
-
-    if (recognition) {
-      recognition.continuous = false;
-      recognition.interimResults = false;
-      recognition.lang = "en-US";
-
-      recognition.onstart = () => {
-        setIsListening(true);
-      };
-
-      recognition.onresult = (event) => {
-        const transcript = Array.from(event.results)
-          .map((result) => result[0])
-          .map((result) => result.transcript)
-          .join("");
-        setContent((prevContent) => prevContent + transcript);
-      };
-
-      recognition.onend = () => {
-        setIsListening(false);
-      };
-
-      recognition.onerror = (event) => {
-        console.error("Speech recognition error:", event.error);
-        setIsListening(false);
-      };
-    }
   }, [childId]);
 
-  const handleVoiceInput = () => {
-    if (recognition) {
-      if (isListening) {
-        recognition.stop();
-      } else {
-        recognition.start();
-      }
-    } else {
-      alert("Speech recognition is not supported in this browser.");
-    }
-  };
-
   const handleSave = async () => {
-    if (!title || !content) return;
+    if (!title || !richTextData || !richTextData.text.trim()) return;
+
+    let mediaURL = "";
+    let voiceMemoURL = "";
+    let mediaType = "";
 
     try {
+      if (richTextData.mediaFile) {
+        const mediaRef = ref(
+          storage,
+          `progressNotes/${childId}/${Date.now()}-${richTextData.mediaFile.file.name}`
+        );
+        await uploadBytes(mediaRef, richTextData.mediaFile.file);
+        mediaURL = await getDownloadURL(mediaRef);
+        mediaType = richTextData.mediaFile.type;
+      }
+
+      if (richTextData.audioBlob) {
+        const audioRef = ref(
+          storage,
+          `progressNotes/${childId}/${Date.now()}-voice-memo.webm`
+        );
+        await uploadBytes(audioRef, richTextData.audioBlob);
+        voiceMemoURL = await getDownloadURL(audioRef);
+      }
+
       const formattedTags = tags.map((tag) =>
         typeof tag === "string" ? tag : tag.name
       );
 
       await addProgressNote(childId, {
         title,
-        content,
+        content: richTextData.text,
         date: date.toDate(),
         mediaURL,
+        mediaType,
+        voiceMemoURL,
         tags: formattedTags,
         timestamp: new Date(),
       });
@@ -102,15 +83,14 @@ const ProgressNoteTab = ({ childId, onSaveSuccess }) => {
 
   const resetForm = () => {
     setTitle("");
-    setContent("");
     setDate(dayjs());
-    setMediaURL("");
     setTags([]);
+    setRichTextData(null);
   };
 
   return (
-    <Box>
-      <Box sx={{ mb: 2, display: 'flex', justifyContent: 'center', gap: 2 }}>
+    <Box sx={{ mt: 4 }}>
+      <Box sx={{ mb: 2, display: "flex", justifyContent: "center", gap: 2 }}>
         <Button
           variant="contained"
           onClick={() => setShowAddForm(true)}
@@ -129,54 +109,54 @@ const ProgressNoteTab = ({ childId, onSaveSuccess }) => {
 
       {showAddForm ? (
         <>
-          <Typography variant="h6" gutterBottom>Add Progress Note</Typography>
+          <Typography variant="h6" gutterBottom sx={{ mt: 4 }}>
+            Add Progress Note
+          </Typography>
           <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <TextField
-              label="Title"
-              fullWidth
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              sx={{ my: 2 }}
-            />
-            <DatePicker
-              label="Date"
-              value={date}
-              onChange={(newValue) => setDate(newValue)}
-              renderInput={(params) => <TextField {...params} fullWidth sx={{ my: 2 }} />}
-            />
-            <TextField
-              label="Progress Note"
-              multiline
-              rows={4}
-              fullWidth
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="Describe observations, interventions, and outcomes."
-              helperText="Provide a detailed progress note for this entry."
-              sx={{ my: 2 }}
-              InputProps={{
-                endAdornment: (
-                  <IconButton onClick={handleVoiceInput} disabled={isListening}>
-                    <MicNoneIcon color={isListening ? "primary" : "action"} />
-                  </IconButton>
-                ),
-              }}
-            />
-            <TagInput
-              childId={childId}
-              tags={tags}
-              setTags={setTags}
-              availableTags={availableTags}
-            />
-            <MediaUploader childId={childId} onUploadComplete={setMediaURL} />
-            <Button variant="contained" color="primary" onClick={handleSave} sx={{ mt: 2 }}>
+            <Box sx={{ mb: 2 }}>
+              <TextField
+                label="Title"
+                fullWidth
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
+            </Box>
+            <Box sx={{ mb: 2 }}>
+              <DatePicker
+                label="Date"
+                value={date}
+                onChange={(newValue) => setDate(newValue)}
+                renderInput={(params) => (
+                  <TextField {...params} fullWidth />
+                )}
+              />
+            </Box>
+            <Box sx={{ mb: 2 }}>
+              <RichTextInput onDataChange={setRichTextData} />
+            </Box>
+            <Box sx={{ mb: 2 }}>
+              <TagInput
+                childId={childId}
+                tags={tags}
+                setTags={setTags}
+                availableTags={availableTags}
+              />
+            </Box>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleSave}
+              sx={{ mt: 2 }}
+            >
               Save Progress Note
             </Button>
           </LocalizationProvider>
         </>
       ) : (
         <Box sx={{ mt: 4 }}>
-          <Typography variant="h6" gutterBottom>Recent Progress Notes</Typography>
+          <Typography variant="h6" gutterBottom sx={{ mt: 4 }}>
+            Recent Progress Notes
+          </Typography>
           <ProgressNoteList childId={childId} />
         </Box>
       )}

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Button,
@@ -17,37 +16,67 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
+import RichTextInput from '../UI/RichTextInput';
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { storage } from "../../services/firebase";
 
 const AddBehaviorForm = ({ childId, onSaveSuccess, refreshTrigger }) => {
   const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
   const [goal, setGoal] = useState('');
   const [saveAsTemplate, setSaveAsTemplate] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedIcon, setSelectedIcon] = useState(null);
-  const [selectedDate, setSelectedDate] = useState(dayjs()); // State for selected date
+  const [selectedDate, setSelectedDate] = useState(dayjs());
+  const [richTextData, setRichTextData] = useState(null);
 
   const handleSave = async () => {
-    const behaviorData = {
-      name,
-      description,
-      goal,
-      isTemplate: saveAsTemplate,
-      iconName: selectedIcon,
-      createdAt: selectedDate.toDate(), // Use selectedDate for createdAt
-    };
+    let mediaURL = "";
+    let voiceMemoURL = "";
+    let mediaType = "";
+
     try {
+      if (richTextData && richTextData.mediaFile) {
+        const mediaRef = ref(
+          storage,
+          `behaviors/${childId}/${Date.now()}-${richTextData.mediaFile.file.name}`
+        );
+        await uploadBytes(mediaRef, richTextData.mediaFile.file);
+        mediaURL = await getDownloadURL(mediaRef);
+        mediaType = richTextData.mediaFile.type;
+      }
+
+      if (richTextData && richTextData.audioBlob) {
+        const audioRef = ref(
+          storage,
+          `behaviors/${childId}/${Date.now()}-voice-memo.webm`
+        );
+        await uploadBytes(audioRef, richTextData.audioBlob);
+        voiceMemoURL = await getDownloadURL(audioRef);
+      }
+
+      const behaviorData = {
+        name,
+        description: richTextData ? richTextData.text : "",
+        goal,
+        isTemplate: saveAsTemplate,
+        iconName: selectedIcon,
+        createdAt: selectedDate.toDate(),
+        mediaURL,
+        mediaType,
+        voiceMemoURL,
+      };
+
       await addBehavior(childId, behaviorData);
       if (onSaveSuccess) {
         onSaveSuccess();
       }
       // Reset form
       setName('');
-      setDescription('');
       setGoal('');
       setSaveAsTemplate(false);
       setSelectedIcon(null);
-      setSelectedDate(dayjs()); // Reset date to today
+      setSelectedDate(dayjs());
+      setRichTextData(null);
     } catch (error) {
       console.error('Failed to save behavior:', error);
     }
@@ -55,9 +84,9 @@ const AddBehaviorForm = ({ childId, onSaveSuccess, refreshTrigger }) => {
 
   const handleSelectTemplate = (template) => {
     setName(template.name);
-    setDescription(template.description);
+    setRichTextData({ text: template.description, mediaFile: null, audioBlob: null });
     setSelectedIcon(template.iconName);
-    setIsModalOpen(false); // Close modal after selection
+    setIsModalOpen(false);
   };
 
   return (
@@ -79,50 +108,42 @@ const AddBehaviorForm = ({ childId, onSaveSuccess, refreshTrigger }) => {
       </Alert>
 
       <LocalizationProvider dateAdapter={AdapterDayjs}>
-        <DatePicker
-          label="Date of Behavior"
-          value={selectedDate}
-          onChange={(newValue) => setSelectedDate(newValue)}
-          renderInput={(params) => <TextField {...params} fullWidth sx={{ mb: 2 }} />}
-        />
+        <Box sx={{ mb: 2 }}>
+          <DatePicker
+            label="Date of Behavior"
+            value={selectedDate}
+            onChange={(newValue) => setSelectedDate(newValue)}
+            renderInput={(params) => <TextField {...params} fullWidth />}
+          />
+        </Box>
       </LocalizationProvider>
 
-      <TextField
-        autoFocus
-        margin="dense"
-        label="Behavior Name"
-        type="text"
-        fullWidth
-        variant="outlined"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        sx={{ mb: 2 }}
-        placeholder="e.g., Hand Flapping, Making Eye Contact"
-      />
-      <TextField
-        margin="dense"
-        label="Observable Definition"
-        type="text"
-        fullWidth
-        multiline
-        rows={3}
-        variant="outlined"
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        sx={{ mb: 2 }}
-        placeholder="Describe exactly what the behavior looks like."
-      />
-      <TextField
-        margin="dense"
-        label="Target Goal"
-        type="text"
-        fullWidth
-        variant="outlined"
-        value={goal}
-        onChange={(e) => setGoal(e.target.value)}
-        sx={{ mb: 2 }}
-        placeholder="e.g., Reduce to < 5 times/hour, Increase to 3 seconds"
-      />
+      <Box sx={{ mb: 2 }}>
+        <TextField
+          autoFocus
+          label="Behavior Name"
+          type="text"
+          fullWidth
+          variant="outlined"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="e.g., Hand Flapping, Making Eye Contact"
+        />
+      </Box>
+      <Box sx={{ mb: 2 }}>
+        <RichTextInput onDataChange={setRichTextData} />
+      </Box>
+      <Box sx={{ mb: 2 }}>
+        <TextField
+          label="Target Goal"
+          type="text"
+          fullWidth
+          variant="outlined"
+          value={goal}
+          onChange={(e) => setGoal(e.target.value)}
+          placeholder="e.g., Reduce to < 5 times/hour, Increase to 3 seconds"
+        />
+      </Box>
         <FormControlLabel
             control={<Checkbox checked={saveAsTemplate} onChange={(e) => setSaveAsTemplate(e.target.checked)} />}
             label="Save this as a reusable template for later?"

@@ -1,7 +1,14 @@
 // src/components/SensoryLog/AddSensoryLogModal.js
 import React, { useState, useEffect } from "react";
-import { Box, Modal, TextField, Button, Typography, IconButton } from "@mui/material";
-import MicNoneIcon from '@mui/icons-material/MicNone';
+import {
+  Box,
+  Modal,
+  TextField,
+  Button,
+  Typography,
+  IconButton,
+} from "@mui/material";
+import MicNoneIcon from "@mui/icons-material/MicNone";
 import { addDoc, collection } from "firebase/firestore";
 import { db } from "../../services/firebase";
 import SeverityRating from "../UI/Rating"; // Import your severity rating component

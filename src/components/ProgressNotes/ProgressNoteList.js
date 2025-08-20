@@ -17,12 +17,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditProgressNoteModal from "./EditProgressNoteModal";
 import { deleteProgressNote } from "../../services/progressNotesService";
-import {
-  collection,
-  query,
-  orderBy,
-  onSnapshot,
-} from "firebase/firestore";
+import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
 import { db } from "../../services/firebase";
 import MediaPreview from "./MediaPreview";
 

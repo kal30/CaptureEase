@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Container, Typography, Button, Box } from "@mui/material";
-import ProgressNoteList from "../components/Journal/ProgressNoteList";
-import AddProgressNoteModal from "../components/Journal/AddProgressNoteModal";
-import ProgressNoteCalendar from "../components/Journal/ProgressNoteCalendar";
+import ProgressNoteList from "../components/ProgressNotes/ProgressNoteList";
+import AddProgressNoteModal from "../components/ProgressNotes/AddProgressNoteModal";
+import ProgressNoteCalendar from "../components/ProgressNotes/ProgressNoteCalendar";
 import useChildName from "../hooks/useChildName"; // Import the custom hook
 import { useChildContext } from "../contexts/ChildContext";
 import "../assets/css/ProgressNotes.css";
