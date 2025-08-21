@@ -117,7 +117,7 @@ const Dashboard = () => {
         py: 4,
       }}
     >
-      <Container maxWidth="lg">
+      <Container maxWidth="xl">
         {/* Refined Header Section */}
         <Paper
           elevation={0}
@@ -183,7 +183,7 @@ const Dashboard = () => {
                   color: "text.primary",
                   fontWeight: 700,
                   mb: 1,
-                  fontSize: { xs: "2rem", md: "2.5rem" },
+                  fontSize: { xs: "2rem", md: "2.5rem", lg: "3rem", xl: "3.5rem" },
                   letterSpacing: "-0.02em",
                 }}
               >
@@ -201,9 +201,9 @@ const Dashboard = () => {
                 variant="body1"
                 sx={{
                   color: "text.secondary",
-                  fontSize: "1.1rem",
+                  fontSize: { xs: "1.1rem", md: "1.2rem", lg: "1.3rem" },
                   fontWeight: 400,
-                  maxWidth: 600,
+                  maxWidth: { xs: 600, lg: 800, xl: 1000 },
                 }}
               >
                 Keep track of your children's progress and collaborate with your
@@ -212,14 +212,19 @@ const Dashboard = () => {
             </Box>
 
             {/* Refined Stats Cards */}
-            <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+            <Box sx={{ display: "flex", gap: { xs: 2, md: 3, lg: 4 }, flexWrap: "wrap" }}>
               <Card
                 elevation={0}
                 sx={{
                   bgcolor: alpha(theme.palette.primary.main, 0.08),
                   border: `1px solid ${alpha(theme.palette.primary.main, 0.12)}`,
-                  borderRadius: 2,
-                  minWidth: 140,
+                  borderRadius: { xs: 2, md: 3 },
+                  minWidth: { xs: 140, md: 160, lg: 180 },
+                  transition: "transform 0.2s ease, box-shadow 0.2s ease",
+                  "&:hover": {
+                    transform: "translateY(-2px)",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                  },
                 }}
               >
                 <CardContent sx={{ p: 2, "&:last-child": { pb: 2 } }}>
@@ -250,8 +255,13 @@ const Dashboard = () => {
                 sx={{
                   bgcolor: alpha(theme.palette.success.main, 0.08),
                   border: `1px solid ${alpha(theme.palette.success.main, 0.12)}`,
-                  borderRadius: 2,
-                  minWidth: 140,
+                  borderRadius: { xs: 2, md: 3 },
+                  minWidth: { xs: 140, md: 160, lg: 180 },
+                  transition: "transform 0.2s ease, box-shadow 0.2s ease",
+                  "&:hover": {
+                    transform: "translateY(-2px)",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                  },
                 }}
               >
                 <CardContent sx={{ p: 2, "&:last-child": { pb: 2 } }}>
@@ -365,14 +375,15 @@ const Dashboard = () => {
                 )}
               </Paper>
             ) : (
-              <Grid container spacing={3}>
+              <Grid container spacing={{ xs: 3, md: 4, lg: 5 }}>
                 {children.map((child) => (
                   <Grid
                     item
                     xs={12}
                     sm={children.length > 1 ? 6 : 12}
                     md={children.length > 2 ? 4 : children.length > 1 ? 6 : 12}
-                    lg={children.length > 3 ? 3 : children.length > 1 ? 6 : 12}
+                    lg={children.length > 4 ? 3 : children.length > 2 ? 4 : children.length > 1 ? 6 : 12}
+                    xl={children.length > 5 ? 2 : children.length > 3 ? 3 : children.length > 1 ? 6 : 12}
                     key={child.id}
                   >
                     <ChildCard

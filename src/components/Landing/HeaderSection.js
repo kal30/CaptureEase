@@ -30,29 +30,35 @@ const HeaderSection = () => {
       sx={{
         backgroundColor: "background.default",
         position: "relative",
-        pt: { xs: 6, md: 6 },
-        pb: { xs: 6, md: 10 },
+        pt: { xs: 5, md: 6, lg: 7 },
+        pb: { xs: 4, md: 6, lg: 8 },
+        minHeight: { xs: "auto", md: "auto", lg: "auto" },
+        display: "flex",
+        alignItems: "center",
       }}
     >
-      <Container maxWidth="lg">
+      <Container maxWidth="xl">
         <Box
           sx={{
             display: "flex",
             flexDirection: { xs: "column", md: "row" },
             alignItems: "center",
             justifyContent: { xs: "center", md: "space-between" },
-            padding: { xs: 2, md: 4 },
+            gap: { xs: 3, md: 4, lg: 5 },
+            padding: { xs: 1, md: 2, lg: 3 },
           }}
         >
           {/* Left Side - Text */}
-          <Box sx={{ width: { xs: "100%", md: "50%" }, pr: 2 }}>
+          <Box sx={{ width: { xs: "100%", md: "50%", lg: "45%" }, pr: { md: 2, lg: 4 } }}>
             <Typography
               variant="h1"
               sx={{
                 color: "primary.main",
                 fontWeight: "bold",
-                fontSize: { xs: "2rem", md: "3rem" },
+                fontSize: { xs: "2rem", sm: "2.5rem", md: "3rem", lg: "3.5rem", xl: "4rem" },
                 fontFamily: `"Montserrat", sans-serif`,
+                lineHeight: { xs: 1.2, md: 1.1, lg: 1.15 },
+                mb: { xs: 2, md: 3, lg: 4 },
               }}
             >
               Simplifying Care for{" "}
@@ -71,11 +77,13 @@ const HeaderSection = () => {
             <Typography
               variant="h6"
               sx={{
-                mt: 4,
+                mt: { xs: 3, md: 4, lg: 5 },
                 color: "text.primary",
                 fontWeight: 300,
                 lineHeight: 1.6,
                 fontFamily: `"Poppins", sans-serif`,
+                fontSize: { xs: "1rem", sm: "1.1rem", md: "1.25rem", lg: "1.35rem", xl: "1.5rem" },
+                maxWidth: { xs: "100%", md: "90%", lg: "85%" },
               }}
             >
               Caring for someone shouldn’t mean juggling notebooks, sticky
@@ -92,21 +100,23 @@ const HeaderSection = () => {
               caring, not scrambling.
             </Typography>
 
-            <Box sx={{ mt: 5 }}>
+            <Box sx={{ mt: { xs: 4, md: 5, lg: 6 } }}>
               <Button
                 variant="contained"
                 color="primary"
                 size="large"
                 sx={{
-                  px: 4,
-                  py: 1.5,
-                  fontSize: "1rem",
-                  borderRadius: "8px",
+                  px: { xs: 4, md: 5, lg: 6 },
+                  py: { xs: 1.5, md: 2, lg: 2.5 },
+                  fontSize: { xs: "1rem", md: "1.1rem", lg: "1.25rem" },
+                  borderRadius: { xs: "8px", md: "12px" },
                   textTransform: "none",
                   boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)",
                   "&:hover": {
                     boxShadow: "0px 6px 14px rgba(0, 0, 0, 0.25)",
+                    transform: "translateY(-2px)",
                   },
+                  transition: "all 0.3s ease",
                   fontFamily: `"Poppins", sans-serif`,
                   fontWeight: 500,
                 }}
@@ -120,25 +130,27 @@ const HeaderSection = () => {
           {/* Right Side - Image and Floating Circle */}
           <Box
             sx={{
-              width: { xs: "100%", md: "50%" },
+              width: { xs: "100%", md: "50%", lg: "55%" },
               position: "relative",
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
+              minHeight: { xs: 300, md: 400, lg: 500, xl: 600 },
+              mt: { xs: 4, md: 0 },
             }}
           >
             {/* Floating Circle Shape */}
             <Box
               sx={{
                 position: "absolute",
-                width: { xs: 180, md: 260 },
-                height: { xs: 180, md: 260 },
+                width: { xs: 180, md: 260, lg: 320, xl: 380 },
+                height: { xs: 180, md: 260, lg: 320, xl: 380 },
                 backgroundColor: "secondary.main",
                 borderRadius: "50%",
                 zIndex: 0,
-                opacity: 0.12,
-                top: { xs: "-18%", md: "-22%" },
-                right: { xs: "-12%", md: "-15%" },
+                opacity: 0.08,
+                top: { xs: "-10%", md: "-15%", lg: "-12%" },
+                right: { xs: "-8%", md: "-10%", lg: "-8%" },
                 boxShadow: "0px 10px 20px rgba(0, 0, 0, 0.1)",
                 pointerEvents: "none",
               }}
@@ -150,14 +162,17 @@ const HeaderSection = () => {
               src={image2}
               alt="Caregiving Illustration"
               sx={{
-                position: "absolute",
-                bottom: { xs: "-80px", md: "-100px" },
-                width: { xs: 280, md: 400 },
-                height: { xs: 210, md: 300 },
-                borderRadius: "20px",
+                width: { xs: 280, md: 400, lg: 500, xl: 600 },
+                height: { xs: 210, md: 300, lg: 375, xl: 450 },
+                borderRadius: { xs: "16px", md: "20px", lg: "24px" },
                 objectFit: "cover",
-                boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)",
+                boxShadow: "0px 8px 25px rgba(0, 0, 0, 0.15)",
                 zIndex: 1,
+                transform: { xs: "none", md: "translateY(-20px)", lg: "translateY(-30px)" },
+                transition: "transform 0.3s ease",
+                "&:hover": {
+                  transform: { xs: "none", md: "translateY(-25px)", lg: "translateY(-35px)" },
+                },
               }}
             />
           </Box>

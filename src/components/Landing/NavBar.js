@@ -55,11 +55,12 @@ const Navbar = () => {
     >
       <Toolbar sx={{ py: { xs: 1, md: 1.5 } }}>
         <Container
-          maxWidth="lg"
+          maxWidth="xl"
           sx={{
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
+            px: { xs: 2, md: 3, lg: 4 },
           }}
         >
           {/* Logo Text */}
@@ -84,13 +85,14 @@ const Navbar = () => {
               src={Wordmark}
               alt="CaptureEz"
               sx={{
-                height: { xs: 52, md: 68 },
+                height: { xs: 52, md: 68, lg: 72, xl: 76 },
                 width: "auto",
                 display: "block",
                 objectFit: "contain",
                 objectPosition: "left center",
                 transform: "none",
                 m: 0,
+                transition: "height 0.2s ease",
               }}
             />
           </Button>

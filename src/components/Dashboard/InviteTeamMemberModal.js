@@ -17,12 +17,16 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  OutlinedInput
+  OutlinedInput,
+  FormHelperText
 } from '@mui/material';
+import EmailIcon from '@mui/icons-material/Email';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
 
 const InviteTeamMemberModal = ({ open, onClose, allChildren }) => {
   const [role, setRole] = useState('caregiver');
   const [email, setEmail] = useState('');
+  const [emailError, setEmailError] = useState('');
   const [specialization, setSpecialization] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -33,12 +37,46 @@ const InviteTeamMemberModal = ({ open, onClose, allChildren }) => {
   const handleClose = () => {
     setRole('caregiver');
     setEmail('');
+    setEmailError('');
     setSpecialization('');
     setMessage('');
     setLoading(false);
     setError('');
     setSuccess('');
+    setSelectedChildren([]);
     onClose();
+  };
+
+  // Enhanced email validation
+  const validateEmail = (email) => {
+    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+    
+    if (!email) {
+      return 'Email address is required';
+    }
+    
+    if (!emailRegex.test(email)) {
+      return 'Please enter a valid email address';
+    }
+    
+    if (email.length > 254) {
+      return 'Email address is too long';
+    }
+    
+    return '';
+  };
+
+  const handleEmailChange = (e) => {
+    const newEmail = e.target.value;
+    setEmail(newEmail);
+    
+    // Real-time validation
+    if (newEmail) {
+      const emailValidationError = validateEmail(newEmail);
+      setEmailError(emailValidationError);
+    } else {
+      setEmailError('');
+    }
   };
 
   const handleSubmit = async () => {
@@ -46,30 +84,79 @@ const InviteTeamMemberModal = ({ open, onClose, allChildren }) => {
     setSuccess('');
     setLoading(true);
 
-    if (!email || !role || selectedChildren.length === 0) {
-      setError('Email, Role, and at least one Child are required.');
+    // Validate all required fields
+    const emailValidationError = validateEmail(email);
+    if (emailValidationError) {
+      setEmailError(emailValidationError);
+      setError('Please fix the email address error.');
       setLoading(false);
       return;
     }
 
-    // Basic email validation
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError('Please enter a valid email address.');
+    if (!role) {
+      setError('Please select a role.');
+      setLoading(false);
+      return;
+    }
+
+    if (selectedChildren.length === 0) {
+      setError('Please select at least one child.');
+      setLoading(false);
+      return;
+    }
+
+    if (role === 'therapist' && !specialization.trim()) {
+      setError('Specialization is required for therapists.');
       setLoading(false);
       return;
     }
 
     try {
       const results = [];
+      const childNames = [];
+      
       for (const childId of selectedChildren) {
-        const result = await sendInvitation(childId, email, role, specialization, message);
+        const child = allChildren.find(c => c.id === childId);
+        childNames.push(child?.name || 'Unknown');
+        
+        const result = await sendInvitation(
+          childId, 
+          email.trim().toLowerCase(), 
+          role, 
+          specialization.trim(), 
+          message.trim()
+        );
         results.push(result.message);
       }
-      setSuccess(results.join(' '));
-      // handleClose(); // Close after success or keep open for more invitations
+      
+      const successMessage = `Invitation sent successfully to ${email} for ${childNames.join(', ')}.`;
+      setSuccess(successMessage);
+      
+      // Reset form after success
+      setTimeout(() => {
+        setEmail('');
+        setEmailError('');
+        setSpecialization('');
+        setMessage('');
+        setSelectedChildren([]);
+        setSuccess('');
+      }, 3000);
+      
     } catch (err) {
       console.error('Invitation error:', err);
-      setError(err.message || 'Failed to send invitation. Please try again.');
+      let errorMessage = 'Failed to send invitation. Please try again.';
+      
+      if (err.message) {
+        if (err.message.includes('already assigned')) {
+          errorMessage = 'This person is already assigned to the selected child(ren).';
+        } else if (err.message.includes('not found')) {
+          errorMessage = 'Child not found. Please refresh and try again.';
+        } else {
+          errorMessage = err.message;
+        }
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -118,7 +205,13 @@ const InviteTeamMemberModal = ({ open, onClose, allChildren }) => {
           fullWidth
           variant="outlined"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={handleEmailChange}
+          error={!!emailError}
+          helperText={emailError || 'Enter the email address of the person you want to invite'}
+          placeholder="example@email.com"
+          InputProps={{
+            startAdornment: <EmailIcon sx={{ color: 'action.active', mr: 1 }} />,
+          }}
           sx={{ mb: 2 }}
         />
 
@@ -150,10 +243,30 @@ const InviteTeamMemberModal = ({ open, onClose, allChildren }) => {
         />
 
       </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose} color="secondary" disabled={loading}>Cancel</Button>
-        <Button onClick={handleSubmit} color="primary" disabled={loading}>
-          {loading ? <CircularProgress size={24} /> : 'Send Invitation'}
+      <DialogActions sx={{ p: 3, pt: 1 }}>
+        <Button 
+          onClick={handleClose} 
+          color="secondary" 
+          disabled={loading}
+          sx={{ mr: 1 }}
+        >
+          Cancel
+        </Button>
+        <Button 
+          onClick={handleSubmit} 
+          variant="contained"
+          color="primary" 
+          disabled={loading || !!emailError || !email}
+          startIcon={loading ? <CircularProgress size={16} /> : <PersonAddIcon />}
+          sx={{ 
+            minWidth: 140,
+            background: 'linear-gradient(135deg, #F27F45 0%, #E85D2F 100%)',
+            '&:hover': {
+              background: 'linear-gradient(135deg, #E85D2F 0%, #D64925 100%)',
+            }
+          }}
+        >
+          {loading ? 'Sending...' : 'Send Invitation'}
         </Button>
       </DialogActions>
     </Dialog>

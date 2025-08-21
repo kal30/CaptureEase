@@ -74,7 +74,7 @@ export const sendInvitation = async (childId, email, role, specialization = null
                 // User exists in Auth but not in Firestore 'users' collection (unlikely but possible)
                 console.warn(`User ${email} exists in Auth but not in Firestore users collection. Sending invitation email.`);
                 // Send email via Cloud Function
-                await sendInvitationEmailCallable({
+                const emailResult = await sendInvitationEmailCallable({
                     recipientEmail: email,
                     childName,
                     role,
@@ -82,13 +82,14 @@ export const sendInvitation = async (childId, email, role, specialization = null
                     invitationLink,
                     personalMessage // Pass the personal message
                 });
+                console.log('Email sent successfully:', emailResult.data);
                 // Optional: Send SMS notification (uncomment and provide recipientPhoneNumber if you collect it)
                 // await sendSmsNotificationCallable({ recipientPhoneNumber: '+15551234567', messageBody: `Hi! ${senderName} invited you to ${childName}'s CareTeam. Check your email.` });
                 return { status: "invited", message: `Invitation email sent to ${email}.` };
             }
         } else {
             // User does not exist: Send invitation email via Cloud Function
-            await sendInvitationEmailCallable({
+            const emailResult = await sendInvitationEmailCallable({
                 recipientEmail: email,
                 childName,
                 role,
@@ -96,6 +97,7 @@ export const sendInvitation = async (childId, email, role, specialization = null
                 invitationLink,
                 personalMessage // Pass the personal message
             });
+            console.log('Email sent successfully:', emailResult.data);
             // Optional: Send SMS notification (uncomment and provide recipientPhoneNumber if you collect it)
             // await sendSmsNotificationCallable({ recipientPhoneNumber: '+15551234567', messageBody: `Hi! ${senderName} invited you to ${childName}'s CareTeam. Check your email.` });
             return { status: "invited", message: `Invitation email sent to ${email}.` };
