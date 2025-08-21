@@ -2,7 +2,7 @@
   max-width: 800px;
   margin: 0 auto;
   padding: 20px;
-  background-color: #FAF5EF; /* Cream */
+  /* Use theme background.default */
   border-radius: 12px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
@@ -25,7 +25,7 @@
 
 input[type="submit"],
 .submit-btn {
-  background: #EB684A; /* Terracotta */
+  /* Use theme journal.hoverIcon for background */
   color: #fff;
   margin-bottom: 1rem;
   border-radius: 8px;
@@ -37,7 +37,7 @@ input[type="submit"],
 
 input[type="submit"]:hover,
 .submit-btn:hover {
-  background-color: #F4B860; /* Mustard on hover */
+  /* Use theme journal.deleteHover for hover */
 }
 
 @media (max-width: 768px) {

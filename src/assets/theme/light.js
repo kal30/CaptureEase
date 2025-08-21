@@ -18,13 +18,35 @@ const theme = createTheme({
     accent: {
       main: "#FFC857",
     },
+    tertiary: {
+      main: "#7C6F57", // muted brown/khaki
+      light: "#A49592", // secondary from CSS files
+      dark: "#727077", // darker neutral
+    },
+    calendar: {
+      background: "#EED8C9",
+      accent: "#E99787",
+      accentHover: "#d48a7a",
+      weekendBg: "#f9f5f2",
+      eventDot: "#EB684A",
+      todayBg: "#A49592",
+      hoverBg: "#fce9e5",
+    },
+    journal: {
+      chipBg: "#A3B18A", // sage green
+      hoverIcon: "#EB684A", // terracotta
+      deleteHover: "#F4B860", // mustard
+    },
     background: {
       default: "#FFF8ED",
       paper: "#FFFFFF",
+      container: "#fff8ed", // light blue background for containers
     },
     text: {
       primary: "#333333",
       secondary: "#666666",
+      tertiary: "#888888", // muted grey
+      darkNeutral: "#04061f", // black pearl from App.css
     },
   },
   typography: {
@@ -366,6 +388,110 @@ const theme = createTheme({
           },
           "& .MuiBreadcrumbs-separator": {
             color: "#F27F45",
+          },
+        },
+      },
+    },
+    // Calendar component styling
+    MuiCalendar: {
+      styleOverrides: {
+        root: {
+          background: "#EED8C9",
+          borderRadius: "16px",
+          boxShadow: "0 4px 10px rgba(0, 0, 0, 0.05)",
+          padding: "20px",
+          maxWidth: "100%",
+          margin: "0 auto",
+          "& .rbc-toolbar": {
+            backgroundColor: "#FFFFFF",
+            padding: "10px",
+            borderRadius: "10px",
+            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.03)",
+          },
+          "& .rbc-toolbar button": {
+            backgroundColor: "#E99787",
+            color: "#FFFFFF",
+            border: "none",
+            borderRadius: "6px",
+            padding: "5px 10px",
+            fontWeight: "bold",
+            transition: "background-color 0.2s ease, box-shadow 0.2s ease",
+            "&:hover": {
+              backgroundColor: "#d48a7a",
+              boxShadow: "0 2px 5px rgba(0, 0, 0, 0.1)",
+            },
+          },
+          "& .rbc-month-view": {
+            borderRadius: "10px",
+          },
+          "& .rbc-date-cell": {
+            borderRadius: "8px",
+            padding: "5px",
+            transition: "background-color 0.2s ease",
+            "&:hover": {
+              backgroundColor: "transparent !important",
+            },
+          },
+          "& .rbc-day-bg:hover": {
+            backgroundColor: "#fce9e5 !important",
+          },
+          "& .rbc-date-cell--now": {
+            backgroundColor: "#A49592",
+            borderRadius: "50%",
+          },
+          "& .rbc-date-cell--active": {
+            backgroundColor: "#E99787 !important",
+            color: "#FFFFFF !important",
+            borderRadius: "50%",
+          },
+          "& .rbc-header": {
+            fontWeight: "bold",
+            fontSize: "small",
+            color: "#333333",
+            padding: "10px",
+            textTransform: "uppercase",
+            textAlign: "center",
+          },
+          "& .rbc-day-bg:nth-child(1), & .rbc-day-bg:nth-child(7)": {
+            backgroundColor: "#f9f5f2",
+            color: "#888888",
+          },
+          "& .rbc-event": {
+            backgroundColor: "#A49592",
+            borderRadius: "8px",
+            color: "#FFFFFF",
+            padding: "5px",
+            opacity: 0.9,
+          },
+          "& .rbc-day-bg.has-event::after": {
+            content: "''",
+            position: "absolute",
+            bottom: "5px",
+            right: "5px",
+            width: "8px",
+            height: "8px",
+            backgroundColor: "#EB684A",
+            borderRadius: "50%",
+          },
+          "& .rbc-day-bg.has-progress-note::before": {
+            content: "''",
+            position: "absolute",
+            top: "5px",
+            left: "5px",
+            width: "8px",
+            height: "8px",
+            backgroundColor: "#A49592",
+            borderRadius: "50%",
+          },
+          "& .rbc-day-bg.has-sensory-log::after": {
+            content: "''",
+            position: "absolute",
+            top: "5px",
+            right: "5px",
+            width: "8px",
+            height: "8px",
+            backgroundColor: "#727077",
+            borderRadius: "50%",
           },
         },
       },

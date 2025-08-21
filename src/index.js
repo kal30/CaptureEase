@@ -3,12 +3,14 @@ import ReactDOM from "react-dom/client";
 import App from "./App";
 import "./assets/css/App.css";
 import reportWebVitals from "./reportWebVitals";
-
+import { ErrorProvider } from "./contexts/ErrorContext";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
-    <App />
+    <ErrorProvider>
+      <App />
+    </ErrorProvider>
   </React.StrictMode>
 );
 

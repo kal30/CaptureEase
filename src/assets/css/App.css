@@ -3,8 +3,8 @@ body {
   margin: 0;
   padding: 0;
   font-family: "Roboto", sans-serif;
-  /* background-color: #edfdfd; /* Foam background from your theme */
-  color: #04061f; /* Black Pearl text color from your theme */
+  /* Use theme colors - background will be set by MUI ThemeProvider */
+  /* color will be set by MUI theme text.primary */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -31,14 +31,14 @@ code {
 }
 
 .App-header {
-  background-color: #fff8ed;
+  /* Use theme background.default instead of hardcoded color */
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   font-size: calc(10px + 2vmin);
-  color: white;
+  /* color will be set by theme */
 }
 
 .logo {
@@ -52,14 +52,12 @@ code {
 
 /* Global Styles or in a CSS Module */
 .journal-entry-day {
-  background-color: #81d4fa; /* Light blue background for entry days */
-  color: white; /* White text */
-  border-radius: 50%; /* Round corners */
+  /* Use theme calendar colors - will be moved to MUI component styling */
+  border-radius: 50%;
 }
 
 .react-calendar .journal-entry-day {
-  background-color: #81d4fa !important; /* Use !important to ensure it applies */
-  color: #fff !important; /* Ensure text is white */
+  /* Calendar styling moved to theme - remove hardcoded colors */
 }
 
 /* Custom styles for react-calendar */
@@ -75,23 +73,22 @@ code {
 }
 
 .react-calendar__tile--hover {
-  background-color: #e0f7fa; /* Light cyan on hover */
+  /* Hover color moved to theme */
 }
 
 .journal-entry-day {
-  background-color: #81d4fa; /* Light blue for journal entry days */
-  color: white;
+  /* Colors moved to theme */
   border-radius: 10px;
 }
 
 .container {
-  background-color: #fff8ed; /* Light blue background for the page */
+  /* Use theme background.container */
 }
 
 .card {
   margin-top: 16px;
-  background-color: #fff; /* White background for cards */
-  border-radius: 8px; /* Rounded corners */
+  /* Background and styling moved to MUI Card component in theme */
+  border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 

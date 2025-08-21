@@ -7,6 +7,7 @@ import SensoryLogTab from "./SensoryLogTab";
 import BehaviorTab from "./BehaviorTab";
 import MoodLogTab from "./MoodLogTab";
 import DailyNotesTab from "./DailyNotesTab";
+import TimelineTab from "./TimelineTab";
 
 function a11yProps(index) {
   return {
@@ -69,6 +70,7 @@ const ChildLogPage = () => {
           <Tab label="Sensory Logs" {...a11yProps(2)} />
           <Tab label="Behaviors" {...a11yProps(3)} />
           <Tab label="Mood Logs" {...a11yProps(4)} />
+          <Tab label="Timeline" {...a11yProps(5)} />
         </Tabs>
       </Box>
 
@@ -86,6 +88,9 @@ const ChildLogPage = () => {
       </TabPanel>
       <TabPanel value={value} index={4}>
         <MoodLogTab childId={currentChildId} />
+      </TabPanel>
+      <TabPanel value={value} index={5}>
+        <TimelineTab childId={currentChildId} />
       </TabPanel>
     </Container>
   );

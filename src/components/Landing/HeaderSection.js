@@ -145,14 +145,15 @@ const HeaderSection = () => {
             />
 
             {/* Image */}
-            <img
+            <Box
+              component="img"
               src={image2}
               alt="Caregiving Illustration"
-              style={{
+              sx={{
                 position: "absolute",
-                bottom: window.innerWidth < 900 ? "-80px" : "-100px",
-                width: window.innerWidth < 900 ? 280 : 400,
-                height: window.innerWidth < 900 ? 210 : 300,
+                bottom: { xs: "-80px", md: "-100px" },
+                width: { xs: 280, md: 400 },
+                height: { xs: 210, md: 300 },
                 borderRadius: "20px",
                 objectFit: "cover",
                 boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)",

@@ -7,6 +7,7 @@ import theme from "./assets/theme/light";
 import Navbar from "./components/Landing/NavBar"; // Import the Navbar component
 import { auth } from "./services/firebase";
 import { ChildProvider } from "./contexts/ChildContext";
+import { ErrorBoundary } from "./contexts/ErrorContext";
 
 const App = () => {
   useEffect(() => {
@@ -24,8 +25,10 @@ const App = () => {
     <ThemeProvider theme={theme}>
       <ChildProvider>
         <Router>
-          <Navbar />
-          <AppRoutes />
+          <ErrorBoundary>
+            <Navbar />
+            <AppRoutes />
+          </ErrorBoundary>
         </Router>
       </ChildProvider>
     </ThemeProvider>

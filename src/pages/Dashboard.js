@@ -7,6 +7,8 @@ import {
   Grid,
   CircularProgress,
   Paper,
+  Card,
+  CardContent,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import AddChildModal from "../components/Dashboard/AddChildModal";
@@ -36,18 +38,16 @@ const Dashboard = () => {
   const [editChildOpen, setEditChildOpen] = useState(false);
   const [logMoodOpen, setLogMoodOpen] = useState(false);
   const [selectedChild, setSelectedChild] = useState(null);
-
-  // New state for expanded child
   const [expandedChildId, setExpandedChildId] = useState(null);
-
-  // Fetch all children from Firestore in real-time
   const [userDisplayName, setUserDisplayName] = useState("");
   const [userRole, setUserRole] = useState(null);
   const [loadingUserRole, setLoadingUserRole] = useState(true);
 
+  const theme = useTheme();
+
   useEffect(() => {
     const auth = getAuth();
-    let unsubscribeSnapshot = null; // Declare and initialize unsubscribeSnapshot here
+    let unsubscribeSnapshot = null;
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setUserDisplayName(user.displayName || user.email || "User");
@@ -59,9 +59,7 @@ const Dashboard = () => {
           const userData = userDocSnap.data();
           currentRole = userData.role;
           setUserRole(currentRole);
-          console.log("User role set to:", currentRole);
         } else {
-          console.log("User document not found.");
           setUserRole(null);
         }
 
@@ -77,7 +75,6 @@ const Dashboard = () => {
             where("users.therapists", "array-contains", user.uid)
           );
         } else {
-          // Handle other roles or no role, or user document not found
           setChildren([]);
           setLoadingUserRole(false);
           return;
@@ -96,10 +93,8 @@ const Dashboard = () => {
         unsubscribeSnapshot = currentUnsubscribeSnapshot;
         setLoadingUserRole(false);
       } else {
-        // If user logs out, ensure children are cleared and loading state is handled
         setChildren([]);
         setLoadingUserRole(false);
-        // Also, if there was a previous snapshot listener, unsubscribe it
         if (unsubscribeSnapshot) {
           unsubscribeSnapshot();
         }
@@ -114,38 +109,43 @@ const Dashboard = () => {
     };
   }, []);
 
-  const theme = useTheme();
-  const isCompact = children.length > 2;
-
   return (
     <Box
       sx={{
         minHeight: "100vh",
         bgcolor: "background.default",
-        padding: "16px 0",
+        py: 4,
       }}
     >
       <Container maxWidth="lg">
-        {/* Header Section */}
-        <Box
+        {/* Refined Header Section */}
+        <Paper
+          elevation={0}
           sx={{
+            borderRadius: 3,
+            p: 4,
+            mb: 4,
             bgcolor: "background.paper",
-            borderRadius: "20px",
-            padding: { xs: "22px 16px", sm: "30px 22px" },
-            marginBottom: "16px",
-            boxShadow: "0 6px 20px rgba(17,24,39,0.06)",
-            border: `1px solid ${alpha("#000", 0.04)}`,
+            border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
             position: "relative",
             overflow: "hidden",
-            minHeight: { xs: "140px", sm: "160px" },
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            alignItems: "flex-start",
-            backgroundImage: `linear-gradient(90deg, ${alpha("#5B8C51", 0.06)} 0%, ${alpha("#CB6318", 0.06)} 100%)`,
           }}
         >
-          {/* Add New Child button for parents, absolutely positioned */}
+          {/* Subtle background accent */}
+          <Box
+            sx={{
+              position: "absolute",
+              top: -50,
+              right: -50,
+              width: 200,
+              height: 200,
+              borderRadius: "50%",
+              bgcolor: alpha(theme.palette.primary.main, 0.03),
+              zIndex: 0,
+            }}
+          />
+
+          {/* Add Child Button - Cleaner positioning */}
           {userRole === "parent" && (
             <Button
               variant="contained"
@@ -153,210 +153,177 @@ const Dashboard = () => {
               startIcon={<AddIcon />}
               sx={{
                 position: "absolute",
-                top: { xs: 12, sm: 18 },
-                right: { xs: 12, sm: 22 },
+                top: 24,
+                right: 24,
                 bgcolor: "primary.main",
-                color: "#FFFFFF",
-                padding: "10px 18px",
-                fontSize: "1rem",
-                fontWeight: 700,
-                borderRadius: "16px",
-                boxShadow: "0 1px 2px rgba(17,24,39,0.06)",
-                minWidth: "0",
-                zIndex: 10,
+                borderRadius: 2,
+                px: 3,
+                py: 1.5,
+                boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                fontWeight: 600,
+                zIndex: 2,
                 "&:hover": {
                   bgcolor: "primary.dark",
-                  cursor: "pointer",
-                  boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.1)",
+                  transform: "translateY(-1px)",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
                 },
-                transition: "all 0.2s ease-in-out",
+                transition: "all 0.2s ease",
               }}
             >
-              Add New Child
+              Add Child
             </Button>
           )}
-          <Box sx={{ position: "relative", zIndex: 2 }}>
-            <Typography
-              variant="h4"
-              component="h1"
-              gutterBottom
-              sx={{
-                color: "#5B8C51",
-                fontFamily: "Dancing Script, cursive",
-                fontWeight: 600,
-                marginBottom: 1,
-                fontSize: {
-                  xs: "1.4rem",
-                  sm: "1.8rem",
-                  md: "2.2rem",
-                  lg: "2.4rem",
-                },
-                lineHeight: 1.18,
-                letterSpacing: "-0.01em",
-                display: "flex",
-                alignItems: "center",
-                gap: 1,
-              }}
-            >
-              Welcome, {userDisplayName}!
-              <EmojiEmotionsIcon
-                sx={{
-                  fontSize: { xs: 22, sm: 28 },
-                  color: "accent.main",
-                  ml: 1,
-                  mb: -0.5,
-                  animation: "wave 1.5s infinite",
-                }}
-              />
-            </Typography>
-            <style>{`
-              @keyframes wave {
-                0% { transform: rotate(0deg); }
-                10% { transform: rotate(14deg); }
-                20% { transform: rotate(-8deg); }
-                30% { transform: rotate(14deg); }
-                40% { transform: rotate(-4deg); }
-                50% { transform: rotate(10deg); }
-                60% { transform: rotate(0deg); }
-                100% { transform: rotate(0deg); }
-              }
-            `}</style>
-            <Typography
-              variant="body2"
-              sx={{
-                color: "text.secondary",
-                fontSize: { xs: "1.08rem", sm: "1.15rem" },
-                fontWeight: 400,
-                marginBottom: 2,
-                maxWidth: "500px",
-                lineHeight: 1.5,
-                letterSpacing: "0.01em",
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-              }}
-            >
-              Manage your children's care and track their progress easily
-            </Typography>
 
-            {/* Quick Stats */}
-            <Box
-              sx={{
-                display: "flex",
-                gap: 2,
-                flexWrap: "wrap",
-                marginTop: 2,
-              }}
-            >
-              <Box
+          <Box sx={{ position: "relative", zIndex: 1 }}>
+            {/* Cleaner Welcome Section */}
+            <Box sx={{ mb: 3 }}>
+              <Typography
+                variant="h3"
                 sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 0.5,
-                  padding: "6px 12px",
-                  bgcolor: "primary.main",
-                  borderRadius: "999px",
-                  boxShadow: "0 1px 2px rgba(17,24,39,0.06)",
-                  fontWeight: 500,
-                  fontSize: "0.95rem",
-                  minWidth: "90px",
+                  color: "text.primary",
+                  fontWeight: 700,
+                  mb: 1,
+                  fontSize: { xs: "2rem", md: "2.5rem" },
+                  letterSpacing: "-0.02em",
                 }}
               >
-                <ChildCareIcon
-                  sx={{ color: "#FFFFFF", fontSize: 16, mr: 0.5 }}
+                Welcome back, {userDisplayName}
+                <EmojiEmotionsIcon
+                  sx={{
+                    fontSize: { xs: 28, md: 32 },
+                    color: "primary.main",
+                    ml: 1,
+                    verticalAlign: "middle",
+                  }}
                 />
-                <Typography
-                  variant="body2"
-                  sx={{
-                    color: "#FFFFFF",
-                    fontWeight: 500,
-                    fontSize: "0.95rem",
-                  }}
-                >
-                  {children.length}{" "}
-                  {children.length === 1 ? "Child" : "Children"}
-                </Typography>
-              </Box>
-
-              <Box
+              </Typography>
+              <Typography
+                variant="body1"
                 sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 0.5,
-                  padding: "6px 12px",
-                  backgroundColor: alpha("#5B8C51", 0.12),
-                  borderRadius: "999px",
-                  boxShadow: "0 1px 2px rgba(17,24,39,0.06)",
-                  fontWeight: 600,
-                  fontSize: "0.95rem",
-                  minWidth: "110px",
+                  color: "text.secondary",
+                  fontSize: "1.1rem",
+                  fontWeight: 400,
+                  maxWidth: 600,
                 }}
               >
-                <GroupIcon sx={{ color: "#2F5E27", fontSize: 16, mr: 0.5 }} />
-                <Typography
-                  variant="body2"
-                  sx={{
-                    color: "#2F5E27",
-                    fontWeight: 600,
-                    fontSize: "0.95rem",
-                  }}
-                >
-                  Active Care Team
-                </Typography>
-              </Box>
+                Keep track of your children's progress and collaborate with your
+                care team
+              </Typography>
+            </Box>
+
+            {/* Refined Stats Cards */}
+            <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+              <Card
+                elevation={0}
+                sx={{
+                  bgcolor: alpha(theme.palette.primary.main, 0.08),
+                  border: `1px solid ${alpha(theme.palette.primary.main, 0.12)}`,
+                  borderRadius: 2,
+                  minWidth: 140,
+                }}
+              >
+                <CardContent sx={{ p: 2, "&:last-child": { pb: 2 } }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <ChildCareIcon
+                      sx={{ color: "primary.main", fontSize: 20 }}
+                    />
+                    <Box>
+                      <Typography
+                        variant="h6"
+                        sx={{ color: "primary.main", fontWeight: 700, mb: 0 }}
+                      >
+                        {children.length}
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        sx={{ color: "primary.main", fontWeight: 500 }}
+                      >
+                        {children.length === 1 ? "Child" : "Children"}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
+
+              <Card
+                elevation={0}
+                sx={{
+                  bgcolor: alpha(theme.palette.success.main, 0.08),
+                  border: `1px solid ${alpha(theme.palette.success.main, 0.12)}`,
+                  borderRadius: 2,
+                  minWidth: 140,
+                }}
+              >
+                <CardContent sx={{ p: 2, "&:last-child": { pb: 2 } }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <GroupIcon sx={{ color: "success.main", fontSize: 20 }} />
+                    <Box>
+                      <Typography
+                        variant="h6"
+                        sx={{ color: "success.main", fontWeight: 700, mb: 0 }}
+                      >
+                        Active
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        sx={{ color: "success.main", fontWeight: 500 }}
+                      >
+                        Care Team
+                      </Typography>
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
             </Box>
           </Box>
-        </Box>
+        </Paper>
 
+        {/* Content Section */}
         {loadingUserRole ? (
           <Box
             sx={{
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
-              minHeight: "400px",
+              minHeight: "300px",
             }}
           >
-            <CircularProgress
-              size={60}
-              sx={{
-                color: "primary.main",
-              }}
-            />
+            <CircularProgress size={48} sx={{ color: "primary.main" }} />
           </Box>
         ) : (
           <>
-            {children.length === 0 && !loadingUserRole ? (
+            {children.length === 0 ? (
               <Paper
+                elevation={0}
                 sx={{
-                  padding: "56px 28px",
+                  p: 6,
                   textAlign: "center",
-                  borderRadius: "24px",
-                  background: "#FFFFFF",
-                  boxShadow: "0 1px 2px rgba(17,24,39,0.04)",
+                  borderRadius: 3,
+                  bgcolor: "background.paper",
+                  border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
                 }}
               >
                 <Box
                   sx={{
-                    width: 64,
-                    height: 64,
+                    width: 80,
+                    height: 80,
                     borderRadius: "50%",
-                    bgcolor: alpha(theme.palette.primary.main, 0.12),
+                    bgcolor: alpha(theme.palette.primary.main, 0.1),
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     mx: "auto",
-                    mb: 2,
+                    mb: 3,
                   }}
                 >
                   <ChildCareIcon sx={{ fontSize: 40, color: "primary.main" }} />
                 </Box>
                 <Typography
-                  variant="h6"
+                  variant="h5"
                   sx={{
-                    color: "primary.main",
-                    fontWeight: 700,
-                    marginBottom: 2,
+                    color: "text.primary",
+                    fontWeight: 600,
+                    mb: 2,
                   }}
                 >
                   No children added yet
@@ -365,7 +332,9 @@ const Dashboard = () => {
                   variant="body1"
                   sx={{
                     color: "text.secondary",
-                    marginBottom: 3,
+                    mb: 4,
+                    maxWidth: 400,
+                    mx: "auto",
                   }}
                 >
                   {userRole === "parent"
@@ -377,20 +346,18 @@ const Dashboard = () => {
                     variant="contained"
                     onClick={() => setAddChildOpen(true)}
                     startIcon={<AddIcon />}
+                    size="large"
                     sx={{
                       bgcolor: "primary.main",
-                      color: "#FFFFFF",
-                      padding: "12px 24px",
-                      fontSize: "0.875rem",
+                      px: 4,
+                      py: 1.5,
+                      borderRadius: 2,
                       fontWeight: 600,
-                      borderRadius: "12px",
-                      boxShadow: "0 1px 2px rgba(17,24,39,0.06)",
                       "&:hover": {
                         bgcolor: "primary.dark",
-                        cursor: "pointer",
-                        boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.1)",
+                        transform: "translateY(-1px)",
                       },
-                      transition: "all 0.2s ease-in-out",
+                      transition: "all 0.2s ease",
                     }}
                   >
                     Add Your First Child
@@ -403,10 +370,9 @@ const Dashboard = () => {
                   <Grid
                     item
                     xs={12}
-                    sm={isCompact ? 6 : 12}
-                    md={isCompact ? 4 : 6}
-                    lg={isCompact ? 3 : 4}
-                    xl={3}
+                    sm={children.length > 1 ? 6 : 12}
+                    md={children.length > 2 ? 4 : children.length > 1 ? 6 : 12}
+                    lg={children.length > 3 ? 3 : children.length > 1 ? 6 : 12}
                     key={child.id}
                   >
                     <ChildCard
@@ -415,11 +381,8 @@ const Dashboard = () => {
                         setSelectedChild(child);
                         setEditChildOpen(true);
                       }}
-                      onAssignCaregiver={() => {
+                      onInviteTeamMember={() => {
                         setSelectedChild(child);
-                        setInviteTeamMemberOpen(true);
-                      }}
-                      onInviteTherapist={() => {
                         setInviteTeamMemberOpen(true);
                       }}
                       onLogMood={() => {
@@ -433,14 +396,13 @@ const Dashboard = () => {
                         )
                       }
                       userRole={userRole}
-                      compact={isCompact}
-                      iconSpacing={0.5}
                     />
                   </Grid>
                 ))}
               </Grid>
             )}
 
+            {/* Modals */}
             <AddChildModal
               open={addChildOpen}
               onClose={() => setAddChildOpen(false)}

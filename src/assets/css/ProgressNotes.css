@@ -1,7 +1,6 @@
 /* JournalButton.css */
 .journal-button {
-  background: #E99787; /* Accent */
-  color: #FFFFFF;
+  /* Use theme calendar.accent color */
   margin-bottom: 1rem;
   border-radius: 8px;
   padding: 10px 20px;
@@ -10,17 +9,17 @@
 }
 
 .journal-button:hover {
-  background: #d48a7a; /* Darker Accent on hover */
+  /* Use theme calendar.accentHover color */
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 /* ProgressNoteList.css */
 
 .journal-paper {
-  margin-bottom: 24px; /* 3rem */
-  padding: 24px; /* 3rem */
-  border-radius: 12px; /* Softer rounding */
-  background: #FFFFFF; /* Clean white background */
-  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.05); /* Lighter shadow */
+  margin-bottom: 24px;
+  padding: 24px;
+  border-radius: 12px;
+  /* Use theme background.paper */
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.05);
   transition: box-shadow 0.3s ease-in-out;
 }
 /* e0f7fa */
@@ -32,12 +31,12 @@
 /* Title Styling */
 .journal-title {
   font-weight: bold;
-  color: #333333; /* Dark Neutral */
+  /* Use theme text.primary */
 }
 
 /* Date Styling */
 .journal-date {
-  color: #888888; /* Text Secondary */
+  /* Use theme text.tertiary */
   margin-bottom: 16px;
 }
 
@@ -58,8 +57,7 @@
 }
 
 .journal-chip {
-  background-color: #A3B18A; /* Sage Green */
-  color: #FFFFFF; /* White Text */
+  /* Use theme journal.chipBg */
 }
 
 /* Edit and Delete Icon Styling */
@@ -69,9 +67,9 @@
 }
 
 .journal-icon:hover {
-  color: #EB684A; /* Terracotta on hover */
+  /* Use theme journal.hoverIcon */
 }
 
 .journal-delete-icon:hover {
-  color: #F4B860; /* Mustard on hover */
+  /* Use theme journal.deleteHover */
 }
