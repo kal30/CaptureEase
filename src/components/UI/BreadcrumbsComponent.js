@@ -1,18 +1,24 @@
 // BreadcrumbsComponent.js
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Breadcrumbs, Link, Typography, Box, Container } from "@mui/material";
 import { useLocation, Link as RouterLink } from "react-router-dom";
 import HomeIcon from "@mui/icons-material/Home";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { auth } from "../../services/firebase";
 
 const BreadcrumbsComponent = () => {
   const location = useLocation();
+  const [user, setUser] = useState(null);
 
-  const isLoggedIn = !!(
-    localStorage.getItem("authToken") ||
-    localStorage.getItem("token") ||
-    localStorage.getItem("user")
-  );
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const isLoggedIn = !!user;
 
   const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
