@@ -15,6 +15,9 @@ import AddChildModal from "../components/Dashboard/AddChildModal";
 import InviteTeamMemberModal from "../components/Dashboard/InviteTeamMemberModal";
 import EditChildModal from "../components/Dashboard/EditChildModal";
 import ChildCard from "../components/Dashboard/ChildCard";
+import ResponsiveLayout from "../components/Layout/ResponsiveLayout";
+import MobileDashboard from "../components/Mobile/MobileDashboard";
+import TabletDashboard from "../components/Tablet/TabletDashboard";
 import {
   doc,
   getDoc,
@@ -110,14 +113,11 @@ const Dashboard = () => {
   }, []);
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        bgcolor: "background.default",
-        py: 4,
-      }}
+    <ResponsiveLayout 
+      pageTitle="Dashboard"
+      customMobile={<MobileDashboard children={children} user={{ displayName: userDisplayName }} />}
+      customTablet={<TabletDashboard children={children} user={{ displayName: userDisplayName }} />}
     >
-      <Container maxWidth="xl">
         {/* Refined Header Section */}
         <Paper
           elevation={0}
@@ -439,8 +439,7 @@ const Dashboard = () => {
             )}
           </>
         )}
-      </Container>
-    </Box>
+    </ResponsiveLayout>
   );
 };
 

@@ -13,6 +13,8 @@ import {
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import GoogleAuth from "../components/AuthProviders/GoogleAuth";
+import PasskeyAuth from "../components/AuthProviders/PasskeyAuth";
+import ResponsiveLayout from "../components/Layout/ResponsiveLayout";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -64,24 +66,25 @@ const Login = () => {
   };
 
   return (
-    <Container
-      component="main"
-      maxWidth="xs"
-      sx={{
-        height: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <Paper
+    <ResponsiveLayout pageTitle="Sign In" showBottomNav={false}>
+      <Box
+        sx={{
+          minHeight: "80vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          py: 4,
+        }}
+      >
+        <Paper
         elevation={6}
         sx={{
-          p: 4,
+          p: { xs: 3, sm: 4 },
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
           width: "100%",
+          maxWidth: 400,
           borderRadius: "12px",
         }}
       >
@@ -153,6 +156,9 @@ const Login = () => {
           </Button>
         </Box>
         <Divider sx={{ width: "100%", my: 2 }}>OR</Divider>
+        <Box sx={{ width: "100%", mb: 2 }}>
+          <PasskeyAuth mode="signin" />
+        </Box>
         <GoogleAuth buttonText="Sign In with Google" />
         <Box sx={{ mt: 2 }}>
           <Link
@@ -164,7 +170,8 @@ const Login = () => {
           </Link>
         </Box>
       </Paper>
-    </Container>
+      </Box>
+    </ResponsiveLayout>
   );
 };
 

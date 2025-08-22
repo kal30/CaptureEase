@@ -17,6 +17,7 @@ import {
   updateProfile,
 } from "firebase/auth";
 import GoogleAuth from "../components/AuthProviders/GoogleAuth"; // Keep Google Auth
+import ResponsiveLayout from "../components/Layout/ResponsiveLayout";
 
 const Register = () => {
   const [email, setEmail] = useState("");
@@ -74,27 +75,28 @@ const Register = () => {
   };
 
   return (
-    <Container
-      component="main"
-      maxWidth="xs"
-      sx={{
-        height: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <Paper
-        elevation={6}
+    <ResponsiveLayout pageTitle="Sign Up" showBottomNav={false}>
+      <Box
         sx={{
-          p: 4,
+          minHeight: "80vh",
           display: "flex",
-          flexDirection: "column",
           alignItems: "center",
-          width: "100%",
-          borderRadius: "12px",
+          justifyContent: "center",
+          py: 4,
         }}
       >
+        <Paper
+          elevation={6}
+          sx={{
+            p: { xs: 3, sm: 4 },
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            width: "100%",
+            maxWidth: 400,
+            borderRadius: "12px",
+          }}
+        >
         <Typography
           component="h1"
           variant="h5"
@@ -192,7 +194,8 @@ const Register = () => {
           </Link>
         </Box>
       </Paper>
-    </Container>
+      </Box>
+    </ResponsiveLayout>
   );
 };
 

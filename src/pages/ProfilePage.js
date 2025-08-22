@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Typography, TextField, Button, Box, Paper, CircularProgress, Alert, Divider } from '@mui/material';
 import { getAuth, updateProfile, updatePassword } from 'firebase/auth';
+import PasskeyAuth from '../components/AuthProviders/PasskeyAuth';
+import ResponsiveLayout from '../components/Layout/ResponsiveLayout';
 
 const ProfilePage = () => {
   const auth = getAuth();
@@ -78,8 +80,8 @@ const ProfilePage = () => {
   };
 
   return (
-    <Container component="main" maxWidth="sm" sx={{ mt: 8, mb: 4 }}>
-      <Paper elevation={6} sx={{ p: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', borderRadius: '12px' }}>
+    <ResponsiveLayout pageTitle="Profile Settings">
+      <Paper elevation={6} sx={{ p: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', borderRadius: '12px', maxWidth: 'sm', mx: 'auto' }}>
         <Typography component="h1" variant="h5" sx={{ mb: 3, fontWeight: 'bold', color: 'primary.main' }}>
           User Profile
         </Typography>
@@ -149,6 +151,13 @@ const ProfilePage = () => {
 
         <Divider sx={{ width: '100%', my: 3 }} />
 
+        {/* Passkey Management Section */}
+        <Box sx={{ mt: 2, width: '100%' }}>
+          <PasskeyAuth mode="register" />
+        </Box>
+
+        <Divider sx={{ width: '100%', my: 3 }} />
+
         <Box sx={{ mt: 2, width: '100%' }}>
           <Typography variant="h6" sx={{ mb: 1 }}>Your Email</Typography>
           <Typography variant="body1" sx={{ mb: 2 }}>
@@ -159,7 +168,7 @@ const ProfilePage = () => {
           </Typography>
         </Box>
       </Paper>
-    </Container>
+    </ResponsiveLayout>
   );
 };
 

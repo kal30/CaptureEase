@@ -2,6 +2,7 @@ import React from 'react';
 import { Container, Typography } from '@mui/material';
 import CareTeamTabs from '../components/CareTeam/CareTeamTabs';
 import { useLocation } from 'react-router-dom';
+import ResponsiveLayout from '../components/Layout/ResponsiveLayout';
 
 const CareTeamPage = () => {
   const location = useLocation();
@@ -9,12 +10,12 @@ const CareTeamPage = () => {
   console.log("CareTeamPage - initialTab:", initialTab);
 
   return (
-    <Container sx={{ mt: 5 }}>
+    <ResponsiveLayout pageTitle="Care Team">
       <Typography variant="h4" gutterBottom>
         Care Team
       </Typography>
       <CareTeamTabs initialTab={initialTab} />
-    </Container>
+    </ResponsiveLayout>
   );
 };
 

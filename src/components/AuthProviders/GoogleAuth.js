@@ -61,24 +61,31 @@ const GoogleAuth = ({ buttonText }) => {
           alignItems: "center",
         }}
       >
-        <Typography component="h1" variant="h5">
-          {buttonText} {/* Use custom button text */}
-        </Typography>
 
         <Button
           variant="contained"
           startIcon={<GoogleIcon />}
           onClick={handleGoogleLogin}
           sx={{
-            backgroundColor: "#4285F4", // Google blue
-            color: "#fff",
-            padding: "10px 20px",
+            backgroundColor: "white",
+            color: "#757575",
+            border: "1px solid #dadce0",
+            padding: "12px 24px",
             textTransform: "none",
             fontSize: "16px",
+            fontWeight: 500,
             display: "flex",
             alignItems: "center",
-            ":hover": { backgroundColor: "#357ae8" },
-            boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
+            borderRadius: "8px",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+            "&:hover": { 
+              backgroundColor: "#f8f9fa",
+              boxShadow: "0 4px 8px rgba(0,0,0,0.15)",
+              border: "1px solid #c6c6c6"
+            },
+            "&:active": {
+              backgroundColor: "#f1f3f4"
+            }
           }}
         >
           {buttonText} {/* Use custom button text */}

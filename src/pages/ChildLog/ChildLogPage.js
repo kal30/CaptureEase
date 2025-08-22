@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Container, Typography, Box, Tabs, Tab } from "@mui/material";
 import { useChildContext } from "../../contexts/ChildContext";
 import useChildName from "../../hooks/useChildName";
+import ResponsiveLayout from "../../components/Layout/ResponsiveLayout";
 import ProgressNoteTab from "./ProgressNoteTab";
 import SensoryLogTab from "./SensoryLogTab";
 import BehaviorTab from "./BehaviorTab";
@@ -53,7 +54,7 @@ const ChildLogPage = () => {
   }
 
   return (
-    <Container maxWidth="xl" sx={{ mt: 4 }}>
+    <ResponsiveLayout pageTitle={childName ? `${childName}'s Log` : "Child Log"}>
       <Typography variant="h4" gutterBottom align="center">
         {childName ? `${childName}'s Log` : "Child Log"}
       </Typography>
@@ -92,7 +93,7 @@ const ChildLogPage = () => {
       <TabPanel value={value} index={5}>
         <TimelineTab childId={currentChildId} />
       </TabPanel>
-    </Container>
+    </ResponsiveLayout>
   );
 };
 
