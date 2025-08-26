@@ -3,19 +3,49 @@ import {
   Box,
   Container,
   Typography,
+  Grid,
+  Paper,
+  Card,
+  CardContent,
+  Button,
+  Avatar,
   Chip,
+  LinearProgress,
+  IconButton,
+  Divider,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  ListItemSecondaryAction,
   Stack,
+  Badge,
   Modal,
+  Collapse,
 } from "@mui/material";
 import {
   Add as AddIcon,
   PersonAdd as PersonAddIcon,
+  TrendingUp as TrendingUpIcon,
+  AccessTime as TimeIcon,
+  Person as PersonIcon,
+  PlayArrow as PlayIcon,
+  Timeline as TimelineIcon,
   AutoAwesome as SparkleIcon,
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon,
+  LocalHospital as HospitalIcon,
+  Psychology as TherapyIcon,
+  FamilyRestroom as FamilyIcon,
+  MedicalInformation as DiagnosisIcon,
+  Edit as EditIcon,
 } from "@mui/icons-material";
 import { alpha, useTheme } from "@mui/material/styles";
+import { useNavigate } from "react-router-dom";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "../services/firebase";
 import { useChildContext } from "../contexts/ChildContext";
+import { getChildren } from "../services/childService";
 import {
   getTimelineEntries,
   TIMELINE_TYPES,
@@ -27,14 +57,17 @@ import InviteTeamMemberModal from "../components/InviteTeamMemberModal";
 import AddChildModal from "../components/Dashboard/AddChildModal";
 import EditChildModal from "../components/Dashboard/EditChildModal";
 import ActionGroup from "../components/Dashboard/ActionGroup";
-import ChildCard from "../components/Dashboard/ChildCard";
 import DailyCareModal from "../components/DailyCare/DailyCareModal";
-import DailyReportModal from "../components/DailyCare/DailyReportModal";
 import { useRole } from "../contexts/RoleContext";
+import { usePermissions } from "../hooks/usePermissions";
+import { getPermissionsForRole } from "../services/rolePermissionService";
+import ChildCard from "../components/Dashboard/ChildCard";
 
 const PanelDashboard = () => {
   const theme = useTheme();
+  const navigate = useNavigate();
   const [user] = useAuthState(auth);
+  const [userIsParent, setUserIsParent] = useState(false);
   const { currentChildId, setCurrentChildId } = useChildContext();
   const {
     loading: roleLoading,
@@ -42,6 +75,8 @@ const PanelDashboard = () => {
     getUserRoleForChild,
     canAddDataForChild,
     isReadOnlyForChild,
+    canInviteOthers,
+    canManageChild,
     refreshRoles,
     USER_ROLES,
   } = useRole();
@@ -52,7 +87,6 @@ const PanelDashboard = () => {
   const [showQuickEntry, setShowQuickEntry] = useState(false);
   const [selectedChild, setSelectedChild] = useState(null);
   const [entryType, setEntryType] = useState("micro"); // 'micro' or 'full'
-  const [expandedCards, setExpandedCards] = useState({}); // Track expanded cards per child
   const [expandedCategories, setExpandedCategories] = useState({}); // Track expanded categories per child
   const [highlightedActions, setHighlightedActions] = useState({}); // Track highlighted actions per child
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -63,8 +97,7 @@ const PanelDashboard = () => {
   const [showDailyCareModal, setShowDailyCareModal] = useState(false);
   const [dailyCareAction, setDailyCareAction] = useState(null);
   const [dailyCareChild, setDailyCareChild] = useState(null);
-  const [showDailyReportModal, setShowDailyReportModal] = useState(false);
-  const [dailyReportChild, setDailyReportChild] = useState(null);
+  const [expanded, setExpanded] = useState(false);
 
   // Load children based on role access
   useEffect(() => {
@@ -72,15 +105,8 @@ const PanelDashboard = () => {
 
     const loadChildren = async () => {
       try {
-        console.log("Loading children with role access...");
-
         // Use children from role context (includes role information)
         const childrenWithRoles = childrenWithAccess || [];
-        console.log("Children with roles:", childrenWithRoles);
-        console.log(
-          "childrenWithAccess from role context:",
-          childrenWithAccess
-        );
 
         // Use real children only - no mock data to avoid fake child ID issues
         const testData = childrenWithRoles;
@@ -131,6 +157,38 @@ const PanelDashboard = () => {
     };
   }, [children]);
 
+  // Check if user has parent role
+  useEffect(() => {
+    const checkParentRole = async () => {
+      if (!user) {
+        setUserIsParent(false);
+        return;
+      }
+
+      try {
+        const { doc, getDoc } = await import("firebase/firestore");
+        const { db } = await import("../services/firebase");
+        const userDocRef = doc(db, "users", user.uid);
+        const userDocSnap = await getDoc(userDocRef);
+
+        if (userDocSnap.exists()) {
+          const userData = userDocSnap.data();
+          const hasParentRole =
+            userData.roles?.includes("parent") ||
+            userData.roles?.includes("primary_parent") ||
+            userData.roles?.includes("co_parent") ||
+            userData.role === "parent" ||
+            userData.role === "primary_parent" ||
+            userData.role === "co_parent";
+          setUserIsParent(hasParentRole);
+        }
+      } catch (error) {
+        console.error("Error checking parent role:", error);
+      }
+    };
+
+    checkParentRole();
+  }, [user]);
 
   // Mock quick data status (replace with real implementation)
   useEffect(() => {
@@ -169,11 +227,9 @@ const PanelDashboard = () => {
 
     // Check if user has permission to add data for this child
     if (!canAddDataForChild(child.id)) {
-      console.log("User does not have permission to add data for this child");
       return;
     }
 
-    console.log("Quick data entry clicked:", type, child.name);
     setCurrentChildId(child.id);
 
     // For mood, sleep, energy - open the Daily Care modal directly
@@ -183,14 +239,34 @@ const PanelDashboard = () => {
       setDailyCareChild(child);
       setShowDailyCareModal(true);
       
+      // Also expand Daily Care section and highlight for visual feedback
+      setExpandedCategories(prev => ({
+        ...prev,
+        [`${child.id}-daily_care`]: true
+      }));
+      
+      // Highlight the corresponding action
+      setHighlightedActions(prev => ({
+        ...prev,
+        [`${child.id}-${type}`]: true
+      }));
+      
+      // Clear highlight after 3 seconds
+      setTimeout(() => {
+        setHighlightedActions(prev => ({
+          ...prev,
+          [`${child.id}-${type}`]: false
+        }));
+      }, 3000);
       
       return;
     }
 
-    // For "complete" (Daily Report), show the Daily Report modal
+    // For "complete" or other types, show the modal as before
     if (type === "complete") {
-      setDailyReportChild(child);
-      setShowDailyReportModal(true);
+      setSelectedChild(child);
+      setEntryType("micro");
+      setShowQuickEntry(true);
     } else {
       setSelectedChild(child);
       setEntryType("full");
@@ -198,9 +274,80 @@ const PanelDashboard = () => {
     }
   };
 
+  const handleDetailedEntry = (type) => {
+    if (!currentChildId) return;
+
+    // Check if user has permission to add data for this child
+    if (!canAddDataForChild(currentChildId)) {
+      return;
+    }
+
+    // Map our consolidated button types to actual entry types
+    const buttonMappings = {
+      daily: "daily_note",
+      food_health: "food_log",
+      behavior_sensory: "behavior",
+      progress: "progress_note",
+    };
+
+    // Use mapping if it exists, otherwise use type directly
+    const actualType = buttonMappings[type] || type;
+
+    // Navigation strategy: Dedicated pages first, tabs as fallback
+    const dedicatedPages = {
+      daily_note: "/log/daily-note",
+      progress_note: "/log/progress-note",
+      behavior: "/log/behavior",
+      mood_log: "/log/mood",
+      // Add new dedicated pages here
+    };
+
+    // Fallback tab mapping (for types without dedicated pages yet)
+    const tabFallbackMap = {
+      daily_note: 0,
+      progress_note: 1,
+      sensory_log: 2,
+      behavior: 3,
+      mood_log: 4,
+    };
+
+    // Try dedicated page first, then fallback to tabs
+    if (dedicatedPages[actualType]) {
+      navigate(dedicatedPages[actualType]);
+    } else if (tabFallbackMap[actualType] !== undefined) {
+      navigate(`/log?tab=${tabFallbackMap[actualType]}`);
+    } else {
+      // For new types, navigate to specific pages or show implementation message
+      switch (actualType) {
+        case "medication_log":
+          alert(
+            "Medication Log: Navigate to dedicated medication tracking page (to be implemented)"
+          );
+          break;
+        case "food_log":
+          alert(
+            "Food Log: Navigate to detailed food tracking page (to be implemented)"
+          );
+          break;
+        case "medical_event":
+          alert(
+            "Medical Event: Navigate to medical events page (to be implemented)"
+          );
+          break;
+        case "sleep_log":
+          alert(
+            "Sleep Log: Navigate to detailed sleep tracking page (to be implemented)"
+          );
+          break;
+        default:
+          alert(
+            `Entry type "${actualType}" will be implemented in the next phase.`
+          );
+      }
+    }
+  };
 
   const handleQuickEntryComplete = (data) => {
-    console.log("Quick entry completed:", data);
     // Here you would save the data to your backend
     setShowQuickEntry(false);
     setSelectedChild(null);
@@ -214,23 +361,25 @@ const PanelDashboard = () => {
     setSelectedChild(null);
   };
 
-  const toggleCard = (childId) => {
-    setExpandedCards((prev) => ({
+  const toggleCategory = (childId, category) => {
+    setExpandedCategories((prev) => ({
       ...prev,
-      [childId]: !prev[childId],
+      [`${childId}-${category}`]: !prev[`${childId}-${category}`],
     }));
   };
 
-  const isCardExpanded = (childId) => {
-    return expandedCards[childId] || false;
+  const isCategoryExpanded = (childId, category) => {
+    return expandedCategories[`${childId}-${category}`] || false;
   };
 
+  const isActionHighlighted = (childId, actionKey) => {
+    return highlightedActions[`${childId}-${actionKey}`] || false;
+  };
 
   const handleInviteTeamMember = (childId) => {
     // For now, allow all invitations - remove permission check temporarily
     // TODO: Re-enable permission check once role system is properly configured
     // if (!canInviteOthers(childId)) {
-    //   console.log('User does not have permission to invite team members for this child');
     //   return;
     // }
 
@@ -239,14 +388,12 @@ const PanelDashboard = () => {
   };
 
   const handleEditChild = (child) => {
-    console.log("Edit child clicked:", child.name);
     // TODO: Open edit child modal
     setSelectedChildForEdit(child);
     setShowEditChildModal(true);
   };
 
   const handleInviteSuccess = (result) => {
-    console.log("Invitation sent successfully:", result);
     // Refresh the role context to pick up new assignments
     refreshRoles();
   };
@@ -265,7 +412,6 @@ const PanelDashboard = () => {
   };
 
   const handleDailyCareComplete = (actionType, entryData) => {
-    console.log('Daily care completed:', actionType, entryData);
     // Update the completion status for the child
     setQuickDataStatus(prev => ({
       ...prev,
@@ -282,27 +428,6 @@ const PanelDashboard = () => {
     setShowDailyCareModal(false);
     setDailyCareAction(null);
     setDailyCareChild(null);
-  };
-
-  const handleDailyReportEdit = (actionType) => {
-    // When user clicks edit in Daily Report, open the Daily Care modal
-    setDailyCareAction(actionType);
-    setDailyCareChild(dailyReportChild);
-    setShowDailyCareModal(true);
-  };
-
-  const handleCloseDailyReportModal = () => {
-    setShowDailyReportModal(false);
-    setDailyReportChild(null);
-  };
-
-  const handleDailyReport = (child) => {
-    setDailyReportChild(child);
-    setShowDailyReportModal(true);
-  };
-
-  const isActionHighlighted = (childId, actionKey) => {
-    return highlightedActions[`${childId}-${actionKey}`] || false;
   };
 
   // Define grouped action structure with enhanced visual design
@@ -385,19 +510,22 @@ const PanelDashboard = () => {
       return;
     }
 
+    // Handle existing detailed entries
+    if (['daily', 'behavior_sensory', 'progress'].includes(action.key)) {
+      handleDetailedEntry(action.key);
+      return;
+    }
+
     // Handle therapist actions
     if (action.key === 'professional_note') {
-      console.log('Add professional note for child:', child.id);
       return;
     }
     
     if (action.key === 'timeline') {
-      console.log('View timeline for child:', child.id);
       return;
     }
     
     if (action.key === 'report') {
-      console.log('Generate report for child:', child.id);
       return;
     }
 
@@ -413,8 +541,12 @@ const PanelDashboard = () => {
         alert('Shared Access: Navigate to access management (to be implemented)');
         break;
       default:
-        console.log(`Action ${action.key} not yet implemented`);
     }
+  };
+
+  const handleCloseInviteModal = () => {
+    setShowInviteModal(false);
+    setInviteChildId(null);
   };
 
   const getTypeConfig = (type) => {
@@ -438,15 +570,6 @@ const PanelDashboard = () => {
     if (diffHours > 0) return `${diffHours}h ago`;
     return "Just now";
   };
-
-
-
-
-  const handleCloseInviteModal = () => {
-    setShowInviteModal(false);
-    setInviteChildId(null);
-  };
-
 
   if (loading || roleLoading) {
     return (
@@ -639,28 +762,19 @@ const PanelDashboard = () => {
                     />
                   </Box>
                   <Stack spacing={3}>
-                    {ownChildren.map((child) => (
-                      <ChildCard
-                        key={child.id}
-                        child={child}
-                        groupType="own"
-                        status={quickDataStatus[child.id] || {}}
-                        recentEntries={(recentEntries && recentEntries[child.id]) || []}
-                        isExpanded={isCardExpanded(child.id)}
-                        onToggleExpanded={() => toggleCard(child.id)}
-                        onQuickEntry={handleQuickDataEntry}
-                        onEditChild={handleEditChild}
-                        onInviteTeamMember={handleInviteTeamMember}
-                        onDailyReport={handleDailyReport}
-                        getActionGroups={getActionGroups}
-                        handleGroupActionClick={handleGroupActionClick}
-                        highlightedActions={highlightedActions}
-                        expandedCategories={expandedCategories}
-                        setExpandedCategories={setExpandedCategories}
-                        getTypeConfig={getTypeConfig}
-                        formatTimeAgo={formatTimeAgo}
-                      />
-                    ))}
+                    {ownChildren.map((child) => {
+                      return <ChildCard
+                      child={child}
+                      expanded={expanded}
+                      onAccordionChange={() => setExpanded(!expanded)}
+                      onEditChild={handleEditChild}
+                      onDeleteChild={()=>{}}
+                      onInviteTeamMember={handleInviteTeamMember}
+                      onLogMood={()=>{}}
+                      onSmartDataTracking={()=>{}}
+                      userRole={getUserRoleForChild(child.id)}
+                    />;
+                    })}
                   </Stack>
                 </Box>
               )}
@@ -700,28 +814,19 @@ const PanelDashboard = () => {
                     />
                   </Box>
                   <Stack spacing={3}>
-                    {familyChildren.map((child) => (
-                      <ChildCard
-                        key={child.id}
-                        child={child}
-                        groupType="family"
-                        status={quickDataStatus[child.id] || {}}
-                        recentEntries={(recentEntries && recentEntries[child.id]) || []}
-                        isExpanded={isCardExpanded(child.id)}
-                        onToggleExpanded={() => toggleCard(child.id)}
-                        onQuickEntry={handleQuickDataEntry}
-                        onEditChild={handleEditChild}
-                        onInviteTeamMember={handleInviteTeamMember}
-                        onDailyReport={handleDailyReport}
-                        getActionGroups={getActionGroups}
-                        handleGroupActionClick={handleGroupActionClick}
-                        highlightedActions={highlightedActions}
-                        expandedCategories={expandedCategories}
-                        setExpandedCategories={setExpandedCategories}
-                        getTypeConfig={getTypeConfig}
-                        formatTimeAgo={formatTimeAgo}
-                      />
-                    ))}
+                    {familyChildren.map((child) => {
+                      return <ChildCard
+                      child={child}
+                      expanded={expanded}
+                      onAccordionChange={() => setExpanded(!expanded)}
+                      onEditChild={handleEditChild}
+                      onDeleteChild={()=>{}}
+                      onInviteTeamMember={handleInviteTeamMember}
+                      onLogMood={()=>{}}
+                      onSmartDataTracking={()=>{}}
+                      userRole={getUserRoleForChild(child.id)}
+                    />;
+                    })}
                   </Stack>
                 </Box>
               )}
@@ -761,28 +866,19 @@ const PanelDashboard = () => {
                     />
                   </Box>
                   <Stack spacing={2}>
-                    {professionalChildren.map((child) => (
-                      <ChildCard
-                        key={child.id}
-                        child={child}
-                        groupType="professional"
-                        status={quickDataStatus[child.id] || {}}
-                        recentEntries={(recentEntries && recentEntries[child.id]) || []}
-                        isExpanded={isCardExpanded(child.id)}
-                        onToggleExpanded={() => toggleCard(child.id)}
-                        onQuickEntry={handleQuickDataEntry}
-                        onEditChild={handleEditChild}
-                        onInviteTeamMember={handleInviteTeamMember}
-                        onDailyReport={handleDailyReport}
-                        getActionGroups={getActionGroups}
-                        handleGroupActionClick={handleGroupActionClick}
-                        highlightedActions={highlightedActions}
-                        expandedCategories={expandedCategories}
-                        setExpandedCategories={setExpandedCategories}
-                        getTypeConfig={getTypeConfig}
-                        formatTimeAgo={formatTimeAgo}
-                      />
-                    ))}
+                    {professionalChildren.map((child) => {
+                      return <ChildCard
+                      child={child}
+                      expanded={expanded}
+                      onAccordionChange={() => setExpanded(!expanded)}
+                      onEditChild={handleEditChild}
+                      onDeleteChild={()=>{}}
+                      onInviteTeamMember={handleInviteTeamMember}
+                      onLogMood={()=>{}}
+                      onSmartDataTracking={()=>{}}
+                      userRole={getUserRoleForChild(child.id)}
+                    />;
+                    })}
                   </Stack>
                 </Box>
               )}
@@ -863,14 +959,6 @@ const PanelDashboard = () => {
         child={dailyCareChild}
         actionType={dailyCareAction}
         onComplete={handleDailyCareComplete}
-      />
-
-      {/* Daily Report Modal */}
-      <DailyReportModal
-        open={showDailyReportModal}
-        onClose={handleCloseDailyReportModal}
-        child={dailyReportChild}
-        onEditAction={handleDailyReportEdit}
       />
     </Container>
   );
