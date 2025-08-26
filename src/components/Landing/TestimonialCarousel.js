@@ -8,6 +8,7 @@ import {
   Container,
   Rating,
   useTheme,
+  Fade,
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import StarIcon from "@mui/icons-material/Star";
@@ -89,7 +90,10 @@ const TestimonialCarousel = () => {
         position: "relative",
         pt: { xs: 0, md: 0 },
         pb: { xs: 10, md: 12 },
-        bgcolor: "background.default",
+        py: { xs: 6, md: 8 },
+        bgcolor: "#F8EEE7", // updated background for shell background
+        borderRadius: "24px",
+        boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
         // slick styles (dots + arrows)
         "& .slick-dots li button:before": {
           color: (theme) => theme.palette.primary.main,
@@ -107,118 +111,118 @@ const TestimonialCarousel = () => {
       }}
     >
       <Container maxWidth="lg">
-        <Box
+        <Typography
+          variant="h4"
           sx={{
-            backgroundColor: "rgba(245,227,86,0.08)",
-            borderRadius: "16px",
-            px: { xs: 4, md: 6 },
-            pt: { xs: 2, md: 3 },
-            pb: { xs: 4, md: 6 },
-            boxShadow: "none",
-            mt: 0,
+            textAlign: "center",
+            mb: 1.5,
+            fontWeight: 900,
+            letterSpacing: "-0.2px",
+            color: (theme) => theme.palette.success.main,
+            position: "relative",
+            zIndex: 1,
+            fontSize: { xs: "1.6rem", md: "2rem" },
           }}
         >
-          <Typography
-            variant="h4"
-            sx={{
-              textAlign: "center",
-              mb: 1.5,
-              fontWeight: 900,
-              letterSpacing: "-0.2px",
-              color: (theme) => theme.palette.success.main,
-              position: "relative",
-              zIndex: 1,
-              fontSize: { xs: "1.6rem", md: "2rem" },
-            }}
-          >
-            What Users Say
-          </Typography>
-          <Box
-            sx={{
-              width: 56,
-              height: 4,
-              borderRadius: 9999,
-              mx: "auto",
-              mb: 2.5,
-              backgroundColor: (theme) =>
-                alpha(theme.palette.primary.main, 0.5),
-            }}
-          />
-          <Typography
-            variant="body2"
-            sx={{
-              textAlign: "center",
-              mb: 3,
-              color: "text.secondary",
-              maxWidth: 720,
-              mx: "auto",
-            }}
-          >
-            Real notes from parents, caregivers, and therapists using tools like
-            ours to stay organized and in sync.
-          </Typography>
-          <Slider {...settings}>
-            {testimonials.map((testimonial, index) => (
-              <Box key={index} sx={{ px: 3, position: "relative", zIndex: 1 }}>
-                <Card
-                  elevation={0}
-                  sx={{
-                    p: { xs: 3, md: 4 },
-                    textAlign: "center",
-                    borderRadius: "16px",
-                    boxShadow: "0 2px 6px rgba(0,0,0,0.04)",
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "space-between",
-                    gap: 2,
-                    m: "0 10px",
-                  }}
-                >
-                  <CardContent>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "center",
-                        mb: 1.5,
-                      }}
-                    >
-                      <Rating
-                        name="read-only"
-                        value={5}
-                        readOnly
-                        emptyIcon={
-                          <StarIcon
-                            style={{ opacity: 0.55 }}
-                            fontSize="inherit"
-                          />
-                        }
-                      />
-                    </Box>
-                    <Typography
-                      variant="body1"
-                      sx={{
-                        fontStyle: "italic",
-                        flexGrow: 1,
-                        maxWidth: 520,
-                        mx: "auto",
-                        fontSize: "1.05rem",
-                        lineHeight: 1.6,
-                      }}
-                    >
-                      "{testimonial.quote}"
-                    </Typography>
-                    <Typography
-                      variant="subtitle2"
-                      sx={{ mt: 3, fontWeight: "bold" }}
-                    >
-                      - {testimonial.author}, {testimonial.role}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Box>
-            ))}
-          </Slider>
-        </Box>
+          What Users Say
+        </Typography>
+        <Box
+          sx={{
+            width: 56,
+            height: 4,
+            borderRadius: 9999,
+            mx: "auto",
+            mb: 2.5,
+            backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.5),
+          }}
+        />
+        <Typography
+          variant="body2"
+          sx={{
+            textAlign: "center",
+            mb: 3,
+            color: "text.secondary",
+            maxWidth: 720,
+            mx: "auto",
+          }}
+        >
+          Real notes from parents, caregivers, and therapists using tools like
+          ours to stay organized and in sync.
+        </Typography>
+        <Slider {...settings}>
+          {testimonials.map((testimonial, index) => (
+            <Box
+              key={index}
+              sx={{ px: { xs: 1.5, md: 3 }, position: "relative", zIndex: 1 }}
+            >
+              <Card
+                elevation={0}
+                sx={{
+                  p: { xs: 3, md: 4 },
+                  textAlign: "center",
+                  borderRadius: "16px",
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.04)",
+                  border: "1px solid rgba(0,0,0,0.05)",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                  gap: 2,
+                  m: "0 10px",
+                }}
+              >
+                <CardContent>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "center",
+                      mb: 1.5,
+                    }}
+                  >
+                    <Rating
+                      name="read-only"
+                      value={5}
+                      readOnly
+                      icon={
+                        <StarIcon sx={{ color: theme.palette.success.main }} />
+                      }
+                      emptyIcon={<StarIcon sx={{ opacity: 0.3 }} />}
+                      sx={{ color: theme.palette.success.main }}
+                    />
+                  </Box>
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      fontStyle: "italic",
+                      flexGrow: 1,
+                      maxWidth: 520,
+                      mx: "auto",
+                      fontSize: "1.05rem",
+                      lineHeight: 1.6,
+                      color: "#333",
+                    }}
+                  >
+                    "{testimonial.quote}"
+                  </Typography>
+                  <Typography
+                    variant="subtitle2"
+                    sx={{ mt: 2, fontWeight: "bold" }}
+                  >
+                    - {testimonial.author}, {testimonial.role}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Box>
+          ))}
+        </Slider>
+        <Box
+          sx={{
+            height: 8,
+            width: "100%",
+            background: "linear-gradient(90deg, #94618E 0%, #F4DECB 100%)",
+            borderRadius: "9999px",
+            mt: 4,
+          }}
+        />
       </Container>
     </Box>
   );

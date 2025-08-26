@@ -9,7 +9,8 @@ const MinimalHeader = () => {
       position="static"
       sx={{
         boxShadow: "none",
-        backgroundColor: "#FFFFFF",
+        backgroundColor: "transparent",
+        boxShadow: "none",
       }}
     >
       <Toolbar
@@ -23,7 +24,7 @@ const MinimalHeader = () => {
           <img
             src={logo}
             alt="Logo"
-            style={{ height: "120px", cursor: "pointer" }}
+            style={{ height: "64px", cursor: "pointer" }}
           />
         </Button>
       </Toolbar>

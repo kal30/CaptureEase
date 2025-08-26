@@ -32,7 +32,7 @@ const ExpertProgram = () => {
     >
       <Box
         sx={{
-          bgcolor: "background.paper",
+          bgcolor: "#F8EEE7", // soft shell tone for warmth
           borderRadius: 3,
           boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
           position: "relative",
@@ -44,6 +44,7 @@ const ExpertProgram = () => {
           alignItems: "center",
           justifyContent: "space-between",
           gap: { xs: 3, md: 6 },
+          borderLeft: "6px solid #49274A",
         }}
       >
         {/* Left Side: Text */}
@@ -68,7 +69,7 @@ const ExpertProgram = () => {
               fontFamily: "Montserrat, sans-serif",
             }}
           >
-            Expert Insights on Digital, Personalized Care
+            Real-World Results with Personalized Digital Care
           </Typography>
           <Typography
             variant="body1"
@@ -79,9 +80,9 @@ const ExpertProgram = () => {
               fontSize: "1.05rem",
             }}
           >
-            Healthcare professionals report that digital care tools improve
-            coordination; a 2022 AMA survey found <strong>78%</strong> of
-            clinicians saw better patient care.
+            Healthcare professionals and families report that digital care tools
+            improve coordination; a 2022 AMA survey found <strong>78%</strong>{" "}
+            of clinicians saw better care outcomes.
           </Typography>
           <Typography
             variant="body1"
@@ -92,9 +93,10 @@ const ExpertProgram = () => {
               fontSize: "1.05rem",
             }}
           >
-            Multimedia logging (voice, photo, video) enhances patient–clinician
-            communication; research in JMIR reports up to a <strong>65%</strong>{" "}
-            improvement in effectiveness.
+            Multimedia logging (voice, photo, video) improves communication
+            between caregivers, families, and clinicians. Research in JMIR
+            reports up to a <strong>65%</strong> improvement in care
+            effectiveness.
           </Typography>
           <Typography
             variant="body1"
@@ -105,9 +107,9 @@ const ExpertProgram = () => {
               fontSize: "1.05rem",
             }}
           >
-            Reducing administrative burden by <strong>20%+</strong> is linked to
-            improved care quality and staff satisfaction, according to a 2023
-            WHO report.
+            Reducing administrative burden by <strong>20%+</strong> improves
+            both care quality and caregiver well-being, according to a 2023 WHO
+            report.
           </Typography>
           <Typography
             variant="body1"
@@ -139,7 +141,7 @@ const ExpertProgram = () => {
               },
             }}
           >
-            See How It Works
+            See How CaptureEase Works
           </Button>
         </Box>
 

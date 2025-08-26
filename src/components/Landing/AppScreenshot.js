@@ -6,9 +6,9 @@ import image2 from "../../assets/image/landing/DashboardSlideShow/Dashboard.png"
 import image3 from "../../assets/image/landing/DashboardSlideShow/QuickCheckIn.png";
 
 const defaultItems = [
-  { src: image1, alt: "Daily Journal", caption: "Daily Journal" },
-  { src: image2, alt: "Sensory Log", caption: "Sensory Log" },
-  { src: image3, alt: "Caregiver Sharing", caption: "Caregiver Sharing" },
+  { src: image1, alt: "Why CaptureEZ", caption: "Why CaptureEZ" },
+  { src: image2, alt: "Dashboard", caption: "Dashboard" },
+  { src: image3, alt: "Quick Data Capture", caption: "Quick Data Capture" },
 ];
 
 const AppScreenshots = ({ items }) => {
@@ -50,40 +50,68 @@ const AppScreenshots = ({ items }) => {
     <Box
       sx={{
         py: 2,
-        // bgcolor: "grey.100",
-        maxWidth: "fit-content",
+        px: { xs: 1.5, md: 2 },
         mx: "auto",
-        borderRadius: 2,
-        px: 2,
+        width: "100%",
+        maxWidth: { xs: 300, sm: 360, md: 480, lg: 520 },
       }}
     >
-      <Typography variant="h4" align="center" sx={{ mb: 3 }}>
+      {/* <Typography
+        variant="h4"
+        align="center"
+        sx={{
+          mb: 3,
+          fontFamily: '"Dancing Script", cursive',
+          fontWeight: 700,
+          fontSize: { xs: "1.5rem", md: "2rem", lg: "2.25rem" },
+          color: "#49274A",
+        }}
+      >
         See CaptureEz in Action
-      </Typography>
+      </Typography> */}
       <Slider {...settings}>
         {(items || defaultItems).map(({ src, alt, caption }, index) => (
           <Box key={index} sx={{ textAlign: "center" }}>
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "center",
-                mb: 1,
-              }}
-            >
-              <img
-                src={src}
-                alt={alt}
-                style={{
-                  width: "100%",
-                  height: "auto",
-                  maxHeight: 480,
-                  maxWidth: "100%",
-                  objectFit: "contain",
-                  borderRadius: "10px",
+            <Box sx={{ mb: 1 }}>
+              <Box
+                sx={{
+                  bgcolor: "common.white",
+                  borderRadius: 2,
+                  p: { xs: 0.75, sm: 1 },
+                  boxShadow: "0 8px 20px rgba(0,0,0,0.08)",
                 }}
-              />
+              >
+                {/* Aspect-ratio container to lock proportions (portrait 9:17) */}
+                <Box
+                  sx={{
+                    position: "relative",
+                    width: "100%",
+                    aspectRatio: "9 / 17",
+                  }}
+                >
+                  <Box
+                    component="img"
+                    src={src}
+                    alt={alt}
+                    sx={{
+                      position: "absolute",
+                      inset: 0,
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "contain",
+                      borderRadius: 2,
+                      display: "block",
+                    }}
+                  />
+                </Box>
+              </Box>
             </Box>
-            <Typography variant="subtitle1">{caption}</Typography>
+            <Typography
+              variant="body2"
+              sx={{ mt: 0.5, color: "text.secondary" }}
+            >
+              {caption}
+            </Typography>
           </Box>
         ))}
       </Slider>

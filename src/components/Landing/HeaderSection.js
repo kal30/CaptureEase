@@ -137,7 +137,7 @@ const HeaderSection = () => {
                 }}
                 onClick={handleGetStarted}
               >
-                Join the Beta Free
+                Try CaptureEz Free
               </Button>
             </Box>
           </Box>
@@ -175,7 +175,7 @@ const HeaderSection = () => {
             <Box
               sx={{
                 width: "100%",
-                maxWidth: { xs: 360, md: 520, lg: 620, xl: 700 },
+                maxWidth: { xs: 240, md: 360, lg: 440, xl: 480 },
                 zIndex: 1,
               }}
             >

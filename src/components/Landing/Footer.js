@@ -5,12 +5,12 @@ const Footer = () => {
   return (
     <Box
       sx={{
-        backgroundColor: "#E3F2F0", // Footer background color
-        padding: "20px 0",
+        backgroundColor: "#F4DECB", // a soft sand tone from the CaptureEase palette
+        padding: "12px 0",
         textAlign: "center",
         position: "relative",
         mt: 0, // Ensure no extra margin on top
-        paddingBottom: 0, // Ensure no extra padding at the bottom
+        paddingBottom: 2, // Ensure no extra padding at the bottom
         height: "auto", // Make sure the footer height is flexible
       }}
     >
@@ -18,21 +18,21 @@ const Footer = () => {
         variant="body1"
         sx={{
           fontWeight: "bold",
-          color: "#00695C", // Footer text color
-          fontSize: "1rem", // Footer font size
-          mb: 2,
+          color: "#49274A", // Eggplant tone
+          fontSize: "0.95rem", // Footer font size
+          mb: 1,
         }}
       >
         CaptureEz © {new Date().getFullYear()} - Caring Made Simple
       </Typography>
 
-      <Box sx={{ display: "flex", justifyContent: "center", gap: 4 }}>
+      <Box sx={{ display: "flex", justifyContent: "center", gap: 3, mt: 0.5 }}>
         <Link
           href="/privacy-policy"
           sx={{
-            color: "#1F4E5F",
+            color: "#49274A",
             textDecoration: "none",
-            "&:hover": { color: "#004D40" },
+            "&:hover": { color: "#94618E" },
           }}
         >
           Privacy Policy
@@ -40,9 +40,9 @@ const Footer = () => {
         <Link
           href="/terms-of-service"
           sx={{
-            color: "#1F4E5F",
+            color: "#49274A",
             textDecoration: "none",
-            "&:hover": { color: "#004D40" },
+            "&:hover": { color: "#94618E" },
           }}
         >
           Terms of Service
@@ -50,9 +50,9 @@ const Footer = () => {
         <Link
           href="/contact-us"
           sx={{
-            color: "#1F4E5F",
+            color: "#49274A",
             textDecoration: "none",
-            "&:hover": { color: "#004D40" },
+            "&:hover": { color: "#94618E" },
           }}
         >
           Contact Us

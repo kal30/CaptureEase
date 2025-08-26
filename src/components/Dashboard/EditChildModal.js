@@ -18,7 +18,7 @@ import { doc, updateDoc } from "firebase/firestore";
 import { db } from "../../services/firebase";
 import ChildPhotoUploader from "./ChildPhotoUploader";
 
-const EditChildModal = ({ open, onClose, child, onSuccess }) => {
+const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
   const [photo, setPhoto] = useState(null);
@@ -33,6 +33,10 @@ const EditChildModal = ({ open, onClose, child, onSuccess }) => {
   const [sleepIssues, setSleepIssues] = useState([]);
   const [communicationNeeds, setCommunicationNeeds] = useState([]);
   const storage = getStorage();
+
+  // Permission checks
+  const canEdit = userRole === 'primary_parent' || userRole === 'co_parent' || userRole === 'parent';
+  const canEditMedicalInfo = userRole === 'primary_parent' || userRole === 'co_parent'; // More restrictive for medical data
 
   const CONDITION_OPTIONS = [
     { code: "ASD", label: "Autism / ASD" },
@@ -111,6 +115,12 @@ const EditChildModal = ({ open, onClose, child, onSuccess }) => {
 
   const handleSubmit = async () => {
     if (!name || !age || !child) return;
+    
+    // Security check - ensure user has permission to edit
+    if (!canEdit) {
+      console.error('Unauthorized edit attempt');
+      return;
+    }
 
     setLoading(true);
     let photoDownloadURL = child.photoURL;
@@ -137,7 +147,11 @@ const EditChildModal = ({ open, onClose, child, onSuccess }) => {
       diagnosis: primaryLabel,
       concerns: selectedConditions,
       conditionCodes,
-      medicalProfile: {
+    };
+
+    // Only include medical profile if user has permission to edit it
+    if (canEditMedicalInfo) {
+      updatedChild.medicalProfile = {
         foodAllergies,
         dietaryRestrictions,
         sensoryIssues,
@@ -145,8 +159,8 @@ const EditChildModal = ({ open, onClose, child, onSuccess }) => {
         currentMedications,
         sleepIssues,
         communicationNeeds,
-      },
-    };
+      };
+    }
 
     try {
       const childRef = doc(db, "children", child.id);
@@ -160,6 +174,12 @@ const EditChildModal = ({ open, onClose, child, onSuccess }) => {
     }
   };
 
+  // Security check - only parents can edit
+  if (!canEdit) {
+    console.warn('EditChildModal: User does not have permission to edit child details');
+    return null;
+  }
+
   return (
     <Modal open={open} onClose={onClose}>
       <Box
@@ -168,18 +188,34 @@ const EditChildModal = ({ open, onClose, child, onSuccess }) => {
           top: "50%",
           left: "50%",
           transform: "translate(-50%, -50%)",
-          width: 400,
+          width: { xs: '90vw', sm: 500, md: 600 },
+          maxHeight: '90vh',
           bgcolor: "background.paper",
           boxShadow: 24,
-          p: 4,
-          borderRadius: 2,
+          borderRadius: 3,
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column'
         }}
       >
-        <Typography variant="h6" gutterBottom>
-          Edit Child
-        </Typography>
+        {/* Header */}
+        <Box sx={{ p: 3, pb: 2, borderBottom: 1, borderColor: 'divider' }}>
+          <Typography variant="h5" sx={{ fontWeight: 600, color: 'text.primary' }}>
+            Edit {child?.name || 'Child'}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+            Update your child's information and care profile
+          </Typography>
+        </Box>
 
-        <TextField
+        {/* Scrollable Content */}
+        <Box sx={{ flex: 1, overflow: 'auto', p: 3 }}>
+          {/* Basic Information Section */}
+          <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
+            Basic Information
+          </Typography>
+
+          <TextField
           label="Child's Name"
           variant="outlined"
           fullWidth
@@ -253,146 +289,164 @@ const EditChildModal = ({ open, onClose, child, onSuccess }) => {
           setPhotoURL={setPhotoURL}
         />
 
-        {/* Medical & Behavioral Profile Section */}
-        <Typography variant="h6" gutterBottom sx={{ mt: 4, mb: 2, fontWeight: 600 }}>
-          Medical & Behavioral Profile
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          This information helps us understand your child's specific needs and identify patterns in their behavior and wellbeing.
-        </Typography>
+          {/* Medical & Behavioral Profile Section - Only for Primary/Co-Parents */}
+          {canEditMedicalInfo && (
+            <Box sx={{ mt: 4, pt: 3, borderTop: 1, borderColor: 'divider' }}>
+              <Typography variant="h6" sx={{ mb: 1, fontWeight: 600, color: 'primary.main' }}>
+                Medical & Behavioral Profile
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                This information helps us understand your child's specific needs and identify patterns in their behavior and wellbeing.
+              </Typography>
+            </Box>
+          )}
 
-        <Autocomplete
-          multiple
-          freeSolo
-          options={FOOD_ALLERGY_OPTIONS}
-          value={foodAllergies}
-          onChange={(event, newValue) => setFoodAllergies(newValue)}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Food Allergies & Sensitivities"
-              variant="outlined"
-              helperText="Select from list or add your own"
-              sx={{ mb: 3 }}
+          {canEditMedicalInfo && (
+            <Autocomplete
+              multiple
+              freeSolo
+              options={FOOD_ALLERGY_OPTIONS}
+              value={foodAllergies}
+              onChange={(event, newValue) => setFoodAllergies(newValue)}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Food Allergies & Sensitivities"
+                  variant="outlined"
+                  helperText="Select from list or add your own"
+                  sx={{ mb: 3 }}
+                />
+              )}
             />
           )}
-        />
 
-        <Autocomplete
-          multiple
-          freeSolo
-          options={DIETARY_OPTIONS}
-          value={dietaryRestrictions}
-          onChange={(event, newValue) => setDietaryRestrictions(newValue)}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Dietary Restrictions"
-              variant="outlined"
-              helperText="Special diets or food preferences"
-              sx={{ mb: 3 }}
-            />
+          {canEditMedicalInfo && (
+            <>
+              <Autocomplete
+                multiple
+                freeSolo
+                options={DIETARY_OPTIONS}
+                value={dietaryRestrictions}
+                onChange={(event, newValue) => setDietaryRestrictions(newValue)}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Dietary Restrictions"
+                    variant="outlined"
+                    helperText="Special diets or food preferences"
+                    sx={{ mb: 3 }}
+                  />
+                )}
+              />
+
+              <Autocomplete
+                multiple
+                freeSolo
+                options={SENSORY_OPTIONS}
+                value={sensoryIssues}
+                onChange={(event, newValue) => setSensoryIssues(newValue)}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Sensory Issues"
+                    variant="outlined"
+                    helperText="Light, sound, touch, or other sensitivities"
+                    sx={{ mb: 3 }}
+                  />
+                )}
+              />
+
+              <Autocomplete
+                multiple
+                freeSolo
+                options={TRIGGER_OPTIONS}
+                value={behavioralTriggers}
+                onChange={(event, newValue) => setBehavioralTriggers(newValue)}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Behavioral Triggers"
+                    variant="outlined"
+                    helperText="Situations that may cause stress or behavioral changes"
+                    sx={{ mb: 3 }}
+                  />
+                )}
+              />
+
+              <Autocomplete
+                multiple
+                freeSolo
+                options={[]}
+                value={currentMedications}
+                onChange={(event, newValue) => setCurrentMedications(newValue)}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Current Medications"
+                    variant="outlined"
+                    helperText="List any current medications and dosages"
+                    sx={{ mb: 3 }}
+                  />
+                )}
+              />
+
+              <Autocomplete
+                multiple
+                freeSolo
+                options={SLEEP_OPTIONS}
+                value={sleepIssues}
+                onChange={(event, newValue) => setSleepIssues(newValue)}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Sleep Issues"
+                    variant="outlined"
+                    helperText="Any sleep challenges or patterns"
+                    sx={{ mb: 3 }}
+                  />
+                )}
+              />
+
+              <Autocomplete
+                multiple
+                freeSolo
+                options={COMMUNICATION_OPTIONS}
+                value={communicationNeeds}
+                onChange={(event, newValue) => setCommunicationNeeds(newValue)}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Communication Needs"
+                    variant="outlined"
+                    helperText="How your child communicates and any support they need"
+                    sx={{ mb: 3 }}
+                  />
+                )}
+              />
+            </>
           )}
-        />
 
-        <Autocomplete
-          multiple
-          freeSolo
-          options={SENSORY_OPTIONS}
-          value={sensoryIssues}
-          onChange={(event, newValue) => setSensoryIssues(newValue)}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Sensory Issues"
-              variant="outlined"
-              helperText="Light, sound, touch, or other sensitivities"
-              sx={{ mb: 3 }}
-            />
-          )}
-        />
+        </Box>
 
-        <Autocomplete
-          multiple
-          freeSolo
-          options={TRIGGER_OPTIONS}
-          value={behavioralTriggers}
-          onChange={(event, newValue) => setBehavioralTriggers(newValue)}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Behavioral Triggers"
-              variant="outlined"
-              helperText="Situations that may cause stress or behavioral changes"
-              sx={{ mb: 3 }}
-            />
-          )}
-        />
-
-        <Autocomplete
-          multiple
-          freeSolo
-          options={[]}
-          value={currentMedications}
-          onChange={(event, newValue) => setCurrentMedications(newValue)}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Current Medications"
-              variant="outlined"
-              helperText="List any current medications and dosages"
-              sx={{ mb: 3 }}
-            />
-          )}
-        />
-
-        <Autocomplete
-          multiple
-          freeSolo
-          options={SLEEP_OPTIONS}
-          value={sleepIssues}
-          onChange={(event, newValue) => setSleepIssues(newValue)}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Sleep Issues"
-              variant="outlined"
-              helperText="Any sleep challenges or patterns"
-              sx={{ mb: 3 }}
-            />
-          )}
-        />
-
-        <Autocomplete
-          multiple
-          freeSolo
-          options={COMMUNICATION_OPTIONS}
-          value={communicationNeeds}
-          onChange={(event, newValue) => setCommunicationNeeds(newValue)}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Communication Needs"
-              variant="outlined"
-              helperText="How your child communicates and any support they need"
-              sx={{ mb: 3 }}
-            />
-          )}
-        />
-
-        <Button
-          variant="contained"
-          sx={{
-            backgroundColor: "#a5d6a7",
-            color: "#000",
-            "&:hover": { backgroundColor: "#81c784" },
-          }}
-          onClick={handleSubmit}
-          fullWidth
-          disabled={loading}
-        >
-          {loading ? "Saving..." : "Save Changes"}
-        </Button>
+        {/* Footer */}
+        <Box sx={{ p: 3, borderTop: 1, borderColor: 'divider', bgcolor: 'grey.50' }}>
+          <Button
+            variant="contained"
+            sx={{
+              backgroundColor: "#a5d6a7",
+              color: "#000",
+              "&:hover": { backgroundColor: "#81c784" },
+              py: 1.5,
+              fontSize: '1rem',
+              fontWeight: 600
+            }}
+            onClick={handleSubmit}
+            fullWidth
+            disabled={loading}
+          >
+            {loading ? "Saving..." : "Save Changes"}
+          </Button>
+        </Box>
       </Box>
     </Modal>
   );

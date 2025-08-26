@@ -299,7 +299,7 @@ const PanelDashboard = () => {
                 {user?.displayName || user?.email?.split('@')[0] || 'Your'} Dashboard
               </Typography>
               <Typography variant="h6" color="text.secondary" sx={{ fontWeight: 400, textAlign: 'left' }}>
-                Support your child's growth with daily tracking and progress insights
+                Caring is hard. CaptureEase helps you track progress, share the load, and support those who depend on you
               </Typography>
             </Box>
           </Box>

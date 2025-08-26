@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import {
-  Container,
   Typography,
   Button,
   Box,
@@ -9,6 +8,7 @@ import {
   Paper,
   Card,
   CardContent,
+  Tooltip,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import AddChildModal from "../components/Dashboard/AddChildModal";
@@ -30,10 +30,9 @@ import {
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { db } from "../services/firebase";
 import LogMoodModal from "../components/Dashboard/LogMoodModal";
-import EmojiEmotionsIcon from "@mui/icons-material/EmojiEmotions";
 import GroupIcon from "@mui/icons-material/Group";
 import ChildCareIcon from "@mui/icons-material/ChildCare";
-import { alpha, useTheme } from "@mui/material/styles";
+import { useTheme } from "@mui/material/styles";
 
 const Dashboard = () => {
   const [children, setChildren] = useState([]);
@@ -50,14 +49,8 @@ const Dashboard = () => {
 
   const theme = useTheme();
 
-  // Helper function to check if user has a specific role
-  const hasRole = (role) => userRoles.includes(role);
-  
-  // Helper to check if user can manage children (add/edit)
+  // User role helpers
   const canManageChildren = () => userRoles.includes('primary_parent') || userRoles.includes('co_parent');
-  
-  // Helper to check if user is any type of parent
-  const isParent = () => userRoles.includes('primary_parent') || userRoles.includes('co_parent') || userRoles.includes('parent');
 
   useEffect(() => {
     const auth = getAuth();
@@ -76,13 +69,16 @@ const Dashboard = () => {
           currentRoles = userData.roles || [userData.role].filter(Boolean);
           setUserRole(currentRole);
           setUserRoles(currentRoles);
+          console.log('Dashboard userRole set to:', currentRole);
+          console.log('Dashboard userRoles set to:', currentRoles);
         } else {
           setUserRole(null);
           setUserRoles([]);
         }
 
         let childrenQuery;
-        if (currentRoles.includes("parent") || currentRoles.includes("primary_parent") || currentRoles.includes("co_parent")) {
+        const parentRoles = ['parent', 'primary_parent', 'co_parent'];
+        if (parentRoles.some(role => currentRoles.includes(role))) {
           childrenQuery = query(
             collection(db, "children"),
             where("users.parent", "==", user.uid)
@@ -139,7 +135,6 @@ const Dashboard = () => {
             setEditChildOpen(true);
           }}
           onDeleteChild={(child) => {
-            // Add delete functionality if needed
             console.log('Delete child:', child);
           }}
           onInviteTeamMember={(child) => {
@@ -183,32 +178,18 @@ const Dashboard = () => {
       }
       customTablet={<TabletDashboard children={children} user={{ displayName: userDisplayName }} />}
     >
-        {/* Refined Header Section */}
+        {/* Professional Header Section */}
         <Paper
           elevation={0}
           sx={{
-            borderRadius: 3,
-            p: 4,
-            mb: 4,
+            borderRadius: 2,
+            p: 5,
+            mb: 5,
             bgcolor: "background.paper",
-            border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+            border: `1px solid ${theme.palette.divider}`,
             position: "relative",
-            overflow: "hidden",
           }}
         >
-          {/* Subtle background accent */}
-          <Box
-            sx={{
-              position: "absolute",
-              top: -50,
-              right: -50,
-              width: 200,
-              height: 200,
-              borderRadius: "50%",
-              bgcolor: alpha(theme.palette.primary.main, 0.03),
-              zIndex: 0,
-            }}
-          />
 
           {/* Action Buttons - Cleaner positioning */}
           {canManageChildren() && (
@@ -222,60 +203,63 @@ const Dashboard = () => {
                 zIndex: 2,
               }}
             >
-              <Button
-                variant="outlined"
-                onClick={() => {
-                  if (children.length === 1) {
-                    setSelectedChild(children[0]);
-                    setInviteTeamMemberOpen(true);
-                  } else if (children.length > 1) {
-                    // For multiple children, we'll still need to expand a card or add child selection
-                    // For now, just alert the user
-                    alert("Please click on a child card and use the 'Add Team Member' button inside to invite team members for that specific child.");
-                  }
-                }}
-                startIcon={<GroupIcon />}
-                disabled={children.length === 0}
+              <Tooltip title={
+                children.length === 0 
+                  ? "Add a child first to invite team members" 
+                  : children.length > 1 
+                    ? "Use the invite button on individual child cards for multiple children"
+                    : "Invite team members for this child"
+              }>
+                <span>
+                  <Button
+                    variant="outlined"
+                    onClick={() => {
+                      if (children.length === 1) {
+                        setSelectedChild(children[0]);
+                        setInviteTeamMemberOpen(true);
+                      }
+                    }}
+                    startIcon={<GroupIcon />}
+                    disabled={children.length !== 1}
                 sx={{
                   bgcolor: "background.paper",
-                  borderColor: "success.main",
-                  color: "success.main",
-                  borderRadius: 2,
+                  borderColor: "text.secondary",
+                  color: "text.secondary",
+                  borderRadius: 1,
                   px: 3,
                   py: 1.5,
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-                  fontWeight: 600,
+                  fontWeight: 500,
+                  fontSize: "0.9rem",
                   "&:hover": {
-                    bgcolor: "success.main",
+                    bgcolor: "primary.main",
+                    borderColor: "primary.main",
                     color: "white",
-                    transform: "translateY(-1px)",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
                   },
                   "&:disabled": {
-                    bgcolor: "grey.100",
+                    bgcolor: "grey.50",
                     borderColor: "grey.300",
-                    color: "grey.500",
+                    color: "grey.400",
                   },
                   transition: "all 0.2s ease",
                 }}
               >
-                Invite Team
-              </Button>
+                    Invite Team
+                  </Button>
+                </span>
+              </Tooltip>
               <Button
                 variant="contained"
                 onClick={() => setAddChildOpen(true)}
                 startIcon={<AddIcon />}
                 sx={{
                   bgcolor: "primary.main",
-                  borderRadius: 2,
+                  borderRadius: 1,
                   px: 3,
                   py: 1.5,
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-                  fontWeight: 600,
+                  fontWeight: 500,
+                  fontSize: "0.9rem",
                   "&:hover": {
                     bgcolor: "primary.dark",
-                    transform: "translateY(-1px)",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
                   },
                   transition: "all 0.2s ease",
                 }}
@@ -286,73 +270,63 @@ const Dashboard = () => {
           )}
 
           <Box sx={{ position: "relative", zIndex: 1 }}>
-            {/* Cleaner Welcome Section */}
-            <Box sx={{ mb: 3 }}>
+            {/* Professional Welcome Section */}
+            <Box sx={{ mb: 4 }}>
               <Typography
-                variant="h3"
+                variant="h4"
                 sx={{
                   color: "text.primary",
-                  fontWeight: 700,
-                  mb: 1,
-                  fontSize: { xs: "2rem", md: "2.5rem", lg: "3rem", xl: "3.5rem" },
-                  letterSpacing: "-0.02em",
+                  fontWeight: 600,
+                  mb: 2,
+                  fontSize: { xs: "1.75rem", md: "2rem", lg: "2.25rem" },
+                  letterSpacing: "-0.01em",
                 }}
               >
                 Welcome back, {userDisplayName}
-                <EmojiEmotionsIcon
-                  sx={{
-                    fontSize: { xs: 28, md: 32 },
-                    color: "primary.main",
-                    ml: 1,
-                    verticalAlign: "middle",
-                  }}
-                />
               </Typography>
               <Typography
                 variant="body1"
                 sx={{
                   color: "text.secondary",
-                  fontSize: { xs: "1.1rem", md: "1.2rem", lg: "1.3rem" },
+                  fontSize: { xs: "1rem", md: "1.1rem" },
                   fontWeight: 400,
-                  maxWidth: { xs: 600, lg: 800, xl: 1000 },
+                  lineHeight: 1.6,
                 }}
               >
-                Keep track of your children's progress and collaborate with your
-                care team
+                Manage your children's care coordination and track their progress with your team
               </Typography>
             </Box>
 
-            {/* Refined Stats Cards */}
-            <Box sx={{ display: "flex", gap: { xs: 2, md: 3, lg: 4 }, flexWrap: "wrap" }}>
+            {/* Professional Stats Cards */}
+            <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
               <Card
                 elevation={0}
                 sx={{
-                  bgcolor: alpha(theme.palette.primary.main, 0.08),
-                  border: `1px solid ${alpha(theme.palette.primary.main, 0.12)}`,
-                  borderRadius: { xs: 2, md: 3 },
-                  minWidth: { xs: 140, md: 160, lg: 180 },
-                  transition: "transform 0.2s ease, box-shadow 0.2s ease",
+                  bgcolor: "background.paper",
+                  border: `2px solid ${theme.palette.divider}`,
+                  borderRadius: 2,
+                  minWidth: { xs: 160, md: 180 },
+                  transition: "border-color 0.2s ease",
                   "&:hover": {
-                    transform: "translateY(-2px)",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                    borderColor: theme.palette.primary.main,
                   },
                 }}
               >
-                <CardContent sx={{ p: 2, "&:last-child": { pb: 2 } }}>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <CardContent sx={{ p: 3 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                     <ChildCareIcon
-                      sx={{ color: "primary.main", fontSize: 20 }}
+                      sx={{ color: "text.secondary", fontSize: 24 }}
                     />
                     <Box>
                       <Typography
-                        variant="h6"
-                        sx={{ color: "primary.main", fontWeight: 700, mb: 0 }}
+                        variant="h5"
+                        sx={{ color: "text.primary", fontWeight: 600, mb: 0.5, fontSize: "1.5rem" }}
                       >
                         {children.length}
                       </Typography>
                       <Typography
-                        variant="caption"
-                        sx={{ color: "primary.main", fontWeight: 500 }}
+                        variant="body2"
+                        sx={{ color: "text.secondary", fontWeight: 500, fontSize: "0.9rem" }}
                       >
                         {children.length === 1 ? "Child" : "Children"}
                       </Typography>
@@ -364,32 +338,31 @@ const Dashboard = () => {
               <Card
                 elevation={0}
                 sx={{
-                  bgcolor: alpha(theme.palette.success.main, 0.08),
-                  border: `1px solid ${alpha(theme.palette.success.main, 0.12)}`,
-                  borderRadius: { xs: 2, md: 3 },
-                  minWidth: { xs: 140, md: 160, lg: 180 },
-                  transition: "transform 0.2s ease, box-shadow 0.2s ease",
+                  bgcolor: "background.paper",
+                  border: `2px solid ${theme.palette.divider}`,
+                  borderRadius: 2,
+                  minWidth: { xs: 160, md: 180 },
+                  transition: "border-color 0.2s ease",
                   "&:hover": {
-                    transform: "translateY(-2px)",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                    borderColor: theme.palette.primary.main,
                   },
                 }}
               >
-                <CardContent sx={{ p: 2, "&:last-child": { pb: 2 } }}>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <GroupIcon sx={{ color: "success.main", fontSize: 20 }} />
+                <CardContent sx={{ p: 3 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                    <GroupIcon sx={{ color: "text.secondary", fontSize: 24 }} />
                     <Box>
                       <Typography
                         variant="h6"
-                        sx={{ color: "success.main", fontWeight: 700, mb: 0 }}
-                      >
-                        Active
-                      </Typography>
-                      <Typography
-                        variant="caption"
-                        sx={{ color: "success.main", fontWeight: 500 }}
+                        sx={{ color: "text.primary", fontWeight: 600, mb: 0.5, fontSize: "1.1rem" }}
                       >
                         Care Team
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        sx={{ color: "text.secondary", fontWeight: 500, fontSize: "0.9rem" }}
+                      >
+                        Active
                       </Typography>
                     </Box>
                   </Box>
@@ -408,7 +381,6 @@ const Dashboard = () => {
             setEditChildOpen(true);
           }}
           onDeleteChild={(child) => {
-            // Add delete functionality if needed
             console.log('Delete child:', child);
           }}
         />
@@ -433,17 +405,17 @@ const Dashboard = () => {
                 sx={{
                   p: 6,
                   textAlign: "center",
-                  borderRadius: 3,
+                  borderRadius: 2,
                   bgcolor: "background.paper",
-                  border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                  border: `1px solid ${theme.palette.divider}`,
                 }}
               >
                 <Box
                   sx={{
-                    width: 80,
-                    height: 80,
+                    width: 64,
+                    height: 64,
                     borderRadius: "50%",
-                    bgcolor: alpha(theme.palette.primary.main, 0.1),
+                    bgcolor: "grey.100",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -451,14 +423,15 @@ const Dashboard = () => {
                     mb: 3,
                   }}
                 >
-                  <ChildCareIcon sx={{ fontSize: 40, color: "primary.main" }} />
+                  <ChildCareIcon sx={{ fontSize: 32, color: "text.secondary" }} />
                 </Box>
                 <Typography
                   variant="h5"
                   sx={{
                     color: "text.primary",
-                    fontWeight: 600,
+                    fontWeight: 500,
                     mb: 2,
+                    fontSize: "1.25rem",
                   }}
                 >
                   No children added yet
@@ -470,6 +443,8 @@ const Dashboard = () => {
                     mb: 4,
                     maxWidth: 400,
                     mx: "auto",
+                    fontSize: "1rem",
+                    lineHeight: 1.6,
                   }}
                 >
                   {canManageChildren()
@@ -486,11 +461,11 @@ const Dashboard = () => {
                       bgcolor: "primary.main",
                       px: 4,
                       py: 1.5,
-                      borderRadius: 2,
-                      fontWeight: 600,
+                      borderRadius: 1,
+                      fontWeight: 500,
+                      fontSize: "0.95rem",
                       "&:hover": {
                         bgcolor: "primary.dark",
-                        transform: "translateY(-1px)",
                       },
                       transition: "all 0.2s ease",
                     }}
@@ -500,15 +475,14 @@ const Dashboard = () => {
                 )}
               </Paper>
             ) : (
-              <Grid container spacing={{ xs: 3, md: 4, lg: 5 }}>
+              <Grid container spacing={4}>
                 {children.map((child) => (
                   <Grid
                     item
                     xs={12}
-                    sm={children.length > 1 ? 6 : 12}
-                    md={children.length > 2 ? 4 : children.length > 1 ? 6 : 12}
-                    lg={children.length > 4 ? 3 : children.length > 2 ? 4 : children.length > 1 ? 6 : 12}
-                    xl={children.length > 5 ? 2 : children.length > 3 ? 3 : children.length > 1 ? 6 : 12}
+                    sm={6}
+                    md={children.length === 1 ? 12 : children.length === 2 ? 6 : 4}
+                    lg={children.length === 1 ? 12 : children.length <= 3 ? 4 : 3}
                     key={child.id}
                   >
                     <ChildCard
@@ -538,30 +512,6 @@ const Dashboard = () => {
               </Grid>
             )}
 
-            {/* Modals */}
-            <AddChildModal
-              open={addChildOpen}
-              onClose={() => setAddChildOpen(false)}
-            />
-            <InviteTeamMemberModal
-              open={inviteTeamMemberOpen}
-              onClose={() => setInviteTeamMemberOpen(false)}
-              child={selectedChild}
-            />
-            {editChildOpen && selectedChild && (
-              <EditChildModal
-                open={editChildOpen}
-                onClose={() => setEditChildOpen(false)}
-                child={selectedChild}
-              />
-            )}
-            {logMoodOpen && selectedChild && (
-              <LogMoodModal
-                open={logMoodOpen}
-                onClose={() => setLogMoodOpen(false)}
-                child={selectedChild}
-              />
-            )}
           </>
         )}
     </ResponsiveLayout>
