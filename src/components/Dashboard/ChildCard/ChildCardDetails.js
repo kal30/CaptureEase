@@ -24,6 +24,8 @@ const ChildCardDetails = ({
   allActions,
   child,
 }) => {
+  console.log('ChildCardDetails rendered for', child?.name, 'with userRole:', userRole);
+  
   return (
     <Collapse in={expanded} timeout="auto" unmountOnExit>
       <Box sx={{ px: 3, pb: 3 }}>
@@ -69,7 +71,7 @@ const ChildCardDetails = ({
               No team members yet
             </Typography>
           )}
-          {userRole === "parent" && (
+          {(userRole === "primary_parent" || userRole === "co_parent") && (
             <Button
               size="small"
               variant="text"

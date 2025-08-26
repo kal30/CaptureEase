@@ -37,6 +37,34 @@ export const TIMELINE_TYPES = {
     icon: '😊',
     color: '#E91E63', // Pink
     collection: 'moodLogs'
+  },
+  MEDICATION_LOG: {
+    type: 'medication_log',
+    label: 'Medication Log',
+    icon: '💊',
+    color: '#FF5722', // Deep Orange
+    collection: 'medicationLogs'
+  },
+  FOOD_LOG: {
+    type: 'food_log',
+    label: 'Food Log',
+    icon: '🍎',
+    color: '#8BC34A', // Light Green
+    collection: 'foodLogs'
+  },
+  MEDICAL_EVENT: {
+    type: 'medical_event',
+    label: 'Medical Event',
+    icon: '🏥',
+    color: '#F44336', // Red
+    collection: 'medicalEvents'
+  },
+  SLEEP_LOG: {
+    type: 'sleep_log',
+    label: 'Sleep Log',
+    icon: '😴',
+    color: '#673AB7', // Deep Purple
+    collection: 'sleepLogs'
   }
 };
 

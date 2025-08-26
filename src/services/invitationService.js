@@ -38,10 +38,14 @@ export const sendInvitation = async (childId, email, role, specialization = null
     // --- End Fetch Child Name ---
 
 
-    // Example invitation link - adjust to your actual registration/acceptance flow
-    // This link should ideally point to a page where the invited user can register
-    // and their role/child association is handled based on these URL parameters.
-    const invitationLink = `${window.location.origin}/register?inviteEmail=${encodeURIComponent(email)}&childId=${childId}&role=${role}`;
+    // Enhanced invitation link with role context
+    const invitationLink = `${window.location.origin}/accept-invite?token=${encodeURIComponent(btoa(JSON.stringify({
+        email,
+        childId,
+        role,
+        timestamp: Date.now(),
+        childName
+    })))}&childName=${encodeURIComponent(childName)}&role=${role}`;
 
     try {
         // 1. Check if the user already exists in Firebase Auth
@@ -104,6 +108,96 @@ export const sendInvitation = async (childId, email, role, specialization = null
         }
     } catch (error) {
         console.error("Error sending invitation:", error);
+        throw error;
+    }
+};
+
+// Function to send a single invitation for multiple children
+export const sendMultiChildInvitation = async (childIds, email, role, specialization = null, personalMessage = null) => {
+    const auth = getAuth();
+    const currentUser = auth.currentUser;
+
+    if (!currentUser) {
+        throw new Error("User not logged in.");
+    }
+
+    const senderName = currentUser.displayName || currentUser.email || 'A parent';
+
+    // Fetch all child names
+    const children = [];
+    for (const childId of childIds) {
+        try {
+            const childDocRef = doc(db, "children", childId);
+            const childDocSnap = await getDoc(childDocRef);
+            if (childDocSnap.exists()) {
+                children.push({
+                    id: childId,
+                    name: childDocSnap.data().name
+                });
+            }
+        } catch (error) {
+            console.error(`Error fetching child ${childId}:`, error);
+        }
+    }
+
+    if (children.length === 0) {
+        throw new Error("No valid children found for invitation");
+    }
+
+    // Create multi-child invitation token
+    const invitationToken = btoa(JSON.stringify({
+        email,
+        childIds: children.map(c => c.id),
+        childNames: children.map(c => c.name),
+        role,
+        timestamp: Date.now(),
+        specialization
+    }));
+
+    const invitationLink = `${window.location.origin}/accept-invite?token=${encodeURIComponent(invitationToken)}`;
+
+    try {
+        // Check if the user already exists
+        const signInMethods = await fetchSignInMethodsForEmail(auth, email);
+        const userExists = signInMethods && signInMethods.length > 0;
+
+        if (userExists) {
+            // User exists: Still send invitation email (they can just log in and get access)
+            const emailResult = await sendInvitationEmailCallable({
+                recipientEmail: email,
+                childNames: children.map(c => c.name), // Pass array of child names
+                role,
+                senderName,
+                invitationLink,
+                personalMessage,
+                multiChild: true // Flag for multi-child email template
+            });
+            console.log('Multi-child invitation email sent to existing user:', emailResult.data);
+            return { 
+                status: "invited_existing_user", 
+                message: `Invitation sent to existing user ${email} for ${children.length} children.`,
+                children: children.map(c => c.name)
+            };
+        } else {
+            // User doesn't exist: Send invitation to create account
+            const emailResult = await sendInvitationEmailCallable({
+                recipientEmail: email,
+                childNames: children.map(c => c.name),
+                role,
+                senderName,
+                invitationLink,
+                personalMessage,
+                multiChild: true
+            });
+            console.log('Multi-child invitation email sent to new user:', emailResult.data);
+            return { 
+                status: "invited_new_user", 
+                message: `Invitation sent to ${email} for ${children.length} children.`,
+                children: children.map(c => c.name)
+            };
+        }
+    } catch (error) {
+        console.error("Error sending multi-child invitation:", error);
         throw error;
     }
 };

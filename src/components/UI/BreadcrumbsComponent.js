@@ -39,6 +39,7 @@ const BreadcrumbsComponent = () => {
     "health-info": "Health Info",
     "progress-notes": "Progress Notes",
     "daily-log": "Daily Log",
+    "daily-note": "Daily Log",
     profile: "Profile",
   };
 

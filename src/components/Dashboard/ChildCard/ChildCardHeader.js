@@ -169,13 +169,13 @@ const ChildCardHeader = ({
                   }}
                   sx={{
                     bgcolor: alpha(
-                      action.color === "primary" ? "#5B8C51" : "#CB6318",
+                      "#5B8C51",
                       0.1
                     ),
                     color: action.color === "primary" ? "#2F5E27" : "#8B4513",
                     "&:hover": {
                       bgcolor: alpha(
-                        action.color === "primary" ? "#5B8C51" : "#CB6318",
+                        "#5B8C51",
                         0.2
                       ),
                     },

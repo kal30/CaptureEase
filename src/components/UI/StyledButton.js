@@ -1,6 +1,7 @@
 import React from "react";
 import { Button } from "@mui/material";
 import PropTypes from "prop-types";
+import { useTheme, alpha } from "@mui/material/styles";
 
 /**
  * StyledButton - A standardized button component that follows the application's theme
@@ -19,7 +20,8 @@ const StyledButton = ({
   sx = {},
   ...props
 }) => {
-  // Base styles that match your theme settings
+  const theme = useTheme();
+
   const baseStyles = {
     borderRadius: "14px",
     padding: "12px 24px",
@@ -27,12 +29,27 @@ const StyledButton = ({
     fontWeight: 600,
     textTransform: "none",
     transition: "background-color 120ms ease, transform 120ms ease",
-    backgroundColor: variant === "contained" ? "#F27F45" : "transparent",
-    color: variant === "contained" ? "#FFFFFF" : "#F27F45",
-    "&:hover": {
-      backgroundColor:
-        variant === "contained" ? "#E85D2F" : "rgba(242, 127, 69, 0.1)",
-    },
+    ...(variant === "contained" && {
+      backgroundColor: theme.palette[color].main,
+      color: theme.palette[color].contrastText || "#FFFFFF",
+      "&:hover": {
+        backgroundColor: theme.palette[color].dark,
+      },
+    }),
+    ...(variant === "outlined" && {
+      borderColor: theme.palette[color].main,
+      color: theme.palette[color].main,
+      "&:hover": {
+        backgroundColor: alpha(theme.palette[color].main, 0.1),
+        borderColor: theme.palette[color].main,
+      },
+    }),
+    ...(variant === "text" && {
+      color: theme.palette[color].main,
+      "&:hover": {
+        backgroundColor: alpha(theme.palette[color].main, 0.1),
+      },
+    }),
     "&.Mui-disabled": {
       opacity: 0.6,
     },

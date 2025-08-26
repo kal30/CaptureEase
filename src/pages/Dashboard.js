@@ -18,6 +18,7 @@ import ChildCard from "../components/Dashboard/ChildCard";
 import ResponsiveLayout from "../components/Layout/ResponsiveLayout";
 import MobileDashboard from "../components/Mobile/MobileDashboard";
 import TabletDashboard from "../components/Tablet/TabletDashboard";
+import QuickDataSection from "../components/Dashboard/QuickDataSection";
 import {
   doc,
   getDoc,
@@ -44,9 +45,19 @@ const Dashboard = () => {
   const [expandedChildId, setExpandedChildId] = useState(null);
   const [userDisplayName, setUserDisplayName] = useState("");
   const [userRole, setUserRole] = useState(null);
+  const [userRoles, setUserRoles] = useState([]);
   const [loadingUserRole, setLoadingUserRole] = useState(true);
 
   const theme = useTheme();
+
+  // Helper function to check if user has a specific role
+  const hasRole = (role) => userRoles.includes(role);
+  
+  // Helper to check if user can manage children (add/edit)
+  const canManageChildren = () => userRoles.includes('primary_parent') || userRoles.includes('co_parent');
+  
+  // Helper to check if user is any type of parent
+  const isParent = () => userRoles.includes('primary_parent') || userRoles.includes('co_parent') || userRoles.includes('parent');
 
   useEffect(() => {
     const auth = getAuth();
@@ -58,21 +69,25 @@ const Dashboard = () => {
         const userDocSnap = await getDoc(userDocRef);
 
         let currentRole = null;
+        let currentRoles = [];
         if (userDocSnap.exists()) {
           const userData = userDocSnap.data();
           currentRole = userData.role;
+          currentRoles = userData.roles || [userData.role].filter(Boolean);
           setUserRole(currentRole);
+          setUserRoles(currentRoles);
         } else {
           setUserRole(null);
+          setUserRoles([]);
         }
 
         let childrenQuery;
-        if (currentRole === "parent") {
+        if (currentRoles.includes("parent") || currentRoles.includes("primary_parent") || currentRoles.includes("co_parent")) {
           childrenQuery = query(
             collection(db, "children"),
-            where("parentId", "==", user.uid)
+            where("users.parent", "==", user.uid)
           );
-        } else if (currentRole === "therapist") {
+        } else if (currentRoles.includes("therapist")) {
           childrenQuery = query(
             collection(db, "children"),
             where("users.therapists", "array-contains", user.uid)
@@ -115,7 +130,57 @@ const Dashboard = () => {
   return (
     <ResponsiveLayout 
       pageTitle="Dashboard"
-      customMobile={<MobileDashboard children={children} user={{ displayName: userDisplayName }} />}
+      customMobile={
+        <MobileDashboard 
+          children={children} 
+          user={{ displayName: userDisplayName }}
+          onEditChild={(child) => {
+            setSelectedChild(child);
+            setEditChildOpen(true);
+          }}
+          onDeleteChild={(child) => {
+            // Add delete functionality if needed
+            console.log('Delete child:', child);
+          }}
+          onInviteTeamMember={(child) => {
+            setSelectedChild(child);
+            setInviteTeamMemberOpen(true);
+          }}
+          onLogMood={(child) => {
+            setSelectedChild(child);
+            setLogMoodOpen(true);
+          }}
+          userRole={userRole}
+          onAddChild={() => setAddChildOpen(true)}
+          modals={
+            <>
+              <AddChildModal
+                open={addChildOpen}
+                onClose={() => setAddChildOpen(false)}
+              />
+              <InviteTeamMemberModal
+                open={inviteTeamMemberOpen}
+                onClose={() => setInviteTeamMemberOpen(false)}
+                child={selectedChild}
+              />
+              {editChildOpen && selectedChild && (
+                <EditChildModal
+                  open={editChildOpen}
+                  onClose={() => setEditChildOpen(false)}
+                  child={selectedChild}
+                />
+              )}
+              {logMoodOpen && selectedChild && (
+                <LogMoodModal
+                  open={logMoodOpen}
+                  onClose={() => setLogMoodOpen(false)}
+                  child={selectedChild}
+                />
+              )}
+            </>
+          }
+        />
+      }
       customTablet={<TabletDashboard children={children} user={{ displayName: userDisplayName }} />}
     >
         {/* Refined Header Section */}
@@ -145,33 +210,79 @@ const Dashboard = () => {
             }}
           />
 
-          {/* Add Child Button - Cleaner positioning */}
-          {userRole === "parent" && (
-            <Button
-              variant="contained"
-              onClick={() => setAddChildOpen(true)}
-              startIcon={<AddIcon />}
+          {/* Action Buttons - Cleaner positioning */}
+          {canManageChildren() && (
+            <Box
               sx={{
                 position: "absolute",
                 top: 24,
                 right: 24,
-                bgcolor: "primary.main",
-                borderRadius: 2,
-                px: 3,
-                py: 1.5,
-                boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-                fontWeight: 600,
+                display: "flex",
+                gap: 2,
                 zIndex: 2,
-                "&:hover": {
-                  bgcolor: "primary.dark",
-                  transform: "translateY(-1px)",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
-                },
-                transition: "all 0.2s ease",
               }}
             >
-              Add Child
-            </Button>
+              <Button
+                variant="outlined"
+                onClick={() => {
+                  if (children.length === 1) {
+                    setSelectedChild(children[0]);
+                    setInviteTeamMemberOpen(true);
+                  } else if (children.length > 1) {
+                    // For multiple children, we'll still need to expand a card or add child selection
+                    // For now, just alert the user
+                    alert("Please click on a child card and use the 'Add Team Member' button inside to invite team members for that specific child.");
+                  }
+                }}
+                startIcon={<GroupIcon />}
+                disabled={children.length === 0}
+                sx={{
+                  bgcolor: "background.paper",
+                  borderColor: "success.main",
+                  color: "success.main",
+                  borderRadius: 2,
+                  px: 3,
+                  py: 1.5,
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                  fontWeight: 600,
+                  "&:hover": {
+                    bgcolor: "success.main",
+                    color: "white",
+                    transform: "translateY(-1px)",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
+                  },
+                  "&:disabled": {
+                    bgcolor: "grey.100",
+                    borderColor: "grey.300",
+                    color: "grey.500",
+                  },
+                  transition: "all 0.2s ease",
+                }}
+              >
+                Invite Team
+              </Button>
+              <Button
+                variant="contained"
+                onClick={() => setAddChildOpen(true)}
+                startIcon={<AddIcon />}
+                sx={{
+                  bgcolor: "primary.main",
+                  borderRadius: 2,
+                  px: 3,
+                  py: 1.5,
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                  fontWeight: 600,
+                  "&:hover": {
+                    bgcolor: "primary.dark",
+                    transform: "translateY(-1px)",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
+                  },
+                  transition: "all 0.2s ease",
+                }}
+              >
+                Add Child
+              </Button>
+            </Box>
           )}
 
           <Box sx={{ position: "relative", zIndex: 1 }}>
@@ -288,6 +399,20 @@ const Dashboard = () => {
           </Box>
         </Paper>
 
+        {/* Smart Data Collection Section */}
+        <QuickDataSection 
+          children={children} 
+          userRole={userRole} 
+          onEditChild={(child) => {
+            setSelectedChild(child);
+            setEditChildOpen(true);
+          }}
+          onDeleteChild={(child) => {
+            // Add delete functionality if needed
+            console.log('Delete child:', child);
+          }}
+        />
+
         {/* Content Section */}
         {loadingUserRole ? (
           <Box
@@ -347,11 +472,11 @@ const Dashboard = () => {
                     mx: "auto",
                   }}
                 >
-                  {userRole === "parent"
+                  {canManageChildren()
                     ? "Start by adding your first child to begin tracking their care and progress."
                     : "No children have been assigned to you yet."}
                 </Typography>
-                {userRole === "parent" && (
+                {canManageChildren() && (
                   <Button
                     variant="contained"
                     onClick={() => setAddChildOpen(true)}
@@ -421,7 +546,7 @@ const Dashboard = () => {
             <InviteTeamMemberModal
               open={inviteTeamMemberOpen}
               onClose={() => setInviteTeamMemberOpen(false)}
-              allChildren={children}
+              child={selectedChild}
             />
             {editChildOpen && selectedChild && (
               <EditChildModal

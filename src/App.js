@@ -7,6 +7,7 @@ import theme from "./assets/theme/light";
 import Navbar from "./components/Landing/NavBar"; // Import the Navbar component
 import { auth } from "./services/firebase";
 import { ChildProvider } from "./contexts/ChildContext";
+import { RoleProvider } from "./contexts/RoleContext";
 import { ErrorBoundary } from "./contexts/ErrorContext";
 
 const App = () => {
@@ -24,12 +25,14 @@ const App = () => {
   return (
     <ThemeProvider theme={theme}>
       <ChildProvider>
-        <Router>
-          <ErrorBoundary>
-            <Navbar />
-            <AppRoutes />
-          </ErrorBoundary>
-        </Router>
+        <RoleProvider>
+          <Router>
+            <ErrorBoundary>
+              <Navbar />
+              <AppRoutes />
+            </ErrorBoundary>
+          </Router>
+        </RoleProvider>
       </ChildProvider>
     </ThemeProvider>
   );

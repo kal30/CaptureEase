@@ -78,9 +78,54 @@ export const assignCaregiver = async (childId, caregiverId) => {
 
 // Assign a therapist to a child
 export const assignTherapist = async (childId, therapistId) => {
+  console.log('assignTherapist called:', { childId, therapistId });
+  try {
+    const childRef = doc(db, "children", childId);
+    
+    // Check the document before update
+    const childDoc = await getDoc(childRef);
+    if (!childDoc.exists()) {
+      throw new Error(`Child document ${childId} not found`);
+    }
+    
+    const beforeData = childDoc.data();
+    console.log('assignTherapist - before update:', {
+      childName: beforeData.name,
+      currentTherapists: beforeData.users?.therapists || []
+    });
+    
+    await updateDoc(childRef, {
+      "users.therapists": arrayUnion(therapistId),
+    });
+    
+    // Check the document after update
+    const updatedDoc = await getDoc(childRef);
+    const afterData = updatedDoc.data();
+    console.log('assignTherapist - after update:', {
+      childName: afterData.name,
+      updatedTherapists: afterData.users?.therapists || []
+    });
+    
+    console.log('assignTherapist success: therapist added to child');
+  } catch (error) {
+    console.error('assignTherapist error:', error);
+    throw error;
+  }
+};
+
+// Assign a co-parent to a child
+export const assignCoParent = async (childId, coParentId) => {
   const childRef = doc(db, "children", childId);
   await updateDoc(childRef, {
-    "users.therapists": arrayUnion(therapistId),
+    "users.co_parents": arrayUnion(coParentId),
+  });
+};
+
+// Assign a family member to a child
+export const assignFamilyMember = async (childId, familyMemberId) => {
+  const childRef = doc(db, "children", childId);
+  await updateDoc(childRef, {
+    "users.family_members": arrayUnion(familyMemberId),
   });
 };
 

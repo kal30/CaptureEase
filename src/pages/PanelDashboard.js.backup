@@ -1,0 +1,1124 @@
+import React, { useState, useEffect } from 'react';
+import {
+  Box,
+  Container,
+  Typography,
+  Grid,
+  Paper,
+  Card,
+  CardContent,
+  Button,
+  Avatar,
+  Chip,
+  LinearProgress,
+  IconButton,
+  Divider,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  ListItemSecondaryAction,
+  Stack,
+  Badge,
+  Modal,
+  Collapse
+} from '@mui/material';
+import {
+  Add as AddIcon,
+  TrendingUp as TrendingUpIcon,
+  AccessTime as TimeIcon,
+  Person as PersonIcon,
+  PlayArrow as PlayIcon,
+  Timeline as TimelineIcon,
+  AutoAwesome as SparkleIcon,
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon,
+  LocalHospital as HospitalIcon,
+  Psychology as TherapyIcon,
+  FamilyRestroom as FamilyIcon,
+  MedicalInformation as DiagnosisIcon
+} from '@mui/icons-material';
+import { alpha, useTheme } from '@mui/material/styles';
+import { useNavigate } from 'react-router-dom';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth } from '../services/firebase';
+import { useChildContext } from '../contexts/ChildContext';
+import { getChildren } from '../services/childService';
+import { getTimelineEntries, TIMELINE_TYPES } from '../services/timelineService';
+import StyledButton from '../components/UI/StyledButton';
+import QuickCheckIn from '../components/Mobile/QuickCheckIn';
+import MicroDataCollector from '../components/Mobile/MicroDataCollector';
+import InviteTeamMemberModal from '../components/InviteTeamMemberModal';
+import { useRole } from '../contexts/RoleContext';
+import { usePermissions } from '../hooks/usePermissions';
+
+const PanelDashboard = () => {
+  const theme = useTheme();
+  const navigate = useNavigate();
+  const [user] = useAuthState(auth);
+  const { currentChildId, setCurrentChildId } = useChildContext();
+  const { loading: roleLoading } = useRole();
+  const [children, setChildren] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [recentEntries, setRecentEntries] = useState([]);
+  const [quickDataStatus, setQuickDataStatus] = useState({});
+  const [showQuickEntry, setShowQuickEntry] = useState(false);
+  const [selectedChild, setSelectedChild] = useState(null);
+  const [entryType, setEntryType] = useState('micro'); // 'micro' or 'full'
+  const [expandedCategories, setExpandedCategories] = useState({}); // Track expanded categories per child
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteChildId, setInviteChildId] = useState(null);
+
+  // Load children
+  useEffect(() => {
+    const loadChildren = async () => {
+      try {
+        console.log('Loading children...');
+        const childrenData = await getChildren();
+        console.log('Children loaded:', childrenData);
+        
+        // TEMPORARY: Add mock data for testing if no children
+        const testData = childrenData.length === 0 ? [
+          { id: 'test1', name: 'Emma', age: 8 },
+          { id: 'test2', name: 'Liam', age: 6 }
+        ] : childrenData;
+        
+        setChildren(testData);
+        if (testData.length > 0 && !currentChildId) {
+          setCurrentChildId(testData[0].id);
+        }
+      } catch (error) {
+        console.error('Error loading children:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadChildren();
+  }, [currentChildId, setCurrentChildId]);
+
+  // Load recent timeline entries for all children (organized by child)
+  useEffect(() => {
+    const unsubscribes = [];
+    const entriesByChild = {};
+
+    children.forEach(child => {
+      const unsubscribe = getTimelineEntries(child.id, (entries) => {
+        // Get recent entries (last 7 days)
+        const recentTimelineEntries = entries
+          .filter(entry => {
+            const entryDate = new Date(entry.timestamp);
+            const weekAgo = new Date();
+            weekAgo.setDate(weekAgo.getDate() - 7);
+            return entryDate >= weekAgo;
+          })
+          .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+          .slice(0, 5); // Keep only 5 most recent per child
+
+        entriesByChild[child.id] = recentTimelineEntries;
+        setRecentEntries({ ...entriesByChild });
+      });
+
+      unsubscribes.push(unsubscribe);
+    });
+
+    return () => {
+      unsubscribes.forEach(unsub => {
+        if (unsub) unsub();
+      });
+    };
+  }, [children]);
+
+  // Mock quick data status (replace with real implementation)
+  useEffect(() => {
+    const mockStatus = {};
+    children.forEach(child => {
+      mockStatus[child.id] = {
+        mood: Math.random() > 0.5,
+        sleep: Math.random() > 0.4,
+        energy: Math.random() > 0.6,
+        dataCompleteness: Math.floor(Math.random() * 100)
+      };
+    });
+    setQuickDataStatus(mockStatus);
+  }, [children]);
+
+  const handleQuickDataEntry = (child, type, event) => {
+    if (event) {
+      event.stopPropagation();
+      event.preventDefault();
+    }
+    
+    console.log('Quick data entry clicked:', type, child.name);
+    setSelectedChild(child);
+    setCurrentChildId(child.id);
+    
+    if (type === 'complete' || type === 'mood' || type === 'sleep' || type === 'energy') {
+      // Show micro data collector for quick entries
+      setEntryType('micro');
+      setShowQuickEntry(true);
+    } else {
+      // For other types, navigate to detailed forms
+      setEntryType('full');
+      setShowQuickEntry(true);
+    }
+  };
+
+  const handleDetailedEntry = (type) => {
+    if (!currentChildId) return;
+    
+    // Navigate to ChildLog page with specific tab or dedicated pages
+    const tabMap = {
+      'daily_note': 0,
+      'progress_note': 1, 
+      'sensory_log': 2,
+      'behavior': 3,
+      'mood_log': 4
+      // New types will need dedicated pages or expanded ChildLog tabs
+    };
+    
+    // For existing types, navigate to ChildLog tabs
+    if (tabMap[type] !== undefined) {
+      const tabIndex = tabMap[type];
+      navigate(`/log?tab=${tabIndex}`);
+    } else {
+      // For new types, navigate to specific pages or show implementation message
+      switch (type) {
+        case 'medication_log':
+          alert('Medication Log: Navigate to dedicated medication tracking page (to be implemented)');
+          break;
+        case 'food_log':
+          alert('Food Log: Navigate to detailed food tracking page (to be implemented)');
+          break;
+        case 'medical_event':
+          alert('Medical Event: Navigate to medical events page (to be implemented)');
+          break;
+        case 'sleep_log':
+          alert('Sleep Log: Navigate to detailed sleep tracking page (to be implemented)');
+          break;
+        default:
+          console.log(`Navigation for ${type} not yet implemented`);
+      }
+    }
+  };
+
+  const handleQuickEntryComplete = (data) => {
+    console.log('Quick entry completed:', data);
+    // Here you would save the data to your backend
+    setShowQuickEntry(false);
+    setSelectedChild(null);
+    
+    // Refresh data to show the new entry
+    // You can implement this based on your data flow
+  };
+
+  const handleQuickEntrySkip = () => {
+    setShowQuickEntry(false);
+    setSelectedChild(null);
+  };
+
+  const toggleCategory = (childId, category) => {
+    setExpandedCategories(prev => ({
+      ...prev,
+      [`${childId}-${category}`]: !prev[`${childId}-${category}`]
+    }));
+  };
+
+  const isCategoryExpanded = (childId, category) => {
+    return expandedCategories[`${childId}-${category}`] || false;
+  };
+
+  const handleInviteTeamMember = (childId) => {
+    setInviteChildId(childId);
+    setShowInviteModal(true);
+  };
+
+  const handleInviteSuccess = (result) => {
+    console.log('Invitation sent successfully:', result);
+    // Optionally refresh data or show success message
+  };
+
+  const handleCloseInviteModal = () => {
+    setShowInviteModal(false);
+    setInviteChildId(null);
+  };
+
+  const getTypeConfig = (type) => {
+    return Object.values(TIMELINE_TYPES).find(t => t.type === type) || {
+      icon: '📝',
+      color: theme.palette.primary.main,
+      label: type
+    };
+  };
+
+  const formatTimeAgo = (timestamp) => {
+    const now = new Date();
+    const entryTime = new Date(timestamp);
+    const diffMs = now - entryTime;
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffDays > 0) return `${diffDays}d ago`;
+    if (diffHours > 0) return `${diffHours}h ago`;
+    return 'Just now';
+  };
+
+  if (loading) {
+    return (
+      <Container maxWidth="xl" sx={{ mt: 4 }}>
+        <Typography>Loading...</Typography>
+      </Container>
+    );
+  }
+
+  return (
+    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+      {/* Beautiful Header */}
+      <Box sx={{ 
+        mb: 6,
+        background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.05)} 0%, ${alpha(theme.palette.secondary.main, 0.05)} 100%)`,
+        py: 4,
+        px: 3,
+        borderRadius: 3,
+        border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`
+      }}>
+        {/* Header Content */}
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+          {/* Left: User Name & Title */}
+          <Box sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+            <SparkleIcon sx={{ fontSize: 40, color: 'primary.main', mr: 2 }} />
+            <Box>
+              <Typography variant="h3" sx={{ 
+                fontWeight: 800, 
+                background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                textAlign: 'left'
+              }}>
+                {user?.displayName || user?.email?.split('@')[0] || 'Your'} Dashboard
+              </Typography>
+              <Typography variant="h6" color="text.secondary" sx={{ fontWeight: 400, textAlign: 'left' }}>
+                Support your child's growth with daily tracking and progress insights
+              </Typography>
+            </Box>
+          </Box>
+
+          {/* Right: Add Child Button */}
+          <Box>
+            <StyledButton
+              variant="contained"
+              size="large"
+              startIcon={<AddIcon />}
+              onClick={() => console.log('Add child clicked - implement add child modal here')}
+              sx={{
+                py: 1.5,
+                px: 3,
+                fontSize: '1rem',
+                fontWeight: 600,
+                background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+                boxShadow: `0 4px 20px ${alpha(theme.palette.primary.main, 0.3)}`,
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  boxShadow: `0 6px 25px ${alpha(theme.palette.primary.main, 0.4)}`
+                }
+              }}
+            >
+              Add Child
+            </StyledButton>
+          </Box>
+        </Box>
+      </Box>
+
+      {/* Child Cards - Vertical Stack for Mobile */}
+      <Stack spacing={3} sx={{ maxWidth: 800, mx: 'auto' }}>
+        {children.map((child) => {
+          const status = quickDataStatus[child.id] || {};
+          const childEntries = recentEntries[child.id] || [];
+          const completedToday = status.mood && status.sleep && status.energy;
+          
+          return (
+            <ChildCardWithPermissions 
+              key={child.id}
+              child={child}
+              status={status}
+              childEntries={childEntries}
+              completedToday={completedToday}
+              theme={theme}
+              onQuickDataEntry={handleQuickDataEntry}
+              onDetailedEntry={handleDetailedEntry}
+              onInviteTeamMember={handleInviteTeamMember}
+              setCurrentChildId={setCurrentChildId}
+              expandedCategories={expandedCategories}
+              toggleCategory={toggleCategory}
+              isCategoryExpanded={isCategoryExpanded}
+              getTypeConfig={getTypeConfig}
+              formatTimeAgo={formatTimeAgo}
+            />
+          );
+        })}
+      </Stack>
+
+      
+      {/* Quick Entry Modal */}
+      <Modal
+        open={showQuickEntry}
+        onClose={handleQuickEntrySkip}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          p: 2
+        }}
+      >
+        <Box sx={{ 
+          maxWidth: 600, 
+          width: '100%',
+          maxHeight: '90vh',
+          overflow: 'auto'
+        }}>
+          {selectedChild && entryType === 'micro' && (
+            <MicroDataCollector
+              child={selectedChild}
+              onComplete={handleQuickEntryComplete}
+              onSkip={handleQuickEntrySkip}
+            />
+          )}
+          {selectedChild && entryType === 'full' && (
+            <QuickCheckIn
+              child={selectedChild}
+              onComplete={handleQuickEntryComplete}
+              onSkip={handleQuickEntrySkip}
+            />
+          )}
+        </Box>
+      </Modal>
+
+      {/* Invitation Modal */}
+      <InviteTeamMemberModal
+        open={showInviteModal}
+        onClose={handleCloseInviteModal}
+        child={children.find(c => c.id === inviteChildId)}
+        onInviteSuccess={handleInviteSuccess}
+      />
+    </Container>
+  );
+};
+
+// Child Card Component with Permissions
+const ChildCardWithPermissions = ({
+  child,
+  status,
+  childEntries,
+  completedToday,
+  theme,
+  onQuickDataEntry,
+  onDetailedEntry,
+  onInviteTeamMember,
+  setCurrentChildId,
+  expandedCategories,
+  toggleCategory,
+  isCategoryExpanded,
+  getTypeConfig,
+  formatTimeAgo
+}) => {
+  const permissions = usePermissions(child.id);
+  const { alpha } = require('@mui/material/styles');
+
+  if (permissions.loading) {
+    return (
+      <Card elevation={0} sx={{ 
+        border: `2px solid ${theme.palette.divider}`,
+        borderRadius: 4,
+        p: 3,
+        textAlign: 'center'
+      }}>
+        <Typography>Loading permissions...</Typography>
+      </Card>
+    );
+  }
+
+  return (
+              <Card 
+                elevation={0}
+                onClick={(e) => {
+                  console.log('Card clicked - this should NOT navigate', e.target);
+                  // e.stopPropagation();
+                }}
+                sx={{ 
+                  border: `2px solid ${completedToday ? theme.palette.success.main : theme.palette.divider}`,
+                  borderRadius: 4,
+                  overflow: 'hidden',
+                  bgcolor: completedToday 
+                    ? alpha(theme.palette.success.main, 0.02) 
+                    : 'background.paper',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    boxShadow: `0 8px 32px ${alpha(theme.palette.primary.main, 0.1)}`,
+                    transform: 'translateY(-2px)'
+                  }
+                }}
+              >
+                {/* Child Header */}
+                <Box sx={{ 
+                  background: completedToday 
+                    ? `linear-gradient(135deg, ${alpha(theme.palette.success.main, 0.1)} 0%, ${alpha(theme.palette.success.main, 0.05)} 100%)`
+                    : `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.1)} 0%, ${alpha(theme.palette.primary.main, 0.05)} 100%)`,
+                  p: 3,
+                  position: 'relative'
+                }}>
+                  {completedToday && (
+                    <Box sx={{ 
+                      position: 'absolute', 
+                      top: 16, 
+                      right: 16,
+                      background: theme.palette.success.main,
+                      borderRadius: '50%',
+                      width: 32,
+                      height: 32,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      <Typography sx={{ color: 'white', fontSize: '1.2rem' }}>✓</Typography>
+                    </Box>
+                  )}
+                  
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                    <Badge
+                      badgeContent={childEntries.length}
+                      color="primary"
+                      sx={{
+                        '& .MuiBadge-badge': {
+                          right: -6,
+                          top: -6,
+                          fontSize: '0.75rem'
+                        }
+                      }}
+                    >
+                      <Avatar 
+                        sx={{ 
+                          bgcolor: completedToday ? theme.palette.success.main : theme.palette.primary.main,
+                          width: 64, 
+                          height: 64,
+                          fontSize: '1.5rem',
+                          fontWeight: 700,
+                          boxShadow: `0 4px 16px ${alpha(theme.palette.primary.main, 0.3)}`
+                        }}
+                      >
+                        {child.name[0]}
+                      </Avatar>
+                    </Badge>
+                    <Box sx={{ ml: 2, flex: 1 }}>
+                      <Typography variant="h5" sx={{ fontWeight: 700, mb: 0.5 }}>
+                        {child.name}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                        Age {child.age} • {childEntries.length} recent entries
+                      </Typography>
+                      
+                      {/* Diagnosis */}
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                        <DiagnosisIcon sx={{ color: '#FF6B6B', fontSize: 20 }} />
+                        <Typography variant="body2" sx={{ fontSize: '0.85rem', fontWeight: 700, color: '#FF6B6B' }}>
+                          Diagnosis:
+                        </Typography>
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                          {[
+                            { name: 'Autism Spectrum', color: '#FF6B6B' },
+                            { name: 'ADHD', color: '#4ECDC4' }
+                          ].map((diagnosis, index) => (
+                            <Chip
+                              key={index}
+                              label={diagnosis.name}
+                              size="small"
+                              sx={{
+                                height: 24,
+                                fontSize: '0.7rem',
+                                bgcolor: alpha(diagnosis.color, 0.15),
+                                color: diagnosis.color,
+                                border: `1px solid ${alpha(diagnosis.color, 0.4)}`,
+                                fontWeight: 600
+                              }}
+                            />
+                          ))}
+                        </Box>
+                      </Box>
+                      
+                      {/* Care Team - Expandable with Fun Colors */}
+                      <Box sx={{ 
+                        mb: 2,
+                        p: 1.5,
+                        background: `linear-gradient(135deg, ${alpha('#9B59B6', 0.08)} 0%, ${alpha('#3498DB', 0.08)} 100%)`,
+                        borderRadius: 2,
+                        border: `2px solid ${alpha('#9B59B6', 0.2)}`
+                      }}>
+                        {/* Care Team Header - Clickable */}
+                        <Box 
+                          sx={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'space-between',
+                            cursor: 'pointer',
+                            py: 0.5,
+                            '&:hover': {
+                              bgcolor: alpha('#9B59B6', 0.1),
+                              borderRadius: 1
+                            }
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleCategory(child.id, 'careTeam');
+                          }}
+                        >
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <HospitalIcon sx={{ color: '#9B59B6', fontSize: 20 }} />
+                            <Typography variant="body2" sx={{ fontSize: '0.85rem', fontWeight: 700, color: '#9B59B6' }}>
+                              Family & Care Team
+                            </Typography>
+                            <Typography variant="caption" sx={{ 
+                              fontSize: '0.7rem', 
+                              color: '#3498DB',
+                              bgcolor: alpha('#3498DB', 0.15),
+                              border: `1px solid ${alpha('#3498DB', 0.3)}`,
+                              px: 1,
+                              py: 0.25,
+                              borderRadius: 2,
+                              fontWeight: 500
+                            }}>
+                              8 members
+                            </Typography>
+                          </Box>
+                          <IconButton size="small" sx={{ color: '#9B59B6' }}>
+                            {isCategoryExpanded(child.id, 'careTeam') ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                          </IconButton>
+                        </Box>
+
+                        {/* Expandable Care Team Content */}
+                        <Collapse in={isCategoryExpanded(child.id, 'careTeam')}>
+                          <Box sx={{ mt: 2, pt: 1.5, borderTop: `1px solid ${alpha(theme.palette.divider, 0.2)}` }}>
+                            <Stack spacing={2}>
+                              {/* Therapists - Fun Ocean Theme */}
+                              <Box>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                                  <TherapyIcon sx={{ color: '#2ECC71', fontSize: 18 }} />
+                                  <Typography variant="body2" sx={{ fontSize: '0.8rem', fontWeight: 600, color: '#2ECC71' }}>
+                                    Professional Team
+                                  </Typography>
+                                  <IconButton
+                                    size="small"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleInviteTeamMember(child.id);
+                                    }}
+                                    sx={{
+                                      width: 20,
+                                      height: 20,
+                                      bgcolor: alpha('#2ECC71', 0.1),
+                                      border: `1px dashed ${alpha('#2ECC71', 0.3)}`,
+                                      '&:hover': {
+                                        bgcolor: alpha('#2ECC71', 0.2),
+                                        transform: 'scale(1.1)'
+                                      }
+                                    }}
+                                  >
+                                    <AddIcon sx={{ fontSize: 12, color: '#2ECC71' }} />
+                                  </IconButton>
+                                </Box>
+                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.8, pl: 2 }}>
+                                  {[
+                                    { name: 'Dr. Smith (Speech)', role: 'therapist' },
+                                    { name: 'Mike J. (OT)', role: 'therapist' },
+                                    { name: 'Dr. Chen (Behavioral)', role: 'therapist' }
+                                  ].map((therapist, index) => {
+                                    // Use muted blue/gray tones for view-only therapists
+                                    const viewOnlyColors = ['#64748B', '#6B7280', '#71717A'];
+                                    const color = viewOnlyColors[index % viewOnlyColors.length];
+                                    
+                                    return (
+                                      <Chip
+                                        key={index}
+                                        label={therapist.name}
+                                        size="small"
+                                        sx={{
+                                          height: 26,
+                                          fontSize: '0.75rem',
+                                          bgcolor: alpha(color, 0.15),
+                                          color: color,
+                                          border: `2px solid ${alpha(color, 0.3)}`,
+                                          fontWeight: 600,
+                                          '&:hover': {
+                                            bgcolor: alpha(color, 0.25),
+                                            cursor: 'pointer',
+                                            transform: 'scale(1.05)'
+                                          }
+                                        }}
+                                      />
+                                    );
+                                  })}
+                                </Box>
+                              </Box>
+
+                              {/* Caregivers - Fun Sunset Theme */}
+                              <Box>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                                  <FamilyIcon sx={{ color: '#E67E22', fontSize: 18 }} />
+                                  <Typography variant="body2" sx={{ fontSize: '0.8rem', fontWeight: 600, color: '#E67E22' }}>
+                                    Family & Caregivers
+                                  </Typography>
+                                  <IconButton
+                                    size="small"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleInviteTeamMember(child.id);
+                                    }}
+                                    sx={{
+                                      width: 20,
+                                      height: 20,
+                                      bgcolor: alpha('#E67E22', 0.1),
+                                      border: `1px dashed ${alpha('#E67E22', 0.3)}`,
+                                      '&:hover': {
+                                        bgcolor: alpha('#E67E22', 0.2),
+                                        transform: 'scale(1.1)'
+                                      }
+                                    }}
+                                  >
+                                    <AddIcon sx={{ fontSize: 12, color: '#E67E22' }} />
+                                  </IconButton>
+                                </Box>
+                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.8, pl: 2 }}>
+                                  {[
+                                    { name: 'Emma W. (Primary)', role: 'primary_caregiver' },
+                                    { name: 'John D.', role: 'caregiver' },
+                                    { name: 'Maria R.', role: 'caregiver' },
+                                    { name: 'Tom B.', role: 'caregiver' },
+                                    { name: 'Jane S.', role: 'caregiver' }
+                                  ].map((caregiver, index) => {
+                                    // Use bright, vibrant colors for active data contributors
+                                    const canAddDataColors = [
+                                      '#10B981', // Primary caregiver - emerald green
+                                      '#3B82F6', // Blue
+                                      '#8B5CF6', // Purple  
+                                      '#F59E0B', // Amber
+                                      '#EF4444'  // Red
+                                    ];
+                                    const color = canAddDataColors[index % canAddDataColors.length];
+                                    
+                                    return (
+                                      <Chip
+                                        key={index}
+                                        label={caregiver.name}
+                                        size="small"
+                                        sx={{
+                                          height: 26,
+                                          fontSize: '0.75rem',
+                                          bgcolor: alpha(color, 0.15),
+                                          color: color,
+                                          border: `2px solid ${alpha(color, 0.4)}`,
+                                          fontWeight: 600,
+                                          boxShadow: `0 2px 4px ${alpha(color, 0.2)}`,
+                                          '&:hover': {
+                                            bgcolor: alpha(color, 0.25),
+                                            cursor: 'pointer',
+                                            transform: 'scale(1.05)',
+                                            boxShadow: `0 4px 8px ${alpha(color, 0.3)}`
+                                          }
+                                        }}
+                                      />
+                                    );
+                                  })}
+                                </Box>
+                              </Box>
+                            </Stack>
+                          </Box>
+                        </Collapse>
+                      </Box>
+                      <LinearProgress
+                        variant="determinate"
+                        value={status.dataCompleteness || 0}
+                        sx={{ 
+                          height: 8, 
+                          borderRadius: 4,
+                          bgcolor: alpha(theme.palette.divider, 0.3),
+                          '& .MuiLinearProgress-bar': {
+                            borderRadius: 4,
+                            background: completedToday 
+                              ? `linear-gradient(90deg, ${theme.palette.success.main} 0%, ${theme.palette.success.light} 100%)`
+                              : `linear-gradient(90deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 100%)`
+                          }
+                        }}
+                      />
+                      <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                        {status.dataCompleteness || 0}% weekly progress
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Box>
+
+                <CardContent sx={{ p: 3 }}>
+                  {/* Quick Daily Status */}
+                  <Box sx={{ mb: 3 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, display: 'flex', alignItems: 'center' }}>
+                      <PlayIcon sx={{ mr: 1, color: 'primary.main' }} />
+                      Daily Check-In
+                    </Typography>
+                    <Stack direction="row" spacing={1.5}>
+                      {[
+                        { key: 'mood', label: 'Mood', emoji: '😊', color: theme.palette.primary.main },
+                        { key: 'sleep', label: 'Sleep', emoji: '😴', color: theme.palette.secondary.main },
+                        { key: 'energy', label: 'Energy', emoji: '⚡', color: theme.palette.warning.main }
+                      ].map((item) => (
+                        <Box
+                          key={item.key}
+                          onClick={(e) => handleQuickDataEntry(child, item.key, e)}
+                          sx={{
+                            flex: 1,
+                            p: 2,
+                            borderRadius: 2,
+                            border: `2px solid ${status[item.key] ? item.color : theme.palette.divider}`,
+                            bgcolor: status[item.key] ? alpha(item.color, 0.1) : 'background.paper',
+                            cursor: 'pointer',
+                            textAlign: 'center',
+                            transition: 'all 0.2s ease',
+                            '&:hover': {
+                              borderColor: item.color,
+                              bgcolor: alpha(item.color, 0.05),
+                              transform: 'translateY(-1px)'
+                            }
+                          }}
+                        >
+                          <Typography sx={{ fontSize: '1.5rem', mb: 0.5 }}>
+                            {item.emoji}
+                          </Typography>
+                          <Typography variant="caption" sx={{ 
+                            fontWeight: 600,
+                            color: status[item.key] ? item.color : 'text.secondary'
+                          }}>
+                            {item.label}
+                          </Typography>
+                          {status[item.key] && (
+                            <Typography sx={{ 
+                              fontSize: '0.8rem', 
+                              color: item.color,
+                              mt: 0.5 
+                            }}>
+                              ✓
+                            </Typography>
+                          )}
+                        </Box>
+                      ))}
+                    </Stack>
+                    
+                    <StyledButton
+                      variant="contained"
+                      fullWidth
+                      startIcon={<PlayIcon />}
+                      onClick={(e) => handleQuickDataEntry(child, 'complete', e)}
+                      sx={{ 
+                        mt: 2,
+                        py: 1.5,
+                        fontSize: '1rem',
+                        fontWeight: 600,
+                        background: completedToday 
+                          ? `linear-gradient(135deg, ${theme.palette.success.main} 0%, ${theme.palette.success.dark} 100%)`
+                          : `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+                        '&:hover': {
+                          transform: 'translateY(-1px)',
+                          boxShadow: `0 6px 20px ${alpha(theme.palette.primary.main, 0.3)}`
+                        }
+                      }}
+                    >
+                      {completedToday ? 'Update Daily Info' : 'Start Daily Check-in'}
+                    </StyledButton>
+                  </Box>
+
+                  <Divider sx={{ my: 3 }} />
+
+                  {/* Recent Detailed Entries */}
+                  <Box>
+                    <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, display: 'flex', alignItems: 'center' }}>
+                      <TimelineIcon sx={{ mr: 1, color: 'primary.main' }} />
+                      Progress Timeline
+                    </Typography>
+                    
+                    {childEntries.length === 0 ? (
+                      <Box sx={{ 
+                        textAlign: 'center', 
+                        py: 3, 
+                        bgcolor: alpha(theme.palette.background.default, 0.3),
+                        borderRadius: 2,
+                        border: `2px dashed ${theme.palette.divider}`
+                      }}>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                          No entries yet
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Start tracking daily progress, behaviors, and milestones
+                        </Typography>
+                      </Box>
+                    ) : (
+                      <Stack spacing={1.5}>
+                        {childEntries.map((entry, index) => {
+                          const typeConfig = getTypeConfig(entry.type);
+                          return (
+                            <Box
+                              key={`${entry.id}-${index}`}
+                              sx={{
+                                p: 2,
+                                borderRadius: 2,
+                                border: `1px solid ${alpha(typeConfig.color, 0.2)}`,
+                                bgcolor: alpha(typeConfig.color, 0.05),
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease',
+                                '&:hover': {
+                                  borderColor: typeConfig.color,
+                                  bgcolor: alpha(typeConfig.color, 0.1),
+                                  transform: 'translateY(-1px)'
+                                }
+                              }}
+                            >
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                <Box sx={{
+                                  width: 40,
+                                  height: 40,
+                                  borderRadius: '50%',
+                                  bgcolor: typeConfig.color,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontSize: '1.2rem'
+                                }}>
+                                  {typeConfig.icon}
+                                </Box>
+                                <Box sx={{ flex: 1, minWidth: 0 }}>
+                                  <Typography variant="subtitle2" sx={{ fontWeight: 600, color: typeConfig.color }}>
+                                    {typeConfig.label}
+                                  </Typography>
+                                  <Typography 
+                                    variant="body2" 
+                                    color="text.secondary"
+                                    sx={{ 
+                                      overflow: 'hidden',
+                                      textOverflow: 'ellipsis',
+                                      whiteSpace: 'nowrap'
+                                    }}
+                                  >
+                                    {entry.title || entry.content?.substring(0, 40) + '...' || 'No details'}
+                                  </Typography>
+                                </Box>
+                                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
+                                  {formatTimeAgo(entry.timestamp)}
+                                </Typography>
+                              </Box>
+                            </Box>
+                          );
+                        })}
+                      </Stack>
+                    )}
+
+                    {/* Add Detailed Entry - Clean Expandable Design */}
+                    <Box sx={{ mt: 2 }}>
+                      <Typography variant="caption" color="text.secondary" sx={{ mb: 1.5, display: 'block', fontWeight: 600 }}>
+                        Track progress:
+                      </Typography>
+                      
+                      {/* Quick Access - Most Used */}
+                      <Box sx={{ mb: 2 }}>
+                        <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
+                          {['daily_note', 'progress_note', 'medication_log'].map((typeKey) => {
+                            const type = Object.values(TIMELINE_TYPES).find(t => t.type === typeKey);
+                            return type && (
+                              <Button
+                                key={type.type}
+                                variant="outlined"
+                                size="small"
+                                startIcon={<span style={{ fontSize: '0.8rem' }}>{type.icon}</span>}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  e.preventDefault();
+                                  setCurrentChildId(child.id);
+                                  handleDetailedEntry(type.type);
+                                }}
+                                sx={{
+                                  fontSize: '0.75rem',
+                                  py: 0.75,
+                                  px: 1.5,
+                                  borderColor: alpha(type.color, 0.3),
+                                  color: type.color,
+                                  '&:hover': {
+                                    borderColor: type.color,
+                                    bgcolor: alpha(type.color, 0.1),
+                                    transform: 'translateY(-1px)'
+                                  }
+                                }}
+                              >
+                                {type.label}
+                              </Button>
+                            );
+                          })}
+                        </Stack>
+                      </Box>
+
+                      {/* Expandable "More Options" */}
+                      <Box>
+                        <Button
+                          variant="text"
+                          size="small"
+                          endIcon={isCategoryExpanded(child.id, 'more') ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleCategory(child.id, 'more');
+                          }}
+                          sx={{
+                            fontSize: '0.75rem',
+                            color: 'text.secondary',
+                            textTransform: 'none',
+                            '&:hover': {
+                              bgcolor: alpha(theme.palette.primary.main, 0.05)
+                            }
+                          }}
+                        >
+                          More entry types
+                        </Button>
+                        
+                        <Collapse in={isCategoryExpanded(child.id, 'more')}>
+                          <Box sx={{ mt: 1, pl: 1, borderLeft: `2px solid ${alpha(theme.palette.divider, 0.3)}` }}>
+                            <Stack spacing={1}>
+                              {/* Health & Medical */}
+                              <Box>
+                                <Typography variant="caption" color="error.main" sx={{ mb: 0.5, display: 'block', fontWeight: 600 }}>
+                                  🏥 Medical
+                                </Typography>
+                                <Stack direction="row" spacing={0.5} sx={{ flexWrap: 'wrap', gap: 0.5 }}>
+                                  {['medical_event'].map((typeKey) => {
+                                    const type = Object.values(TIMELINE_TYPES).find(t => t.type === typeKey);
+                                    return type && (
+                                      <Button
+                                        key={type.type}
+                                        variant="outlined"
+                                        size="small"
+                                        startIcon={<span style={{ fontSize: '0.7rem' }}>{type.icon}</span>}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          e.preventDefault();
+                                          setCurrentChildId(child.id);
+                                          handleDetailedEntry(type.type);
+                                        }}
+                                        sx={{
+                                          fontSize: '0.7rem',
+                                          py: 0.5,
+                                          px: 1,
+                                          minWidth: 'auto',
+                                          borderColor: alpha(type.color, 0.3),
+                                          color: type.color,
+                                          '&:hover': {
+                                            borderColor: type.color,
+                                            bgcolor: alpha(type.color, 0.1)
+                                          }
+                                        }}
+                                      >
+                                        {type.label}
+                                      </Button>
+                                    );
+                                  })}
+                                </Stack>
+                              </Box>
+
+                              {/* Behavior & Development */}
+                              <Box>
+                                <Typography variant="caption" color="warning.main" sx={{ mb: 0.5, display: 'block', fontWeight: 600 }}>
+                                  🧠 Behavior
+                                </Typography>
+                                <Stack direction="row" spacing={0.5} sx={{ flexWrap: 'wrap', gap: 0.5 }}>
+                                  {['behavior', 'sensory_log', 'food_log'].map((typeKey) => {
+                                    const type = Object.values(TIMELINE_TYPES).find(t => t.type === typeKey);
+                                    return type && (
+                                      <Button
+                                        key={type.type}
+                                        variant="outlined"
+                                        size="small"
+                                        startIcon={<span style={{ fontSize: '0.7rem' }}>{type.icon}</span>}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          e.preventDefault();
+                                          setCurrentChildId(child.id);
+                                          handleDetailedEntry(type.type);
+                                        }}
+                                        sx={{
+                                          fontSize: '0.7rem',
+                                          py: 0.5,
+                                          px: 1,
+                                          minWidth: 'auto',
+                                          borderColor: alpha(type.color, 0.3),
+                                          color: type.color,
+                                          '&:hover': {
+                                            borderColor: type.color,
+                                            bgcolor: alpha(type.color, 0.1)
+                                          }
+                                        }}
+                                      >
+                                        {type.label}
+                                      </Button>
+                                    );
+                                  })}
+                                </Stack>
+                              </Box>
+                            </Stack>
+                          </Box>
+                        </Collapse>
+                      </Box>
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
+          );
+        })}
+      </Stack>
+
+
+      {/* Quick Entry Modal */}
+      <Modal
+        open={showQuickEntry}
+        onClose={handleQuickEntrySkip}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          p: 2
+        }}
+      >
+        <Box sx={{ 
+          maxWidth: 600, 
+          width: '100%',
+          maxHeight: '90vh',
+          overflow: 'auto'
+        }}>
+          {selectedChild && entryType === 'micro' && (
+            <MicroDataCollector
+              child={selectedChild}
+              onComplete={handleQuickEntryComplete}
+              onSkip={handleQuickEntrySkip}
+            />
+          )}
+          {selectedChild && entryType === 'full' && (
+            <QuickCheckIn
+              child={selectedChild}
+              onComplete={handleQuickEntryComplete}
+              onSkip={handleQuickEntrySkip}
+            />
+          )}
+        </Box>
+      </Modal>
+
+      {/* Invitation Modal */}
+      <InviteTeamMemberModal
+        open={showInviteModal}
+        onClose={handleCloseInviteModal}
+        child={children.find(c => c.id === inviteChildId)}
+        onInviteSuccess={handleInviteSuccess}
+      />
+    </Container>
+  );
+};
+
+export default PanelDashboard;

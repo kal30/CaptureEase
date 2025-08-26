@@ -7,7 +7,7 @@ import EditCaregiverModal from './EditCaregiverModal';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 
-const CaregiverManager = () => {
+const CaregiverManager = ({ child }) => {
   const [caregivers, setCaregivers] = useState([]);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -68,6 +68,7 @@ const CaregiverManager = () => {
         open={addModalOpen}
         onClose={handleAddModalClose}
         onCaregiverAdded={fetchCaregivers}
+        child={child}
       />
       <EditCaregiverModal
         open={editModalOpen}

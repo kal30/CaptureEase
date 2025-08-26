@@ -9,7 +9,7 @@ import InfoIcon from "@mui/icons-material/Info";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import GroupIcon from "@mui/icons-material/Group";
 import AvatarMenu from "./AvatarMenu"; // Import the avatar menu component
-import Wordmark from "../../assets/image/logo/capture-ez-logo.svg";
+import Wordmark from "../../assets/image/logo/logo-transparent.png";
 
 const navStyles = {
   current: {
@@ -78,6 +78,7 @@ const Navbar = () => {
               alignItems: "center",
               height: { xs: 36, md: 44 },
               borderRadius: 0,
+              mr: { xs: 1, md: 4, lg: 6 },
             }}
           >
             <Box
@@ -85,8 +86,9 @@ const Navbar = () => {
               src={Wordmark}
               alt="CaptureEz"
               sx={{
-                height: { xs: 52, md: 68, lg: 72, xl: 76 },
-                width: "auto",
+                width: { xs: 120, sm: 150, md: 200, lg: 240, xl: 280 },
+                maxWidth: "70vw",
+                height: "auto",
                 display: "block",
                 objectFit: "contain",
                 objectPosition: "left center",

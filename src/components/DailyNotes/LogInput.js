@@ -11,7 +11,7 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "../../services/firebase";
 import RichTextInput from "../UI/RichTextInput";
 
-const LogInput = ({ childId }) => {
+const LogInput = ({ childId, selectedDate = new Date() }) => {
   const [richTextData, setRichTextData] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -52,15 +52,26 @@ const LogInput = ({ childId }) => {
         voiceMemoURL = await getDownloadURL(audioRef);
       }
 
-      await addDoc(collection(db, "dailyLogs"), {
+      // Create timestamp for the selected date
+      const entryTimestamp = new Date(selectedDate);
+      // Set to current time but keep the selected date
+      const now = new Date();
+      entryTimestamp.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
+
+      const docData = {
         childId,
         text: richTextData.text,
         mediaURL,
         mediaType,
         voiceMemoURL,
         tags,
-        timestamp: serverTimestamp(),
-      });
+        timestamp: entryTimestamp, // Use selected date with current time
+        entryDate: selectedDate.toDateString(), // Store the selected date for filtering
+      };
+      
+      console.log('LogInput: Saving entry with data:', docData);
+      await addDoc(collection(db, "dailyLogs"), docData);
+      console.log('LogInput: Entry saved successfully');
 
       setRichTextData(null); // Clear the input after submission
     } catch (error) {

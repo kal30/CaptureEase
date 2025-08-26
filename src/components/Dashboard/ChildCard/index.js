@@ -20,6 +20,7 @@ import EventNoteIcon from "@mui/icons-material/EventNote";
 import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
 import CategoryIcon from "@mui/icons-material/Category";
 import ListAltIcon from "@mui/icons-material/ListAlt";
+import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 
 const ChildCard = ({
   child,
@@ -29,6 +30,7 @@ const ChildCard = ({
   onDeleteChild,
   onInviteTeamMember,
   onLogMood,
+  onSmartDataTracking,
   userRole,
 }) => {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -106,7 +108,7 @@ const ChildCard = ({
       icon: <MedicalServicesIcon />,
       label: "Medical Log",
       action: () => handleNavigate("/medical"),
-      color: "#CB6318",
+      color: "#5B8C51",
     },
   ];
 

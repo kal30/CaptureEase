@@ -1,12 +1,16 @@
 import { createTheme } from "@mui/material/styles";
+import { alpha } from "@mui/material/styles";
 
 const theme = createTheme({
   palette: {
     mode: "light",
     primary: {
-      main: "#F27F45", // softer orange
-      dark: "#E85D2F", // used for hover/active
-      light: "#F9A06B",
+      main: "#5B8C51", // Green
+      dark: "#4a7342", // Slightly darker green for hover
+      light: "#82b17a", // Lighter green
+      secondary: "#F27F45", // softer orange
+      darkSecondary: "#E85D2F", // used for hover/active
+      lightSecondary: "#F9A06B",
     },
     secondary: {
       // A complementary, softer tone to the green info color
@@ -151,17 +155,12 @@ const theme = createTheme({
           fontWeight: 600,
           textTransform: "none",
           transition: "background-color 120ms ease, transform 120ms ease",
-          backgroundColor: "#F27F45",
-          color: "#FFFFFF",
-          "&:hover": {
-            backgroundColor: "#E85D2F",
-          },
         },
         containedPrimary: {
-          background: "#F27F45",
+          background: "#5B8C51",
           color: "#FFFFFF",
           "&:hover": {
-            background: "#E85D2F",
+            background: "#4a7342",
           },
         },
         containedSecondary: {
@@ -173,17 +172,17 @@ const theme = createTheme({
         },
         outlined: {
           borderWidth: "2px",
-          borderColor: "#F27F45",
-          color: "#F27F45",
+          borderColor: "#5B8C51",
+          color: "#5B8C51",
           "&:hover": {
             borderWidth: "2px",
-            borderColor: "#E85D2F",
-            backgroundColor: "rgba(242, 127, 69, 0.1)",
+            borderColor: "#4a7342",
+            backgroundColor: alpha("#5B8C51", 0.1),
           },
         },
         text: {
           "&:hover": {
-            backgroundColor: "rgba(242, 127, 69, 0.1)",
+            backgroundColor: alpha("#5B8C51", 0.1),
           },
         },
       },
@@ -222,12 +221,12 @@ const theme = createTheme({
               borderWidth: "2px",
             },
             "&:hover fieldset": {
-              borderColor: "#F27F45",
+              borderColor: "#5B8C51",
             },
             "&.Mui-focused fieldset": {
-              borderColor: "#F27F45",
+              borderColor: "#5B8C51",
               borderWidth: "2px",
-              boxShadow: "0px 0px 0px 3px rgba(242, 127, 69, 0.12)",
+              boxShadow: "0px 0px 0px 3px rgba(91, 140, 81, 0.12)",
             },
             "&.Mui-focused": {
               backgroundColor: "#FFFFFF",
@@ -236,7 +235,7 @@ const theme = createTheme({
           "& .MuiInputLabel-root": {
             color: "#666666",
             "&.Mui-focused": {
-              color: "#F27F45",
+              color: "#5B8C51",
             },
           },
         },
@@ -246,7 +245,7 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           "& .MuiTabs-indicator": {
-            backgroundColor: "#F27F45",
+            backgroundColor: "#5B8C51",
             height: "3px",
             borderRadius: "2px",
           },
@@ -262,10 +261,10 @@ const theme = createTheme({
           minHeight: "48px",
           color: "#666666",
           "&.Mui-selected": {
-            color: "#F27F45",
+            color: "#5B8C51",
           },
           "&:hover": {
-            backgroundColor: "rgba(242, 127, 69, 0.06)",
+            backgroundColor: alpha("#5B8C51", 0.06),
           },
         },
       },
@@ -277,7 +276,7 @@ const theme = createTheme({
           marginBottom: "8px",
           transition: "all 0.2s ease-in-out",
           "&:hover": {
-            backgroundColor: "rgba(242, 127, 69, 0.05)",
+            backgroundColor: alpha("#5B8C51", 0.05),
           },
         },
       },
@@ -289,7 +288,7 @@ const theme = createTheme({
           marginBottom: "4px",
           transition: "all 0.2s ease-in-out",
           "&:hover": {
-            backgroundColor: "rgba(242, 127, 69, 0.08)",
+            backgroundColor: alpha("#5B8C51", 0.08),
           },
         },
       },
@@ -302,10 +301,10 @@ const theme = createTheme({
           fontSize: "0.8rem",
         },
         filled: {
-          backgroundColor: "#F27F45",
+          backgroundColor: "#5B8C51",
           color: "#FFFFFF",
           "&:hover": {
-            backgroundColor: "#E85D2F",
+            backgroundColor: "#4a7342",
           },
         },
       },
@@ -383,11 +382,11 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           "& .MuiBreadcrumbs-ol": {
-            color: "#F27F45",
+            color: "#5B8C51",
             fontWeight: 500,
           },
           "& .MuiBreadcrumbs-separator": {
-            color: "#F27F45",
+            color: "#5B8C51",
           },
         },
       },

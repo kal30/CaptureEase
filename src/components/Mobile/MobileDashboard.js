@@ -17,6 +17,7 @@ import {
   Toolbar,
   Badge
 } from '@mui/material';
+import MobileChildCard from './MobileChildCard';
 import {
   Add as AddIcon,
   Home as HomeIcon,
@@ -28,7 +29,17 @@ import {
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 
-const MobileDashboard = ({ children, user }) => {
+const MobileDashboard = ({ 
+  children, 
+  user, 
+  onEditChild,
+  onDeleteChild,
+  onInviteTeamMember,
+  onLogMood,
+  userRole,
+  modals, // Pass modals from parent
+  onAddChild // Add child handler
+}) => {
   const theme = useTheme();
   const [navValue, setNavValue] = React.useState(0);
 
@@ -108,57 +119,32 @@ const MobileDashboard = ({ children, user }) => {
           ))}
         </Box>
 
-        {/* Children List - Mobile Optimized */}
-        <Card elevation={0} sx={{ border: `1px solid ${theme.palette.divider}` }}>
-          <CardContent sx={{ p: 0 }}>
-            <Box sx={{ p: 2, borderBottom: `1px solid ${theme.palette.divider}` }}>
-              <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                Your Children
+        {/* Children List - Mobile Optimized with Tabs */}
+        <Box>
+          <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, px: 1 }}>
+            Your Children
+          </Typography>
+          
+          {children?.map((child) => (
+            <MobileChildCard
+              key={child.id}
+              child={child}
+              onEditChild={onEditChild}
+              onDeleteChild={onDeleteChild}
+              onInviteTeamMember={onInviteTeamMember}
+              onLogMood={onLogMood}
+              userRole={userRole}
+            />
+          ))}
+          
+          {(!children || children.length === 0) && (
+            <Card elevation={0} sx={{ border: `1px dashed ${theme.palette.divider}`, textAlign: 'center', py: 4 }}>
+              <Typography variant="body2" color="text.secondary">
+                No children added yet. Tap + to add your first child.
               </Typography>
-            </Box>
-            
-            <List sx={{ p: 0 }}>
-              {children?.map((child, index) => (
-                <ListItem 
-                  key={child.id}
-                  sx={{
-                    py: 2,
-                    borderBottom: index < children.length - 1 ? `1px solid ${theme.palette.divider}` : 'none',
-                    '&:active': {
-                      bgcolor: 'action.selected'
-                    }
-                  }}
-                >
-                  <ListItemAvatar>
-                    <Avatar 
-                      sx={{ 
-                        bgcolor: 'primary.main',
-                        width: 48,
-                        height: 48
-                      }}
-                    >
-                      {child.name[0]}
-                    </Avatar>
-                  </ListItemAvatar>
-                  <ListItemText
-                    primary={
-                      <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                        {child.name}
-                      </Typography>
-                    }
-                    secondary={
-                      <Box>
-                        <Typography variant="body2" color="text.secondary">
-                          Age: {child.age} • Last entry: 2 hours ago
-                        </Typography>
-                      </Box>
-                    }
-                  />
-                </ListItem>
-              ))}
-            </List>
-          </CardContent>
-        </Card>
+            </Card>
+          )}
+        </Box>
 
         {/* Recent Activity - Mobile Card */}
         <Card 
@@ -212,6 +198,7 @@ const MobileDashboard = ({ children, user }) => {
       {/* Floating Action Button */}
       <Fab
         color="primary"
+        onClick={onAddChild}
         sx={{
           position: 'fixed',
           bottom: 80,
@@ -248,6 +235,9 @@ const MobileDashboard = ({ children, user }) => {
           icon={<PersonIcon />} 
         />
       </BottomNavigation>
+      
+      {/* Render modals if provided */}
+      {modals}
     </Box>
   );
 };

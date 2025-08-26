@@ -1,18 +1,25 @@
 import React, { useState } from 'react';
 import { Button, Dialog, DialogActions, DialogContent, TextField } from '@mui/material';
-import { addUser } from '../../services/careTeamService';
+import { sendInvitation } from '../../services/invitationService';
 
-const AddCaregiverModal = ({ open, onClose, onCaregiverAdded }) => {
+const AddCaregiverModal = ({ open, onClose, onCaregiverAdded, child }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
 
   const handleAddCaregiver = async () => {
+    if (!child) {
+      console.error('No child selected');
+      return;
+    }
+    
     try {
-      await addUser({ name, email, role: 'caregiver' });
+      await sendInvitation(child.id, email, 'caregiver');
       onCaregiverAdded();
+      setName('');
+      setEmail('');
       onClose();
     } catch (error) {
-      console.error('Error adding caregiver:', error);
+      console.error('Error inviting caregiver:', error);
     }
   };
 
