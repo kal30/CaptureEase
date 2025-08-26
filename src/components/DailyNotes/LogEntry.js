@@ -7,8 +7,10 @@ import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Cancel';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 
 dayjs.extend(relativeTime);
+dayjs.extend(isSameOrAfter);
 
 const LogEntry = ({ entry, onEdit, onDelete }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -16,11 +18,17 @@ const LogEntry = ({ entry, onEdit, onDelete }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const formattedTime = entry.timestamp ? 
+  const entryTimestamp = entry.timestamp ? 
     (typeof entry.timestamp.toDate === 'function' ? 
-      dayjs(entry.timestamp.toDate()).fromNow() : 
-      dayjs(entry.timestamp).fromNow()
-    ) : '';
+      entry.timestamp.toDate() : 
+      entry.timestamp
+    ) : new Date();
+  
+  const formattedTime = dayjs(entryTimestamp).fromNow();
+  const formattedDate = dayjs(entryTimestamp).format('MMM D, YYYY');
+  const formattedTimeOnly = dayjs(entryTimestamp).format('h:mm A');
+  const isToday = dayjs(entryTimestamp).isSame(dayjs(), 'day');
+  const isYesterday = dayjs(entryTimestamp).isSame(dayjs().subtract(1, 'day'), 'day');
 
   const handleMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
@@ -77,84 +85,121 @@ const LogEntry = ({ entry, onEdit, onDelete }) => {
   };
 
   return (
-    <Paper elevation={1} sx={{ padding: 2, marginBottom: 2, display: 'flex' }}>
-      <Avatar sx={{ marginRight: 2 }}>
-        {/* You can replace this with child's actual avatar if available */}
-        C
-      </Avatar>
-      <Box sx={{ flexGrow: 1 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 1 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Typography variant="subtitle2" fontWeight="bold" sx={{ marginRight: 1 }}>
-              {/* Replace with actual child name if passed as prop */}
-              Child Name
-            </Typography>
-            <Typography variant="caption" color="textSecondary">
-              &bull; {formattedTime}
-            </Typography>
-          </Box>
-          <IconButton size="small" onClick={handleMenuOpen}>
-            <MoreVertIcon />
-          </IconButton>
-        </Box>
+    <Box 
+      sx={{ 
+        position: 'relative',
+        pb: 1.5,
+        borderBottom: '1px solid',
+        borderBottomColor: 'grey.100',
+        '&:last-child': {
+          borderBottom: 'none',
+          pb: 0
+        },
+        '&:hover': {
+          bgcolor: 'grey.50',
+          borderRadius: 1,
+          mx: -1,
+          px: 1
+        }
+      }}
+    >
+      {/* Header with time and menu */}
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.8rem', fontWeight: 500 }}>
+          {formattedTimeOnly}
+        </Typography>
+        <IconButton 
+          size="small" 
+          onClick={handleMenuOpen}
+          sx={{ opacity: 0, transition: 'opacity 0.2s', '.MuiBox-root:hover &': { opacity: 0.7 }, '&:hover': { opacity: 1 } }}
+        >
+          <MoreVertIcon fontSize="small" />
+        </IconButton>
+      </Box>
 
-        {entry.text && (
-          isEditing ? (
-            <Box sx={{ marginBottom: 2 }}>
-              <TextField
-                fullWidth
-                multiline
-                rows={3}
-                value={editText}
-                onChange={(e) => setEditText(e.target.value)}
-                variant="outlined"
-                sx={{ marginBottom: 1 }}
-              />
-              <Box sx={{ display: 'flex', gap: 1 }}>
-                <Button
-                  variant="contained"
-                  size="small"
-                  startIcon={<SaveIcon />}
-                  onClick={handleSaveEdit}
-                  disabled={loading || !editText.trim()}
-                >
-                  Save
-                </Button>
-                <Button
+      {/* Entry content */}
+      <Box>
+
+          {entry.text && (
+            isEditing ? (
+              <Box>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={3}
+                  value={editText}
+                  onChange={(e) => setEditText(e.target.value)}
                   variant="outlined"
-                  size="small"
-                  startIcon={<CancelIcon />}
-                  onClick={handleCancelEdit}
-                  disabled={loading}
-                >
-                  Cancel
-                </Button>
+                  sx={{ mb: 1 }}
+                />
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    startIcon={<SaveIcon />}
+                    onClick={handleSaveEdit}
+                    disabled={loading || !editText.trim()}
+                  >
+                    Save
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<CancelIcon />}
+                    onClick={handleCancelEdit}
+                    disabled={loading}
+                  >
+                    Cancel
+                  </Button>
+                </Box>
               </Box>
+            ) : (
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  lineHeight: 1.5,
+                  fontSize: '0.9rem',
+                  color: 'text.primary'
+                }}
+              >
+                {renderTextWithTags(entry.text, entry.tags || [])}
+              </Typography>
+            )
+          )}
+
+          {entry.mediaURL && entry.mediaType === 'image' && (
+            <Box sx={{ mt: 1 }}>
+              <img 
+                src={entry.mediaURL} 
+                alt="log media" 
+                style={{ 
+                  maxWidth: '100%', 
+                  borderRadius: '4px',
+                  display: 'block'
+                }} 
+              />
             </Box>
-          ) : (
-            <Typography variant="body1" sx={{ marginBottom: 1 }}>
-              {renderTextWithTags(entry.text, entry.tags || [])}
-            </Typography>
-          )
-        )}
+          )}
 
-        {entry.mediaURL && entry.mediaType === 'image' && (
-          <Box sx={{ marginBottom: 1 }}>
-            <img src={entry.mediaURL} alt="log media" style={{ maxWidth: '100%', borderRadius: '8px' }} />
-          </Box>
-        )}
+          {entry.mediaURL && entry.mediaType === 'video' && (
+            <Box sx={{ mt: 1 }}>
+              <video 
+                controls 
+                src={entry.mediaURL} 
+                style={{ 
+                  maxWidth: '100%', 
+                  borderRadius: '4px',
+                  display: 'block'
+                }} 
+              />
+            </Box>
+          )}
 
-        {entry.mediaURL && entry.mediaType === 'video' && (
-          <Box sx={{ marginBottom: 1 }}>
-            <video controls src={entry.mediaURL} style={{ maxWidth: '100%', borderRadius: '8px' }} />
-          </Box>
-        )}
-
-        {entry.voiceMemoURL && (
-          <Box sx={{ marginBottom: 1 }}>
-            <audio controls src={entry.voiceMemoURL} />
-          </Box>
-        )}
+          {entry.voiceMemoURL && (
+            <Box sx={{ mt: 1 }}>
+              <audio controls src={entry.voiceMemoURL} style={{ width: '100%' }} />
+            </Box>
+          )}
       </Box>
       
       {/* Dropdown Menu */}
@@ -172,7 +217,7 @@ const LogEntry = ({ entry, onEdit, onDelete }) => {
           Delete
         </MenuItem>
       </Menu>
-    </Paper>
+    </Box>
   );
 };
 

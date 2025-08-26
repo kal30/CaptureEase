@@ -122,55 +122,87 @@ const BreadcrumbsComponent = () => {
     }
   }
 
-  let currentPath = "";
-  pathnames.forEach((value, index) => {
-    // Skip 'dashboard' as it's the root of our breadcrumbs
-    if (value === "dashboard") {
-      return;
-    }
+  // Special handling for Daily Log hierarchy
+  if (location.pathname === "/log" || location.pathname === "/log/daily-note") {
+    // Add "Child Log" as non-clickable parent
+    breadcrumbsItems.push(
+      <Typography
+        color="text.secondary"
+        key="child-log-parent"
+        sx={{
+          fontWeight: 500,
+          color: "#64748B",
+        }}
+      >
+        Child Log
+      </Typography>
+    );
+    
+    // Add "Daily Log" as final breadcrumb
+    breadcrumbsItems.push(
+      <Typography
+        color="text.primary"
+        key="daily-log"
+        sx={{
+          fontWeight: 600,
+          color: "#1E293B",
+        }}
+      >
+        Daily Log
+      </Typography>
+    );
+  } else {
+    // Original logic for other routes
+    let currentPath = "";
+    pathnames.forEach((value, index) => {
+      // Skip 'dashboard' as it's the root of our breadcrumbs
+      if (value === "dashboard") {
+        return;
+      }
 
-    // Build the path incrementally
-    currentPath += `/${value}`;
-    const isLast = index === pathnames.length - 1;
-    const rawName = breadcrumbNameMap[value] || value;
-    const name = capitalize(rawName);
+      // Build the path incrementally
+      currentPath += `/${value}`;
+      const isLast = index === pathnames.length - 1;
+      const rawName = breadcrumbNameMap[value] || value;
+      const name = capitalize(rawName);
 
-    if (isLast) {
-      breadcrumbsItems.push(
-        <Typography
-          color="text.primary"
-          key={currentPath}
-          sx={{
-            fontWeight: 600,
-            color: "#1E293B",
-          }}
-        >
-          {decodeURIComponent(name)}
-        </Typography>
-      );
-    } else {
-      breadcrumbsItems.push(
-        <Link
-          component={RouterLink}
-          underline="hover"
-          color="inherit"
-          to={currentPath}
-          key={currentPath}
-          sx={{
-            color: "#5B8C51",
-            fontWeight: 500,
-            textDecoration: "none",
-            "&:hover": {
-              color: "#4B7345",
-              textDecoration: "underline",
-            },
-          }}
-        >
-          {decodeURIComponent(name)}
-        </Link>
-      );
-    }
-  });
+      if (isLast) {
+        breadcrumbsItems.push(
+          <Typography
+            color="text.primary"
+            key={currentPath}
+            sx={{
+              fontWeight: 600,
+              color: "#1E293B",
+            }}
+          >
+            {decodeURIComponent(name)}
+          </Typography>
+        );
+      } else {
+        breadcrumbsItems.push(
+          <Link
+            component={RouterLink}
+            underline="hover"
+            color="inherit"
+            to={currentPath}
+            key={currentPath}
+            sx={{
+              color: "#5B8C51",
+              fontWeight: 500,
+              textDecoration: "none",
+              "&:hover": {
+                color: "#4B7345",
+                textDecoration: "underline",
+              },
+            }}
+          >
+            {decodeURIComponent(name)}
+          </Link>
+        );
+      }
+    });
+  }
 
   return (
     <Box

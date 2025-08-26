@@ -8,14 +8,19 @@ import {
   Chip,
   IconButton,
   Popover,
+  TextField,
+  InputAdornment,
 } from "@mui/material";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { DateCalendar } from "@mui/x-date-pickers/DateCalendar";
+import { PickersDay } from "@mui/x-date-pickers/PickersDay";
 import { isToday } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+import SearchIcon from "@mui/icons-material/Search";
+import ClearIcon from "@mui/icons-material/Clear";
 import { useChildContext } from "../contexts/ChildContext";
 import useChildName from "../hooks/useChildName";
 import ResponsiveLayout from "../components/Layout/ResponsiveLayout";
@@ -33,13 +38,55 @@ const DailyLogPage = () => {
 
   const [calendarAnchor, setCalendarAnchor] = useState(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [datesWithEntries, setDatesWithEntries] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Get the child name for page title
   const pageTitle = childName ? `Daily Log - ${childName}` : "Daily Log";
 
+  // Custom Day component with entry indicator
+  const CustomDay = (props) => {
+    const { day, outsideCurrentMonth, ...other } = props;
+    const dayString = day.toDateString();
+    const hasEntries = datesWithEntries.includes(dayString);
+
+    return (
+      <Box sx={{ position: 'relative' }}>
+        <PickersDay 
+          {...other} 
+          day={day} 
+          outsideCurrentMonth={outsideCurrentMonth}
+        />
+        {hasEntries && (
+          <Box
+            sx={{
+              position: 'absolute',
+              bottom: 4,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: 6,
+              height: 6,
+              borderRadius: '50%',
+              backgroundColor: 'primary.main',
+              zIndex: 1
+            }}
+          />
+        )}
+      </Box>
+    );
+  };
+
 
   const handleBackToDashboard = () => {
     navigate("/dashboard");
+  };
+
+  const handleSearchChange = (event) => {
+    setSearchQuery(event.target.value);
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery("");
   };
 
 
@@ -103,10 +150,16 @@ const DailyLogPage = () => {
                 label={selectedDate.toLocaleDateString()}
                 size="small"
                 color="primary"
-                variant="outlined"
+                variant="filled"
                 clickable
                 onClick={(e) => setCalendarAnchor(e.currentTarget)}
                 icon={<CalendarTodayIcon />}
+                sx={{
+                  border: "none",
+                  "& .MuiChip-root": {
+                    border: "none"
+                  }
+                }}
               />
             </Box>
           </Box>
@@ -116,44 +169,62 @@ const DailyLogPage = () => {
 
       {/* Timeline View - Input and Feed Together */}
       <Box sx={{ display: "flex", flexDirection: "column", gap: 3, minHeight: "60vh" }}>
-        {/* Add New Entry Section */}
-        <Paper elevation={2} sx={{ p: 3 }}>
-          <Typography
-            variant="h6"
-            gutterBottom
-            sx={{ display: "flex", alignItems: "center", gap: 1 }}
-          >
-            ✍️ New Daily Entry
-            <Chip 
-              label={isToday(selectedDate) ? "Today" : selectedDate.toLocaleDateString()} 
-              size="small" 
-              color={isToday(selectedDate) ? "success" : "primary"} 
-            />
-          </Typography>
-          <Typography color="text.secondary" sx={{ mb: 2 }}>
-            Record your child's daily activities, milestones, and observations.
-          </Typography>
+        {/* Add New Entry */}
+        <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
           <LogInput childId={currentChildId} selectedDate={selectedDate} />
+          
+          {/* Search Bar - inside the same card */}
+          <Box sx={{ mt: 2 }}>
+            <TextField
+              fullWidth
+              placeholder="Search entries by text or #tags..."
+              value={searchQuery}
+              onChange={handleSearchChange}
+              variant="outlined"
+              size="small"
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon color="action" />
+                  </InputAdornment>
+                ),
+                endAdornment: searchQuery && (
+                  <InputAdornment position="end">
+                    <IconButton
+                      size="small"
+                      onClick={handleClearSearch}
+                      edge="end"
+                    >
+                      <ClearIcon />
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '& fieldset': {
+                    borderColor: 'transparent',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: 'grey.300',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: 'primary.main',
+                    borderWidth: '1px',
+                  },
+                },
+              }}
+            />
+          </Box>
         </Paper>
 
-
-        {/* Timeline Feed Section */}
-        <Paper elevation={2} sx={{ p: 3 }}>
-          <Typography
-            variant="h6"
-            gutterBottom
-            sx={{ display: "flex", alignItems: "center", gap: 1 }}
-          >
-            📚 Timeline for {isToday(selectedDate) ? "Today" : selectedDate.toLocaleDateString()}
-          </Typography>
-          <Typography color="text.secondary" sx={{ mb: 2 }}>
-            Recent entries {!isToday(selectedDate) && `from ${selectedDate.toDateString()}`}
-          </Typography>
-          <DailyLogFeed
-            childId={currentChildId}
-            selectedDate={selectedDate}
-          />
-        </Paper>
+        {/* Timeline */}
+        <DailyLogFeed
+          childId={currentChildId}
+          selectedDate={selectedDate}
+          searchQuery={searchQuery}
+          onEntriesLoad={(entryDates) => setDatesWithEntries(entryDates)}
+        />
       </Box>
 
       {/* Calendar Popover */}
@@ -178,10 +249,32 @@ const DailyLogPage = () => {
               setCalendarAnchor(null);
             }}
             maxDate={new Date()} // Prevent future dates
+            slots={{
+              day: CustomDay,
+            }}
             sx={{
               "& .MuiPickersDay-today": {
-                border: "2px solid",
-                borderColor: "primary.main",
+                border: "none",
+                backgroundColor: "transparent",
+                color: "text.primary",
+                fontWeight: "600",
+                "&:hover": {
+                  backgroundColor: "grey.100",
+                },
+              },
+              "& .MuiPickersDay-root": {
+                border: "none",
+                "&:focus": {
+                  outline: "none",
+                  boxShadow: "0 0 0 2px rgba(25, 118, 210, 0.2)",
+                },
+                "&.Mui-selected": {
+                  backgroundColor: "grey.800",
+                  color: "white",
+                  "&:hover": {
+                    backgroundColor: "grey.900",
+                  },
+                },
               },
             }}
           />

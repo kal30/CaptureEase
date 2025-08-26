@@ -12,7 +12,7 @@ import VideocamIcon from "@mui/icons-material/Videocam";
 import MicIcon from "@mui/icons-material/Mic";
 import StopIcon from "@mui/icons-material/Stop";
 
-const RichTextInput = ({ onDataChange }) => {
+const RichTextInput = ({ onDataChange, clearData, templateText }) => {
   const [text, setText] = useState("");
   const [mediaFile, setMediaFile] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
@@ -27,6 +27,27 @@ const RichTextInput = ({ onDataChange }) => {
   useEffect(() => {
     onDataChange({ text, mediaFile, audioBlob });
   }, [text, mediaFile, audioBlob, onDataChange]);
+
+  // Clear data when clearData prop changes
+  useEffect(() => {
+    if (clearData) {
+      setText("");
+      setMediaFile(null);
+      setAudioBlob(null);
+      setIsRecording(false);
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        setShowCamera(false);
+      }
+    }
+  }, [clearData]);
+
+  // Set text when templateText prop changes
+  useEffect(() => {
+    if (templateText) {
+      setText(templateText);
+    }
+  }, [templateText]);
 
   const handleFileChange = (event, type) => {
     const file = event.target.files[0];

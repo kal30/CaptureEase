@@ -4,16 +4,23 @@ import {
   Button,
   CircularProgress,
   Paper,
+  ButtonGroup,
+  Chip,
+  Typography,
 } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { db, storage } from "../../services/firebase";
+import { db, storage, auth } from "../../services/firebase";
 import RichTextInput from "../UI/RichTextInput";
+import { useAuthState } from "react-firebase-hooks/auth";
 
 const LogInput = ({ childId, selectedDate = new Date() }) => {
   const [richTextData, setRichTextData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [clearInput, setClearInput] = useState(false);
+  const [templateText, setTemplateText] = useState("");
+  const [user] = useAuthState(auth);
 
   const extractTags = (inputText) => {
     const tagRegex = /#(\w+)/g;
@@ -21,8 +28,50 @@ const LogInput = ({ childId, selectedDate = new Date() }) => {
     return matches.map((match) => match[1]);
   };
 
+  // Entry templates
+  const templates = [
+    { 
+      emoji: "🍽️", 
+      name: "Meal Time",
+      text: "Had [meal] at [time]. Ate [food items]. #mealtime"
+    },
+    { 
+      emoji: "😊", 
+      name: "Good Day",
+      text: "Great day today! Was happy and engaged. Had fun [activity]. #goodday #mood"
+    },
+    { 
+      emoji: "😴", 
+      name: "Nap Time",
+      text: "Took a nap from [start time] to [end time]. Slept well. #nap #sleep"
+    },
+    { 
+      emoji: "🎉", 
+      name: "Milestone",
+      text: "🎉 Did something amazing today! [achievement]. So proud! #milestone #development"
+    },
+    { 
+      emoji: "😤", 
+      name: "Challenge",
+      text: "Had some challenges today. Struggled with [issue]. We worked through it by [solution]. #challenges"
+    },
+    { 
+      emoji: "🏥", 
+      name: "Medical",
+      text: "Medical update: [medical information]. #medical #health"
+    }
+  ];
+
+  const applyTemplate = (template) => {
+    setTemplateText(template.text);
+    // Reset template text after a brief moment to allow for multiple uses
+    setTimeout(() => setTemplateText(""), 100);
+  };
+
   const handleSubmit = async () => {
+    console.log('LogInput: handleSubmit called with richTextData:', richTextData);
     if (!richTextData || (!richTextData.text.trim() && !richTextData.mediaFile && !richTextData.audioBlob)) {
+      console.log('LogInput: Submission blocked - no content');
       return; // Don't submit empty
     }
 
@@ -67,23 +116,57 @@ const LogInput = ({ childId, selectedDate = new Date() }) => {
         tags,
         timestamp: entryTimestamp, // Use selected date with current time
         entryDate: selectedDate.toDateString(), // Store the selected date for filtering
+        authorId: user?.uid,
+        authorName: user?.displayName || user?.email?.split('@')[0] || 'User',
+        authorEmail: user?.email,
       };
       
-      console.log('LogInput: Saving entry with data:', docData);
-      await addDoc(collection(db, "dailyLogs"), docData);
-      console.log('LogInput: Entry saved successfully');
+      const docRef = await addDoc(collection(db, "dailyLogs"), docData);
 
-      setRichTextData(null); // Clear the input after submission
+      // Clear the input after successful submission
+      setClearInput(true);
+      setTimeout(() => setClearInput(false), 100); // Reset clear flag
+      setRichTextData(null);
     } catch (error) {
       console.error("Error adding daily log:", error);
+      console.error("Full error details:", error.code, error.message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Paper elevation={2} sx={{ padding: 2, marginBottom: 3 }}>
-      <RichTextInput onDataChange={setRichTextData} />
+    <Box>
+      {/* Template Buttons */}
+      <Box sx={{ mb: 2 }}>
+        <Typography variant="subtitle2" sx={{ mb: 1, color: 'text.secondary', fontSize: '0.8rem' }}>
+          Quick Templates:
+        </Typography>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+          {templates.map((template) => (
+            <Chip
+              key={template.name}
+              label={`${template.emoji} ${template.name}`}
+              variant="outlined"
+              size="small"
+              clickable
+              onClick={() => applyTemplate(template)}
+              sx={{
+                '&:hover': {
+                  backgroundColor: 'primary.light',
+                  borderColor: 'primary.main',
+                },
+              }}
+            />
+          ))}
+        </Box>
+      </Box>
+
+      <RichTextInput 
+        onDataChange={setRichTextData} 
+        clearData={clearInput} 
+        templateText={templateText}
+      />
       <Box
         sx={{
           display: "flex",
@@ -105,10 +188,10 @@ const LogInput = ({ childId, selectedDate = new Date() }) => {
           onClick={handleSubmit}
           disabled={loading || !richTextData || (!richTextData.text.trim() && !richTextData.mediaFile && !richTextData.audioBlob)}
         >
-          Log
+          {loading ? 'Saving...' : 'Log'}
         </Button>
       </Box>
-    </Paper>
+    </Box>
   );
 };
 

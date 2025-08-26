@@ -58,8 +58,9 @@ const AppRoutes = () => {
         <Route path="/health-info" element={<HealthInfoPage />} />
         <Route path="/progress-notes" element={<ProgressNotesPage />} />
         <Route path="/sensory" element={<SensoryPage />} />
-        <Route path="/log" element={<ChildLogPage />} />
+        <Route path="/log" element={<DailyLogPage />} />
         <Route path="/log/daily-note" element={<DailyLogPage />} />
+        <Route path="/child-log-old" element={<ChildLogPage />} />
         <Route path="/templates" element={<TemplateLibraryPage />} />
         <Route path="/daily-log" element={<DailyLogPage />} />
         <Route path="/medical" element={<MedicalLogPage />} />
