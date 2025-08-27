@@ -131,12 +131,12 @@ const DailyCareModal = ({ open, onClose, child, actionType, onComplete }) => {
               sx={{ 
                 mt: 4, 
                 mb: 2,
-                color: '#6D28D9', // Daily Care purple
+                color: theme.palette.dailyCare.primary, // Daily Care purple
                 '& .MuiSlider-thumb': {
-                  bgcolor: '#6D28D9',
+                  bgcolor: theme.palette.dailyCare.primary,
                 },
                 '& .MuiSlider-track': {
-                  bgcolor: '#6D28D9',
+                  bgcolor: theme.palette.dailyCare.primary,
                 },
                 '& .MuiSlider-rail': {
                   bgcolor: alpha('#6D28D9', 0.2),
@@ -164,12 +164,12 @@ const DailyCareModal = ({ open, onClose, child, actionType, onComplete }) => {
                   variant={isSelected ? 'filled' : 'outlined'}
                   sx={{
                     fontSize: '0.875rem',
-                    color: isSelected ? 'white' : '#6D28D9',
-                    bgcolor: isSelected ? '#6D28D9' : 'transparent',
-                    borderColor: '#6D28D9',
+                    color: isSelected ? 'white' : theme.palette.dailyCare.primary,
+                    bgcolor: isSelected ? theme.palette.dailyCare.primary : 'transparent',
+                    borderColor: theme.palette.dailyCare.primary,
                     '&:hover': { 
                       transform: 'scale(1.05)',
-                      bgcolor: isSelected ? alpha('#6D28D9', 0.8) : alpha('#6D28D9', 0.1),
+                      bgcolor: isSelected ? theme.palette.dailyCare.hover : theme.palette.dailyCare.background,
                     }
                   }}
                   onClick={() => {
@@ -238,7 +238,7 @@ const DailyCareModal = ({ open, onClose, child, actionType, onComplete }) => {
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Typography sx={{ fontSize: '1.5rem' }}>{config.icon}</Typography>
-            <Typography variant="h6" sx={{ fontWeight: 700, color: '#6D28D9' }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, color: theme.palette.dailyCare.primary }}>
               {config.title}
             </Typography>
           </Box>
@@ -260,9 +260,9 @@ const DailyCareModal = ({ open, onClose, child, actionType, onComplete }) => {
                 mt: 0.5, 
                 height: 6, 
                 borderRadius: 3,
-                bgcolor: alpha('#6D28D9', 0.1),
+                bgcolor: theme.palette.dailyCare.background,
                 '& .MuiLinearProgress-bar': {
-                  bgcolor: '#6D28D9',
+                  bgcolor: theme.palette.dailyCare.primary,
                 }
               }}
             />
@@ -308,7 +308,7 @@ const DailyCareModal = ({ open, onClose, child, actionType, onComplete }) => {
             sx={{
               bgcolor: '#6D28D9',
               '&:hover': {
-                bgcolor: alpha('#6D28D9', 0.8),
+                bgcolor: theme.palette.dailyCare.hover,
               },
               '&:disabled': {
                 bgcolor: 'grey.300',

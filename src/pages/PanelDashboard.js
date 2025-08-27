@@ -1,454 +1,49 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import {
   Box,
   Container,
   Typography,
-  Chip,
-  Stack,
   Modal,
 } from "@mui/material";
-import {
-  Add as AddIcon,
-  PersonAdd as PersonAddIcon,
-  AutoAwesome as SparkleIcon,
-} from "@mui/icons-material";
-import { alpha, useTheme } from "@mui/material/styles";
-import { useAuthState } from "react-firebase-hooks/auth";
-import { auth } from "../services/firebase";
-import { useChildContext } from "../contexts/ChildContext";
-import {
-  getTimelineEntries,
-  TIMELINE_TYPES,
-} from "../services/timelineService";
-import StyledButton from "../components/UI/StyledButton";
+
+// Hooks and Services
+import { usePanelDashboard } from "../hooks/usePanelDashboard";
+import { getActionGroups } from "../constants/actionGroups";
+
+// Components
+import DashboardHeader from "../components/Dashboard/DashboardHeader";
+import ChildGroup from "../components/Dashboard/ChildGroup";
 import QuickCheckIn from "../components/Mobile/QuickCheckIn";
 import MicroDataCollector from "../components/Mobile/MicroDataCollector";
 import InviteTeamMemberModal from "../components/InviteTeamMemberModal";
 import AddChildModal from "../components/Dashboard/AddChildModal";
 import EditChildModal from "../components/Dashboard/EditChildModal";
-import ActionGroup from "../components/Dashboard/ActionGroup";
-import ChildCard from "../components/Dashboard/ChildCard";
 import DailyCareModal from "../components/DailyCare/DailyCareModal";
 import DailyReportModal from "../components/DailyCare/DailyReportModal";
-import { useRole } from "../contexts/RoleContext";
 
 const PanelDashboard = () => {
-  const theme = useTheme();
-  const [user] = useAuthState(auth);
-  const { currentChildId, setCurrentChildId } = useChildContext();
-  const {
-    loading: roleLoading,
-    childrenWithAccess,
-    getUserRoleForChild,
-    canAddDataForChild,
-    isReadOnlyForChild,
-    refreshRoles,
-    USER_ROLES,
-  } = useRole();
-  const [children, setChildren] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [recentEntries, setRecentEntries] = useState([]);
-  const [quickDataStatus, setQuickDataStatus] = useState({});
-  const [showQuickEntry, setShowQuickEntry] = useState(false);
-  const [selectedChild, setSelectedChild] = useState(null);
-  const [entryType, setEntryType] = useState("micro"); // 'micro' or 'full'
-  const [expandedCards, setExpandedCards] = useState({}); // Track expanded cards per child
-  const [expandedCategories, setExpandedCategories] = useState({}); // Track expanded categories per child
-  const [highlightedActions, setHighlightedActions] = useState({}); // Track highlighted actions per child
-  const [showInviteModal, setShowInviteModal] = useState(false);
-  const [inviteChildId, setInviteChildId] = useState(null);
-  const [showAddChildModal, setShowAddChildModal] = useState(false);
-  const [showEditChildModal, setShowEditChildModal] = useState(false);
-  const [selectedChildForEdit, setSelectedChildForEdit] = useState(null);
-  const [showDailyCareModal, setShowDailyCareModal] = useState(false);
-  const [dailyCareAction, setDailyCareAction] = useState(null);
-  const [dailyCareChild, setDailyCareChild] = useState(null);
-  const [showDailyReportModal, setShowDailyReportModal] = useState(false);
-  const [dailyReportChild, setDailyReportChild] = useState(null);
+  const hook = usePanelDashboard();
+  const actionGroups = getActionGroups(hook.theme);
 
-  // Load children based on role access
-  useEffect(() => {
-    if (roleLoading) return;
-
-    const loadChildren = async () => {
-      try {
-        console.log("Loading children with role access...");
-
-        // Use children from role context (includes role information)
-        const childrenWithRoles = childrenWithAccess || [];
-        console.log("Children with roles:", childrenWithRoles);
-        console.log(
-          "childrenWithAccess from role context:",
-          childrenWithAccess
-        );
-
-        // Use real children only - no mock data to avoid fake child ID issues
-        const testData = childrenWithRoles;
-
-        setChildren(testData);
-        if (testData.length > 0 && !currentChildId) {
-          setCurrentChildId(testData[0].id);
-        }
-      } catch (error) {
-        console.error("Error loading children:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadChildren();
-  }, [roleLoading, childrenWithAccess, currentChildId, setCurrentChildId]);
-
-  // Load recent timeline entries for all children (organized by child)
-  useEffect(() => {
-    const unsubscribes = [];
-    const entriesByChild = {};
-
-    children.forEach((child) => {
-      const unsubscribe = getTimelineEntries(child.id, (entries) => {
-        // Get recent entries (last 7 days)
-        const recentTimelineEntries = entries
-          .filter((entry) => {
-            const entryDate = new Date(entry.timestamp);
-            const weekAgo = new Date();
-            weekAgo.setDate(weekAgo.getDate() - 7);
-            return entryDate >= weekAgo;
-          })
-          .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-          .slice(0, 5); // Keep only 5 most recent per child
-
-        entriesByChild[child.id] = recentTimelineEntries;
-        setRecentEntries({ ...entriesByChild });
-      });
-
-      unsubscribes.push(unsubscribe);
-    });
-
-    return () => {
-      unsubscribes.forEach((unsub) => {
-        if (unsub) unsub();
-      });
-    };
-  }, [children]);
-
-
-  // Mock quick data status (replace with real implementation)
-  useEffect(() => {
-    const mockStatus = {};
-    children.forEach((child) => {
-      // Generate some sample quick entry status (this would come from real data in production)
-      const mood = Math.random() > 0.5;
-      const sleep = Math.random() > 0.4;
-      const energy = Math.random() > 0.6;
-
-      // Calculate progress based on completed quick entries
-      const quickEntries = [mood, sleep, energy];
-      const completedQuickEntries = quickEntries.filter(Boolean).length;
-      const quickCompletionRate = Math.round(
-        (completedQuickEntries / quickEntries.length) * 100
-      );
-
-      // Simple calculation: Daily Care completion based on mood, sleep, energy only
-      const dailyCareCompletion = quickCompletionRate;
-
-      mockStatus[child.id] = {
-        mood,
-        sleep,
-        energy,
-        dataCompleteness: dailyCareCompletion,
-      };
-    });
-    setQuickDataStatus(mockStatus);
-  }, [children, recentEntries]);
-
-  const handleQuickDataEntry = (child, type, event) => {
-    if (event) {
-      event.stopPropagation();
-      event.preventDefault();
-    }
-
-    // Check if user has permission to add data for this child
-    if (!canAddDataForChild(child.id)) {
-      console.log("User does not have permission to add data for this child");
-      return;
-    }
-
-    console.log("Quick data entry clicked:", type, child.name);
-    setCurrentChildId(child.id);
-
-    // For mood, sleep, energy - open the Daily Care modal directly
-    if (type === "mood" || type === "sleep" || type === "energy") {
-      // Open the Daily Care modal for this action
-      setDailyCareAction(type);
-      setDailyCareChild(child);
-      setShowDailyCareModal(true);
-      
-      
-      return;
-    }
-
-    // For "complete" (Daily Report), show the Daily Report modal
-    if (type === "complete") {
-      setDailyReportChild(child);
-      setShowDailyReportModal(true);
-    } else {
-      setSelectedChild(child);
-      setEntryType("full");
-      setShowQuickEntry(true);
-    }
+  const commonChildGroupProps = {
+    quickDataStatus: hook.quickDataStatus,
+    recentEntries: hook.recentEntries,
+    isCardExpanded: hook.isCardExpanded,
+    onToggleExpanded: hook.toggleCard,
+    onQuickEntry: hook.handleQuickDataEntry,
+    onEditChild: hook.handleEditChild,
+    onInviteTeamMember: hook.handleInviteTeamMember,
+    onDailyReport: hook.handleDailyReport,
+    getActionGroups: actionGroups,
+    handleGroupActionClick: hook.handleGroupActionClick,
+    highlightedActions: hook.highlightedActions,
+    expandedCategories: hook.expandedCategories,
+    setExpandedCategories: hook.setExpandedCategories,
+    getTypeConfig: hook.getTypeConfig,
+    formatTimeAgo: hook.formatTimeAgo,
   };
 
-
-  const handleQuickEntryComplete = (data) => {
-    console.log("Quick entry completed:", data);
-    // Here you would save the data to your backend
-    setShowQuickEntry(false);
-    setSelectedChild(null);
-
-    // Refresh data to show the new entry
-    // You can implement this based on your data flow
-  };
-
-  const handleQuickEntrySkip = () => {
-    setShowQuickEntry(false);
-    setSelectedChild(null);
-  };
-
-  const toggleCard = (childId) => {
-    setExpandedCards((prev) => ({
-      ...prev,
-      [childId]: !prev[childId],
-    }));
-  };
-
-  const isCardExpanded = (childId) => {
-    return expandedCards[childId] || false;
-  };
-
-
-  const handleInviteTeamMember = (childId) => {
-    // For now, allow all invitations - remove permission check temporarily
-    // TODO: Re-enable permission check once role system is properly configured
-    // if (!canInviteOthers(childId)) {
-    //   console.log('User does not have permission to invite team members for this child');
-    //   return;
-    // }
-
-    setInviteChildId(childId);
-    setShowInviteModal(true);
-  };
-
-  const handleEditChild = (child) => {
-    console.log("Edit child clicked:", child.name);
-    // TODO: Open edit child modal
-    setSelectedChildForEdit(child);
-    setShowEditChildModal(true);
-  };
-
-  const handleInviteSuccess = (result) => {
-    console.log("Invitation sent successfully:", result);
-    // Refresh the role context to pick up new assignments
-    refreshRoles();
-  };
-
-  const handleAddChildSuccess = () => {
-    setShowAddChildModal(false);
-    // Refresh the role context to pick up new child
-    refreshRoles();
-  };
-
-  const handleEditChildSuccess = () => {
-    setShowEditChildModal(false);
-    setSelectedChildForEdit(null);
-    // Refresh the role context to pick up child changes
-    refreshRoles();
-  };
-
-  const handleDailyCareComplete = (actionType, entryData) => {
-    console.log('Daily care completed:', actionType, entryData);
-    // Update the completion status for the child
-    setQuickDataStatus(prev => ({
-      ...prev,
-      [entryData.childId]: {
-        ...prev[entryData.childId],
-        [actionType]: true,
-      }
-    }));
-    
-    // TODO: Refresh from database instead of local state
-  };
-
-  const handleCloseDailyCareModal = () => {
-    setShowDailyCareModal(false);
-    setDailyCareAction(null);
-    setDailyCareChild(null);
-  };
-
-  const handleDailyReportEdit = (actionType) => {
-    // When user clicks edit in Daily Report, open the Daily Care modal
-    setDailyCareAction(actionType);
-    setDailyCareChild(dailyReportChild);
-    setShowDailyCareModal(true);
-  };
-
-  const handleCloseDailyReportModal = () => {
-    setShowDailyReportModal(false);
-    setDailyReportChild(null);
-  };
-
-  const handleDailyReport = (child) => {
-    setDailyReportChild(child);
-    setShowDailyReportModal(true);
-  };
-
-  const isActionHighlighted = (childId, actionKey) => {
-    return highlightedActions[`${childId}-${actionKey}`] || false;
-  };
-
-  // Define grouped action structure with enhanced visual design
-  const getActionGroups = (userRole) => {
-    // Common groups for parents and caregivers with improved color schemes
-    const parentGroups = [
-      {
-        id: 'daily_care',
-        title: 'Daily Care',
-        icon: '💜',
-        color: '#6D28D9', // Updated purple
-        tooltip: 'Essential daily wellness tracking for mood, sleep, energy and health',
-        actions: [
-          { key: 'mood', label: 'Mood Check', icon: '😊', types: ['mood_log'], trackingType: 'daily' },
-          { key: 'sleep', label: 'Sleep Quality', icon: '😴', types: ['sleep_log'], trackingType: 'daily' },
-          { key: 'energy', label: 'Energy Level', icon: '⚡', types: ['energy_log'], trackingType: 'daily' },
-          { key: 'food_health', label: 'Food & Medicine', icon: '🍎', types: ['food_log', 'medication_log', 'medical_event'], trackingType: 'daily' },
-          { key: 'safety', label: 'Safety Check', icon: '🛡️', types: ['safety_log'], trackingType: 'task' },
-        ],
-      },
-      {
-        id: 'behavior_progress',
-        title: 'Behavior & Progress',
-        icon: '🧠',
-        color: '#334155', // Darker slate gray
-        tooltip: 'Track behavioral patterns, sensory responses, and developmental progress',
-        actions: [
-          { key: 'daily', label: 'Daily Notes', icon: '📝', types: ['daily_note'], trackingType: 'daily' },
-          { key: 'behavior_sensory', label: 'Behavior & Sensory', icon: '🧠', types: ['behavior', 'sensory_log'], trackingType: 'task' },
-          { key: 'progress', label: 'Progress Review', icon: '📈', types: ['progress_note'], trackingType: 'task' },
-        ],
-      },
-      {
-        id: 'planning_reminders',
-        title: 'Planning & Reminders',
-        icon: '🌸',
-        color: '#DB2777', // Updated coral pink
-        tooltip: 'Organize schedules, coordinate with team, and manage shared access',
-        actions: [
-          { key: 'routines', label: 'Schedule & Appointments', icon: '📅', types: ['routine', 'appointment'], trackingType: 'task' },
-          { key: 'notes', label: 'Team Notes', icon: '📋', types: ['caregiver_note'], trackingType: 'task' },
-          { key: 'access', label: 'Share Access', icon: '👥', types: ['access_management'], trackingType: 'task' },
-        ],
-      },
-    ];
-
-    // Therapist-specific groups with enhanced styling
-    const therapistGroups = [
-      {
-        id: 'professional_tools',
-        title: 'Professional Tools',
-        icon: '🩺',
-        color: '#64748B', // Professional slate blue
-        tooltip: 'Clinical assessment tools and professional documentation',
-        actions: [
-          { key: 'professional_note', label: 'Clinical Notes', icon: '📝', trackingType: 'task' },
-          { key: 'timeline', label: 'View Timeline', icon: '📈', trackingType: 'task' },
-          { key: 'report', label: 'Generate Report', icon: '📊', trackingType: 'task' },
-        ],
-      },
-    ];
-
-    // Return appropriate groups based on role
-    if (userRole === USER_ROLES.THERAPIST) {
-      return therapistGroups;
-    }
-    
-    return parentGroups;
-  };
-
-  // Unified action handler that maintains existing functionality
-  const handleGroupActionClick = (action, child) => {
-    setCurrentChildId(child.id);
-
-    // Handle Daily Care actions with new modal
-    if (['mood', 'sleep', 'energy', 'food_health', 'safety'].includes(action.key)) {
-      setDailyCareAction(action.key);
-      setDailyCareChild(child);
-      setShowDailyCareModal(true);
-      return;
-    }
-
-    // Handle therapist actions
-    if (action.key === 'professional_note') {
-      console.log('Add professional note for child:', child.id);
-      return;
-    }
-    
-    if (action.key === 'timeline') {
-      console.log('View timeline for child:', child.id);
-      return;
-    }
-    
-    if (action.key === 'report') {
-      console.log('Generate report for child:', child.id);
-      return;
-    }
-
-    // Handle new actions (placeholder implementations)
-    switch (action.key) {
-      case 'routines':
-        alert('Routines & Appointments: Navigate to scheduling page (to be implemented)');
-        break;
-      case 'notes':
-        alert('Caregiver Notes: Navigate to notes management (to be implemented)');
-        break;
-      case 'access':
-        alert('Shared Access: Navigate to access management (to be implemented)');
-        break;
-      default:
-        console.log(`Action ${action.key} not yet implemented`);
-    }
-  };
-
-  const getTypeConfig = (type) => {
-    return (
-      Object.values(TIMELINE_TYPES).find((t) => t.type === type) || {
-        icon: "📝",
-        color: theme.palette.primary.main,
-        label: type,
-      }
-    );
-  };
-
-  const formatTimeAgo = (timestamp) => {
-    const now = new Date();
-    const entryTime = new Date(timestamp);
-    const diffMs = now - entryTime;
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffHours / 24);
-
-    if (diffDays > 0) return `${diffDays}d ago`;
-    if (diffHours > 0) return `${diffHours}h ago`;
-    return "Just now";
-  };
-
-
-
-
-  const handleCloseInviteModal = () => {
-    setShowInviteModal(false);
-    setInviteChildId(null);
-  };
-
-
-  if (loading || roleLoading) {
+  if (hook.loading) {
     return (
       <Container maxWidth="xl" sx={{ mt: 4 }}>
         <Typography>Loading...</Typography>
@@ -458,419 +53,99 @@ const PanelDashboard = () => {
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-      {/* Beautiful Header */}
-      <Box
-        sx={{
-          mb: 6,
-          background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.05)} 0%, ${alpha(theme.palette.secondary.main, 0.05)} 100%)`,
-          py: 4,
-          px: 3,
-          borderRadius: 3,
-          border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-        }}
-      >
-        {/* Header Content */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            mb: 2,
-          }}
-        >
-          {/* Left: User Name & Title */}
-          <Box sx={{ display: "flex", alignItems: "center", flex: 1 }}>
-            <SparkleIcon sx={{ fontSize: 40, color: "primary.main", mr: 2 }} />
-            <Box>
-              <Typography
-                variant="h3"
-                sx={{
-                  fontWeight: 800,
-                  background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
-                  backgroundClip: "text",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  textAlign: "left",
-                }}
-              >
-                {user?.displayName || user?.email?.split("@")[0] || "Your"}{" "}
-                Dashboard
-              </Typography>
-              <Typography
-                variant="subtitle1"
-                color="text.secondary"
-                sx={{
-                  fontWeight: 500,
-                  textAlign: "left",
-                  fontSize: "1.1rem",
-                  mt: 0.5,
-                }}
-              >
-                {children.some((child) => !isReadOnlyForChild(child.id))
-                  ? "Support and track progress for the individuals you care for — personally or professionally."
-                  : "Monitor updates and stay connected to the people you support."}
-              </Typography>
-            </Box>
-          </Box>
+      <DashboardHeader
+        user={hook.user}
+        children={hook.children}
+        isReadOnlyForChild={hook.isReadOnlyForChild}
+        getUserRoleForChild={hook.getUserRoleForChild}
+        USER_ROLES={hook.USER_ROLES}
+        onInviteClick={() => hook.setShowInviteModal(true)}
+        onAddChildClick={() => hook.setShowAddChildModal(true)}
+      />
 
-          {/* Right: Action Buttons */}
-          <Box sx={{ display: "flex", gap: 2 }}>
-            {/* Invite Team Member - Show only if user can manage at least one child */}
-            {children?.some((child) => {
-              const userRole = getUserRoleForChild?.(child.id);
-              return (
-                userRole === USER_ROLES.PRIMARY_PARENT ||
-                userRole === USER_ROLES.CO_PARENT
-              );
-            }) && (
-              <StyledButton
-                variant="outlined"
-                size="large"
-                startIcon={<PersonAddIcon />}
-                onClick={() => {
-                  setInviteChildId(null); // No specific child selected - let user choose
-                  setShowInviteModal(true);
-                }}
-                sx={{
-                  py: 1.5,
-                  px: 3,
-                  fontSize: "1.1rem",
-                  fontWeight: 600,
-                  borderColor: theme.palette.success.main,
-                  color: theme.palette.success.main,
-                  "&:hover": {
-                    borderColor: theme.palette.success.dark,
-                    backgroundColor: alpha(theme.palette.success.main, 0.05),
-                    transform: "translateY(-2px)",
-                    boxShadow: `0 6px 25px ${alpha(theme.palette.success.main, 0.4)}`,
-                  },
-                }}
-              >
-                Invite Team Member
-              </StyledButton>
-            )}
-
-            {/* Add Child - Show for everyone */}
-            <StyledButton
-              variant="contained"
-              size="large"
-              startIcon={<AddIcon />}
-              onClick={() => setShowAddChildModal(true)}
-              sx={{
-                py: 1.5,
-                px: 3,
-                fontSize: "1.1rem",
-                fontWeight: 600,
-                background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
-                "&:hover": {
-                  background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)`,
-                  transform: "translateY(-2px)",
-                  boxShadow: `0 6px 25px ${alpha(theme.palette.primary.main, 0.4)}`,
-                },
-              }}
-            >
-              Add Child
-            </StyledButton>
-          </Box>
-        </Box>
-      </Box>
-
-      {/* Child Cards - Grouped by Relationship */}
       <Box sx={{ maxWidth: 800, mx: "auto" }}>
-        {(() => {
-          // Group children by relationship type
-          const ownChildren = [];
-          const familyChildren = [];
-          const professionalChildren = [];
-
-          children?.forEach((child) => {
-            const userRole = getUserRoleForChild
-              ? getUserRoleForChild(child.id)
-              : null;
-            if (userRole === USER_ROLES.PRIMARY_PARENT) {
-              ownChildren.push(child);
-            } else if (
-              userRole === USER_ROLES.CO_PARENT ||
-              userRole === USER_ROLES.FAMILY_MEMBER
-            ) {
-              familyChildren.push(child);
-            } else if (
-              userRole === USER_ROLES.CAREGIVER ||
-              userRole === USER_ROLES.THERAPIST
-            ) {
-              professionalChildren.push(child);
-            }
-          });
-
-          return (
-            <>
-              {/* Your Children Section */}
-              {ownChildren.length > 0 && (
-                <Box sx={{ mb: 4 }}>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 2,
-                      mb: 3,
-                      px: 1,
-                    }}
-                  >
-                    <Typography
-                      variant="h5"
-                      sx={{
-                        fontWeight: 700,
-                        color: theme.palette.primary.main,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                      }}
-                    >
-                      🏠 In Your Full Care
-                    </Typography>
-                    <Chip
-                      label={ownChildren.length}
-                      size="small"
-                      sx={{
-                        bgcolor: alpha(theme.palette.primary.main, 0.15),
-                        color: theme.palette.primary.main,
-                        fontWeight: 600,
-                      }}
-                    />
-                  </Box>
-                  <Stack spacing={3}>
-                    {ownChildren.map((child) => (
-                      <ChildCard
-                        key={child.id}
-                        child={child}
-                        groupType="own"
-                        status={quickDataStatus[child.id] || {}}
-                        recentEntries={(recentEntries && recentEntries[child.id]) || []}
-                        isExpanded={isCardExpanded(child.id)}
-                        onToggleExpanded={() => toggleCard(child.id)}
-                        onQuickEntry={handleQuickDataEntry}
-                        onEditChild={handleEditChild}
-                        onInviteTeamMember={handleInviteTeamMember}
-                        onDailyReport={handleDailyReport}
-                        getActionGroups={getActionGroups}
-                        handleGroupActionClick={handleGroupActionClick}
-                        highlightedActions={highlightedActions}
-                        expandedCategories={expandedCategories}
-                        setExpandedCategories={setExpandedCategories}
-                        getTypeConfig={getTypeConfig}
-                        formatTimeAgo={formatTimeAgo}
-                      />
-                    ))}
-                  </Stack>
-                </Box>
-              )}
-
-              {/* Family Children Section */}
-              {familyChildren.length > 0 && (
-                <Box sx={{ mb: 4 }}>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 2,
-                      mb: 3,
-                      px: 1,
-                    }}
-                  >
-                    <Typography
-                      variant="h5"
-                      sx={{
-                        fontWeight: 700,
-                        color: theme.palette.calendar.accent,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                      }}
-                    >
-                      👨‍👩‍👧‍👦 Family Children
-                    </Typography>
-                    <Chip
-                      label={familyChildren.length}
-                      size="small"
-                      sx={{
-                        bgcolor: alpha(theme.palette.calendar.accent, 0.15),
-                        color: theme.palette.calendar.accent,
-                        fontWeight: 600,
-                      }}
-                    />
-                  </Box>
-                  <Stack spacing={3}>
-                    {familyChildren.map((child) => (
-                      <ChildCard
-                        key={child.id}
-                        child={child}
-                        groupType="family"
-                        status={quickDataStatus[child.id] || {}}
-                        recentEntries={(recentEntries && recentEntries[child.id]) || []}
-                        isExpanded={isCardExpanded(child.id)}
-                        onToggleExpanded={() => toggleCard(child.id)}
-                        onQuickEntry={handleQuickDataEntry}
-                        onEditChild={handleEditChild}
-                        onInviteTeamMember={handleInviteTeamMember}
-                        onDailyReport={handleDailyReport}
-                        getActionGroups={getActionGroups}
-                        handleGroupActionClick={handleGroupActionClick}
-                        highlightedActions={highlightedActions}
-                        expandedCategories={expandedCategories}
-                        setExpandedCategories={setExpandedCategories}
-                        getTypeConfig={getTypeConfig}
-                        formatTimeAgo={formatTimeAgo}
-                      />
-                    ))}
-                  </Stack>
-                </Box>
-              )}
-
-              {/* Professional Assignments Section */}
-              {professionalChildren.length > 0 && (
-                <Box sx={{ mb: 4 }}>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 2,
-                      mb: 3,
-                      px: 1,
-                    }}
-                  >
-                    <Typography
-                      variant="h5"
-                      sx={{
-                        fontWeight: 700,
-                        color: theme.palette.tertiary.dark,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                      }}
-                    >
-                      💼 Professional Assignments
-                    </Typography>
-                    <Chip
-                      label={professionalChildren.length}
-                      size="small"
-                      sx={{
-                        bgcolor: alpha(theme.palette.tertiary.dark, 0.15),
-                        color: theme.palette.tertiary.dark,
-                        fontWeight: 600,
-                      }}
-                    />
-                  </Box>
-                  <Stack spacing={2}>
-                    {professionalChildren.map((child) => (
-                      <ChildCard
-                        key={child.id}
-                        child={child}
-                        groupType="professional"
-                        status={quickDataStatus[child.id] || {}}
-                        recentEntries={(recentEntries && recentEntries[child.id]) || []}
-                        isExpanded={isCardExpanded(child.id)}
-                        onToggleExpanded={() => toggleCard(child.id)}
-                        onQuickEntry={handleQuickDataEntry}
-                        onEditChild={handleEditChild}
-                        onInviteTeamMember={handleInviteTeamMember}
-                        onDailyReport={handleDailyReport}
-                        getActionGroups={getActionGroups}
-                        handleGroupActionClick={handleGroupActionClick}
-                        highlightedActions={highlightedActions}
-                        expandedCategories={expandedCategories}
-                        setExpandedCategories={setExpandedCategories}
-                        getTypeConfig={getTypeConfig}
-                        formatTimeAgo={formatTimeAgo}
-                      />
-                    ))}
-                  </Stack>
-                </Box>
-              )}
-            </>
-          );
-        })()}
+        <ChildGroup
+          title="In Your Full Care"
+          groupType="own"
+          children={hook.ownChildren}
+          {...commonChildGroupProps}
+        />
+        <ChildGroup
+          title="Family Children"
+          groupType="family"
+          children={hook.familyChildren}
+          {...commonChildGroupProps}
+        />
+        <ChildGroup
+          title="Professional Assignments"
+          groupType="professional"
+          children={hook.professionalChildren}
+          {...commonChildGroupProps}
+        />
       </Box>
 
-      {/* Quick Entry Modal */}
+      {/* Modals */}
       <Modal
-        open={showQuickEntry}
-        onClose={handleQuickEntrySkip}
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          p: 2,
-        }}
+        open={hook.showQuickEntry}
+        onClose={hook.handleQuickEntrySkip}
+        sx={{ display: "flex", alignItems: "center", justifyContent: "center", p: 2 }}
       >
-        <Box
-          sx={{
-            maxWidth: 600,
-            width: "100%",
-            maxHeight: "90vh",
-            overflow: "auto",
-          }}
-        >
-          {selectedChild && entryType === "micro" && (
+        <Box sx={{ maxWidth: 600, width: "100%", maxHeight: "90vh", overflow: "auto" }}>
+          {hook.selectedChild && hook.entryType === "micro" && (
             <MicroDataCollector
-              child={selectedChild}
-              onComplete={handleQuickEntryComplete}
-              onSkip={handleQuickEntrySkip}
+              child={hook.selectedChild}
+              onComplete={hook.handleQuickEntryComplete}
+              onSkip={hook.handleQuickEntrySkip}
             />
           )}
-          {selectedChild && entryType === "full" && (
+          {hook.selectedChild && hook.entryType === "full" && (
             <QuickCheckIn
-              child={selectedChild}
-              onComplete={handleQuickEntryComplete}
-              onSkip={handleQuickEntrySkip}
+              child={hook.selectedChild}
+              onComplete={hook.handleQuickEntryComplete}
+              onSkip={hook.handleQuickEntrySkip}
             />
           )}
         </Box>
       </Modal>
 
-      {/* Invitation Modal */}
       <InviteTeamMemberModal
-        open={showInviteModal}
-        onClose={handleCloseInviteModal}
-        children={children}
-        selectedChildId={inviteChildId}
-        onInviteSuccess={handleInviteSuccess}
+        open={hook.showInviteModal}
+        onClose={hook.handleCloseInviteModal}
+        children={hook.children}
+        selectedChildId={hook.inviteChildId}
+        onInviteSuccess={hook.handleInviteSuccess}
       />
 
       <AddChildModal
-        open={showAddChildModal}
-        onClose={() => setShowAddChildModal(false)}
-        onSuccess={handleAddChildSuccess}
+        open={hook.showAddChildModal}
+        onClose={() => hook.setShowAddChildModal(false)}
+        onSuccess={hook.handleAddChildSuccess}
       />
+
       <EditChildModal
-        open={showEditChildModal}
-        child={selectedChildForEdit}
-        userRole={
-          selectedChildForEdit
-            ? getUserRoleForChild?.(selectedChildForEdit.id)
-            : null
-        }
+        open={hook.showEditChildModal}
+        child={hook.selectedChildForEdit}
+        userRole={hook.selectedChildForEdit ? hook.getUserRoleForChild?.(hook.selectedChildForEdit.id) : null}
         onClose={() => {
-          setShowEditChildModal(false);
-          setSelectedChildForEdit(null);
+          hook.setShowEditChildModal(false);
+          hook.setSelectedChildForEdit(null);
         }}
-        onSuccess={handleEditChildSuccess}
+        onSuccess={hook.handleEditChildSuccess}
       />
 
-      {/* Daily Care Modal */}
       <DailyCareModal
-        open={showDailyCareModal}
-        onClose={handleCloseDailyCareModal}
-        child={dailyCareChild}
-        actionType={dailyCareAction}
-        onComplete={handleDailyCareComplete}
+        open={hook.showDailyCareModal}
+        onClose={hook.handleCloseDailyCareModal}
+        child={hook.dailyCareChild}
+        actionType={hook.dailyCareAction}
+        onComplete={hook.handleDailyCareComplete}
       />
 
-      {/* Daily Report Modal */}
       <DailyReportModal
-        open={showDailyReportModal}
-        onClose={handleCloseDailyReportModal}
-        child={dailyReportChild}
-        onEditAction={handleDailyReportEdit}
+        open={hook.showDailyReportModal}
+        onClose={hook.handleCloseDailyReportModal}
+        child={hook.dailyReportChild}
+        onEditAction={hook.handleDailyReportEdit}
       />
     </Container>
   );

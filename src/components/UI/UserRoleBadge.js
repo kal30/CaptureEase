@@ -1,6 +1,6 @@
 import React from 'react';
 import { Chip } from '@mui/material';
-import { alpha } from '@mui/material/styles';
+import { alpha, useTheme } from '@mui/material/styles';
 
 /**
  * Reusable User Role Badge Component
@@ -12,13 +12,15 @@ const UserRoleBadge = ({
   size = 'small',
   variant = 'filled' 
 }) => {
+  const theme = useTheme();
+  
   // Role-specific styling
   const getRoleStyle = () => {
     switch (role) {
       case 'PRIMARY_PARENT':
         return {
-          bgcolor: alpha('#6D28D9', 0.1),
-          color: '#6D28D9',
+          bgcolor: theme.palette.dailyCare.background,
+          color: theme.palette.dailyCare.primary,
           icon: '👑'
         };
       case 'CAREGIVER':

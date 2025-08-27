@@ -65,35 +65,35 @@ const DailyReportModal = ({ open, onClose, child, onEditAction }) => {
       key: 'mood',
       label: 'Mood',
       icon: '😊',
-      color: '#6D28D9',
+      color: theme.palette.dailyCare.primary,
       getSummary: (data) => data ? `${data.moodLevel}/5 ${data.moodTags?.join(', ') || ''}` : null
     },
     {
       key: 'sleep',
       label: 'Sleep',
       icon: '😴',
-      color: '#6D28D9',
+      color: theme.palette.dailyCare.primary,
       getSummary: (data) => data ? `${data.sleepDuration || 0} hrs, ${data.sleepQuality}/5 quality` : null
     },
     {
       key: 'energy',
       label: 'Energy',
       icon: '⚡',
-      color: '#6D28D9',
+      color: theme.palette.dailyCare.primary,
       getSummary: (data) => data ? `${data.energyLevel}/5 energy level` : null
     },
     {
       key: 'food_health',
       label: 'Food & Medicine',
       icon: '🍎',
-      color: '#6D28D9',
+      color: theme.palette.dailyCare.primary,
       getSummary: (data) => data ? `${data.mealsEaten?.length || 0} meals logged` : null
     },
     {
       key: 'safety',
       label: 'Safety Check',
       icon: '🛡️',
-      color: '#6D28D9',
+      color: theme.palette.dailyCare.primary,
       getSummary: (data) => data ? data.safetyStatus || 'Checked' : null
     }
   ];
@@ -128,7 +128,7 @@ const DailyReportModal = ({ open, onClose, child, onEditAction }) => {
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Typography sx={{ fontSize: '1.5rem' }}>🗓️</Typography>
-            <Typography variant="h6" sx={{ fontWeight: 700, color: '#6D28D9' }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, color: theme.palette.dailyCare.primary }}>
               Daily Report for {child?.name}
             </Typography>
           </Box>
@@ -233,10 +233,10 @@ const DailyReportModal = ({ open, onClose, child, onEditAction }) => {
                 sx={{
                   bgcolor: completedItems.length === dailyCareItems.length 
                     ? alpha(theme.palette.success.main, 0.1)
-                    : alpha('#6D28D9', 0.1),
+                    : theme.palette.dailyCare.background,
                   color: completedItems.length === dailyCareItems.length 
                     ? theme.palette.success.dark
-                    : '#6D28D9',
+                    : theme.palette.dailyCare.primary,
                   fontWeight: 600,
                 }}
               />
@@ -258,8 +258,8 @@ const DailyReportModal = ({ open, onClose, child, onEditAction }) => {
                 variant="contained"
                 onClick={handleStartWithMood}
                 sx={{
-                  bgcolor: '#6D28D9',
-                  '&:hover': { bgcolor: alpha('#6D28D9', 0.8) },
+                  bgcolor: theme.palette.dailyCare.primary,
+                  '&:hover': { bgcolor: theme.palette.dailyCare.hover },
                   borderRadius: 2,
                   textTransform: 'none',
                   px: 3,

@@ -29,7 +29,7 @@ import {
 } from '@mui/icons-material';
 import { alpha, useTheme } from '@mui/material/styles';
 import { sendInvitation, sendMultiChildInvitation } from '../services/invitationService';
-import StyledButton from './UI/StyledButton';
+import GradientButton from './UI/GradientButton';
 
 const InviteTeamMemberModal = ({ 
   open, 
@@ -529,29 +529,16 @@ const InviteTeamMemberModal = ({
           >
             Cancel
           </Button>
-          <StyledButton
+          <GradientButton
             type="submit"
-            variant="contained"
+            variant="gradient"
             disabled={!email || loading}
             startIcon={loading ? <CircularProgress size={16} /> : <PersonAddIcon />}
-            sx={{
-              px: 4,
-              py: 1.5,
-              fontSize: '1rem',
-              fontWeight: 600,
-              background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
-              '&:hover': {
-                transform: 'translateY(-1px)',
-                boxShadow: `0 6px 20px ${alpha(theme.palette.primary.main, 0.3)}`
-              },
-              '&:disabled': {
-                background: theme.palette.grey[300],
-                color: theme.palette.grey[500]
-              }
-            }}
+            elevated
+            size="large"
           >
             {loading ? 'Sending...' : 'Send Invitation'}
-          </StyledButton>
+          </GradientButton>
         </DialogActions>
       </form>
     </Dialog>

@@ -60,7 +60,7 @@ const Navbar = () => {
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            px: { xs: 2, md: 3, lg: 4 },
+            px: { xs: 1, sm: 1.5, md: 3, lg: 4 },
           }}
         >
           {/* Logo Text */}
@@ -86,8 +86,8 @@ const Navbar = () => {
               src={Wordmark}
               alt="CaptureEz"
               sx={{
-                width: { xs: 120, sm: 150, md: 200, lg: 240, xl: 280 },
-                maxWidth: "70vw",
+                width: { xs: 100, sm: 130, md: 200, lg: 240, xl: 280 },
+                maxWidth: { xs: "45vw", md: "70vw" },
                 height: "auto",
                 display: "block",
                 objectFit: "contain",
@@ -99,11 +99,11 @@ const Navbar = () => {
             />
           </Button>
 
-          {/* Navigation Links - Right Aligned */}
+          {/* Navigation Links - Hidden on mobile when logged out */}
           <Box
             sx={(theme) => ({
-              display: "flex",
-              gap: { xs: 1, md: 2.5 },
+              display: { xs: isLoggedIn ? "flex" : "none", md: "flex" },
+              gap: { xs: 0.5, md: 2.5 },
               ml: "auto",
               alignItems: "center",
               "& .MuiButton-root": {
@@ -203,8 +203,15 @@ const Navbar = () => {
             )}
           </Box>
 
-          {/* Auth Buttons or Avatar */}
-          <Box sx={{ display: "flex", gap: 2.5, ml: { xs: 1.5, md: 3 } }}>
+          {/* Auth Buttons or Avatar - Mobile optimized */}
+          <Box 
+            sx={{ 
+              display: "flex", 
+              gap: { xs: 1, md: 2.5 }, 
+              ml: { xs: 0.5, md: 3 },
+              flexShrink: 0 // Prevent shrinking on mobile
+            }}
+          >
             {isLoggedIn ? (
               <AvatarMenu user={getAuth().currentUser} />
             ) : (
@@ -217,11 +224,12 @@ const Navbar = () => {
                     backgroundColor: (theme) => alpha("#E07A5F", 0.12),
                     color: "#B75C3B",
                     fontWeight: 700,
-                    fontSize: "1rem",
+                    fontSize: { xs: "0.875rem", md: "1rem" },
                     borderRadius: "8px",
                     textTransform: "none",
-                    px: 3.2,
-                    py: 0.95,
+                    px: { xs: 1.5, md: 3.2 },
+                    py: { xs: 0.75, md: 0.95 },
+                    minWidth: { xs: 60, md: "auto" },
                     boxShadow: "none",
                     border: (theme) => `1px solid ${alpha("#E07A5F", 0.3)}`,
                     "&:hover": {
@@ -241,9 +249,11 @@ const Navbar = () => {
                       "linear-gradient(135deg, #E07A5F 0%, #F7B267 100%)",
                     color: "#fff",
                     fontWeight: 500,
+                    fontSize: { xs: "0.875rem", md: "1rem" },
                     borderRadius: "8px",
-                    px: 3.25,
-                    py: 1,
+                    px: { xs: 1.5, md: 3.25 },
+                    py: { xs: 0.75, md: 1 },
+                    minWidth: { xs: 70, md: "auto" },
                     boxShadow: "0px 2px 4px rgba(224, 122, 95, 0.12)",
                     "&:hover": {
                       background:

@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import AddChildModal from "../components/Dashboard/AddChildModal";
-import InviteTeamMemberModal from "../components/Dashboard/InviteTeamMemberModal";
+import InviteTeamMemberModal from "../components/InviteTeamMemberModal";
 import EditChildModal from "../components/Dashboard/EditChildModal";
 import ChildCard from "../components/Dashboard/ChildCard";
 import ResponsiveLayout from "../components/Layout/ResponsiveLayout";

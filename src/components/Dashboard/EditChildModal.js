@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
   Box,
-  Button,
   Modal,
   TextField,
   Typography,
@@ -17,6 +16,7 @@ import {
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "../../services/firebase";
 import ChildPhotoUploader from "./ChildPhotoUploader";
+import { ThemeCard, GradientButton } from "../UI";
 
 const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
   const [name, setName] = useState("");
@@ -190,14 +190,12 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
           transform: "translate(-50%, -50%)",
           width: { xs: '90vw', sm: 500, md: 600 },
           maxHeight: '90vh',
-          bgcolor: "background.paper",
-          boxShadow: 24,
-          borderRadius: 3,
           overflow: 'hidden',
           display: 'flex',
           flexDirection: 'column'
         }}
       >
+        <ThemeCard variant="modal" elevated sx={{ display: 'flex', flexDirection: 'column' }}>
         {/* Header */}
         <Box sx={{ p: 3, pb: 2, borderBottom: 1, borderColor: 'divider' }}>
           <Typography variant="h5" sx={{ fontWeight: 600, color: 'text.primary' }}>
@@ -430,23 +428,19 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
 
         {/* Footer */}
         <Box sx={{ p: 3, borderTop: 1, borderColor: 'divider', bgcolor: 'grey.50' }}>
-          <Button
-            variant="contained"
-            sx={{
-              backgroundColor: "#a5d6a7",
-              color: "#000",
-              "&:hover": { backgroundColor: "#81c784" },
-              py: 1.5,
-              fontSize: '1rem',
-              fontWeight: 600
-            }}
+          <GradientButton
+            variant="gradient"
+            color="success"
             onClick={handleSubmit}
             fullWidth
             disabled={loading}
+            elevated
+            size="large"
           >
             {loading ? "Saving..." : "Save Changes"}
-          </Button>
+          </GradientButton>
         </Box>
+        </ThemeCard>
       </Box>
     </Modal>
   );

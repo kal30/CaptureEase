@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Card,
   CardContent,
   Typography,
   Box,
@@ -18,6 +17,7 @@ import {
   Close as CloseIcon
 } from '@mui/icons-material';
 import StyledButton from "../UI/StyledButton";
+import ThemeCard from '../UI/ThemeCard';
 import { useTheme, alpha } from '@mui/material/styles';
 
 const MicroDataCollector = ({ child, onComplete, onSkip }) => {
@@ -217,7 +217,7 @@ const MicroDataCollector = ({ child, onComplete, onSkip }) => {
   };
 
   return (
-    <Card elevation={0} sx={{ border: `1px solid ${theme.palette.divider}`, mb: 2 }}>
+    <ThemeCard variant="basic" elevated>
       <CardContent>
         {/* Header */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
@@ -300,7 +300,7 @@ const MicroDataCollector = ({ child, onComplete, onSkip }) => {
           </Box>
         )}
       </CardContent>
-    </Card>
+    </ThemeCard>
   );
 };
 

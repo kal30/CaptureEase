@@ -36,6 +36,13 @@ const theme = createTheme({
       todayBg: "#A49592",
       hoverBg: "#fce9e5",
     },
+    dailyCare: {
+      primary: "#6D28D9", // Daily Care purple
+      light: "#8B5CF6", // Lighter purple
+      dark: "#5B21B6", // Darker purple
+      background: "rgba(109, 40, 217, 0.1)", // Light purple background
+      hover: "rgba(109, 40, 217, 0.2)", // Hover background
+    },
     journal: {
       chipBg: "#A3B18A", // sage green
       hoverIcon: "#EB684A", // terracotta
@@ -55,6 +62,10 @@ const theme = createTheme({
   },
   typography: {
     fontFamily: "'Inter', 'Roboto', 'Helvetica', 'Arial', sans-serif",
+    // Poppins for special UI elements (buttons, headers, etc.)
+    hero: {
+      fontFamily: "'Poppins', 'Inter', 'Roboto', sans-serif",
+    },
     h1: {
       fontSize: {
         xs: "2rem",
@@ -125,6 +136,7 @@ const theme = createTheme({
       fontSize: "0.95rem",
       fontWeight: 600,
       letterSpacing: "0.025em",
+      fontFamily: "'Poppins', 'Inter', 'Roboto', sans-serif", // Poppins for all buttons
     },
     caption: {
       fontSize: "0.75rem",

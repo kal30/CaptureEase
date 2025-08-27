@@ -1,11 +1,12 @@
 import React, { useState } from "react";
-import { Box, Button, Modal, TextField, Typography, Chip } from "@mui/material";
+import { Box, Modal, TextField, Chip } from "@mui/material";
 import Autocomplete, { createFilterOptions } from "@mui/material/Autocomplete";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { addDoc, collection } from "firebase/firestore";
 import { getAuth } from "firebase/auth"; // Import Firestore functions
 import { db } from "../../services/firebase"; // Adjust the path based on your structure
 import ChildPhotoUploader from "./ChildPhotoUploader"; // Import the ChildPhotoUploader component
+import { ThemeCard, GradientButton, ThemeSpacing, ThemeText } from "../UI";
 
 const AddChildModal = ({ open, onClose, onSuccess }) => {
   const [name, setName] = useState("");
@@ -178,33 +179,33 @@ const AddChildModal = ({ open, onClose, onSuccess }) => {
           width: 600,
           maxHeight: '90vh',
           overflow: 'auto',
-          bgcolor: "background.paper",
-          boxShadow: 24,
-          p: 4,
-          borderRadius: 2,
         }}
       >
-        <Typography variant="h6" gutterBottom>
-          Add New Child
-        </Typography>
+        <ThemeCard variant="modal" elevated>
+          <ThemeSpacing variant="modal-content">
+            <ThemeText variant="modal-title" gutterBottom>
+              Add New Child
+            </ThemeText>
 
-        <TextField
-          label="Child's Name"
-          variant="outlined"
-          fullWidth
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          sx={{ mb: 3 }}
-        />
+            <ThemeSpacing variant="field">
+              <TextField
+                label="Child's Name"
+                variant="outlined"
+                fullWidth
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </ThemeSpacing>
 
-        <TextField
-          label="Child's Age"
-          variant="outlined"
-          fullWidth
-          value={age}
-          onChange={(e) => setAge(e.target.value)}
-          sx={{ mb: 3 }}
-        />
+            <ThemeSpacing variant="field">
+              <TextField
+                label="Child's Age"
+                variant="outlined"
+                fullWidth
+                value={age}
+                onChange={(e) => setAge(e.target.value)}
+              />
+            </ThemeSpacing>
 
         <Autocomplete
           multiple
@@ -251,18 +252,17 @@ const AddChildModal = ({ open, onClose, onSuccess }) => {
               label="Primary Concerns / Diagnoses"
               variant="outlined"
               helperText="Optional — pick from list or type your own, then press Enter"
-              sx={{ mb: 3 }}
             />
           )}
         />
 
         {/* Medical & Behavioral Profile */}
-        <Typography variant="h6" sx={{ mt: 4, mb: 2, color: 'info.main', fontWeight: 600 }}>
+        <ThemeText variant="section-header">
           📋 Medical & Behavioral Profile
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+        </ThemeText>
+        <ThemeText variant="form-helper">
           This information helps us identify patterns and correlations in daily tracking
-        </Typography>
+        </ThemeText>
 
         <Autocomplete
           multiple
@@ -451,19 +451,19 @@ const AddChildModal = ({ open, onClose, onSuccess }) => {
           setPhotoURL={setPhotoURL}
         />
 
-        <Button
-          variant="contained"
-          sx={{
-            backgroundColor: "#a5d6a7",
-            color: "#000",
-            "&:hover": { backgroundColor: "#81c784" },
-          }}
+        <GradientButton
+          variant="gradient"
+          color="success"
           onClick={handleSubmit}
           fullWidth
-          disabled={loading} // Disable button during loading
+          disabled={loading}
+          elevated
+          size="large"
         >
-          {loading ? "Saving..." : "Add Child"} {/* Show loading text */}
-        </Button>
+          {loading ? "Saving..." : "Add Child"}
+        </GradientButton>
+          </ThemeSpacing>
+        </ThemeCard>
       </Box>
     </Modal>
   );

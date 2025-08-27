@@ -1,10 +1,11 @@
 import React from 'react';
+import { Card } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import { useRole } from '../../contexts/RoleContext';
-import { ThemeCard } from '../UI';
-import ChildCardHeader from './ChildCard/ChildCardHeader';
-import ChildCardContent from './ChildCard/ChildCardContent';
-import ChildCardActions from './ChildCard/ChildCardActions';
+import { useRole } from '../../../contexts/RoleContext';
+import { ThemeCard } from '../../UI';
+import ChildCardHeader from './ChildCardHeader';
+import ChildCardContent from './ChildCardContent';
+import ChildCardActions from './ChildCardActions';
 
 /**
  * ChildCard - Main child card component with clean, theme-driven styling
@@ -35,6 +36,7 @@ const ChildCard = ({
   const {
     getUserRoleForChild,
     canAddDataForChild,
+    USER_ROLES,
   } = useRole();
 
   // Derived state
