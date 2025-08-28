@@ -20,6 +20,10 @@ import AddChildModal from "../components/Dashboard/AddChildModal";
 import EditChildModal from "../components/Dashboard/EditChildModal";
 import DailyCareModal from "../components/DailyCare/DailyCareModal";
 import DailyReportModal from "../components/DailyCare/DailyReportModal";
+import IncidentLoggingModal from "../components/Dashboard/IncidentLoggingModal";
+import IncidentFollowUpModal from "../components/Dashboard/IncidentFollowUpModal";
+import PatternSuggestionModal from "../components/Dashboard/PatternSuggestionModal";
+import { NotificationPermissionPrompt } from "../components/UI";
 
 const PanelDashboard = () => {
   const hook = usePanelDashboard();
@@ -61,6 +65,16 @@ const PanelDashboard = () => {
         USER_ROLES={hook.USER_ROLES}
         onInviteClick={() => hook.setShowInviteModal(true)}
         onAddChildClick={() => hook.setShowAddChildModal(true)}
+      />
+
+      {/* Notification Permission Prompt */}
+      <NotificationPermissionPrompt 
+        onPermissionGranted={() => {
+          console.log('🎉 Notification permission granted! Follow-ups will now send reminders.');
+        }}
+        onDismiss={() => {
+          console.log('ℹ️ Notification permission prompt dismissed');
+        }}
       />
 
       <Box sx={{ maxWidth: 800, mx: "auto" }}>
@@ -146,6 +160,28 @@ const PanelDashboard = () => {
         onClose={hook.handleCloseDailyReportModal}
         child={hook.dailyReportChild}
         onEditAction={hook.handleDailyReportEdit}
+      />
+
+      <IncidentLoggingModal
+        open={hook.showIncidentModal}
+        onClose={hook.handleCloseIncidentModal}
+        childId={hook.incidentChild?.id}
+        childName={hook.incidentChild?.name}
+      />
+
+      <IncidentFollowUpModal
+        open={hook.showFollowUpModal}
+        onClose={hook.handleCloseFollowUpModal}
+        incident={hook.followUpIncident}
+        childName={hook.children.find(c => c.id === hook.followUpIncident?.childId)?.name}
+      />
+
+      <PatternSuggestionModal
+        open={hook.showPatternSuggestionModal}
+        onClose={hook.handleClosePatternSuggestionModal}
+        suggestions={hook.patternSuggestions}
+        childName={hook.children.find(c => c.id === hook.suggestionsChildId)?.name}
+        onCreateCategory={hook.handleCreateCustomCategories}
       />
     </Container>
   );

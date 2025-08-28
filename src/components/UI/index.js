@@ -7,6 +7,12 @@ export { default as RoleIndicator } from './RoleIndicator';
 export { default as CompletionIndicator } from './CompletionIndicator';
 export { default as ThemeSpacing } from './ThemeSpacing';
 export { default as ThemeText } from './ThemeText';
+export { default as TimelineProgressRing } from './TimelineProgressRing';
+export { default as TimelineWidget } from './TimelineWidget';
+export { default as MiniCalendar } from './MiniCalendar';
+export { default as MonthNavigationControls } from './MonthNavigationControls';
+export { default as NotificationBadge } from './NotificationBadge';
+export { default as NotificationPermissionPrompt } from './NotificationPermissionPrompt';
 
 // Legacy components (consider migrating to new ones above)
 export { default as StyledButton } from './StyledButton';

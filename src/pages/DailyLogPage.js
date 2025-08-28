@@ -11,6 +11,7 @@ import {
   TextField,
   InputAdornment,
 } from "@mui/material";
+import { useTheme } from "@mui/material/styles"; // Import useTheme
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { DateCalendar } from "@mui/x-date-pickers/DateCalendar";
@@ -29,6 +30,7 @@ import DailyLogFeed from "../components/DailyNotes/DailyLogFeed";
 
 const DailyLogPage = () => {
   const navigate = useNavigate();
+  const theme = useTheme(); // Get theme object
   const { currentChildId } = useChildContext();
   const {
     childName,
@@ -67,7 +69,7 @@ const DailyLogPage = () => {
               width: 6,
               height: 6,
               borderRadius: '50%',
-              backgroundColor: 'primary.main',
+              backgroundColor: theme.palette.primary.main,
               zIndex: 1
             }}
           />
@@ -126,9 +128,9 @@ const DailyLogPage = () => {
           <IconButton
             onClick={handleBackToDashboard}
             sx={{
-              bgcolor: "primary.main",
+              bgcolor: theme.palette.primary.main,
               color: "white",
-              "&:hover": { bgcolor: "primary.dark" },
+              "&:hover": { bgcolor: theme.palette.primary.dark },
             }}
           >
             <ArrowBackIcon />
@@ -209,7 +211,7 @@ const DailyLogPage = () => {
                     borderColor: 'grey.300',
                   },
                   '&.Mui-focused fieldset': {
-                    borderColor: 'primary.main',
+                    borderColor: theme.palette.primary.main,
                     borderWidth: '1px',
                   },
                 },

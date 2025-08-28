@@ -24,9 +24,21 @@ import {
   Timeline as TimelineIcon,
   TrendingUp as TrendingIcon
 } from '@mui/icons-material';
-import { useTheme } from '@mui/material/styles';
+import { useTheme, alpha } from '@mui/material/styles';
 
 const DRAWER_WIDTH = 280;
+
+// Helper to safely resolve color strings like 'primary.main' from the theme
+const resolveColor = (theme, colorString) => {
+  if (!colorString || typeof colorString !== 'string') return theme.palette.text.primary;
+  const path = colorString.split('.');
+  let color = theme.palette;
+  for (let key of path) {
+    if (color[key] === undefined) return theme.palette.text.primary; // Fallback
+    color = color[key];
+  }
+  return color;
+};
 
 const TabletDashboard = ({ children, user }) => {
   const theme = useTheme();
@@ -49,7 +61,7 @@ const TabletDashboard = ({ children, user }) => {
       >
         {/* Sidebar Header */}
         <Box sx={{ p: 3, borderBottom: `1px solid ${theme.palette.divider}` }}>
-          <Typography variant="h5" sx={{ fontWeight: 700, color: 'primary.main' }}>
+          <Typography variant="h5" sx={{ fontWeight: 700, color: theme.palette.primary.main }}>
             CaptureEz
           </Typography>
           <Typography variant="body2" color="text.secondary">
@@ -88,32 +100,35 @@ const TabletDashboard = ({ children, user }) => {
               { label: 'Total Entries', value: '156', icon: <TimelineIcon />, color: 'primary.main' },
               { label: 'This Week', value: '12', icon: <TrendingIcon />, color: 'success.main' },
               { label: 'Children', value: children?.length || 0, icon: <ChildIcon />, color: 'warning.main' }
-            ].map((stat, index) => (
-              <Card 
-                key={index}
-                elevation={0}
-                sx={{ 
-                  bgcolor: `${stat.color}08`,
-                  border: `1px solid ${stat.color}20`
-                }}
-              >
-                <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Box sx={{ color: stat.color }}>
-                      {stat.icon}
+            ].map((stat, index) => {
+              const resolvedStatColor = resolveColor(theme, stat.color);
+              return (
+                <Card 
+                  key={index}
+                  elevation={0}
+                  sx={{ 
+                    bgcolor: alpha(resolvedStatColor, 0.08),
+                    border: `1px solid ${alpha(resolvedStatColor, 0.2)}`
+                  }}
+                >
+                  <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <Box sx={{ color: resolvedStatColor }}>
+                        {stat.icon}
+                      </Box>
+                      <Box>
+                        <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                          {stat.value}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {stat.label}
+                        </Typography>
+                      </Box>
                     </Box>
-                    <Box>
-                      <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                        {stat.value}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {stat.label}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </Box>
         </Box>
       </Drawer>
@@ -177,7 +192,7 @@ const TabletDashboard = ({ children, user }) => {
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                           <Avatar 
                             sx={{ 
-                              bgcolor: 'primary.main',
+                              bgcolor: theme.palette.primary.main,
                               width: 56,
                               height: 56
                             }}
@@ -218,40 +233,43 @@ const TabletDashboard = ({ children, user }) => {
                     { type: 'note', time: '4h ago', child: 'Liam', content: 'Daily progress note', color: 'primary.main' },
                     { type: 'behavior', time: '6h ago', child: 'Emma', content: 'Behavior observation', color: 'warning.main' },
                     { type: 'sensory', time: '1d ago', child: 'Liam', content: 'Sensory log updated', color: 'info.main' }
-                  ].map((activity, index) => (
-                    <ListItem 
-                      key={index}
-                      sx={{
-                        py: 2,
-                        borderBottom: index < 3 ? `1px solid ${theme.palette.divider}` : 'none'
-                      }}
-                    >
-                      <ListItemAvatar>
-                        <Avatar 
-                          sx={{ 
-                            bgcolor: `${activity.color}20`,
-                            color: activity.color,
-                            width: 40,
-                            height: 40
-                          }}
-                        >
-                          {activity.child[0]}
-                        </Avatar>
-                      </ListItemAvatar>
-                      <ListItemText
-                        primary={
-                          <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                            {activity.content}
-                          </Typography>
-                        }
-                        secondary={
-                          <Typography variant="caption" color="text.secondary">
-                            {activity.child} • {activity.time}
-                          </Typography>
-                        }
-                      />
-                    </ListItem>
-                  ))}
+                  ].map((activity, index) => {
+                    const resolvedActivityColor = resolveColor(theme, activity.color);
+                    return (
+                      <ListItem 
+                        key={index}
+                        sx={{
+                          py: 2,
+                          borderBottom: index < 3 ? `1px solid ${theme.palette.divider}` : 'none'
+                        }}
+                      >
+                        <ListItemAvatar>
+                          <Avatar 
+                            sx={{ 
+                              bgcolor: alpha(resolvedActivityColor, 0.2),
+                              color: resolvedActivityColor,
+                              width: 40,
+                              height: 40
+                            }}
+                          >
+                            {activity.child[0]}
+                          </Avatar>
+                        </ListItemAvatar>
+                        <ListItemText
+                          primary={
+                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                              {activity.content}
+                            </Typography>
+                          }
+                          secondary={
+                            <Typography variant="caption" color="text.secondary">
+                              {activity.child} • {activity.time}
+                            </Typography>
+                          }
+                        />
+                      </ListItem>
+                    );
+                  })}
                 </List>
               </Paper>
             </Grid>

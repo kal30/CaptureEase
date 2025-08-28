@@ -170,10 +170,10 @@ const TimelineTab = ({ childId }) => {
                 color: 'text.primary',
                 borderColor: 'divider',
                 '&.Mui-selected': {
-                  bgcolor: 'primary.main',
+                  bgcolor: theme.palette.primary.main,
                   color: 'white',
                   '&:hover': {
-                    bgcolor: 'primary.dark'
+                    bgcolor: theme.palette.primary.dark
                   }
                 }
               }
@@ -198,10 +198,10 @@ const TimelineTab = ({ childId }) => {
               onClick={handleRefresh}
               disabled={loading}
               sx={{
-                bgcolor: 'success.main',
+                bgcolor: theme.palette.success.main,
                 color: 'white',
                 '&:hover': {
-                  bgcolor: 'success.dark'
+                  bgcolor: theme.palette.success.dark
                 },
                 '&:disabled': {
                   bgcolor: 'action.disabled',
@@ -218,10 +218,10 @@ const TimelineTab = ({ childId }) => {
               onClick={() => handleExport('csv')}
               disabled={loading || filteredEntries.length === 0}
               sx={{
-                bgcolor: 'success.main',
+                bgcolor: theme.palette.success.main,
                 color: 'white',
                 '&:hover': {
-                  bgcolor: 'success.dark'
+                  bgcolor: theme.palette.success.dark
                 },
                 '&:disabled': {
                   bgcolor: 'action.disabled',

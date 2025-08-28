@@ -22,7 +22,7 @@ export const getActionGroups = (theme) => (userRole) => {
       actions: [
         { key: 'mood', label: 'Mood Check', icon: '😊', types: ['mood_log'], trackingType: 'daily' },
         { key: 'sleep', label: 'Sleep Quality', icon: '😴', types: ['sleep_log'], trackingType: 'daily' },
-        { key: 'energy', label: 'Energy Level', icon: '⚡', types: ['energy_log'], trackingType: 'daily' },
+        { key: 'incident', label: 'Log Incident', icon: '🚨', types: ['incident_log'], trackingType: 'task' },
         { key: 'food_health', label: 'Food & Medicine', icon: '🍎', types: ['food_log', 'medication_log', 'medical_event'], trackingType: 'daily' },
         { key: 'safety', label: 'Safety Check', icon: '🛡️', types: ['safety_log'], trackingType: 'task' },
       ],

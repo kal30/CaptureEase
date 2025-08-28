@@ -22,7 +22,7 @@ import {
   Person as PersonIcon,
   ChildCare as ChildIcon
 } from '@mui/icons-material';
-import { useTheme } from '@mui/material/styles';
+import { useTheme, alpha } from '@mui/material/styles'; // Import alpha
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '../../services/firebase';
@@ -61,7 +61,7 @@ const TabletLayout = ({ children, pageTitle, showSidebar = true }) => {
         >
           {/* Sidebar Header */}
           <Box sx={{ p: 3, borderBottom: `1px solid ${theme.palette.divider}` }}>
-            <Typography variant="h6" sx={{ fontWeight: 700, color: 'primary.main' }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, color: theme.palette.primary.main }}>
               CaptureEz
             </Typography>
             <Typography variant="body2" color="text.secondary">
@@ -99,13 +99,13 @@ const TabletLayout = ({ children, pageTitle, showSidebar = true }) => {
                   cursor: 'pointer',
                   mx: 1,
                   borderRadius: 1,
-                  bgcolor: location.pathname === item.path ? 'primary.light' + '20' : 'transparent',
+                  bgcolor: location.pathname === item.path ? alpha(theme.palette.primary.light, 0.2) : 'transparent',
                   '&:hover': {
                     bgcolor: 'action.hover'
                   }
                 }}
               >
-                <ListItemIcon sx={{ color: location.pathname === item.path ? 'primary.main' : 'text.secondary' }}>
+                <ListItemIcon sx={{ color: location.pathname === item.path ? theme.palette.primary.main : 'text.secondary' }}>
                   {item.icon}
                 </ListItemIcon>
                 <ListItemText 
@@ -113,7 +113,7 @@ const TabletLayout = ({ children, pageTitle, showSidebar = true }) => {
                   sx={{ 
                     '& .MuiListItemText-primary': {
                       fontWeight: location.pathname === item.path ? 600 : 400,
-                      color: location.pathname === item.path ? 'primary.main' : 'text.primary'
+                      color: location.pathname === item.path ? theme.palette.primary.main : 'text.primary'
                     }
                   }}
                 />

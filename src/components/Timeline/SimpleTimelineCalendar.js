@@ -298,7 +298,7 @@ const SimpleTimelineCalendar = ({ entries, onDayClick, filters }) => {
                   sx={{ 
                     fontWeight: isCurrentDay ? 700 : 400,
                     color: isCurrentDay 
-                      ? 'primary.main' 
+                      ? theme.palette.primary.main 
                       : isFuture 
                         ? 'text.disabled'
                         : 'text.primary',
@@ -389,7 +389,7 @@ const SimpleTimelineCalendar = ({ entries, onDayClick, filters }) => {
 
             <Typography 
               variant="caption" 
-              color="primary.main" 
+              color={theme.palette.primary.main} 
               sx={{ 
                 display: 'block',
                 mt: 1,

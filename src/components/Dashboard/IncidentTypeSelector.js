@@ -1,4 +1,5 @@
-import { Box, Button, Typography, Grid, Card } from "@mui/material";
+import React, { useState, useEffect } from "react";
+import { Box, Button, Typography, Card, Chip } from "@mui/material";
 import {
   Restaurant as RestaurantIcon,
   Mood as MoodIcon,
@@ -8,7 +9,7 @@ import {
   LocalHospital as LocalHospitalIcon,
   Edit as EditIcon,
 } from "@mui/icons-material";
-import { INCIDENT_TYPES } from "../../services/incidentService";
+import { INCIDENT_TYPES, getCustomCategories } from "../../services/incidentService";
 
 // Single source of truth for icons (kept local to avoid changing INCIDENT_TYPES for now)
 const ICONS = {
@@ -19,6 +20,16 @@ const ICONS = {
   sensory: SensorsIcon,
   pain_medical: LocalHospitalIcon,
   other: EditIcon,
+};
+
+const ICON_COLORS = {
+  eating_nutrition: "#22c55e", // green
+  mood: "#f59e0b", // amber
+  sleep: "#3b82f6", // blue
+  behavioral: "#ef4444", // red
+  sensory: "#8b5cf6", // purple
+  pain_medical: "#dc2626", // darker red
+  other: "#6b7280", // gray
 };
 
 // Fix the key mapping - use the object keys directly
@@ -36,7 +47,46 @@ const getIconForType = (key) => {
   return ICONS[mappedKey] || EditIcon;
 };
 
-const IncidentTypeSelector = ({ onTypeSelect, onClose }) => {
+const IncidentTypeSelector = ({ onTypeSelect, onClose, childId }) => {
+  const [customCategories, setCustomCategories] = useState({});
+
+  useEffect(() => {
+    const loadCustomCategories = async () => {
+      if (!childId) {
+        return;
+      }
+      
+      try {
+        console.log('📥 Loading custom categories for child:', childId);
+        const categories = await getCustomCategories(childId);
+        console.log('📋 Loaded categories:', categories);
+        setCustomCategories(categories);
+      } catch (error) {
+        console.error('Error loading custom categories:', error);
+      }
+    };
+
+    loadCustomCategories();
+  }, [childId]);
+
+  // Combine default and custom incident types
+  const allIncidentTypes = {
+    ...INCIDENT_TYPES,
+    ...Object.fromEntries(
+      Object.entries(customCategories).map(([key, category]) => [
+        key,
+        {
+          id: category.id,
+          label: category.label,
+          color: category.color,
+          emoji: category.emoji,
+          remedies: category.remedies,
+          isCustom: true
+        }
+      ])
+    )
+  };
+
   return (
     <Box
       sx={{
@@ -45,20 +95,6 @@ const IncidentTypeSelector = ({ onTypeSelect, onClose }) => {
         minHeight: "100%",
       }}
     >
-      <Typography
-        variant="h5"
-        gutterBottom
-        sx={{
-          textAlign: "center",
-          mb: 4,
-          color: "#1f2937",
-          fontWeight: 600,
-          letterSpacing: "-0.5px",
-        }}
-      >
-        What type of incident occurred?
-      </Typography>
-
       <Box
         sx={{
           maxWidth: 720,
@@ -69,8 +105,10 @@ const IncidentTypeSelector = ({ onTypeSelect, onClose }) => {
           alignItems: "stretch",
         }}
       >
-        {Object.entries(INCIDENT_TYPES).map(([key, incident]) => {
-          const IconComponent = getIconForType(key);
+        {Object.entries(allIncidentTypes).map(([key, incident]) => {
+          const IconComponent = incident.isCustom ? null : getIconForType(key);
+          const mappedKey = key.toLowerCase();
+          const iconColor = incident.isCustom ? incident.color : (ICON_COLORS[mappedKey] || "#6b7280");
 
           return (
             <Card
@@ -89,9 +127,25 @@ const IncidentTypeSelector = ({ onTypeSelect, onClose }) => {
                 cursor: "pointer",
                 px: 2,
                 boxSizing: "border-box",
+                position: "relative",
               }}
               onClick={() => onTypeSelect(key)}
             >
+              {incident.isCustom && (
+                <Chip
+                  label="Custom"
+                  size="small"
+                  sx={{
+                    position: "absolute",
+                    top: 8,
+                    right: 8,
+                    backgroundColor: incident.color,
+                    color: "white",
+                    fontSize: "0.6rem",
+                    height: 18,
+                  }}
+                />
+              )}
               <Box
                 sx={{
                   display: "flex",
@@ -100,7 +154,11 @@ const IncidentTypeSelector = ({ onTypeSelect, onClose }) => {
                   width: "100%",
                 }}
               >
-                <IconComponent sx={{ fontSize: "1.5rem" }} />
+                {incident.isCustom ? (
+                  <Typography sx={{ fontSize: "1.5rem" }}>{incident.emoji}</Typography>
+                ) : (
+                  <IconComponent sx={{ fontSize: "1.5rem", color: iconColor }} />
+                )}
                 <Typography
                   variant="body1"
                   sx={{

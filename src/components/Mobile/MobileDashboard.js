@@ -27,7 +27,19 @@ import {
   Menu as MenuIcon,
   ChildCare as ChildIcon
 } from '@mui/icons-material';
-import { useTheme } from '@mui/material/styles';
+import { useTheme, alpha } from '@mui/material/styles';
+
+// Helper to safely resolve color strings like 'primary.main' from the theme
+const resolveColor = (theme, colorString) => {
+  if (!colorString || typeof colorString !== 'string') return theme.palette.text.primary;
+  const path = colorString.split('.');
+  let color = theme.palette;
+  for (let key of path) {
+    if (color[key] === undefined) return theme.palette.text.primary; // Fallback
+    color = color[key];
+  }
+  return color;
+};
 
 const MobileDashboard = ({ 
   children, 
@@ -64,7 +76,7 @@ const MobileDashboard = ({
             <IconButton size="small">
               <MenuIcon />
             </IconButton>
-            <Typography variant="h6" sx={{ fontWeight: 700, color: 'primary.main' }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, color: theme.palette.primary.main }}>
               CaptureEz
             </Typography>
           </Box>
@@ -93,30 +105,33 @@ const MobileDashboard = ({
             { label: 'Children', value: children?.length || 0, icon: <ChildIcon />, color: 'primary.main' },
             { label: 'This Week', value: '12', icon: <TimelineIcon />, color: 'success.main' },
             { label: 'Total Entries', value: '156', icon: <HomeIcon />, color: 'warning.main' }
-          ].map((stat, index) => (
-            <Card 
-              key={index}
-              sx={{ 
-                minWidth: 120,
-                bgcolor: `${stat.color}10`,
-                border: `1px solid ${stat.color}20`
-              }}
-            >
-              <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                  <Box sx={{ color: stat.color, fontSize: 16 }}>
-                    {stat.icon}
+          ].map((stat, index) => {
+            const resolvedStatColor = resolveColor(theme, stat.color);
+            return (
+              <Card 
+                key={index}
+                sx={{ 
+                  minWidth: 120,
+                  bgcolor: alpha(resolvedStatColor, 0.1),
+                  border: `1px solid ${alpha(resolvedStatColor, 0.2)}`
+                }}
+              >
+                <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                    <Box sx={{ color: resolvedStatColor, fontSize: 16 }}>
+                      {stat.icon}
+                    </Box>
                   </Box>
-                </Box>
-                <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.25rem' }}>
-                  {stat.value}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {stat.label}
-                </Typography>
-              </CardContent>
-            </Card>
-          ))}
+                  <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.25rem' }}>
+                    {stat.value}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {stat.label}
+                  </Typography>
+                </CardContent>
+              </Card>
+            );
+          })}
         </Box>
 
         {/* Children List - Mobile Optimized with Tabs */}
@@ -177,7 +192,7 @@ const MobileDashboard = ({
                     border: `1px solid ${theme.palette.divider}`
                   }}
                 >
-                  <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.light' }}>
+                  <Avatar sx={{ width: 32, height: 32, bgcolor: theme.palette.primary.light }}>
                     {activity.child[0]}
                   </Avatar>
                   <Box sx={{ flex: 1 }}>

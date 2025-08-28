@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, Button, List, ListItem, ListItemText, Modal, TextField, IconButton, Autocomplete, Grid, FormControlLabel, Checkbox } from '@mui/material';
-
+import { useTheme } from '@mui/material/styles'; // Import useTheme
 import ArchiveIcon from '@mui/icons-material/Archive';
 import UnarchiveIcon from '@mui/icons-material/Unarchive';
 import Rating from '../../components/UI/Rating';
@@ -24,6 +24,7 @@ const style = {
 };
 
 const MedicationsLogTab = ({ childId }) => {
+  const theme = useTheme(); // Get theme object
   const [medications, setMedications] = useState([]);
   const [editingMedicationId, setEditingMedicationId] = useState(null);
   const [medicationForm, setMedicationForm] = useState({
@@ -399,7 +400,7 @@ const MedicationsLogTab = ({ childId }) => {
               }
             >
               <ListItemText
-                primary={<Typography variant="subtitle1" component="span" sx={{ fontWeight: 'bold', mb: 3, color: 'primary.main' }}>{med.name}</Typography>}
+                primary={<Typography variant="subtitle1" component="span" sx={{ fontWeight: 'bold', mb: 3, color: theme.palette.primary.main }}>{med.name}</Typography>}
                 secondary={
                   <Box sx={{ mt: 1 }}>
                     <Typography variant="body2" color="text.primary"><strong>Dosage:</strong> {med.dosage}</Typography>

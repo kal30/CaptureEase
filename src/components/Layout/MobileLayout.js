@@ -78,7 +78,7 @@ const MobileLayout = ({ children, pageTitle, showBottomNav = true }) => {
             <IconButton size="small">
               <MenuIcon />
             </IconButton>
-            <Typography variant="h6" sx={{ fontWeight: 700, color: 'primary.main' }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, color: theme.palette.primary.main }}>
               {pageTitle || 'CaptureEz'}
             </Typography>
           </Box>

@@ -238,7 +238,7 @@ const AcceptInvite = () => {
           p: 4,
           textAlign: 'center'
         }}>
-          <PersonAddIcon sx={{ fontSize: 64, color: 'primary.main', mb: 2 }} />
+          <PersonAddIcon sx={{ fontSize: 64, color: theme.palette.primary.main, mb: 2 }} />
           <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
             You're Invited!
           </Typography>

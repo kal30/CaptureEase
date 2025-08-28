@@ -377,10 +377,10 @@ const DataDrivenChildCard = ({
                       color: 'text.primary',
                       borderColor: 'divider',
                       '&.Mui-selected': {
-                        bgcolor: 'primary.main',
+                        bgcolor: theme.palette.primary.main,
                         color: 'white',
                         '&:hover': {
-                          bgcolor: 'primary.dark'
+                          bgcolor: theme.palette.primary.dark
                         }
                       }
                     }
@@ -442,10 +442,10 @@ const DataDrivenChildCard = ({
                         onClick={() => setShowFilters(!showFilters)}
                         sx={{
                           p: 0.5,
-                          bgcolor: getActiveFiltersCount() > 0 ? 'primary.main' : 'transparent',
+                          bgcolor: getActiveFiltersCount() > 0 ? theme.palette.primary.main : 'transparent',
                           color: getActiveFiltersCount() > 0 ? 'white' : 'text.secondary',
                           '&:hover': {
-                            bgcolor: getActiveFiltersCount() > 0 ? 'primary.dark' : 'action.hover',
+                            bgcolor: getActiveFiltersCount() > 0 ? theme.palette.primary.dark : 'action.hover',
                           }
                         }}
                       >

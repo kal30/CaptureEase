@@ -5,6 +5,9 @@ import { auth } from "../services/firebase";
 import { useChildContext } from "../contexts/ChildContext";
 import { getTimelineEntries, TIMELINE_TYPES } from "../services/timelineService";
 import { useRole } from "../contexts/RoleContext";
+import { useDailyCareStatus } from "./useDailyCareStatus";
+import { listenForFollowUps, initializeNotificationsForPendingFollowUps, processQuickResponses } from "../services/followUpService";
+import { analyzeOtherIncidentPatterns } from "../services/incidentService";
 
 export const usePanelDashboard = () => {
   const theme = useTheme();
@@ -23,7 +26,13 @@ export const usePanelDashboard = () => {
   const [children, setChildren] = useState([]);
   const [loading, setLoading] = useState(true);
   const [recentEntries, setRecentEntries] = useState({});
-  const [quickDataStatus, setQuickDataStatus] = useState({});
+  
+  // Use separated Daily Care status hook
+  const { 
+    completionStatus: quickDataStatus, 
+    refreshChildStatus: refreshDailyCareStatus,
+    loading: dailyCareLoading 
+  } = useDailyCareStatus(children);
   const [showQuickEntry, setShowQuickEntry] = useState(false);
   const [selectedChild, setSelectedChild] = useState(null);
   const [entryType, setEntryType] = useState("micro"); // 'micro' or 'full'
@@ -40,6 +49,13 @@ export const usePanelDashboard = () => {
   const [dailyCareChild, setDailyCareChild] = useState(null);
   const [showDailyReportModal, setShowDailyReportModal] = useState(false);
   const [dailyReportChild, setDailyReportChild] = useState(null);
+  const [showIncidentModal, setShowIncidentModal] = useState(false);
+  const [incidentChild, setIncidentChild] = useState(null);
+  const [showFollowUpModal, setShowFollowUpModal] = useState(false);
+  const [followUpIncident, setFollowUpIncident] = useState(null);
+  const [showPatternSuggestionModal, setShowPatternSuggestionModal] = useState(false);
+  const [patternSuggestions, setPatternSuggestions] = useState([]);
+  const [suggestionsChildId, setSuggestionsChildId] = useState(null);
 
   useEffect(() => {
     if (roleLoading) return;
@@ -50,6 +66,19 @@ export const usePanelDashboard = () => {
         setChildren(childrenWithRoles);
         if (childrenWithRoles.length > 0 && !currentChildId) {
           setCurrentChildId(childrenWithRoles[0].id);
+        }
+        
+        // Initialize notifications for pending follow-ups
+        if (childrenWithRoles.length > 0) {
+          initializeNotificationsForPendingFollowUps(childrenWithRoles);
+          
+          // Process any quick responses from notifications
+          processQuickResponses().then(processedResponses => {
+            if (processedResponses.length > 0) {
+              console.log(`📱 Processed ${processedResponses.length} quick responses from notifications`);
+              // Could show a toast or update UI to reflect the processed responses
+            }
+          });
         }
       } catch (error) {
         console.error("Error loading children:", error);
@@ -91,28 +120,21 @@ export const usePanelDashboard = () => {
     };
   }, [children]);
 
+  // Listen for follow-up reminders
   useEffect(() => {
-    const mockStatus = {};
-    children.forEach((child) => {
-      const mood = Math.random() > 0.5;
-      const sleep = Math.random() > 0.4;
-      const energy = Math.random() > 0.6;
-      const quickEntries = [mood, sleep, energy];
-      const completedQuickEntries = quickEntries.filter(Boolean).length;
-      const quickCompletionRate = Math.round(
-        (completedQuickEntries / quickEntries.length) * 100
-      );
-      const dailyCareCompletion = quickCompletionRate;
+    if (children.length === 0) return;
 
-      mockStatus[child.id] = {
-        mood,
-        sleep,
-        energy,
-        dataCompleteness: dailyCareCompletion,
-      };
-    });
-    setQuickDataStatus(mockStatus);
-  }, [children, recentEntries]);
+    const childIds = children.map(child => child.id);
+    
+    const handleFollowUpNeeded = (incident) => {
+      setFollowUpIncident(incident);
+      setShowFollowUpModal(true);
+    };
+
+    const cleanup = listenForFollowUps(childIds, handleFollowUpNeeded);
+    
+    return cleanup;
+  }, [children]);
 
   const handleQuickDataEntry = (child, type, event) => {
     if (event) {
@@ -127,10 +149,16 @@ export const usePanelDashboard = () => {
 
     setCurrentChildId(child.id);
 
-    if (type === "mood" || type === "sleep" || type === "energy") {
+    if (type === "mood" || type === "sleep") {
       setDailyCareAction(type);
       setDailyCareChild(child);
       setShowDailyCareModal(true);
+      return;
+    }
+
+    if (type === "incident") {
+      setIncidentChild(child);
+      setShowIncidentModal(true);
       return;
     }
 
@@ -185,14 +213,9 @@ export const usePanelDashboard = () => {
     refreshRoles();
   };
 
-  const handleDailyCareComplete = (actionType, entryData) => {
-    setQuickDataStatus((prev) => ({
-      ...prev,
-      [entryData.childId]: {
-        ...prev[entryData.childId],
-        [actionType]: true,
-      },
-    }));
+  const handleDailyCareComplete = async (actionType, entryData) => {
+    // Refresh the real Daily Care status from database
+    await refreshDailyCareStatus(entryData.childId);
   };
 
   const handleCloseDailyCareModal = () => {
@@ -212,6 +235,53 @@ export const usePanelDashboard = () => {
     setDailyReportChild(null);
   };
 
+  const handleCloseIncidentModal = () => {
+    setShowIncidentModal(false);
+    const childId = incidentChild?.id;
+    setIncidentChild(null);
+    
+    // Check for patterns after a delay to allow the new incident to be processed
+    if (childId) {
+      setTimeout(() => {
+        checkForPatterns(childId);
+      }, 1000);
+    }
+  };
+
+  const handleCloseFollowUpModal = () => {
+    setShowFollowUpModal(false);
+    setFollowUpIncident(null);
+  };
+
+  const checkForPatterns = async (childId) => {
+    try {
+      const suggestions = await analyzeOtherIncidentPatterns(childId);
+      if (suggestions.length > 0) {
+        setPatternSuggestions(suggestions);
+        setSuggestionsChildId(childId);
+        setShowPatternSuggestionModal(true);
+      }
+    } catch (error) {
+      console.error('Error checking for patterns:', error);
+    }
+  };
+
+  const handleClosePatternSuggestionModal = () => {
+    setShowPatternSuggestionModal(false);
+    setPatternSuggestions([]);
+    setSuggestionsChildId(null);
+  };
+
+  const handleCreateCustomCategories = (categories) => {
+    // In a full implementation, this would create custom incident types
+    // For now, we'll just log them and show a success message
+    console.log('Creating custom categories:', categories);
+    // Here you would typically:
+    // 1. Save custom categories to user preferences
+    // 2. Update the INCIDENT_TYPES with user's custom types
+    // 3. Show success feedback
+  };
+
   const handleDailyReport = (child) => {
     setDailyReportChild(child);
     setShowDailyReportModal(true);
@@ -220,10 +290,16 @@ export const usePanelDashboard = () => {
   const handleGroupActionClick = (action, child) => {
     setCurrentChildId(child.id);
 
-    if (["mood", "sleep", "energy", "food_health", "safety"].includes(action.key)) {
+    if (["mood", "sleep", "food_health", "safety"].includes(action.key)) {
       setDailyCareAction(action.key);
       setDailyCareChild(child);
       setShowDailyCareModal(true);
+      return;
+    }
+
+    if (action.key === "incident") {
+      setIncidentChild(child);
+      setShowIncidentModal(true);
       return;
     }
 
@@ -273,6 +349,7 @@ export const usePanelDashboard = () => {
     setInviteChildId(null);
   };
 
+
   const ownChildren = children.filter(child => getUserRoleForChild?.(child.id) === USER_ROLES.PRIMARY_PARENT);
   const familyChildren = children.filter(child => [USER_ROLES.CO_PARENT, USER_ROLES.FAMILY_MEMBER].includes(getUserRoleForChild?.(child.id)));
   const professionalChildren = children.filter(child => [USER_ROLES.CAREGIVER, USER_ROLES.THERAPIST].includes(getUserRoleForChild?.(child.id)));
@@ -280,7 +357,7 @@ export const usePanelDashboard = () => {
   return {
     user,
     theme,
-    loading: loading || roleLoading,
+    loading: loading || roleLoading || dailyCareLoading,
     children,
     ownChildren,
     familyChildren,
@@ -300,6 +377,13 @@ export const usePanelDashboard = () => {
     dailyCareChild,
     showDailyReportModal,
     dailyReportChild,
+    showIncidentModal,
+    incidentChild,
+    showFollowUpModal,
+    followUpIncident,
+    showPatternSuggestionModal,
+    patternSuggestions,
+    suggestionsChildId,
     showQuickEntry,
     selectedChild,
     entryType,
@@ -328,7 +412,13 @@ export const usePanelDashboard = () => {
     handleDailyCareComplete,
     handleCloseDailyReportModal,
     handleDailyReportEdit,
+    handleCloseIncidentModal,
+    handleCloseFollowUpModal,
+    handleClosePatternSuggestionModal,
+    handleCreateCustomCategories,
+    checkForPatterns,
     handleQuickEntryComplete,
     handleQuickEntrySkip,
+    refreshDailyCareStatus,
   };
 };

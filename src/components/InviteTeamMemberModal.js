@@ -248,7 +248,7 @@ const InviteTeamMemberModal = ({
           pb: 2
         }}
       >
-        <PersonAddIcon sx={{ color: 'primary.main', fontSize: 32 }} />
+        <PersonAddIcon sx={{ color: theme.palette.primary.main, fontSize: 32 }} />
         <Box>
           <Typography variant="h5" sx={{ fontWeight: 700 }}>
             Invite Team Member
@@ -387,16 +387,16 @@ const InviteTeamMemberModal = ({
                     }
                   }}
                   sx={{
-                    color: 'primary.main',
+                    color: theme.palette.primary.main,
                     '&.Mui-checked': {
-                      color: 'primary.main',
+                      color: theme.palette.primary.main,
                     },
                   }}
                 />
               }
               label={
                 <Box>
-                  <Typography variant="body1" sx={{ fontWeight: 600, color: 'primary.main' }}>
+                  <Typography variant="body1" sx={{ fontWeight: 600, color: theme.palette.primary.main }}>
                     All Children (Recommended)
                   </Typography>
                   <Typography variant="caption" color="text.secondary">

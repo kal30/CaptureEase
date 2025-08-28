@@ -9,6 +9,7 @@ import {
   Typography,
 } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
+import { useTheme } from "@mui/material/styles"; // Import useTheme
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage, auth } from "../../services/firebase";
@@ -16,6 +17,7 @@ import RichTextInput from "../UI/RichTextInput";
 import { useAuthState } from "react-firebase-hooks/auth";
 
 const LogInput = ({ childId, selectedDate = new Date() }) => {
+  const theme = useTheme(); // Get the theme object
   const [richTextData, setRichTextData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [clearInput, setClearInput] = useState(false);
@@ -153,8 +155,8 @@ const LogInput = ({ childId, selectedDate = new Date() }) => {
               onClick={() => applyTemplate(template)}
               sx={{
                 '&:hover': {
-                  backgroundColor: 'primary.light',
-                  borderColor: 'primary.main',
+                  backgroundColor: theme.palette.primary.light,
+                  borderColor: theme.palette.primary.main,
                 },
               }}
             />

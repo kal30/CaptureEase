@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Card,
@@ -14,17 +14,14 @@ import {
 import {
   Add as AddIcon,
   LocalHospital as HospitalIcon,
+  MedicalInformation as DiagnosisIcon,
+  Edit as EditIcon,
 } from '@mui/icons-material';
 import { alpha, useTheme } from '@mui/material/styles';
 import { useRole } from '../../contexts/RoleContext';
 import ActionGroup from './ActionGroup';
 import RoleIndicator from '../UI/RoleIndicator';
-import ChildManagementMenu from './ChildManagementMenu';
-import MedicalInfoRow from './ChildCard/MedicalInfoRow'; // Corrected Import
-import QuickEntrySection from './QuickEntrySection';
-import { TimelineWidget, NotificationBadge } from '../UI';
-import { useNotificationBadges } from '../../hooks/useNotificationBadges';
-import PendingFollowUpModal from './PendingFollowUpModal';
+import CompletionIndicator from '../UI/CompletionIndicator';
 
 const ChildCard = ({
   child,
@@ -35,7 +32,6 @@ const ChildCard = ({
   onToggleExpanded,
   onQuickEntry,
   onEditChild,
-  onDeleteChild,
   onInviteTeamMember,
   onDailyReport,
   getActionGroups,
@@ -53,26 +49,9 @@ const ChildCard = ({
     USER_ROLES,
   } = useRole();
 
-  // Get notification badges for this child
-  const {
-    getPendingCountForChild,
-    getOverdueFollowUps,
-    getUpcomingFollowUps
-  } = useNotificationBadges([child.id]);
-  
-  const pendingCount = getPendingCountForChild(child.id);
-  const overdueFollowUps = getOverdueFollowUps().filter(incident => incident.childId === child.id);
-  const upcomingFollowUps = getUpcomingFollowUps().filter(incident => incident.childId === child.id);
-
-  const completedToday = status.mood && status.sleep;
+  const completedToday = status.mood && status.sleep && status.energy;
   const userRole = getUserRoleForChild ? getUserRoleForChild(child.id) : null;
   const canAddData = canAddDataForChild ? canAddDataForChild(child.id) : true;
-  
-  // Hover state for Quick Entry ↔ Daily Care highlighting
-  const [hoveredQuickAction, setHoveredQuickAction] = React.useState(null);
-  
-  // Follow-up modal state
-  const [showFollowUpModal, setShowFollowUpModal] = React.useState(false);
 
   // Group-specific styling
   const getGroupStyling = () => {
@@ -117,37 +96,6 @@ const ChildCard = ({
   const isCategoryExpanded = (childId, category) => {
     return expandedCategories[`${childId}-${category}`] || false;
   };
-
-  // Quick Entry hover handlers
-  const handleQuickActionHover = (actionKey, childId) => {
-    setHoveredQuickAction(actionKey);
-  };
-
-  const handleQuickActionLeave = (childId) => {
-    setHoveredQuickAction(null);
-  };
-
-  // Daily Care action hover handlers (reverse direction)
-  const handleDailyCareActionHover = (actionKey, childId) => {
-    setHoveredQuickAction(actionKey);
-  };
-
-  const handleDailyCareActionLeave = (childId) => {
-    setHoveredQuickAction(null);
-  };
-
-  // Enhanced highlighted actions that includes hover state
-  const enhancedHighlightedActions = React.useMemo(() => {
-    const enhanced = { ...highlightedActions };
-    
-    // Add hover highlighting for Daily Care actions
-    // ActionGroup expects just the action key, not childId-actionKey
-    if (hoveredQuickAction) {
-      enhanced[hoveredQuickAction] = true;
-    }
-    
-    return enhanced;
-  }, [highlightedActions, hoveredQuickAction]);
 
   return (
     <Card
@@ -245,6 +193,37 @@ const ChildCard = ({
           },
         }}
       >
+        {/* Status Indicators & Expand Icon */}
+        <Box
+          sx={{
+            position: "absolute",
+            top: 12,
+            right: 8,
+            display: "flex",
+            alignItems: "center",
+            gap: 0.5,
+          }}
+        >
+          {/* Individual completion indicators */}
+          <CompletionIndicator 
+            variant="dots" 
+            status={{ mood: status.mood, sleep: status.sleep, energy: status.energy }} 
+            color="dailyCare" 
+          />
+
+          {/* Subtle interaction hint */}
+          <Box
+            sx={{
+              ml: 1,
+              width: 4,
+              height: 20,
+              borderRadius: 2,
+              bgcolor: alpha(theme.palette.primary.main, 0.15),
+              transition: "all 0.2s ease",
+              opacity: 0.7,
+            }}
+          />
+        </Box>
 
         {/* Left: Avatar & Basic Info */}
         <Box
@@ -301,25 +280,31 @@ const ChildCard = ({
               >
                 Age {child.age}
               </Typography>
-              {/* Follow-up Notifications Badge */}
-              {pendingCount > 0 && (
-                <NotificationBadge
-                  count={pendingCount}
-                  overdueCount={overdueFollowUps.length}
-                  upcomingCount={upcomingFollowUps.length}
-                  onClick={() => setShowFollowUpModal(true)}
-                  size="small"
-                />
-              )}
               
-              {/* Child Management Menu Component */}
-              <ChildManagementMenu
-                child={child}
-                userRole={userRole}
-                onEditChild={onEditChild}
-                onInviteTeamMember={onInviteTeamMember}
-                onDeleteChild={onDeleteChild}
-              />
+              {/* Edit Button - Right next to child name for easy access */}
+              {(userRole === "primary_parent" || userRole === "co_parent") && (
+                <IconButton
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEditChild(child);
+                  }}
+                  sx={{
+                    ml: 1,
+                    width: 28,
+                    height: 28,
+                    bgcolor: alpha(theme.palette.primary.main, 0.1),
+                    color: theme.palette.primary.main,
+                    "&:hover": {
+                      bgcolor: alpha(theme.palette.primary.main, 0.2),
+                      transform: "scale(1.1)",
+                    },
+                    transition: "all 0.2s ease",
+                  }}
+                >
+                  <EditIcon sx={{ fontSize: 16 }} />
+                </IconButton>
+              )}
             </Box>
 
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -369,7 +354,7 @@ const ChildCard = ({
 
               {/* Care Team Count */}
               <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                <HospitalIcon sx={{ color: theme.palette.secondary.main, fontSize: 14 }} />
+                <HospitalIcon sx={{ color: "#9B59B6", fontSize: 14 }} />
                 <Typography
                   variant="caption"
                   sx={{
@@ -388,23 +373,120 @@ const ChildCard = ({
                   })()}
                 </Typography>
               </Box>
-
             </Box>
           </Box>
         </Box>
 
-        {/* Quick Entry Section with Daily Report */}
-        <QuickEntrySection
-          child={child}
-          status={status}
-          userRole={userRole}
-          completedToday={completedToday}
-          onQuickEntry={onQuickEntry}
-          onDailyReport={onDailyReport}
-          onHoverAction={handleQuickActionHover}
-          onLeaveAction={handleQuickActionLeave}
-          externalHoveredAction={hoveredQuickAction}
-        />
+        {/* Quick Entry Circles OR Status Display */}
+        <Box 
+          sx={{ 
+            display: "flex", 
+            gap: 1, 
+            px: { xs: 0, md: 2 },
+            width: { xs: "100%", md: "auto" },
+            justifyContent: { xs: "center", md: "flex-start" },
+            order: { xs: 3, md: 0 }
+          }}
+        >
+          {userRole === USER_ROLES.THERAPIST ? (
+            // Read-only status display for therapists
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+                py: 1,
+                px: 2,
+                borderRadius: 2,
+                bgcolor: alpha("#94A3B8", 0.1),
+                border: `1px solid ${alpha("#94A3B8", 0.3)}`,
+              }}
+            >
+              <Typography
+                variant="caption"
+                sx={{
+                  fontSize: "0.95rem",
+                  fontWeight: 600,
+                  color: "#94A3B8",
+                }}
+              >
+                Today's Status:
+              </Typography>
+              <Box sx={{ display: "flex", gap: 0.5 }}>
+                {[
+                  { key: "mood", emoji: "😊", color: "#6D28D9" }, // Daily Care color
+                  { key: "sleep", emoji: "😴", color: "#6D28D9" }, // Daily Care color
+                  { key: "energy", emoji: "⚡", color: "#6D28D9" }, // Daily Care color
+                ].map((item) => (
+                  <Box
+                    key={item.key}
+                    sx={{
+                      width: 24,
+                      height: 24,
+                      borderRadius: "50%",
+                      border: `1px solid ${status[item.key] ? item.color : theme.palette.divider}`,
+                      bgcolor: status[item.key]
+                        ? alpha(item.color, 0.1)
+                        : "background.paper",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Typography sx={{ fontSize: "1.2rem" }}>
+                      {status[item.key] ? "✓" : item.emoji}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+          ) : (
+            // Interactive quick entry circles for other roles - matching Daily Care colors
+            [
+              { key: "mood", emoji: "😊", color: "#6D28D9", label: "Mood", description: "Quick mood check" }, 
+              { key: "sleep", emoji: "😴", color: "#6D28D9", label: "Sleep", description: "Last night's sleep" }, 
+              {
+                key: "energy",
+                emoji: "⚡",
+                color: theme.palette.dailyCare.primary, 
+                label: "Energy",
+                description: "Current energy level",
+              },
+            ].map((item) => (
+              <Box
+                key={item.key}
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent card expansion
+                  onQuickEntry(child, item.key, e);
+                }}
+                sx={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: "50%",
+                  border: `2px solid ${theme.palette.dailyCare.primary}`, // Always purple outline
+                  bgcolor: status[item.key]
+                    ? theme.palette.dailyCare.background // Purple background when completed
+                    : "background.paper",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transition: "all 0.2s ease",
+                  "&:hover": {
+                    borderColor: theme.palette.dailyCare.primary, // Purple on hover
+                    bgcolor: theme.palette.dailyCare.background, // Purple background on hover
+                    transform: "scale(1.1)",
+                  },
+                }}
+                title={`${item.description} - Click for quick entry`}
+              >
+                <Typography sx={{ fontSize: "1.2rem" }}>
+                  {status[item.key] ? "✓" : item.emoji}
+                </Typography>
+              </Box>
+            ))
+          )}
+        </Box>
 
         {/* Right: Progress & Actions */}
         <Box
@@ -459,19 +541,35 @@ const ChildCard = ({
                 </Button>
               </>
             ) : (
-              // No additional buttons for other roles since Daily Report is now in top-right corner
-              null
+              // Interactive buttons for other roles
+              <>
+                <Button
+                  variant="contained"
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent card expansion
+                    onDailyReport(child);
+                  }}
+                  sx={{
+                    py: 0.5,
+                    px: 1.5,
+                    fontSize: { xs: "0.9rem", md: "1.1rem" },
+                    minWidth: { xs: "120px", md: "auto" },
+                    borderRadius: 1,
+                    background: completedToday
+                      ? `linear-gradient(135deg, ${theme.palette.success.main} 0%, ${theme.palette.success.dark} 100%)`
+                      : `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+                    width: { xs: "100%", md: "auto" }
+                  }}
+                  title="View today's daily care summary with timestamps and edit options"
+                >
+                  Daily Report
+                </Button>
+              </>
             )}
           </Box>
         </Box>
       </Box>
-
-      {/* Medical Info Row */}
-      <MedicalInfoRow
-        diagnosis={child.diagnosis}
-        allergies={child.medicalProfile?.foodAllergies}
-        groupType={groupType}
-      />
 
       {/* Expandable Content */}
       <Collapse in={isExpanded}>
@@ -481,16 +579,65 @@ const ChildCard = ({
             borderTop: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
           }}
         >
+          {/* Diagnosis Chips */}
+          <Box sx={{ mb: 2 }}>
+            <Box
+              sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}
+            >
+              <DiagnosisIcon sx={{ color: "#FF6B6B", fontSize: 16 }} />
+              <Typography
+                variant="body2"
+                sx={{ fontSize: "0.8rem", fontWeight: 600, color: "#FF6B6B" }}
+              >
+                Diagnosis
+              </Typography>
+            </Box>
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, pl: 2 }}>
+              {child.concerns?.map((concern, index) => (
+                <Chip
+                  key={index}
+                  label={concern.label || concern}
+                  size="small"
+                  sx={{
+                    height: 20,
+                    fontSize: "0.95rem",
+                    borderRadius: 1,
+                    bgcolor: alpha("#FF6B6B", 0.15),
+                    color: "#FF6B6B",
+                    fontWeight: 600,
+                  }}
+                />
+              )) ||
+                [
+                  { name: "Autism Spectrum", color: "#FF6B6B" },
+                  { name: "ADHD", color: "#4ECDC4" },
+                ].map((diagnosis, index) => (
+                  <Chip
+                    key={index}
+                    label={diagnosis.name}
+                    size="small"
+                    sx={{
+                      height: 20,
+                      fontSize: "0.95rem",
+                      borderRadius: 1,
+                      bgcolor: alpha(diagnosis.color, 0.15),
+                      color: diagnosis.color,
+                      fontWeight: 600,
+                    }}
+                  />
+                ))}
+            </Box>
+          </Box>
 
           {/* Care Team Details */}
           <Box sx={{ mb: 2 }}>
             <Box
               sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}
             >
-              <HospitalIcon sx={{ color: theme.palette.secondary.main, fontSize: 16 }} />
+              <HospitalIcon sx={{ color: "#9B59B6", fontSize: 16 }} />
               <Typography
                 variant="body2"
-                sx={{ fontSize: "0.8rem", fontWeight: 600, color: theme.palette.secondary.main }}
+                sx={{ fontSize: "0.8rem", fontWeight: 600, color: "#9B59B6" }}
               >
                 Care Team
               </Typography>
@@ -632,7 +779,7 @@ const ChildCard = ({
               >
                 <Typography
                   variant="body2"
-                  sx={{ fontSize: "0.8rem", fontWeight: 600, color: theme.palette.secondary.main }}
+                  sx={{ fontSize: "0.8rem", fontWeight: 600, color: "#9B59B6" }}
                 >
                   Quick Actions
                 </Typography>
@@ -657,9 +804,7 @@ const ChildCard = ({
                       }}
                       onActionClick={handleGroupActionClick} 
                       completionStatus={status}
-                      highlightedActions={enhancedHighlightedActions}
-                      onActionHover={handleDailyCareActionHover}
-                      onActionLeave={handleDailyCareActionLeave}
+                      highlightedActions={highlightedActions}
                     />
                   );
                 })}
@@ -667,24 +812,106 @@ const ChildCard = ({
             </Box>
           )}
 
-          {/* Timeline Widget - Enhanced Recent Activity with Progress Visualization */}
-          <TimelineWidget
-            child={child}
-            entries={recentEntries}
-            dailyCareStatus={status}
-            defaultExpanded={false}
-            variant="full"
-          />
+          {/* Recent Activity Preview */}
+          {getTypeConfig && formatTimeAgo && (
+            <Box>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  mb: 1,
+                }}
+              >
+                <Typography
+                  variant="body2"
+                  sx={{ fontSize: "0.8rem", fontWeight: 600, color: "#9B59B6" }}
+                >
+                  Recent Activity
+                </Typography>
+                <Typography
+                  variant="caption"
+                  sx={{ fontSize: "0.95rem", color: theme.palette.text.secondary }}
+                >
+                  Last 3 days
+                </Typography>
+              </Box>
+
+              {recentEntries.length > 0 ? (
+                <Box sx={{ pl: 2 }}>
+                  {recentEntries.slice(0, 3).map((entry, index) => {
+                    const typeConfig = getTypeConfig(entry.type);
+                    return (
+                      <Box
+                        key={index}
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1,
+                          mb: 0.5,
+                          p: 0.5,
+                          borderRadius: 1,
+                          "&:hover": {
+                            bgcolor: alpha(typeConfig.color, 0.05),
+                          },
+                        }}
+                      >
+                        <Typography sx={{ fontSize: "1rem" }}>
+                          {typeConfig.icon}
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            fontSize: "0.95rem",
+                            color: typeConfig.color,
+                            fontWeight: 600,
+                            flex: 1,
+                          }}
+                        >
+                          {typeConfig.label}
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            fontSize: "0.95rem",
+                            color: theme.palette.text.secondary,
+                          }}
+                        >
+                          {formatTimeAgo(entry.timestamp)}
+                        </Typography>
+                      </Box>
+                    );
+                  })}
+                  {recentEntries.length > 3 && (
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        fontSize: "0.95rem",
+                        color: theme.palette.text.secondary,
+                        ml: 2,
+                      }}
+                    >
+                      +{recentEntries.length - 3} more entries
+                    </Typography>
+                  )}
+                </Box>
+              ) : (
+                <Typography
+                  variant="caption"
+                  sx={{
+                    fontSize: "0.95rem",
+                    color: theme.palette.text.secondary,
+                    pl: 2,
+                    fontStyle: "italic",
+                  }}
+                >
+                  No recent activity
+                </Typography>
+              )}
+            </Box>
+          )}
         </Box>
       </Collapse>
-
-      {/* Pending Follow-up Modal */}
-      <PendingFollowUpModal
-        open={showFollowUpModal}
-        onClose={() => setShowFollowUpModal(false)}
-        childId={child.id}
-        childName={child.name}
-      />
     </Card>
   );
 };

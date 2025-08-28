@@ -7,6 +7,7 @@ import {
   Chip,
 } from "@mui/material";
 import Autocomplete, { createFilterOptions } from "@mui/material/Autocomplete";
+import { useTheme } from "@mui/material/styles"; // Import useTheme
 import {
   getStorage,
   ref,
@@ -19,6 +20,7 @@ import ChildPhotoUploader from "./ChildPhotoUploader";
 import { ThemeCard, GradientButton } from "../UI";
 
 const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
+  const theme = useTheme(); // Get the theme object
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
   const [photo, setPhoto] = useState(null);
@@ -209,7 +211,7 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
         {/* Scrollable Content */}
         <Box sx={{ flex: 1, overflow: 'auto', p: 3 }}>
           {/* Basic Information Section */}
-          <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
+          <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: theme.palette.primary.main }}>
             Basic Information
           </Typography>
 
@@ -290,7 +292,7 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
           {/* Medical & Behavioral Profile Section - Only for Primary/Co-Parents */}
           {canEditMedicalInfo && (
             <Box sx={{ mt: 4, pt: 3, borderTop: 1, borderColor: 'divider' }}>
-              <Typography variant="h6" sx={{ mb: 1, fontWeight: 600, color: 'primary.main' }}>
+              <Typography variant="h6" sx={{ mb: 1, fontWeight: 600, color: theme.palette.primary.main }}>
                 Medical & Behavioral Profile
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>

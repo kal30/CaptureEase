@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Typography, TextField, Button, Box, Paper, CircularProgress, Alert, Divider } from '@mui/material';
+import { useTheme } from '@mui/material/styles'; // Import useTheme
 import { getAuth, updateProfile, updatePassword } from 'firebase/auth';
 import PasskeyAuth from '../components/AuthProviders/PasskeyAuth';
 import ResponsiveLayout from '../components/Layout/ResponsiveLayout';
 
 const ProfilePage = () => {
+  const theme = useTheme(); // Get theme object
   const auth = getAuth();
   const user = auth.currentUser;
 
@@ -82,7 +84,7 @@ const ProfilePage = () => {
   return (
     <ResponsiveLayout pageTitle="Profile Settings">
       <Paper elevation={6} sx={{ p: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', borderRadius: '12px', maxWidth: 'sm', mx: 'auto' }}>
-        <Typography component="h1" variant="h5" sx={{ mb: 3, fontWeight: 'bold', color: 'primary.main' }}>
+        <Typography component="h1" variant="h5" sx={{ mb: 3, fontWeight: 'bold', color: theme.palette.primary.main }}>
           User Profile
         </Typography>
 
@@ -104,7 +106,7 @@ const ProfilePage = () => {
           <Button
             type="submit"
             variant="contained"
-            sx={{ mt: 2, mb: 2, backgroundColor: 'primary.main', '&:hover': { backgroundColor: 'primary.dark' } }}
+            sx={{ mt: 2, mb: 2, backgroundColor: theme.palette.primary.main, '&:hover': { backgroundColor: theme.palette.primary.dark } }}
             disabled={loading}
           >
             Save Display Name
@@ -142,7 +144,7 @@ const ProfilePage = () => {
           <Button
             type="submit"
             variant="contained"
-            sx={{ mt: 2, mb: 2, backgroundColor: 'primary.main', '&:hover': { backgroundColor: 'primary.dark' } }}
+            sx={{ mt: 2, mb: 2, backgroundColor: theme.palette.primary.main, '&:hover': { backgroundColor: theme.palette.primary.dark } }}
             disabled={loading}
           >
             Change Password
@@ -163,7 +165,7 @@ const ProfilePage = () => {
           <Typography variant="body1" sx={{ mb: 2 }}>
             {email}
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+_          <Typography variant="body2" color="text.secondary">
             To change your email, please contact support or use your Firebase console if you have direct access.
           </Typography>
         </Box>

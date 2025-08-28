@@ -7,6 +7,7 @@ import {
   Button,
   Stack,
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles'; // Import useTheme
 import {
   SentimentVeryDissatisfied,
   SentimentDissatisfied,
@@ -37,6 +38,7 @@ const moods = [
 ];
 
 const LogMoodModal = ({ open, onClose, child }) => {
+  const theme = useTheme(); // Get the theme object
   const [selectedMood, setSelectedMood] = useState(null);
 
   const handleMoodSelect = (mood) => {
@@ -61,7 +63,7 @@ const LogMoodModal = ({ open, onClose, child }) => {
             <IconButton 
               key={mood.label} 
               onClick={() => handleMoodSelect(mood)}
-              sx={{ color: selectedMood === mood.label ? 'primary.main' : 'action.active' }}
+              sx={{ color: selectedMood === mood.label ? theme.palette.primary.main : 'action.active' }}
             >
               {mood.icon}
             </IconButton>

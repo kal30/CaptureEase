@@ -22,7 +22,9 @@ const ActionGroup = ({
   onActionClick, 
   completionStatus = {},
   defaultExpanded = false,
-  highlightedActions = {}
+  highlightedActions = {},
+  onActionHover,
+  onActionLeave
 }) => {
   const theme = useTheme();
   const [expanded, setExpanded] = useState(defaultExpanded);
@@ -141,6 +143,17 @@ const ActionGroup = ({
                   onClick={(e) => {
                     e.stopPropagation();
                     onActionClick(action, child);
+                  }}
+                  onMouseEnter={() => {
+                    // Only highlight for Daily Care mood, sleep, incident actions
+                    if (['mood', 'sleep', 'incident'].includes(action.key)) {
+                      onActionHover?.(action.key, child.id);
+                    }
+                  }}
+                  onMouseLeave={() => {
+                    if (['mood', 'sleep', 'incident'].includes(action.key)) {
+                      onActionLeave?.(child.id);
+                    }
                   }}
                   sx={{
                     fontSize: '0.95rem',

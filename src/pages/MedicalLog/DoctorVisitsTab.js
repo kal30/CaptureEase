@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Typography, Button, List, ListItem, ListItemText, Modal, TextField, IconButton } from '@mui/material';
+import { useTheme } from '@mui/material/styles'; // Import useTheme
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -18,6 +19,7 @@ const style = {
 };
 
 const DoctorVisitsTab = ({ childId }) => {
+  const theme = useTheme(); // Get theme object
   const [visits, setVisits] = useState([
     {
       id: 'visit1',
@@ -148,7 +150,7 @@ const DoctorVisitsTab = ({ childId }) => {
             }
           >
             <ListItemText
-              primary={<Typography variant="subtitle1" component="span" sx={{ fontWeight: 'bold', mb: 1, color: 'primary.main' }}>{`${visit.doctorName} on ${visit.visitDate}`}</Typography>}
+              primary={<Typography variant="subtitle1" component="span" sx={{ fontWeight: 'bold', mb: 1, color: theme.palette.primary.main }}>{`${visit.doctorName} on ${visit.visitDate}`}</Typography>}
               secondary={
                 <Box sx={{ mt: 1 }}>
                   <Typography variant="body2" color="text.primary"><strong>Reason:</strong> {visit.reasonForVisit}</Typography>

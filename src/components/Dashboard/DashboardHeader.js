@@ -1,5 +1,6 @@
 import React from "react";
 import { PersonAdd as PersonAddIcon, Add as AddIcon } from "@mui/icons-material";
+import { Box } from "@mui/material";
 import PageHeader from "../UI/PageHeader";
 import GradientButton from "../UI/GradientButton";
 
@@ -16,6 +17,8 @@ const DashboardHeader = ({
   onInviteClick,
   onAddChildClick,
 }) => {
+  // Notification badges moved to individual child cards for better UX
+
   const title = `${user?.displayName || user?.email?.split("@")[0] || "Your"} Dashboard`;
 
   const subtitle = children.some((child) => !isReadOnlyForChild(child.id))
@@ -30,7 +33,7 @@ const DashboardHeader = ({
   });
 
   const actions = (
-    <>
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
       {canInvite && (
         <GradientButton
           variant="outlined"
@@ -54,7 +57,7 @@ const DashboardHeader = ({
       >
         Add Child
       </GradientButton>
-    </>
+    </Box>
   );
 
   return <PageHeader title={title} subtitle={subtitle} actions={actions} />;

@@ -15,7 +15,7 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { useTheme } from '@mui/material/styles';
-import { updateIncidentEffectiveness, INCIDENT_TYPES, EFFECTIVENESS_LEVELS, getSeverityScale } from '../../services/incidentService';
+import { updateIncidentEffectiveness, recordFollowUpResponse, INCIDENT_TYPES, EFFECTIVENESS_LEVELS, getSeverityScale } from '../../services/incidentService';
 
 const IncidentFollowUpModal = ({ 
   open, 
@@ -45,7 +45,26 @@ const IncidentFollowUpModal = ({
 
     setLoading(true);
     try {
-      await updateIncidentEffectiveness(incident.id, effectiveness, followUpNotes);
+      if (incident.isMultiStage) {
+        // Handle multi-stage follow-up
+        const result = await recordFollowUpResponse(
+          incident.id, 
+          effectiveness, 
+          followUpNotes, 
+          incident.currentFollowUpIndex
+        );
+        
+        // Show feedback about next follow-up if there is one
+        if (result.hasMoreFollowUps) {
+          console.log(`Next follow-up scheduled: ${result.nextFollowUpDescription} at ${result.nextFollowUpTime}`);
+        } else {
+          console.log('All follow-ups completed');
+        }
+      } else {
+        // Handle single follow-up (legacy)
+        await updateIncidentEffectiveness(incident.id, effectiveness, followUpNotes);
+      }
+      
       onClose();
     } catch (error) {
       console.error('Error updating incident effectiveness:', error);
@@ -106,6 +125,9 @@ const IncidentFollowUpModal = ({
           </Typography>
           <Typography variant="caption" sx={{ opacity: 0.9 }}>
             {incidentConfig?.icon} {incidentConfig?.label} • {getTimeSinceIncident()}
+            {incident.isMultiStage && (
+              <> • Follow-up {(incident.currentFollowUpIndex || 0) + 1} of {incident.totalFollowUps}</>
+            )}
           </Typography>
         </Box>
         <Button

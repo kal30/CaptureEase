@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -15,15 +15,17 @@ import {
   Switch,
   CircularProgress
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SaveIcon from '@mui/icons-material/Save';
 import { useTheme } from '@mui/material/styles';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '../../services/firebase';
 import { 
-  addIncident, 
+  addIncident,
+  createIncidentWithSmartFollowUp,
   INCIDENT_TYPES, 
-  getSeverityScale 
+  getSeverityScale,
+  getCustomCategories,
+  formatFollowUpSchedule
 } from '../../services/incidentService';
 
 const IncidentQuickCapture = ({ 
@@ -42,9 +44,35 @@ const IncidentQuickCapture = ({
   const [notes, setNotes] = useState('');
   const [scheduleFollowUp, setScheduleFollowUp] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [customCategories, setCustomCategories] = useState({});
 
-  const incidentConfig = INCIDENT_TYPES[incidentType];
-  const severityScale = getSeverityScale(incidentConfig.id);
+  // Load custom categories on mount
+  useEffect(() => {
+    const loadCustomCategories = async () => {
+      if (childId) {
+        try {
+          const categories = await getCustomCategories(childId);
+          setCustomCategories(categories);
+        } catch (error) {
+          console.error('Error loading custom categories:', error);
+        }
+      }
+    };
+
+    loadCustomCategories();
+  }, [childId]);
+
+  // Get incident config from either default or custom categories
+  const getIncidentConfig = () => {
+    if (INCIDENT_TYPES[incidentType]) {
+      return INCIDENT_TYPES[incidentType];
+    }
+    // Check custom categories
+    return customCategories[incidentType] || null;
+  };
+
+  const incidentConfig = getIncidentConfig();
+  const severityScale = getSeverityScale(incidentConfig?.id || 'other');
   const severityConfig = severityScale[severity];
 
   const handleSeverityChange = (event, newValue) => {
@@ -64,24 +92,25 @@ const IncidentQuickCapture = ({
 
     setLoading(true);
     try {
-      const followUpTime = scheduleFollowUp 
-        ? new Date(Date.now() + 20 * 60 * 1000) // 20 minutes from now
-        : null;
-
       const incidentData = {
         type: incidentType,
         severity,
         remedy: remedy === 'Other' ? customRemedy : remedy,
         customRemedy: remedy === 'Other' ? customRemedy : '',
         notes,
-        followUpScheduled: scheduleFollowUp,
-        followUpTime,
         authorId: user?.uid,
         authorName: user?.displayName || user?.email?.split('@')[0] || 'User',
         authorEmail: user?.email
       };
 
-      await addIncident(childId, incidentData);
+      // Use smart timing system when follow-up is scheduled
+      const result = await createIncidentWithSmartFollowUp(childId, incidentData, scheduleFollowUp, childName);
+      
+      // Optionally show user the follow-up schedule
+      if (result.followUpScheduled) {
+        console.log(`Smart follow-up scheduled: ${result.followUpDescription} at ${result.nextFollowUpTime}`);
+      }
+      
       onSaved();
     } catch (error) {
       console.error('Error saving incident:', error);
@@ -103,36 +132,23 @@ const IncidentQuickCapture = ({
 
   const canSave = remedy && (remedy !== 'Other' || customRemedy.trim());
 
+  // Add error handling for missing incident config
+  if (!incidentConfig) {
+    console.error('Incident configuration not found for type:', incidentType);
+    return (
+      <Box sx={{ p: 4, textAlign: 'center' }}>
+        <Typography color="error">
+          Error: Incident type configuration not found
+        </Typography>
+        <Button onClick={onBack} sx={{ mt: 2 }}>
+          Go Back
+        </Button>
+      </Box>
+    );
+  }
+
   return (
     <Box sx={{ p: 4, backgroundColor: '#fafbfc', minHeight: '100%' }}>
-      {/* Header with back button */}
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
-        <Button
-          startIcon={<ArrowBackIcon />}
-          onClick={onBack}
-          sx={{ 
-            mr: 2,
-            color: '#6b7280',
-            '&:hover': {
-              bgcolor: '#f3f4f6'
-            }
-          }}
-        >
-          Back
-        </Button>
-        <Typography 
-          variant="h6" 
-          component="div" 
-          sx={{ 
-            flexGrow: 1,
-            color: '#1f2937',
-            fontWeight: 600,
-            letterSpacing: '-0.5px'
-          }}
-        >
-          Quick Capture
-        </Typography>
-      </Box>
 
       {/* Severity Slider */}
       <Paper 
@@ -297,10 +313,13 @@ const IncidentQuickCapture = ({
           label={
             <Box>
               <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                Schedule Follow-up
+                Smart Follow-up
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Get reminder in 20 minutes to check effectiveness
+                {scheduleFollowUp 
+                  ? `Check-ins scheduled at: ${formatFollowUpSchedule(incidentType, severity, (remedy === 'Other' ? customRemedy : remedy) || 'applied remedy')}`
+                  : "Get smart reminders timed for this incident type"
+                }
               </Typography>
             </Box>
           }

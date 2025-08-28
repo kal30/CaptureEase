@@ -143,7 +143,7 @@ const TimelineCalendar = ({ entries, onDayClick, filters }) => {
                     width: 6,
                     height: 6,
                     borderRadius: '50%',
-                    bgcolor: 'error.main',
+                    bgcolor: theme.palette.error.main,
                     border: '1px solid white',
                     fontSize: '6px',
                     display: 'flex',
@@ -360,7 +360,7 @@ const TimelineCalendar = ({ entries, onDayClick, filters }) => {
                     sx={{ 
                       fontWeight: isCurrentDay ? 700 : 500,
                       color: isCurrentDay 
-                        ? 'primary.main' 
+                        ? theme.palette.primary.main 
                         : isFuture 
                           ? 'text.disabled'
                           : 'text.primary',
@@ -378,7 +378,7 @@ const TimelineCalendar = ({ entries, onDayClick, filters }) => {
                         width: 8,
                         height: 8,
                         borderRadius: '50%',
-                        bgcolor: 'primary.main',
+                        bgcolor: theme.palette.primary.main,
                         boxShadow: '0 0 0 2px white',
                         mt: 0.5
                       }}
@@ -518,7 +518,7 @@ const TimelineCalendar = ({ entries, onDayClick, filters }) => {
 
             <Typography 
               variant="caption" 
-              color="primary.main" 
+              color={theme.palette.primary.main} 
               sx={{ 
                 display: 'block',
                 mt: 1,

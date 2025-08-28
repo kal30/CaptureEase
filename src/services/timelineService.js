@@ -1,14 +1,15 @@
-import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, where } from 'firebase/firestore';
 import { db } from './firebase';
 
 // Timeline entry types with their display configurations
 export const TIMELINE_TYPES = {
   DAILY_NOTE: {
     type: 'daily_note',
-    label: 'Daily Note',
+    label: 'Daily Note', 
     icon: '📝',
     color: '#2196F3', // Blue
-    collection: 'dailyLogs'
+    collection: 'dailyLogs',
+    isRootCollection: true // Indicates this is a root collection with childId filter
   },
   PROGRESS_NOTE: {
     type: 'progress_note', 
@@ -80,8 +81,18 @@ const normalizeTimelineEntry = (doc, type) => {
   
   switch (type) {
     case 'daily_note':
-      title = data.title || 'Daily Note';
-      content = data.note || data.content || data.description || '';
+      // Daily notes from dailyLogs collection use 'text' field
+      const noteText = data.text || data.note || data.content || data.description || '';
+      // Generate title from first line of text (up to 50 chars) or use tags
+      if (data.tags && data.tags.length > 0) {
+        title = `Note: #${data.tags[0]}`;
+      } else if (noteText) {
+        const firstLine = noteText.split('\n')[0].trim();
+        title = firstLine.length > 50 ? `${firstLine.substring(0, 47)}...` : firstLine || 'Daily Note';
+      } else {
+        title = 'Daily Note';
+      }
+      content = noteText;
       break;
     case 'progress_note':
       title = data.title || data.goal || 'Progress Update';
@@ -139,10 +150,22 @@ export const getTimelineEntries = (childId, callback) => {
   // Subscribe to each collection
   Object.values(TIMELINE_TYPES).forEach(typeConfig => {
     try {
-      const q = query(
-        collection(db, 'children', childId, typeConfig.collection),
-        orderBy('timestamp', 'desc')
-      );
+      let q;
+      
+      if (typeConfig.isRootCollection) {
+        // Root collection with childId filter (like dailyLogs)
+        q = query(
+          collection(db, typeConfig.collection),
+          where('childId', '==', childId),
+          orderBy('timestamp', 'desc')
+        );
+      } else {
+        // Child-specific collection (traditional structure)
+        q = query(
+          collection(db, 'children', childId, typeConfig.collection),
+          orderBy('timestamp', 'desc')
+        );
+      }
 
       const unsubscribe = onSnapshot(q, (snapshot) => {
         // Remove existing entries of this type

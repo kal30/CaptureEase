@@ -2,6 +2,7 @@ import { createTheme } from "@mui/material/styles";
 import { alpha } from "@mui/material/styles";
 
 const theme = createTheme({
+  breakpoints: { values: { xs: 0, sm: 480, md: 768, lg: 1200, xl: 1536 } },
   palette: {
     mode: "light",
     primary: {
@@ -48,6 +49,33 @@ const theme = createTheme({
       hoverIcon: "#EB684A", // terracotta
       deleteHover: "#F4B860", // mustard
     },
+    behavior: {
+      primary: "#FF9800", // Orange (matches timeline service)
+      light: "#FFB74D",
+      dark: "#F57C00",
+      background: "rgba(255, 152, 0, 0.1)",
+      hover: "rgba(255, 152, 0, 0.2)",
+    },
+    performance: {
+      primary: "#4CAF50", // Green (matches timeline service)
+      light: "#81C784",
+      dark: "#388E3C",
+      background: "rgba(76, 175, 80, 0.1)",
+      hover: "rgba(76, 175, 80, 0.2)",
+    },
+    timeline: {
+      progress: "#6D28D9", // Use dailyCare primary for progress rings
+      background: "rgba(109, 40, 217, 0.05)",
+      border: "rgba(109, 40, 217, 0.1)",
+    },
+    safety: {
+      allergy: "#FF9800", // Orange for allergies
+      medication: "#4CAF50", // Green for medications
+      allergyBg: "rgba(255, 152, 0, 0.15)", // Light orange background
+      medicationBg: "rgba(76, 175, 80, 0.15)", // Light green background
+      allergyBorder: "rgba(255, 152, 0, 0.3)", // Orange border
+      medicationBorder: "rgba(76, 175, 80, 0.3)", // Green border
+    },
     background: {
       default: "#FFF8ED",
       paper: "#FFFFFF",
@@ -61,6 +89,7 @@ const theme = createTheme({
     },
   },
   typography: {
+    fontSize: 16,
     fontFamily: "'Inter', 'Roboto', 'Helvetica', 'Arial', sans-serif",
     // Poppins for special UI elements (buttons, headers, etc.)
     hero: {
@@ -151,10 +180,11 @@ const theme = createTheme({
     MuiToolbar: {
       styleOverrides: {
         root: {
-          minHeight: 64,
+          minHeight: 56,
           paddingLeft: 16,
           paddingRight: 16,
-          "@media (min-width:600px)": { minHeight: 72 },
+          "@media (min-width:480px)": { minHeight: 60 },
+          "@media (min-width:768px)": { minHeight: 72 },
         },
       },
     },
@@ -167,6 +197,7 @@ const theme = createTheme({
           fontWeight: 600,
           textTransform: "none",
           transition: "background-color 120ms ease, transform 120ms ease",
+          minHeight: 44,
         },
         containedPrimary: {
           background: "#5B8C51",
@@ -196,6 +227,14 @@ const theme = createTheme({
           "&:hover": {
             backgroundColor: alpha("#5B8C51", 0.1),
           },
+        },
+      },
+    },
+    MuiIconButton: {
+      styleOverrides: {
+        root: {
+          width: 44,
+          height: 44,
         },
       },
     },
@@ -302,6 +341,7 @@ const theme = createTheme({
           "&:hover": {
             backgroundColor: alpha("#5B8C51", 0.08),
           },
+          minHeight: 48,
         },
       },
     },
@@ -359,14 +399,10 @@ const theme = createTheme({
     MuiContainer: {
       styleOverrides: {
         root: {
-          maxWidth: "1400px",
-          padding: "0 18px",
-          "@media (min-width: 600px)": {
-            padding: "0 28px",
-          },
-          "@media (min-width: 900px)": {
-            padding: "0 36px",
-          },
+          width: "100%",
+          padding: "0 16px",
+          "@media (min-width:480px)": { padding: "0 20px" },
+          "@media (min-width:768px)": { padding: "0 28px" },
         },
       },
     },
@@ -515,6 +551,7 @@ const theme = createTheme({
           boxShadow: "none",
           borderBottom: "1px solid #E8E2D9",
           backgroundImage: "none",
+          position: "sticky",
         },
       },
     },

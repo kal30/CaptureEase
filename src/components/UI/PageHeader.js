@@ -38,7 +38,7 @@ const PageHeader = ({ title, subtitle, actions }) => {
       >
         {/* Left: Title and Subtitle */}
         <Box sx={{ display: "flex", alignItems: "center", flex: 1 }}>
-          <SparkleIcon sx={{ fontSize: 40, color: "primary.main", mr: 2 }} />
+          <SparkleIcon sx={{ fontSize: 40, color: theme.palette.primary.main, mr: 2 }} />
           <Box>
             <Typography
               variant="h3"
