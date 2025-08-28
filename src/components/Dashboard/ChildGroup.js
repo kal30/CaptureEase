@@ -23,6 +23,12 @@ const groupConfig = {
     }
 }
 
+// Helper to safely get a nested property from an object (like the theme palette)
+const getColor = (obj, path) => {
+    const properties = path.split('.');
+    return properties.reduce((acc, prop) => acc && acc[prop], obj);
+};
+
 /**
  * Renders a titled group of ChildCard components.
  */
@@ -48,6 +54,9 @@ const ChildGroup = ({
 }) => {
   const theme = useTheme();
   const config = groupConfig[groupType] || { icon: '', color: 'text.primary' };
+  
+  // Resolve the color string (e.g., 'primary.main') to an actual color value from the theme
+  const resolvedColor = getColor(theme.palette, config.color) || theme.palette.text.primary;
 
   if (!childItems || childItems.length === 0) {
     return null;
@@ -68,7 +77,7 @@ const ChildGroup = ({
           variant="h5"
           sx={{
             fontWeight: 700,
-            color: config.color,
+            color: resolvedColor, // Use the resolved color value
             display: "flex",
             alignItems: "center",
             gap: 1,
@@ -80,8 +89,8 @@ const ChildGroup = ({
           label={childItems.length}
           size="small"
           sx={{
-            bgcolor: alpha(theme.palette.primary.main, 0.15),
-            color: config.color,
+            bgcolor: alpha(resolvedColor, 0.15),
+            color: resolvedColor, // Use the resolved color value
             fontWeight: 600,
           }}
         />
