@@ -7,6 +7,7 @@ import {
   Chip,
 } from "@mui/material";
 import Autocomplete, { createFilterOptions } from "@mui/material/Autocomplete";
+import AllergyChip from "../UI/AllergyChip";
 import { useTheme } from "@mui/material/styles"; // Import useTheme
 import {
   getStorage,
@@ -308,6 +309,17 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
               options={FOOD_ALLERGY_OPTIONS}
               value={foodAllergies}
               onChange={(event, newValue) => setFoodAllergies(newValue)}
+              renderTags={(value, getTagProps) =>
+                value.map((option, index) => (
+                  <AllergyChip
+                    key={index}
+                    allergy={option}
+                    variant="compact"
+                    inForm={true}
+                    {...getTagProps({ index })}
+                  />
+                ))
+              }
               renderInput={(params) => (
                 <TextField
                   {...params}

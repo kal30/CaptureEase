@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Box, Modal, TextField, Chip } from "@mui/material";
 import Autocomplete, { createFilterOptions } from "@mui/material/Autocomplete";
+import AllergyChip from "../UI/AllergyChip";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { addDoc, collection } from "firebase/firestore";
 import { getAuth } from "firebase/auth"; // Import Firestore functions
@@ -272,12 +273,12 @@ const AddChildModal = ({ open, onClose, onSuccess }) => {
           onChange={(event, newValue) => setFoodAllergies(newValue)}
           renderTags={(value, getTagProps) =>
             value.map((option, index) => (
-              <Chip
+              <AllergyChip
+                key={index}
+                allergy={option}
+                variant="compact"
+                inForm={true}
                 {...getTagProps({ index })}
-                label={option}
-                color="warning"
-                variant="outlined"
-                sx={{ mr: 0.5, mb: 0.5 }}
               />
             ))
           }

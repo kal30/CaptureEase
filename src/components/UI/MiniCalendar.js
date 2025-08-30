@@ -12,17 +12,24 @@ import { useSwipeGesture } from '../../hooks/useSwipeGesture';
  * @param {Array} props.entries - Timeline entries to show as activity dots
  * @param {function} props.onDayClick - Handler for day clicks (day, dayEntries, date)
  * @param {Date} props.currentMonth - Month to display (default: current month)
+ * @param {Date} props.selectedDate - Currently selected date to highlight (optional)
  */
 const MiniCalendar = ({
   entries = [],
   onDayClick,
-  currentMonth: initialMonth = new Date()
+  currentMonth: initialMonth = new Date(),
+  selectedDate = null
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
   // State for current displayed month
   const [displayMonth, setDisplayMonth] = useState(initialMonth);
+  
+  // Update display month when currentMonth prop changes
+  React.useEffect(() => {
+    setDisplayMonth(initialMonth);
+  }, [initialMonth]);
 
   // Month navigation handlers
   const goToPreviousMonth = () => {
@@ -76,6 +83,7 @@ const MiniCalendar = ({
       const isToday = currentDate.toDateString() === today.toDateString();
       const isFuture = currentDate > today;
       const isCurrentMonth = currentDate.getMonth() === monthToDisplay.getMonth();
+      const isSelected = selectedDate && currentDate.toDateString() === selectedDate.toDateString();
       
       days.push({
         date: currentDate,
@@ -85,7 +93,8 @@ const MiniCalendar = ({
         hasActivity: dayEntries.length > 0,
         isToday,
         isFuture,
-        isCurrentMonth
+        isCurrentMonth,
+        isSelected
       });
     }
     
@@ -96,7 +105,8 @@ const MiniCalendar = ({
   }, [entries, displayMonth]);
 
   const handleDayClick = (e, dayData) => {
-    if (dayData.hasActivity && onDayClick) {
+    // Allow clicking on any current month day, not just ones with activity
+    if (dayData.isCurrentMonth && !dayData.isFuture && onDayClick) {
       e.stopPropagation();
       onDayClick(dayData.day, dayData.entries, dayData.date);
     }
@@ -128,14 +138,18 @@ const MiniCalendar = ({
     color: !dayData.isCurrentMonth ? 'text.disabled' : 
            dayData.isFuture ? 'text.secondary' : 
            'text.primary',
-    bgcolor: dayData.isToday ? 'primary.main' : 'transparent',
-    cursor: dayData.hasActivity && dayData.isCurrentMonth ? 'pointer' : 'default',
+    bgcolor: dayData.isToday ? 'primary.main' : 
+             dayData.isSelected ? 'action.selected' : 
+             'transparent',
+    cursor: dayData.isCurrentMonth && !dayData.isFuture ? 'pointer' : 'default',
     position: 'relative',
     transition: 'all 0.2s ease',
     opacity: dayData.isCurrentMonth ? 1 : 0.4,
     minHeight: { xs: 44, md: 24 }, // Meet accessibility touch target requirements
-    '&:hover': dayData.hasActivity && dayData.isCurrentMonth ? {
-      bgcolor: dayData.isToday ? 'primary.dark' : 'action.hover',
+    '&:hover': dayData.isCurrentMonth && !dayData.isFuture ? {
+      bgcolor: dayData.isToday ? 'primary.dark' : 
+               dayData.isSelected ? 'action.focus' :
+               'action.hover',
       transform: { xs: 'scale(1.05)', md: 'scale(1.1)' }
     } : {}
   });

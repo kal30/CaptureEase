@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getTodayCompletionStatus } from '../services/dailyCareService';
+import { getTodayHabitStatus } from '../services/habitService';
 
 /**
  * Custom hook for managing daily care completion status
@@ -19,11 +20,22 @@ export const useDailyCareStatus = (children = []) => {
       setLoading(true);
       const statusPromises = children.map(async (child) => {
         try {
-          const todayStatus = await getTodayCompletionStatus(child.id);
-          return { childId: child.id, status: todayStatus };
+          const [todayStatus, habitStatus] = await Promise.all([
+            getTodayCompletionStatus(child.id),
+            getTodayHabitStatus(child.id)
+          ]);
+          
+          // Merge daily care status with habit status
+          const combinedStatus = {
+            ...todayStatus,
+            // Add journal status based on habit entries
+            journal: Object.keys(habitStatus).length > 0
+          };
+          
+          return { childId: child.id, status: combinedStatus, habitStatus };
         } catch (error) {
           console.error(`Error fetching status for child ${child.id}:`, error);
-          return { childId: child.id, status: {} };
+          return { childId: child.id, status: {}, habitStatus: {} };
         }
       });
 
@@ -31,11 +43,11 @@ export const useDailyCareStatus = (children = []) => {
         const results = await Promise.all(statusPromises);
         const statusMap = {};
         
-        results.forEach(({ childId, status }) => {
+        results.forEach(({ childId, status, habitStatus }) => {
           // Calculate daily care completion (mood, sleep, energy, food_health, safety)
-          const completedCount = Object.keys(status).length;
+          const dailyCareCount = Object.keys(status).filter(key => key !== 'journal').length;
           const totalItems = 5; // mood, sleep, energy, food_health, safety
-          const completionRate = Math.round((completedCount / totalItems) * 100);
+          const completionRate = Math.round((dailyCareCount / totalItems) * 100);
 
           // Create date string for ActionGroup daily tracking compatibility
           const todayDateString = new Date().toDateString();
@@ -47,6 +59,7 @@ export const useDailyCareStatus = (children = []) => {
             energy: !!status.energy,
             food_health: !!status.food_health,
             safety: !!status.safety,
+            journal: !!status.journal, // Add journal status
             dataCompleteness: completionRate,
             
             // Date-suffixed keys for ActionGroup daily tracking
@@ -55,6 +68,9 @@ export const useDailyCareStatus = (children = []) => {
             [`energy_${todayDateString}`]: !!status.energy,
             [`food_health_${todayDateString}`]: !!status.food_health,
             // safety uses 'task' tracking, so just the simple key
+            
+            // Store habit status for detailed tracking
+            habitStatus
           };
         });
 
@@ -79,6 +95,7 @@ export const useDailyCareStatus = (children = []) => {
       energy: false,
       food_health: false,
       safety: false,
+      journal: false,
       dataCompleteness: 0,
       
       // Date-suffixed keys for ActionGroup daily tracking
@@ -93,10 +110,19 @@ export const useDailyCareStatus = (children = []) => {
   // Function to refresh Daily Care status after entries are saved
   const refreshChildStatus = async (childId) => {
     try {
-      const todayStatus = await getTodayCompletionStatus(childId);
-      const completedCount = Object.keys(todayStatus).length;
+      const [todayStatus, habitStatus] = await Promise.all([
+        getTodayCompletionStatus(childId),
+        getTodayHabitStatus(childId)
+      ]);
+      
+      const combinedStatus = {
+        ...todayStatus,
+        journal: Object.keys(habitStatus).length > 0
+      };
+      
+      const dailyCareCount = Object.keys(combinedStatus).filter(key => key !== 'journal').length;
       const totalItems = 5; // mood, sleep, energy, food_health, safety
-      const completionRate = Math.round((completedCount / totalItems) * 100);
+      const completionRate = Math.round((dailyCareCount / totalItems) * 100);
       
       // Create date string for ActionGroup daily tracking compatibility
       const todayDateString = new Date().toDateString();
@@ -105,19 +131,23 @@ export const useDailyCareStatus = (children = []) => {
         ...prev,
         [childId]: {
           // Simple keys for QuickEntry component
-          mood: !!todayStatus.mood,
-          sleep: !!todayStatus.sleep,
-          energy: !!todayStatus.energy,
-          food_health: !!todayStatus.food_health,
-          safety: !!todayStatus.safety,
+          mood: !!combinedStatus.mood,
+          sleep: !!combinedStatus.sleep,
+          energy: !!combinedStatus.energy,
+          food_health: !!combinedStatus.food_health,
+          safety: !!combinedStatus.safety,
+          journal: !!combinedStatus.journal,
           dataCompleteness: completionRate,
           
           // Date-suffixed keys for ActionGroup daily tracking
-          [`mood_${todayDateString}`]: !!todayStatus.mood,
-          [`sleep_${todayDateString}`]: !!todayStatus.sleep,
-          [`energy_${todayDateString}`]: !!todayStatus.energy,
-          [`food_health_${todayDateString}`]: !!todayStatus.food_health,
+          [`mood_${todayDateString}`]: !!combinedStatus.mood,
+          [`sleep_${todayDateString}`]: !!combinedStatus.sleep,
+          [`energy_${todayDateString}`]: !!combinedStatus.energy,
+          [`food_health_${todayDateString}`]: !!combinedStatus.food_health,
           // safety uses 'task' tracking, so just the simple key
+          
+          // Store habit status for detailed tracking
+          habitStatus
         }
       }));
     } catch (error) {

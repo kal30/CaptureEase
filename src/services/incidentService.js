@@ -7,10 +7,12 @@ import {
   orderBy,
   getDocs,
   doc,
+  getDoc,
   updateDoc,
   writeBatch,
 } from "firebase/firestore";
 import { db } from "./firebase";
+import { uploadIncidentMedia } from "../components/Dashboard/Incidents/Media/mediaUploadService";
 
 // Incident types with their configurations - Updated with better colors
 export const INCIDENT_TYPES = {
@@ -655,8 +657,8 @@ export const createIncidentWithSmartFollowUp = async (childId, incidentData, sch
       remedy: incidentData.remedy,
       customRemedy: incidentData.customRemedy || "",
       notes: incidentData.notes || "",
-      timestamp: serverTimestamp(),
-      entryDate: new Date().toDateString(),
+      timestamp: incidentData.incidentDateTime || serverTimestamp(),
+      entryDate: incidentData.incidentDateTime ? incidentData.incidentDateTime.toDateString() : new Date().toDateString(),
       authorId: incidentData.authorId,
       authorName: incidentData.authorName,
       authorEmail: incidentData.authorEmail,
@@ -665,9 +667,35 @@ export const createIncidentWithSmartFollowUp = async (childId, incidentData, sch
       effectiveness: null,
       followUpCompleted: false,
       followUpResponses: [], // Track all follow-up responses
+      // Media storage
+      mediaUrls: [], // Will be populated after media upload
+      hasMedia: !!(incidentData.mediaFile || incidentData.audioBlob),
     };
 
     const docRef = await addDoc(collection(db, "incidents"), docData);
+    
+    // Upload media if present
+    if (incidentData.mediaFile || incidentData.audioBlob) {
+      try {
+        console.log('📤 Uploading incident media...');
+        const mediaUrls = await uploadIncidentMedia(
+          incidentData.mediaFile,
+          incidentData.audioBlob,
+          docRef.id
+        );
+        
+        // Update incident with media URLs
+        if (mediaUrls.length > 0) {
+          await updateDoc(doc(db, "incidents", docRef.id), {
+            mediaUrls: mediaUrls
+          });
+          console.log(`✅ Uploaded ${mediaUrls.length} media files`);
+        }
+      } catch (mediaError) {
+        console.error('⚠️ Media upload failed, but incident was saved:', mediaError);
+        // Don't fail the entire save if media upload fails
+      }
+    }
     
     // Schedule browser notifications if follow-up is enabled
     if (followUpData.followUpScheduled) {
@@ -719,8 +747,8 @@ export const addIncident = async (childId, incidentData) => {
       remedy: incidentData.remedy,
       customRemedy: incidentData.customRemedy || "",
       notes: incidentData.notes || "",
-      timestamp: serverTimestamp(),
-      entryDate: new Date().toDateString(),
+      timestamp: incidentData.incidentDateTime || serverTimestamp(),
+      entryDate: incidentData.incidentDateTime ? incidentData.incidentDateTime.toDateString() : new Date().toDateString(),
       authorId: incidentData.authorId,
       authorName: incidentData.authorName,
       authorEmail: incidentData.authorEmail,
@@ -765,17 +793,17 @@ export const recordFollowUpResponse = async (incidentId, effectiveness, followUp
     const incidentRef = doc(db, "incidents", incidentId);
     
     // Get current incident data to update follow-up tracking
-    const incidentDoc = await getDocs(query(collection(db, "incidents"), where("__name__", "==", incidentId)));
-    if (incidentDoc.empty) throw new Error("Incident not found");
+    const incidentDoc = await getDoc(incidentRef);
+    if (!incidentDoc.exists()) throw new Error("Incident not found");
     
-    const incident = incidentDoc.docs[0].data();
+    const incident = incidentDoc.data();
     const responses = incident.followUpResponses || [];
     
     // Add this response
     const newResponse = {
       effectiveness,
       notes: followUpNotes,
-      timestamp: serverTimestamp(),
+      timestamp: new Date(), // Use Date instead of serverTimestamp() to avoid array issue
       responseIndex,
       intervalMinutes: incident.followUpTimes?.[responseIndex]?.intervalMinutes || 0
     };
@@ -789,7 +817,7 @@ export const recordFollowUpResponse = async (incidentId, effectiveness, followUp
     let updateData = {
       followUpResponses: responses,
       lastFollowUpResponse: newResponse,
-      lastFollowUpTimestamp: serverTimestamp()
+      lastFollowUpTimestamp: serverTimestamp() // This is OK since it's not inside an array
     };
     
     if (hasMoreFollowUps) {
@@ -901,10 +929,35 @@ export const getIncidentsPendingFollowUp = async (childId) => {
     );
 
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    
+    // Filter to only include incidents that actually have a follow-up time set
+    const incidents = querySnapshot.docs
+      .map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }))
+      .filter((incident) => {
+        // Must have a followUpTime set
+        if (!incident.followUpTime) {
+          console.log(`⚠️ Incident ${incident.id} has followUpScheduled=true but no followUpTime`);
+          return false;
+        }
+        
+        // For multi-stage follow-ups, check if there are more stages remaining
+        if (incident.followUpTimes && incident.followUpTimes.length > 0) {
+          const currentIndex = incident.nextFollowUpIndex || 0;
+          const hasMoreStages = currentIndex < incident.followUpTimes.length;
+          if (!hasMoreStages) {
+            console.log(`✅ Incident ${incident.id} has completed all follow-up stages`);
+            return false;
+          }
+        }
+        
+        return true;
+      });
+      
+    console.log(`📊 Found ${querySnapshot.docs.length} total scheduled follow-ups, ${incidents.length} actually pending for child ${childId}`);
+    return incidents;
   } catch (error) {
     console.error("Error fetching incidents pending follow-up:", error);
     throw error;

@@ -24,7 +24,8 @@ import {
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import { getIncidentsPendingFollowUp, INCIDENT_TYPES } from '../../services/incidentService';
-import IncidentFollowUpModal from './IncidentFollowUpModal';
+import { useNotificationBadges } from '../../hooks/useNotificationBadges';
+import { IncidentFollowUpModal } from './Incidents';
 
 const PendingFollowUpModal = ({ 
   open, 
@@ -33,58 +34,74 @@ const PendingFollowUpModal = ({
   childName 
 }) => {
   const theme = useTheme();
-  const [pendingIncidents, setPendingIncidents] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [selectedIncident, setSelectedIncident] = useState(null);
   const [showFollowUpModal, setShowFollowUpModal] = useState(false);
 
-  // Load pending follow-ups when modal opens
-  useEffect(() => {
-    if (open && childId) {
-      loadPendingFollowUps();
-    }
-  }, [open, childId]);
+  // Use the same data source as the badge for consistency
+  const childrenIds = React.useMemo(() => [childId], [childId]);
+  const {
+    pendingFollowUps,
+    loading,
+    refreshPendingFollowUps
+  } = useNotificationBadges(childrenIds);
 
-  const loadPendingFollowUps = async () => {
-    setLoading(true);
-    try {
-      const incidents = await getIncidentsPendingFollowUp(childId);
-      setPendingIncidents(incidents);
-    } catch (error) {
-      console.error('Error loading pending follow-ups:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Get pending incidents for this specific child
+  const pendingIncidents = pendingFollowUps[childId] || [];
 
   const formatTimeAgo = (timestamp) => {
-    const time = timestamp?.toDate?.() || new Date(timestamp);
-    const now = new Date();
-    const diffMs = now - time;
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMins / 60);
-    const diffDays = Math.floor(diffHours / 24);
+    try {
+      let time;
+      if (timestamp?.toDate && typeof timestamp.toDate === 'function') {
+        time = timestamp.toDate();
+      } else {
+        time = new Date(timestamp);
+      }
+      
+      if (isNaN(time.getTime())) return 'Unknown';
+      
+      const now = new Date();
+      const diffMs = now - time;
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMins / 60);
+      const diffDays = Math.floor(diffHours / 24);
 
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    return `${diffDays}d ago`;
+      if (diffMins < 60) return `${diffMins}m ago`;
+      if (diffHours < 24) return `${diffHours}h ago`;
+      return `${diffDays}d ago`;
+    } catch (error) {
+      console.error('Error formatting time ago:', error);
+      return 'Unknown';
+    }
   };
 
   const formatFollowUpTime = (timestamp) => {
-    const time = timestamp?.toDate?.() || new Date(timestamp);
-    const now = new Date();
-    
-    if (time <= now) {
-      return 'Overdue';
+    try {
+      let time;
+      if (timestamp?.toDate && typeof timestamp.toDate === 'function') {
+        time = timestamp.toDate();
+      } else {
+        time = new Date(timestamp);
+      }
+      
+      if (isNaN(time.getTime())) return 'Invalid';
+      
+      const now = new Date();
+      
+      if (time <= now) {
+        return 'Overdue';
+      }
+      
+      const diffMs = time - now;
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMins / 60);
+      
+      if (diffMins < 60) return `in ${diffMins}m`;
+      if (diffHours < 24) return `in ${diffHours}h`;
+      return time.toLocaleDateString();
+    } catch (error) {
+      console.error('Error formatting follow-up time:', error);
+      return 'Invalid';
     }
-    
-    const diffMs = time - now;
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMins / 60);
-    
-    if (diffMins < 60) return `in ${diffMins}m`;
-    if (diffHours < 24) return `in ${diffHours}h`;
-    return time.toLocaleDateString();
   };
 
   const getIncidentIcon = (incident) => {
@@ -95,7 +112,11 @@ const PendingFollowUpModal = ({
   };
 
   const getFollowUpIcon = (incident) => {
-    const followUpTime = incident.followUpTime?.toDate?.() || new Date(incident.followUpTime);
+    const followUpTime = getFollowUpDate(incident);
+    if (!followUpTime) {
+      return <WarningIcon color="disabled" />;
+    }
+    
     const now = new Date();
     
     if (followUpTime <= now) {
@@ -118,19 +139,76 @@ const PendingFollowUpModal = ({
   const handleFollowUpComplete = () => {
     setShowFollowUpModal(false);
     setSelectedIncident(null);
-    // Refresh the list
-    loadPendingFollowUps();
+    // Refresh the data using the hook's refresh function
+    refreshPendingFollowUps();
+  };
+
+  // Helper function to safely convert Firebase Timestamp to Date
+  const getFollowUpDate = (incident) => {
+    try {
+      if (!incident.followUpTime) {
+        console.warn(`⚠️ Incident ${incident.id} has no followUpTime`);
+        return null;
+      }
+      
+      // Handle Firebase Timestamp
+      if (incident.followUpTime?.toDate && typeof incident.followUpTime.toDate === 'function') {
+        return incident.followUpTime.toDate();
+      }
+      
+      // Handle regular Date or date string
+      const date = new Date(incident.followUpTime);
+      if (isNaN(date.getTime())) {
+        console.warn(`⚠️ Invalid followUpTime for incident ${incident.id}:`, incident.followUpTime);
+        return null;
+      }
+      
+      return date;
+    } catch (error) {
+      console.error(`Error parsing followUpTime for incident ${incident.id}:`, error);
+      return null;
+    }
   };
 
   const overdueIncidents = pendingIncidents.filter(incident => {
-    const followUpTime = incident.followUpTime?.toDate?.() || new Date(incident.followUpTime);
-    return followUpTime <= new Date();
+    const followUpTime = getFollowUpDate(incident);
+    if (!followUpTime) return false;
+    
+    const isOverdue = followUpTime <= new Date();
+    console.log(`📅 Incident ${incident.id}: followUpTime=${followUpTime.toISOString()}, isOverdue=${isOverdue}`);
+    return isOverdue;
   });
 
   const upcomingIncidents = pendingIncidents.filter(incident => {
-    const followUpTime = incident.followUpTime?.toDate?.() || new Date(incident.followUpTime);
-    return followUpTime > new Date();
+    const followUpTime = getFollowUpDate(incident);
+    if (!followUpTime) return false;
+    
+    const isUpcoming = followUpTime > new Date();
+    console.log(`🔮 Incident ${incident.id}: followUpTime=${followUpTime.toISOString()}, isUpcoming=${isUpcoming}`);
+    return isUpcoming;
   });
+
+  // Debug: Log the data when modal opens
+  React.useEffect(() => {
+    if (open) {
+      console.log('🔍 PendingFollowUpModal opened for child:', childId);
+      console.log('📊 Pending incidents from hook:', pendingIncidents);
+      console.log('🔢 Count:', pendingIncidents.length);
+      
+      // Detailed breakdown
+      console.log('📈 DETAILED BREAKDOWN:');
+      pendingIncidents.forEach((incident, index) => {
+        const followUpTime = getFollowUpDate(incident);
+        const isOverdue = followUpTime ? followUpTime <= new Date() : false;
+        const isUpcoming = followUpTime ? followUpTime > new Date() : false;
+        console.log(`  ${index + 1}. ${incident.id}: ${incident.type} - followUpTime=${followUpTime?.toISOString() || 'INVALID'}, overdue=${isOverdue}, upcoming=${isUpcoming}`);
+      });
+      
+      console.log(`🔴 Overdue count: ${overdueIncidents.length}`);
+      console.log(`🟡 Upcoming count: ${upcomingIncidents.length}`);
+      console.log(`📋 Total displayable: ${overdueIncidents.length + upcomingIncidents.length}`);
+    }
+  }, [open, childId, pendingIncidents, overdueIncidents.length, upcomingIncidents.length]);
 
   return (
     <>
@@ -221,14 +299,16 @@ const PendingFollowUpModal = ({
                       sx={{ 
                         py: 2,
                         px: 3,
-                        borderLeft: '4px solid',
-                        borderLeftColor: 'error.main',
                         backgroundColor: 'white',
+                        borderRadius: 2,
+                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                        border: '1px solid #f3f4f6',
+                        mb: 1.5,
                         '&:hover': { 
                           backgroundColor: '#fef2f2',
-                        },
-                        '&:not(:last-child)': {
-                          borderBottom: '1px solid #f3f4f6'
+                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                          transform: 'translateY(-1px)',
+                          transition: 'all 0.2s ease-in-out'
                         }
                       }}
                     >
@@ -286,14 +366,16 @@ const PendingFollowUpModal = ({
                       sx={{ 
                         py: 2,
                         px: 3,
-                        borderLeft: '4px solid',
-                        borderLeftColor: 'primary.main',
                         backgroundColor: 'white',
+                        borderRadius: 2,
+                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                        border: '1px solid #f3f4f6',
+                        mb: 1.5,
                         '&:hover': { 
                           backgroundColor: '#eff6ff',
-                        },
-                        '&:not(:last-child)': {
-                          borderBottom: '1px solid #f3f4f6'
+                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                          transform: 'translateY(-1px)',
+                          transition: 'all 0.2s ease-in-out'
                         }
                       }}
                     >

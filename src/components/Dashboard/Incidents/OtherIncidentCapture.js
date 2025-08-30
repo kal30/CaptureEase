@@ -13,7 +13,7 @@ import {
 import SaveIcon from '@mui/icons-material/Save';
 import { useTheme } from '@mui/material/styles';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth } from '../../services/firebase';
+import { auth } from '../../../services/firebase';
 import { 
   addIncident,
   createIncidentWithSmartFollowUp, 
@@ -22,8 +22,8 @@ import {
   getSimilarIncidentNames,
   checkForCategorySuggestion,
   getCustomCategories 
-} from '../../services/incidentService';
-import CategoryCreationModal from './CategoryCreationModal';
+} from '../../../services/incidentService';
+import CategoryCreationModal from '../CategoryCreationModal';
 
 const OtherIncidentCapture = ({ 
   childId, 

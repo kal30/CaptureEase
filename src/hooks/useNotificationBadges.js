@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { getIncidentsPendingFollowUp } from '../services/incidentService';
 
 export const useNotificationBadges = (childrenIds) => {
@@ -6,9 +6,16 @@ export const useNotificationBadges = (childrenIds) => {
   const [totalPendingCount, setTotalPendingCount] = useState(0);
   const [loading, setLoading] = useState(false);
 
+  // Create stable dependency for childrenIds
+  const childrenIdsString = childrenIds ? childrenIds.join(',') : '';
+  const stableChildrenIds = useMemo(() => 
+    childrenIds ? [...childrenIds].sort() : [], 
+    [childrenIdsString]
+  );
+
   // Load pending follow-ups for all children
   useEffect(() => {
-    if (!childrenIds || childrenIds.length === 0) {
+    if (!stableChildrenIds || stableChildrenIds.length === 0) {
       setPendingFollowUps({});
       setTotalPendingCount(0);
       return;
@@ -21,7 +28,7 @@ export const useNotificationBadges = (childrenIds) => {
         let totalCount = 0;
 
         // Get pending follow-ups for each child
-        for (const childId of childrenIds) {
+        for (const childId of stableChildrenIds) {
           try {
             const incidents = await getIncidentsPendingFollowUp(childId);
             pendingByChild[childId] = incidents;
@@ -42,7 +49,7 @@ export const useNotificationBadges = (childrenIds) => {
     };
 
     loadPendingFollowUps();
-  }, [childrenIds]);
+  }, [stableChildrenIds]);
 
   // Get pending count for specific child
   const getPendingCountForChild = (childId) => {
@@ -86,14 +93,14 @@ export const useNotificationBadges = (childrenIds) => {
 
   // Refresh pending follow-ups
   const refreshPendingFollowUps = async () => {
-    if (childrenIds && childrenIds.length > 0) {
+    if (stableChildrenIds && stableChildrenIds.length > 0) {
       const loadPendingFollowUps = async () => {
         setLoading(true);
         try {
           const pendingByChild = {};
           let totalCount = 0;
 
-          for (const childId of childrenIds) {
+          for (const childId of stableChildrenIds) {
             try {
               const incidents = await getIncidentsPendingFollowUp(childId);
               pendingByChild[childId] = incidents;

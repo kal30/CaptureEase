@@ -10,14 +10,11 @@ import {
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import IncidentTypeSelector from "./IncidentTypeSelector";
 import IncidentQuickCapture from "./IncidentQuickCapture";
 import OtherIncidentCapture from "./OtherIncidentCapture";
-import { INCIDENT_TYPES } from "../../services/incidentService";
-
-const Transition = React.forwardRef(function Transition(props, ref) {
-  return <Slide direction="up" ref={ref} {...props} />;
-});
+import { INCIDENT_TYPES } from "../../../services/incidentService";
 
 const IncidentLoggingModal = ({ open, onClose, childId, childName }) => {
   const [currentStep, setCurrentStep] = useState(1); // 1 = type selection, 2 = quick capture
@@ -57,21 +54,37 @@ const IncidentLoggingModal = ({ open, onClose, childId, childName }) => {
 
   const getStepTitle = () => {
     if (currentStep === 1) {
-      return `What is happening ${childName}`;
+      return (
+        <Box sx={{ display: "flex", flexDirection: "column" }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <WarningAmberIcon sx={{ color: "error.main" }} />
+            <Typography
+              variant="h6"
+              sx={{ fontWeight: 700, letterSpacing: "-0.5px" }}
+            >
+              Log Incident {childName}
+            </Typography>
+          </Box>
+          <Typography variant="body2" sx={{ color: "text.secondary" }}>
+            Create a detailed report for a significant event.
+          </Typography>
+        </Box>
+      );
     }
     const typeConfig = INCIDENT_TYPES[selectedIncidentType];
     if (!typeConfig) {
-      console.warn('No incident type config found for:', selectedIncidentType);
+      console.warn("No incident type config found for:", selectedIncidentType);
       return `Incident - ${childName}`;
     }
-    return `${typeConfig.emoji || '📝'} ${typeConfig.label} - ${childName}`;
+    return `${typeConfig.emoji || "📝"} ${typeConfig.label} - ${childName}`;
   };
 
   return (
     <Dialog
       open={open}
       onClose={handleClose}
-      TransitionComponent={Transition}
+      slots={{ transition: Slide }}
+      slotProps={{ transition: { direction: "up" } }}
       maxWidth="sm"
       fullWidth
       fullScreen={window.innerWidth < 600} // Full screen on mobile
@@ -109,16 +122,7 @@ const IncidentLoggingModal = ({ open, onClose, childId, childName }) => {
               <ArrowBackIcon />
             </IconButton>
           )}
-          <Typography
-            variant="h6"
-            component="div"
-            sx={{
-              fontWeight: 600,
-              letterSpacing: "-0.5px",
-            }}
-          >
-            {getStepTitle()}
-          </Typography>
+          {getStepTitle()}
         </Box>
         <IconButton
           aria-label="close"
@@ -147,7 +151,8 @@ const IncidentLoggingModal = ({ open, onClose, childId, childName }) => {
 
         {currentStep === 2 && selectedIncidentType && (
           <>
-            {(selectedIncidentType === "OTHER" || selectedIncidentType.startsWith("CUSTOM_")) ? (
+            {selectedIncidentType === "OTHER" ||
+            selectedIncidentType.startsWith("CUSTOM_") ? (
               <OtherIncidentCapture
                 childId={childId}
                 childName={childName}

@@ -38,6 +38,7 @@ const ChildGroup = ({
   children: childItems,
   quickDataStatus,
   recentEntries,
+  incidents = {},
   isCardExpanded,
   onToggleExpanded,
   onQuickEntry,
@@ -103,6 +104,7 @@ const ChildGroup = ({
             groupType={groupType}
             status={quickDataStatus[child.id] || {}}
             recentEntries={(recentEntries && recentEntries[child.id]) || []}
+            incidents={(incidents && incidents[child.id]) || []}
             isExpanded={isCardExpanded(child.id)}
             onToggleExpanded={() => onToggleExpanded(child.id)}
             onQuickEntry={onQuickEntry}

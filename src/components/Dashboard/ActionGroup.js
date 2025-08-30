@@ -137,6 +137,17 @@ const ActionGroup = ({
               const isCompleted = getCompletionStatus(action);
               const isHighlighted = highlightedActions[action.key] || false;
               
+              // Get distinct colors for different action types
+              const getActionColor = (actionKey) => {
+                switch(actionKey) {
+                  case 'journal': return '#ff0080'; // Hot pink for creative/free-form
+                  case 'incident': return '#DC2626'; // Red for urgent/incidents
+                  default: return group.color; // Default group color
+                }
+              };
+              
+              const actionColor = getActionColor(action.key);
+              
               return (
                 <Typography
                   key={action.key}
@@ -145,31 +156,31 @@ const ActionGroup = ({
                     onActionClick(action, child);
                   }}
                   onMouseEnter={() => {
-                    // Only highlight for Daily Care mood, sleep, incident actions
-                    if (['mood', 'sleep', 'incident'].includes(action.key)) {
+                    // Only highlight for Daily Care actions that have quick entry circles
+                    if (['journal', 'incident'].includes(action.key)) {
                       onActionHover?.(action.key, child.id);
                     }
                   }}
                   onMouseLeave={() => {
-                    if (['mood', 'sleep', 'incident'].includes(action.key)) {
+                    if (['journal', 'incident'].includes(action.key)) {
                       onActionLeave?.(child.id);
                     }
                   }}
                   sx={{
                     fontSize: '0.95rem',
                     cursor: 'pointer',
-                    color: isCompleted ? theme.palette.success.main : group.color,
+                    color: isCompleted ? theme.palette.success.main : actionColor,
                     fontWeight: isCompleted ? 600 : 500,
                     opacity: isCompleted ? 0.8 : 1,
                     transition: 'all 0.2s ease',
-                    backgroundColor: isHighlighted ? alpha(group.color, 0.15) : 'transparent',
+                    backgroundColor: isHighlighted ? alpha(actionColor, 0.15) : 'transparent',
                     borderRadius: isHighlighted ? 1 : 0,
                     px: isHighlighted ? 1 : 0,
                     py: isHighlighted ? 0.5 : 0,
                     transform: isHighlighted ? 'scale(1.05)' : 'scale(1)',
-                    boxShadow: isHighlighted ? `0 2px 8px ${alpha(group.color, 0.3)}` : 'none',
+                    boxShadow: isHighlighted ? `0 2px 8px ${alpha(actionColor, 0.3)}` : 'none',
                     '&:hover': {
-                      color: isCompleted ? theme.palette.success.dark : alpha(group.color, 0.8),
+                      color: isCompleted ? theme.palette.success.dark : alpha(actionColor, 0.8),
                       textDecoration: 'underline',
                     },
                     '&:before': {
@@ -177,12 +188,13 @@ const ActionGroup = ({
                       marginRight: '4px',
                     },
                     '&:after': action.trackingType === 'daily' ? {
-                      content: '" (daily)"',
+                      content: '" (add)"',
                       fontSize: '0.8rem',
                       opacity: 0.6,
                       fontStyle: 'italic',
                     } : {}
                   }}
+                  title={action.description || action.label}
                 >
                   {action.label}
                 </Typography>

@@ -7,7 +7,7 @@ import { getTimelineEntries, TIMELINE_TYPES } from "../services/timelineService"
 import { useRole } from "../contexts/RoleContext";
 import { useDailyCareStatus } from "./useDailyCareStatus";
 import { listenForFollowUps, initializeNotificationsForPendingFollowUps, processQuickResponses } from "../services/followUpService";
-import { analyzeOtherIncidentPatterns } from "../services/incidentService";
+import { analyzeOtherIncidentPatterns, getIncidents } from "../services/incidentService";
 
 export const usePanelDashboard = () => {
   const theme = useTheme();
@@ -26,6 +26,7 @@ export const usePanelDashboard = () => {
   const [children, setChildren] = useState([]);
   const [loading, setLoading] = useState(true);
   const [recentEntries, setRecentEntries] = useState({});
+  const [incidents, setIncidents] = useState({}); // Store incidents by child ID
   
   // Use separated Daily Care status hook
   const { 
@@ -56,6 +57,8 @@ export const usePanelDashboard = () => {
   const [showPatternSuggestionModal, setShowPatternSuggestionModal] = useState(false);
   const [patternSuggestions, setPatternSuggestions] = useState([]);
   const [suggestionsChildId, setSuggestionsChildId] = useState(null);
+  const [showDailyHabitsModal, setShowDailyHabitsModal] = useState(false);
+  const [dailyHabitsChild, setDailyHabitsChild] = useState(null);
 
   useEffect(() => {
     if (roleLoading) return;
@@ -93,9 +96,11 @@ export const usePanelDashboard = () => {
   useEffect(() => {
     const unsubscribes = [];
     const entriesByChild = {};
+    const incidentsByChild = {};
 
     children.forEach((child) => {
-      const unsubscribe = getTimelineEntries(child.id, (entries) => {
+      // Fetch timeline entries
+      const timelineUnsubscribe = getTimelineEntries(child.id, (entries) => {
         const recentTimelineEntries = entries
           .filter((entry) => {
             const entryDate = new Date(entry.timestamp);
@@ -110,7 +115,21 @@ export const usePanelDashboard = () => {
         setRecentEntries({ ...entriesByChild });
       });
 
-      unsubscribes.push(unsubscribe);
+      // Fetch incidents (for unified daily log)
+      const fetchIncidents = async () => {
+        try {
+          const childIncidents = await getIncidents(child.id);
+          incidentsByChild[child.id] = childIncidents;
+          setIncidents({ ...incidentsByChild });
+        } catch (error) {
+          console.error(`Error fetching incidents for child ${child.id}:`, error);
+          incidentsByChild[child.id] = [];
+          setIncidents({ ...incidentsByChild });
+        }
+      };
+
+      fetchIncidents();
+      unsubscribes.push(timelineUnsubscribe);
     });
 
     return () => {
@@ -159,6 +178,12 @@ export const usePanelDashboard = () => {
     if (type === "incident") {
       setIncidentChild(child);
       setShowIncidentModal(true);
+      return;
+    }
+
+    if (type === "journal") {
+      setDailyHabitsChild(child);
+      setShowDailyHabitsModal(true);
       return;
     }
 
@@ -272,6 +297,11 @@ export const usePanelDashboard = () => {
     setSuggestionsChildId(null);
   };
 
+  const handleCloseDailyHabitsModal = () => {
+    setShowDailyHabitsModal(false);
+    setDailyHabitsChild(null);
+  };
+
   const handleCreateCustomCategories = (categories) => {
     // In a full implementation, this would create custom incident types
     // For now, we'll just log them and show a success message
@@ -364,6 +394,7 @@ export const usePanelDashboard = () => {
     professionalChildren,
     quickDataStatus,
     recentEntries,
+    incidents,
     expandedCards,
     expandedCategories,
     highlightedActions,
@@ -384,6 +415,8 @@ export const usePanelDashboard = () => {
     showPatternSuggestionModal,
     patternSuggestions,
     suggestionsChildId,
+    showDailyHabitsModal,
+    dailyHabitsChild,
     showQuickEntry,
     selectedChild,
     entryType,
@@ -416,6 +449,7 @@ export const usePanelDashboard = () => {
     handleCloseFollowUpModal,
     handleClosePatternSuggestionModal,
     handleCreateCustomCategories,
+    handleCloseDailyHabitsModal,
     checkForPatterns,
     handleQuickEntryComplete,
     handleQuickEntrySkip,

@@ -12,41 +12,56 @@ import {
   Avatar,
   Chip,
   Button,
-  Modal
+  Modal,
+  Stack,
+  Divider,
+  Tabs,
+  Tab
 } from '@mui/material';
 import {
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
   Timeline as TimelineIcon,
-  CalendarMonth as CalendarIcon
+  CalendarMonth as CalendarIcon,
+  ViewDay as DayViewIcon,
+  ViewList as ListViewIcon
 } from '@mui/icons-material';
 import TimelineProgressRing from './TimelineProgressRing';
 import TimelineCalendar from '../Timeline/TimelineCalendar';
 import MiniCalendar from './MiniCalendar';
+import DailyLogEntry from './DailyLogEntry';
 import { useTimelineProgress } from '../../hooks/useTimelineProgress';
+import { useUnifiedDailyLog } from '../../hooks/useUnifiedDailyLog';
 
 /**
- * TimelineWidget - Self-contained timeline component with progress visualization
+ * TimelineWidget - Self-contained timeline component with progress visualization and unified daily log
  * Mobile-friendly, uses existing UI components, minimal sx usage
  * 
  * @param {Object} props
  * @param {Object} props.child - Child object
  * @param {Array} props.entries - Timeline entries for the child
+ * @param {Array} props.incidents - Incident entries for the child (optional)
  * @param {Object} props.dailyCareStatus - Daily care completion status
  * @param {boolean} props.defaultExpanded - Whether widget starts expanded
  * @param {string} props.variant - Display variant: 'compact', 'full'
+ * @param {boolean} props.showUnifiedLog - Whether to show enhanced daily log (default: true)
  */
 const TimelineWidget = ({
   child,
   entries = [],
+  incidents = [],
   dailyCareStatus = {},
   defaultExpanded = false,
-  variant = 'full'
+  variant = 'full',
+  showUnifiedLog = true
 }) => {
   const [expanded, setExpanded] = useState(defaultExpanded);
   const [showTimelineModal, setShowTimelineModal] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [viewMode, setViewMode] = useState('daily'); // 'daily' or 'recent'
   
   const timeline = useTimelineProgress(entries, dailyCareStatus);
+  const dailyLog = useUnifiedDailyLog(entries, incidents, selectedDate);
   
   // Component styles - mobile-first responsive
   const widgetStyles = {
@@ -94,11 +109,23 @@ const TimelineWidget = ({
 
   const handleDayClick = (day, dayEntries, date) => {
     // Handle day click from mini calendar or timeline calendar
-    if (dayEntries?.length > 0) {
-      // Could expand to show day details, for now just log
-      console.log('Day clicked:', { day, dayEntries, date });
-      // Future: Could open a day detail modal or expand inline
+    if (showUnifiedLog) {
+      setSelectedDate(date);
+      setViewMode('daily');
+      if (!expanded) {
+        setExpanded(true);
+      }
+      console.log('Daily log updated for:', { day, date, entriesCount: dayEntries?.length || 0 });
+    } else {
+      // Legacy behavior
+      if (dayEntries?.length > 0) {
+        console.log('Day clicked:', { day, dayEntries, date });
+      }
     }
+  };
+
+  const handleViewModeChange = (event, newMode) => {
+    setViewMode(newMode);
   };
 
   // Render recent entries list
@@ -197,6 +224,198 @@ const TimelineWidget = ({
     );
   };
 
+  // Render unified daily log with enhanced features
+  const renderUnifiedDailyLog = () => {
+    return (
+      <>
+        {/* View Mode Tabs */}
+        <Box sx={{ mb: 2 }}>
+          <Tabs
+            value={viewMode}
+            onChange={handleViewModeChange}
+            variant="fullWidth"
+            sx={{
+              minHeight: 32,
+              '& .MuiTab-root': {
+                minHeight: 32,
+                fontSize: '0.75rem',
+                py: 0.5
+              }
+            }}
+          >
+            <Tab
+              icon={<DayViewIcon sx={{ fontSize: 16 }} />}
+              iconPosition="start"
+              label={`Daily Log (${dailyLog.totalCount})`}
+              value="daily"
+              sx={{ textTransform: 'none' }}
+            />
+            <Tab
+              icon={<ListViewIcon sx={{ fontSize: 16 }} />}
+              iconPosition="start"
+              label={`Recent Activity (${timeline.recentEntries.length})`}
+              value="recent"
+              sx={{ textTransform: 'none' }}
+            />
+          </Tabs>
+        </Box>
+
+        {/* Content based on view mode */}
+        {viewMode === 'daily' ? (
+          <>
+            {/* Calendar and Daily Log */}
+            <Box sx={{ 
+              display: 'flex', 
+              gap: { xs: 2, sm: 2, md: 3 }, 
+              flexDirection: { xs: 'column', md: 'row' },
+              alignItems: { xs: 'stretch', md: 'flex-start' }
+            }}>
+              {/* Mini Calendar */}
+              <Box sx={{ 
+                flexShrink: 0,
+                width: { xs: '100%', md: 'auto' },
+                display: 'flex',
+                justifyContent: { xs: 'center', md: 'flex-start' }
+              }}>
+                <MiniCalendar
+                  entries={[...entries, ...incidents]}
+                  onDayClick={handleDayClick}
+                  currentMonth={selectedDate}
+                  selectedDate={selectedDate}
+                />
+              </Box>
+              
+              {/* Daily Log Entries */}
+              <Box sx={{ 
+                flex: { xs: 'none', md: 1 }, 
+                minWidth: 0,
+                width: { xs: '100%', md: 'auto' }
+              }}>
+                {renderDailyLogEntries()}
+              </Box>
+            </Box>
+          </>
+        ) : (
+          /* Legacy Recent Entries View */
+          renderLegacyContent()
+        )}
+      </>
+    );
+  };
+
+  // Render legacy content (original recent entries + calendar)
+  const renderLegacyContent = () => {
+    return (
+      <Box sx={{ 
+        display: 'flex', 
+        gap: { xs: 2, sm: 2, md: 3 }, 
+        flexDirection: { xs: 'column', md: 'row' },
+        alignItems: { xs: 'stretch', md: 'flex-start' }
+      }}>
+        {/* Mini Calendar */}
+        <Box sx={{ 
+          flexShrink: 0,
+          width: { xs: '100%', md: 'auto' },
+          display: 'flex',
+          justifyContent: { xs: 'center', md: 'flex-start' }
+        }}>
+          <MiniCalendar
+            entries={entries}
+            onDayClick={handleDayClick}
+            currentMonth={new Date()}
+          />
+        </Box>
+        
+        {/* Recent Entries */}
+        <Box sx={{ 
+          flex: { xs: 'none', md: 1 }, 
+          minWidth: 0,
+          width: { xs: '100%', md: 'auto' }
+        }}>
+          {renderRecentEntries()}
+        </Box>
+      </Box>
+    );
+  };
+
+  // Render daily log entries using the new DailyLogEntry component
+  const renderDailyLogEntries = () => {
+    if (!dailyLog.hasEntries) {
+      return (
+        <Box sx={{ textAlign: 'center', py: 4 }}>
+          <TimelineIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 2 }} />
+          <Typography variant="h6" color="text.secondary" gutterBottom>
+            No activity for {selectedDate.toLocaleDateString()}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Select a different date or start logging activities
+          </Typography>
+        </Box>
+      );
+    }
+
+    return (
+      <Stack spacing={1} sx={{ maxHeight: 400, overflowY: 'auto' }}>
+        {/* Day Summary */}
+        <Box sx={{ mb: 2, p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
+          <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
+            {selectedDate.toDateString()}
+          </Typography>
+          
+          <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 0.5 }}>
+            <Chip
+              label={`${dailyLog.totalCount} entries`}
+              size="small"
+              color="primary"
+              variant="outlined"
+            />
+            
+            {dailyLog.incidentCount > 0 && (
+              <Chip
+                label={`${dailyLog.incidentCount} incidents`}
+                size="small"
+                color="warning"
+                variant="outlined"
+              />
+            )}
+            
+            {dailyLog.stats.highSeverityCount > 0 && (
+              <Chip
+                label={`${dailyLog.stats.highSeverityCount} high severity`}
+                size="small"
+                color="error"
+                variant="outlined"
+              />
+            )}
+            
+            {dailyLog.stats.pendingFollowUps > 0 && (
+              <Chip
+                label={`${dailyLog.stats.pendingFollowUps} pending follow-ups`}
+                size="small"
+                color="info"
+                variant="outlined"
+              />
+            )}
+          </Stack>
+        </Box>
+
+        {/* Entries List */}
+        <Divider sx={{ my: 1 }} />
+        
+        {dailyLog.entries.map((entry, index) => (
+          <DailyLogEntry
+            key={entry.id}
+            entry={entry}
+            formatTime={dailyLog.formatTime}
+            formatRelativeTime={dailyLog.formatRelativeTime}
+            getEntryTypeInfo={dailyLog.getEntryTypeInfo}
+            defaultExpanded={index === 0 && dailyLog.entries.length === 1}
+          />
+        ))}
+      </Stack>
+    );
+  };
+
   return (
     <>
       <Paper
@@ -281,36 +500,7 @@ const TimelineWidget = ({
           >
             {variant === 'full' && renderMetrics()}
             
-            {/* Main Content: Mini Calendar + Recent Entries */}
-            <Box sx={{ 
-              display: 'flex', 
-              gap: { xs: 2, sm: 2, md: 3 }, 
-              flexDirection: { xs: 'column', md: 'row' },
-              alignItems: { xs: 'stretch', md: 'flex-start' }
-            }}>
-              {/* Mini Calendar */}
-              <Box sx={{ 
-                flexShrink: 0,
-                width: { xs: '100%', md: 'auto' },
-                display: 'flex',
-                justifyContent: { xs: 'center', md: 'flex-start' }
-              }}>
-                <MiniCalendar
-                  entries={entries}
-                  onDayClick={handleDayClick}
-                  currentMonth={new Date()}
-                />
-              </Box>
-              
-              {/* Recent Entries */}
-              <Box sx={{ 
-                flex: { xs: 'none', md: 1 }, 
-                minWidth: 0,
-                width: { xs: '100%', md: 'auto' }
-              }}>
-                {renderRecentEntries()}
-              </Box>
-            </Box>
+            {showUnifiedLog ? renderUnifiedDailyLog() : renderLegacyContent()}
             
             {/* Action Buttons */}
             {timeline.hasActivity && (

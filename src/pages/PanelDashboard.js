@@ -20,9 +20,9 @@ import AddChildModal from "../components/Dashboard/AddChildModal";
 import EditChildModal from "../components/Dashboard/EditChildModal";
 import DailyCareModal from "../components/DailyCare/DailyCareModal";
 import DailyReportModal from "../components/DailyCare/DailyReportModal";
-import IncidentLoggingModal from "../components/Dashboard/IncidentLoggingModal";
-import IncidentFollowUpModal from "../components/Dashboard/IncidentFollowUpModal";
+import { IncidentLoggingModal, IncidentFollowUpModal } from "../components/Dashboard/Incidents";
 import PatternSuggestionModal from "../components/Dashboard/PatternSuggestionModal";
+import DailyHabitsModal from "../components/Dashboard/DailyHabitsModal";
 import { NotificationPermissionPrompt } from "../components/UI";
 
 const PanelDashboard = () => {
@@ -32,6 +32,7 @@ const PanelDashboard = () => {
   const commonChildGroupProps = {
     quickDataStatus: hook.quickDataStatus,
     recentEntries: hook.recentEntries,
+    incidents: hook.incidents,
     isCardExpanded: hook.isCardExpanded,
     onToggleExpanded: hook.toggleCard,
     onQuickEntry: hook.handleQuickDataEntry,
@@ -182,6 +183,14 @@ const PanelDashboard = () => {
         suggestions={hook.patternSuggestions}
         childName={hook.children.find(c => c.id === hook.suggestionsChildId)?.name}
         onCreateCategory={hook.handleCreateCustomCategories}
+      />
+
+      <DailyHabitsModal
+        open={hook.showDailyHabitsModal}
+        onClose={hook.handleCloseDailyHabitsModal}
+        childId={hook.dailyHabitsChild?.id}
+        childName={hook.dailyHabitsChild?.name}
+        onHabitSaved={hook.refreshDailyCareStatus}
       />
     </Container>
   );

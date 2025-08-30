@@ -14,15 +14,26 @@ export const getActionGroups = (theme) => (userRole) => {
 
   const parentGroups = [
     {
+      id: 'daily_progress_timeline',
+      title: 'Daily Progress & Timeline',
+      icon: '📊',
+      color: theme.palette.primary.main, // Primary themed color for prominence
+      tooltip: 'View daily progress, timeline overview, and track patterns over time',
+      actions: [
+        { key: 'timeline', label: 'View Timeline', icon: '📈', types: ['timeline_view'], trackingType: 'view', description: 'See daily activity timeline' },
+        { key: 'progress', label: 'Progress Review', icon: '📊', types: ['progress_note'], trackingType: 'task', description: 'Review developmental progress' },
+        { key: 'daily_summary', label: 'Daily Summary', icon: '📋', types: ['daily_summary'], trackingType: 'view', description: 'View today\'s activities' },
+      ],
+    },
+    {
       id: 'daily_care',
       title: 'Daily Care',
       icon: '💜',
       color: theme.palette.dailyCare.primary, // Themed color
-      tooltip: 'Essential daily wellness tracking for mood, sleep, energy and health',
+      tooltip: 'Essential daily tracking with notes, incidents, health and safety',
       actions: [
-        { key: 'mood', label: 'Mood Check', icon: '😊', types: ['mood_log'], trackingType: 'daily' },
-        { key: 'sleep', label: 'Sleep Quality', icon: '😴', types: ['sleep_log'], trackingType: 'daily' },
-        { key: 'incident', label: 'Log Incident', icon: '🚨', types: ['incident_log'], trackingType: 'task' },
+        { key: 'journal', label: 'Journal', icon: '💬', types: ['journal_entry'], trackingType: 'daily', description: 'Free-form notes and thoughts' },
+        { key: 'incident', label: 'Log Incident', icon: '🛑', types: ['incident_log'], trackingType: 'task' },
         { key: 'food_health', label: 'Food & Medicine', icon: '🍎', types: ['food_log', 'medication_log', 'medical_event'], trackingType: 'daily' },
         { key: 'safety', label: 'Safety Check', icon: '🛡️', types: ['safety_log'], trackingType: 'task' },
       ],
@@ -34,9 +45,7 @@ export const getActionGroups = (theme) => (userRole) => {
       color: theme.palette.tertiary.dark, // Themed color
       tooltip: 'Track behavioral patterns, sensory responses, and developmental progress',
       actions: [
-        { key: 'daily', label: 'Daily Notes', icon: '📝', types: ['daily_note'], trackingType: 'daily' },
         { key: 'behavior_sensory', label: 'Behavior & Sensory', icon: '🧠', types: ['behavior', 'sensory_log'], trackingType: 'task' },
-        { key: 'progress', label: 'Progress Review', icon: '📈', types: ['progress_note'], trackingType: 'task' },
       ],
     },
     {
