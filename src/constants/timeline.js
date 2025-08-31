@@ -51,6 +51,7 @@ const LEGACY_TO_ENTRY = new Set([
 
 export const mapLegacyType = (type) => {
   if (type === 'incident') return 'incident';
+  if (type === 'followUp') return 'incident'; // Follow-ups should display as incidents
   if (type === 'journal' || type === 'progressNote') return 'dailyNote';
   if (type === 'dailyLog' && ENTRY_TYPES.journal) return 'journal';
   if (LEGACY_TO_ENTRY.has(type)) return 'dailyHabit';

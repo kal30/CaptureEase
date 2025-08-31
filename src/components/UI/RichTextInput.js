@@ -12,7 +12,7 @@ import VideocamIcon from "@mui/icons-material/Videocam";
 import MicIcon from "@mui/icons-material/Mic";
 import StopIcon from "@mui/icons-material/Stop";
 
-const RichTextInput = ({ onDataChange, clearData, templateText }) => {
+const RichTextInput = ({ onDataChange, clearData, templateText, placeholder }) => {
   const [text, setText] = useState("");
   const [mediaFile, setMediaFile] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
@@ -42,12 +42,7 @@ const RichTextInput = ({ onDataChange, clearData, templateText }) => {
     }
   }, [clearData]);
 
-  // Set text when templateText prop changes
-  useEffect(() => {
-    if (templateText) {
-      setText(templateText);
-    }
-  }, [templateText]);
+  // templateText is now used as placeholder, not as actual content
 
   const handleFileChange = (event, type) => {
     const file = event.target.files[0];
@@ -163,7 +158,7 @@ const RichTextInput = ({ onDataChange, clearData, templateText }) => {
         multiline
         rows={4}
         variant="outlined"
-        placeholder="What's on your mind today? #tags"
+        placeholder={templateText || placeholder || "What's on your mind today? #tags"}
         value={text}
         onChange={(e) => setText(e.target.value)}
         sx={{ pr: '48px' }} // Add padding to the right to make space for the icons

@@ -105,10 +105,7 @@ const IncidentQuickCapture = ({
       // Use smart timing system when follow-up is scheduled
       const result = await createIncidentWithSmartFollowUp(childId, incidentData, scheduleFollowUp, childName);
       
-      // Optionally show user the follow-up schedule
-      if (result.followUpScheduled) {
-        console.log(`Smart follow-up scheduled: ${result.followUpDescription} at ${result.nextFollowUpTime}`);
-      }
+      // Follow-up scheduling completed if enabled
       
       onSaved();
     } catch (error) {

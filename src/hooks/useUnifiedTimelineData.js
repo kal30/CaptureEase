@@ -1,11 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { 
-  getIncidents, 
-  getJournalEntries, 
-  getDailyLogEntries, 
-  getFollowUpResponses 
-} from '../services/unifiedTimelineService';
-import { getHabitEntries } from '../services/habitService';
+import { getTimelineData } from '../services/timeline';
 
 /**
  * useUnifiedTimelineData - Hook to fetch and combine all timeline data for a specific day
@@ -42,37 +36,15 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
       setError(null);
 
       try {
-        console.log('Starting parallel fetch for all timeline data...');
-        
-        // Calculate date range for the selected day
-        const startOfDay = new Date(selectedDate);
-        startOfDay.setHours(0, 0, 0, 0);
-        const endOfDay = new Date(selectedDate);
-        endOfDay.setHours(23, 59, 59, 999);
-
-        // Fetch all data types in parallel
-        const [incidents, journals, dailyLogs, followUps, dailyHabits] = await Promise.all([
-          getIncidents(childId, selectedDate),
-          getJournalEntries(childId, selectedDate),
-          getDailyLogEntries(childId, selectedDate),
-          getFollowUpResponses(childId, selectedDate),
-          getHabitEntries(childId, startOfDay, endOfDay)
-        ]);
-
-        console.log('Parallel fetch completed:', {
-          incidents: incidents?.length || 0,
-          journals: journals?.length || 0,
-          dailyLogs: dailyLogs?.length || 0,
-          followUps: followUps?.length || 0,
-          dailyHabits: dailyHabits?.length || 0
-        });
+        // Use the new refactored timeline service
+        const timelineData = await getTimelineData(childId, selectedDate);
 
         setRawEntries({
-          incidents: incidents || [],
-          journals: journals || [],
-          dailyLogs: dailyLogs || [],
-          followUps: followUps || [],
-          dailyHabits: dailyHabits || []
+          incidents: timelineData.incidents || [],
+          journals: timelineData.journalEntries || [],
+          dailyLogs: timelineData.dailyLogEntries || [],
+          followUps: timelineData.followUpResponses || [],
+          dailyHabits: timelineData.dailyHabits || []
         });
         
       } catch (err) {

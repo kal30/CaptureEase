@@ -9,43 +9,70 @@ const IncidentDetails = ({ entry }) => {
   const meta = getSeverityMeta(entry.incidentType);
   const info = entry.severity ? meta[entry.severity] : null;
   const sevColor = entry.severity ? getSeverityColor(theme, entry.severity) : theme.palette.text.secondary;
+  
+  // Check if this is a follow-up entry
+  const isFollowUp = entry.type === 'followUp';
 
   return (
     <Box>
-      {/* Main incident description */}
+      {/* Main incident description or follow-up notes */}
       <Typography variant="body2" sx={{ color: 'text.primary', mb: 1, lineHeight: 1.5 }}>
-        {entry.description || entry.summary || 'Incident logged'}
+        {isFollowUp 
+          ? (entry.notes || entry.resolution || 'Follow-up logged') 
+          : (entry.description || entry.summary || 'Incident logged')
+        }
       </Typography>
 
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center', mb: 0.5 }}>
-        {/* Incident type */}
-        {entry.incidentType && (
-          <Typography component="span" variant="caption" sx={{ px: 1, py: 0.25, bgcolor: 'grey.100', borderRadius: 1, fontSize: '0.7rem', fontWeight: 500 }}>
-            {entry.incidentType}
-          </Typography>
-        )}
-        {/* Severity */}
-        {info && (
-          <Typography
-            component="span"
-            sx={{
-              px: 1,
-              py: 0.25,
-              bgcolor: alpha(sevColor, 0.15),
-              color: sevColor,
-              borderRadius: 1,
-              fontSize: '0.7rem',
-              fontWeight: 600,
-            }}
-          >
-            {info.label} ({entry.severity}/10) - {info.description}
-          </Typography>
-        )}
-        {/* Duration */}
-        {entry.duration && (
-          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-            • Lasted {entry.duration}
-          </Typography>
+        {/* Follow-up specific info */}
+        {isFollowUp ? (
+          <>
+            <Typography component="span" variant="caption" sx={{ px: 1, py: 0.25, bgcolor: 'info.light', color: 'info.contrastText', borderRadius: 1, fontSize: '0.7rem', fontWeight: 500 }}>
+              Follow-up
+            </Typography>
+            {entry.status && (
+              <Typography component="span" variant="caption" sx={{ px: 1, py: 0.25, bgcolor: 'grey.100', borderRadius: 1, fontSize: '0.7rem', fontWeight: 500 }}>
+                Status: {entry.status}
+              </Typography>
+            )}
+            {entry.originalIncidentType && (
+              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                • for {entry.originalIncidentType} incident
+              </Typography>
+            )}
+          </>
+        ) : (
+          <>
+            {/* Incident type */}
+            {entry.incidentType && (
+              <Typography component="span" variant="caption" sx={{ px: 1, py: 0.25, bgcolor: 'grey.100', borderRadius: 1, fontSize: '0.7rem', fontWeight: 500 }}>
+                {entry.incidentType}
+              </Typography>
+            )}
+            {/* Severity */}
+            {info && (
+              <Typography
+                component="span"
+                sx={{
+                  px: 1,
+                  py: 0.25,
+                  bgcolor: alpha(sevColor, 0.15),
+                  color: sevColor,
+                  borderRadius: 1,
+                  fontSize: '0.7rem',
+                  fontWeight: 600,
+                }}
+              >
+                {info.label} ({entry.severity}/10) - {info.description}
+              </Typography>
+            )}
+            {/* Duration */}
+            {entry.duration && (
+              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                • Lasted {entry.duration}
+              </Typography>
+            )}
+          </>
         )}
       </Box>
 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Box, Chip } from '@mui/material';
 import Typography from '@mui/material/Typography';
 import ChildAvatar from '../../UI/ChildAvatar';
@@ -6,6 +6,7 @@ import ChildNotificationBadge from '../../UI/ChildNotificationBadge';
 import CareTeamDisplay from '../../UI/CareTeamDisplay';
 import ChildManagementMenu from '../ChildManagementMenu';
 import MedicalInfoDisplay from './MedicalInfoDisplay';
+import useChildCardChips from '../../../hooks/useChildCardChips';
 
 /**
  * ChildCardHeader - Header section of child card with avatar, basic info, and actions
@@ -23,7 +24,7 @@ import MedicalInfoDisplay from './MedicalInfoDisplay';
  * @param {function} props.onNotificationClick - Handler for notification badge click
  * @param {Object} props.sx - Additional styling
  */
-const ChildCardHeader = ({
+const ChildCardHeader = memo(({
   child,
   userRole,
   canAddData,
@@ -35,38 +36,7 @@ const ChildCardHeader = ({
   onNotificationClick,
   sx = {}
 }) => {
-
-  // Prepare chips for child basic info
-  const statusChips = [];
-  if (completedToday) {
-    statusChips.push({
-      label: 'Daily care complete',
-      color: 'success',
-      variant: 'outlined'
-    });
-  }
-
-  // Prepare chips for child basic info - include role chip with different colors
-  const roleChips = [];
-  if (userRole) {
-    const roleConfig = {
-      'primary_parent': { label: '👑 Primary Parent', color: 'primary' },
-      'co_parent': { label: '👨‍👩‍👧‍👦 Co-Parent', color: 'secondary' },  
-      'family_member': { label: '👵 Family', color: 'info' },
-      'caregiver': { label: '🤱 Caregiver', color: 'warning' },
-      'therapist': { label: '🩺 Therapist', color: 'success' }
-    };
-    
-    const config = roleConfig[userRole] || { label: userRole, color: 'default' };
-    roleChips.push({
-      label: config.label,
-      color: config.color,
-      variant: 'outlined',
-      sx: { fontWeight: 600 }
-    });
-  }
-
-  const allChips = [...statusChips, ...roleChips];
+  const allChips = useChildCardChips(userRole, completedToday);
 
   return (
     <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, ...sx }}>
@@ -167,6 +137,6 @@ const ChildCardHeader = ({
 
     </Box>
   );
-};
+});
 
 export default ChildCardHeader;

@@ -1,23 +1,19 @@
-import React, { useState } from 'react';
-import { Paper, Typography } from '@mui/material';
-import RichTextInput from '../../../UI/RichTextInput';
+import React, { useState } from "react";
+import { Paper, Typography } from "@mui/material";
+import RichTextInput from "../../../UI/RichTextInput";
 
-const IncidentMediaUpload = ({ 
-  value, 
-  onChange,
-  onMediaChange 
-}) => {
+const IncidentMediaUpload = ({ value, onChange, onMediaChange }) => {
   const [clearTrigger, setClearTrigger] = useState(false);
 
   const handleDataChange = (richData) => {
     // richData = { text, mediaFile, audioBlob }
     if (onChange) {
-      onChange(richData.text || '');
+      onChange(richData.text || "");
     }
     if (onMediaChange) {
       onMediaChange({
         mediaFile: richData.mediaFile,
-        audioBlob: richData.audioBlob
+        audioBlob: richData.audioBlob,
       });
     }
   };
@@ -28,22 +24,22 @@ const IncidentMediaUpload = ({
   };
 
   return (
-    <Paper 
+    <Paper
       elevation={0}
-      sx={{ 
-        p: 3, 
-        mb: 3, 
-        borderRadius: '16px',
-        border: '1px solid #e5e7eb',
-        backgroundColor: '#ffffff'
+      sx={{
+        p: 3,
+        mb: 3,
+        borderRadius: "16px",
+        border: "1px solid #e5e7eb",
+        backgroundColor: "#ffffff",
       }}
     >
-      <Typography 
-        variant="subtitle1" 
-        gutterBottom 
-        sx={{ 
+      <Typography
+        variant="subtitle1"
+        gutterBottom
+        sx={{
           fontWeight: 600,
-          color: '#1f2937'
+          color: "#1f2937",
         }}
       >
         📝 Incident Details & Media
@@ -51,7 +47,7 @@ const IncidentMediaUpload = ({
       <RichTextInput
         onDataChange={handleDataChange}
         clearData={clearTrigger}
-        templateText="Describe what happened. You can attach photos, videos, or record voice notes..."
+        placeholder="Describe what happened. You can attach photos, videos, or record voice notes..."
       />
     </Paper>
   );

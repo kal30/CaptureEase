@@ -39,14 +39,12 @@ const IncidentFollowUpModal = ({
   };
 
   const handleSubmit = async () => {
-    if (!effectiveness) return;
+    if (!effectiveness || loading) return; // Prevent multiple clicks
 
     setLoading(true);
     setError('');
     
     try {
-      console.log(`🔄 Saving follow-up response for incident ${incident.id}...`);
-      console.log(`📊 Effectiveness: ${effectiveness}, Notes: ${followUpNotes}`);
       
       if (incident.isMultiStage) {
         // Handle multi-stage follow-up
@@ -57,20 +55,16 @@ const IncidentFollowUpModal = ({
           incident.currentFollowUpIndex
         );
         
-        console.log('✅ Multi-stage follow-up saved:', result);
         
         // Show feedback about next follow-up if there is one
         if (result.hasMoreFollowUps) {
           setSuccess(`Follow-up saved! Next check: ${result.nextFollowUpDescription}`);
-          console.log(`Next follow-up scheduled: ${result.nextFollowUpDescription} at ${result.nextFollowUpTime}`);
         } else {
           setSuccess('All follow-ups completed successfully!');
-          console.log('All follow-ups completed');
         }
       } else {
         // Handle single follow-up (legacy)
         await updateIncidentEffectiveness(incident.id, effectiveness, followUpNotes);
-        console.log('✅ Single follow-up saved');
         setSuccess('Follow-up response saved successfully!');
       }
       

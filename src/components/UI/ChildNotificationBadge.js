@@ -5,7 +5,7 @@ import { useNotificationBadges } from '../../hooks/useNotificationBadges';
 /**
  * ChildNotificationBadge - Wrapper around NotificationBadge with child-specific logic
  * Automatically fetches and filters notification data for a specific child
- * Only shows badge when there are overdue follow-ups requiring attention
+ * Shows badge when there are any pending follow-ups (overdue, upcoming, or future)
  * 
  * @param {Object} props
  * @param {string} props.childId - Child ID to get notifications for
@@ -43,8 +43,8 @@ const ChildNotificationBadge = ({
     [getUpcomingFollowUps, childId]
   );
 
-  // Only show badge if there are overdue follow-ups
-  if (loading || overdueFollowUps.length === 0) {
+  // Show badge if there are any pending follow-ups (overdue, upcoming, or future)
+  if (loading || pendingCount === 0) {
     return null;
   }
 

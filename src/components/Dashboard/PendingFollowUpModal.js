@@ -175,7 +175,6 @@ const PendingFollowUpModal = ({
     if (!followUpTime) return false;
     
     const isOverdue = followUpTime <= new Date();
-    console.log(`📅 Incident ${incident.id}: followUpTime=${followUpTime.toISOString()}, isOverdue=${isOverdue}`);
     return isOverdue;
   });
 
@@ -184,31 +183,8 @@ const PendingFollowUpModal = ({
     if (!followUpTime) return false;
     
     const isUpcoming = followUpTime > new Date();
-    console.log(`🔮 Incident ${incident.id}: followUpTime=${followUpTime.toISOString()}, isUpcoming=${isUpcoming}`);
     return isUpcoming;
   });
-
-  // Debug: Log the data when modal opens
-  React.useEffect(() => {
-    if (open) {
-      console.log('🔍 PendingFollowUpModal opened for child:', childId);
-      console.log('📊 Pending incidents from hook:', pendingIncidents);
-      console.log('🔢 Count:', pendingIncidents.length);
-      
-      // Detailed breakdown
-      console.log('📈 DETAILED BREAKDOWN:');
-      pendingIncidents.forEach((incident, index) => {
-        const followUpTime = getFollowUpDate(incident);
-        const isOverdue = followUpTime ? followUpTime <= new Date() : false;
-        const isUpcoming = followUpTime ? followUpTime > new Date() : false;
-        console.log(`  ${index + 1}. ${incident.id}: ${incident.type} - followUpTime=${followUpTime?.toISOString() || 'INVALID'}, overdue=${isOverdue}, upcoming=${isUpcoming}`);
-      });
-      
-      console.log(`🔴 Overdue count: ${overdueIncidents.length}`);
-      console.log(`🟡 Upcoming count: ${upcomingIncidents.length}`);
-      console.log(`📋 Total displayable: ${overdueIncidents.length + upcomingIncidents.length}`);
-    }
-  }, [open, childId, pendingIncidents, overdueIncidents.length, upcomingIncidents.length]);
 
   return (
     <>

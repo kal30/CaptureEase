@@ -69,17 +69,6 @@ export const useChildCardLogic = (child, recentEntries = [], incidents = []) => 
     setShowFollowUpModal(false);
   };
 
-  // Debug logging for notification badges
-  useEffect(() => {
-    if (pendingCount > 0) {
-      console.log(`🔔 Badge for ${child.name} shows ${pendingCount} pending follow-ups`);
-      console.log('📊 Badge data:', { 
-        pendingCount, 
-        overdueCount: overdueFollowUps.length, 
-        upcomingCount: upcomingFollowUps.length 
-      });
-    }
-  }, [pendingCount, overdueFollowUps.length, upcomingFollowUps.length, child.name]);
 
   return {
     // State
