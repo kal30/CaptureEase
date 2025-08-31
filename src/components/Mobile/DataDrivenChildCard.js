@@ -32,7 +32,7 @@ import TimelineCalendar from "../Timeline/TimelineCalendar";
 import TimelineEntry from "../Timeline/TimelineEntry";
 import TimelineFilters from "../Timeline/TimelineFilters";
 import PrintableTimelineCalendar from "../Timeline/PrintableTimelineCalendar";
-import DayDetailModal from "../Timeline/DayDetailModal";
+import DayDetailModal from "../Timeline/_depracatedTab/DayDetailModal";
 import { getTimelineEntries, filterTimelineEntries } from "../../services/timelineService";
 import CorrelationDashboard from "../Analytics/CorrelationDashboard";
 

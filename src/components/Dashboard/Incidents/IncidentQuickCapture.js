@@ -8,7 +8,8 @@ import {
   INCIDENT_TYPES, 
   getSeverityScale,
   getCustomCategories,
-  formatFollowUpSchedule
+  formatFollowUpSchedule,
+  getIncidentTypeConfig
 } from '../../../services/incidentService';
 
 // Import refactored components
@@ -61,10 +62,7 @@ const IncidentQuickCapture = ({
 
   // Get incident config from either default or custom categories
   const getIncidentConfig = () => {
-    if (INCIDENT_TYPES[incidentType]) {
-      return INCIDENT_TYPES[incidentType];
-    }
-    return customCategories[incidentType] || null;
+    return getIncidentTypeConfig(incidentType, customCategories) || null;
   };
 
   const incidentConfig = getIncidentConfig();

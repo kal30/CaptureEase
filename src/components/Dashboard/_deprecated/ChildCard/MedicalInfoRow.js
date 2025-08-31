@@ -1,19 +1,14 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Box, IconButton, Collapse } from '@mui/material';
 import Typography from '@mui/material/Typography';
 import { Add as AddIcon, Remove as RemoveIcon } from '@mui/icons-material';
 import AllergyChip, { sortAllergiesByPriority } from '../../UI/Allergies';
 
 /**
- * MedicalInfoDisplay - Compact display of diagnosis and allergies with expandable list
- * Shows diagnosis and limited allergies with + button to expand
- * 
- * @param {Object} props
- * @param {string} props.diagnosis - Child's diagnosis
- * @param {Array} props.allergies - Array of food allergies
+ * MedicalInfoRow - Compact row of diagnosis and allergies with expand
  */
-const MedicalInfoDisplay = ({ diagnosis, allergies = [] }) => {
-  const [showAllAllergies, setShowAllAllergies] = useState(false);
+const MedicalInfoRow = ({ diagnosis, allergies = [] }) => {
+  const [showAllAllergies, setShowAllAllergies] = React.useState(false);
   
   // Sort allergies by priority (life-threatening first)
   const sortedAllergies = sortAllergiesByPriority(allergies);
@@ -122,4 +117,5 @@ const MedicalInfoDisplay = ({ diagnosis, allergies = [] }) => {
   );
 };
 
-export default MedicalInfoDisplay;
+export default MedicalInfoRow;
+

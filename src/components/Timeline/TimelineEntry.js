@@ -17,6 +17,8 @@ import {
   Person as PersonIcon
 } from '@mui/icons-material';
 import { alpha, useTheme } from '@mui/material/styles';
+import { getTimelineEntryGroup } from '../../services/timelineService';
+import { getTypeColor } from './utils/colors';
 
 const TimelineEntry = ({ entry, isFirst = false, isLast = false }) => {
   const [expanded, setExpanded] = useState(false);
@@ -46,6 +48,8 @@ const TimelineEntry = ({ entry, isFirst = false, isLast = false }) => {
 
   const timeInfo = formatTime(entry.timestamp);
   const hasContent = entry.content && entry.content.trim().length > 0;
+  const group = getTimelineEntryGroup(entry.type) || entry.type;
+  const color = entry.color || getTypeColor(theme, group);
   const contentPreview = hasContent ? 
     (entry.content.length > 100 ? entry.content.substring(0, 100) + '...' : entry.content) : 
     'No additional details';
@@ -73,12 +77,12 @@ const TimelineEntry = ({ entry, isFirst = false, isLast = false }) => {
           sx={{
             width: 48,
             height: 48,
-            bgcolor: entry.color,
+            bgcolor: color,
             color: 'white',
             fontSize: '1.5rem',
             fontWeight: 'bold',
-            border: `3px solid ${alpha(entry.color, 0.2)}`,
-            boxShadow: `0 0 0 4px ${alpha(entry.color, 0.1)}`
+            border: `3px solid ${alpha(color, 0.2)}`,
+            boxShadow: `0 0 0 4px ${alpha(color, 0.1)}`
           }}
         >
           {entry.icon}
@@ -111,8 +115,8 @@ const TimelineEntry = ({ entry, isFirst = false, isLast = false }) => {
                   label={entry.label}
                   size="small"
                   sx={{
-                    bgcolor: alpha(entry.color, 0.1),
-                    color: entry.color,
+                    bgcolor: alpha(color, 0.1),
+                    color: color,
                     fontWeight: 600,
                     fontSize: '0.75rem',
                     height: 24
@@ -142,9 +146,11 @@ const TimelineEntry = ({ entry, isFirst = false, isLast = false }) => {
                 onClick={handleExpandClick}
                 size="small"
                 sx={{
-                  color: entry.color,
-                  '&:hover': { bgcolor: alpha(entry.color, 0.1) }
+                  color: color,
+                  '&:hover': { bgcolor: alpha(color, 0.1) }
                 }}
+                aria-label={expanded ? 'Collapse details' : 'Expand details'}
+                aria-expanded={expanded}
               >
                 {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
               </IconButton>
@@ -177,7 +183,7 @@ const TimelineEntry = ({ entry, isFirst = false, isLast = false }) => {
 
           {/* Expanded Content */}
           <Collapse in={expanded} timeout="auto" unmountOnExit>
-            <Divider sx={{ my: 2, borderColor: alpha(entry.color, 0.1) }} />
+            <Divider sx={{ my: 2, borderColor: alpha(color, 0.1) }} />
             <Typography variant="body2" color="text.primary" sx={{ whiteSpace: 'pre-wrap' }}>
               {entry.content}
             </Typography>

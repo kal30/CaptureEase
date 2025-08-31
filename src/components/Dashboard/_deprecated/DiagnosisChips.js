@@ -61,3 +61,4 @@ const DiagnosisChips = ({ concerns }) => {
 };
 
 export default DiagnosisChips;
+

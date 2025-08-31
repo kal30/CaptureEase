@@ -67,6 +67,29 @@ const theme = createTheme({
       progress: "#6D28D9", // Use dailyCare primary for progress rings
       background: "rgba(109, 40, 217, 0.05)",
       border: "rgba(109, 40, 217, 0.1)",
+      entries: {
+        incident: "#DC2626",
+        dailyHabit: "#D97706",
+        dailyNote: "#059669",
+        journal: "#8B5CF6",
+      },
+      periods: {
+        morning: "#0284C7", // info-like
+        afternoon: "#F59E0B", // warning-like
+        evening: "#7C6F57", // secondary-like
+      }
+    },
+    incident: {
+      // Base incident type colors for chips/buttons
+      types: {
+        eating_nutrition: "#22C55E",
+        mood: "#F59E0B",
+        sleep: "#3B82F6",
+        behavioral: "#EF4444",
+        sensory: "#8B5CF6",
+        pain_medical: "#DC2626",
+        other: "#6B7280",
+      }
     },
     safety: {
       allergy: "#FF9800", // Orange for allergies

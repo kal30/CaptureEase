@@ -11,6 +11,7 @@ import {
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
+import { useChildContext } from '../../contexts/ChildContext';
 
 /**
  * QuickEntrySection - Integrated Quick Entry circles with Daily Report
@@ -29,6 +30,7 @@ const QuickEntrySection = ({
 }) => {
   const theme = useTheme();
   const navigate = useNavigate();
+  const { setCurrentChildId } = useChildContext();
   const [hoveredAction, setHoveredAction] = useState(null);
 
   // Quick action items with theme-driven colors and distinct styling
@@ -71,6 +73,8 @@ const QuickEntrySection = ({
     
     // Handle navigation actions (like Journaling)
     if (action.type === 'navigation' && action.navigationPath) {
+      // Set the current child ID before navigating
+      setCurrentChildId(child.id);
       navigate(action.navigationPath);
       return;
     }

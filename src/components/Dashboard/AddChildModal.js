@@ -1,13 +1,13 @@
 import React, { useState } from "react";
-import { Box, Modal, TextField, Chip } from "@mui/material";
-import Autocomplete, { createFilterOptions } from "@mui/material/Autocomplete";
-import AllergyChip from "../UI/AllergyChip";
+import { Box, Modal, TextField, Chip, IconButton, Typography } from "@mui/material";
+import { Close as CloseIcon } from "@mui/icons-material";
+import AllergyChip from "../UI/Allergies";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { addDoc, collection } from "firebase/firestore";
 import { getAuth } from "firebase/auth"; // Import Firestore functions
 import { db } from "../../services/firebase"; // Adjust the path based on your structure
 import ChildPhotoUploader from "./ChildPhotoUploader"; // Import the ChildPhotoUploader component
-import { ThemeCard, GradientButton, ThemeSpacing, ThemeText } from "../UI";
+import { ThemeCard, GradientButton, ThemeSpacing, ThemeText, CustomizableAutocomplete } from "../UI";
 
 const AddChildModal = ({ open, onClose, onSuccess }) => {
   const [name, setName] = useState("");
@@ -78,9 +78,6 @@ const AddChildModal = ({ open, onClose, onSuccess }) => {
       : { code: "OTHER", label: String(item), custom: true };
   };
 
-  const filter = createFilterOptions({
-    stringify: (option) => (typeof option === "string" ? option : option.label),
-  });
 
   // Handle the form submission
   const handleSubmit = async () => {
@@ -182,11 +179,34 @@ const AddChildModal = ({ open, onClose, onSuccess }) => {
           overflow: 'auto',
         }}
       >
-        <ThemeCard variant="modal" elevated>
+        <ThemeCard variant="modal" elevated sx={{ display: 'flex', flexDirection: 'column' }}>
+          {/* Header */}
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 3, pb: 2, borderBottom: 1, borderColor: 'divider' }}>
+            <Box>
+              <Typography variant="h5" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                Add New Child
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                Create a profile for your child with care information
+              </Typography>
+            </Box>
+            <IconButton
+              onClick={onClose}
+              sx={{
+                color: 'text.secondary',
+                '&:hover': {
+                  color: 'text.primary',
+                  backgroundColor: 'action.hover'
+                }
+              }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </Box>
+
+          {/* Content */}
+          <Box sx={{ flex: 1, overflow: 'auto', p: 3 }}>
           <ThemeSpacing variant="modal-content">
-            <ThemeText variant="modal-title" gutterBottom>
-              Add New Child
-            </ThemeText>
 
             <ThemeSpacing variant="field">
               <TextField
@@ -208,11 +228,8 @@ const AddChildModal = ({ open, onClose, onSuccess }) => {
               />
             </ThemeSpacing>
 
-        <Autocomplete
-          multiple
-          freeSolo
+        <CustomizableAutocomplete
           options={CONDITION_OPTIONS}
-          filterOptions={(opts, params) => filter(opts, params)}
           getOptionLabel={(option) =>
             typeof option === "string" ? option : option.label
           }
@@ -221,6 +238,9 @@ const AddChildModal = ({ open, onClose, onSuccess }) => {
             const normalized = newValue.map(normalizeCondition);
             setSelectedConditions(normalized);
           }}
+          label="Primary Concerns / Diagnoses"
+          addText="Add concern"
+          helperText="Optional — select from list or add custom concerns"
           renderTags={(value, getTagProps) =>
             value.map((option, index) =>
               option.custom ? (
@@ -247,14 +267,7 @@ const AddChildModal = ({ open, onClose, onSuccess }) => {
               )
             )
           }
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Primary Concerns / Diagnoses"
-              variant="outlined"
-              helperText="Optional — pick from list or type your own, then press Enter"
-            />
-          )}
+          sx={{ mb: 3 }}
         />
 
         {/* Medical & Behavioral Profile */}
@@ -265,12 +278,12 @@ const AddChildModal = ({ open, onClose, onSuccess }) => {
           This information helps us identify patterns and correlations in daily tracking
         </ThemeText>
 
-        <Autocomplete
-          multiple
-          freeSolo
+        <CustomizableAutocomplete
           options={FOOD_ALLERGY_OPTIONS}
           value={foodAllergies}
           onChange={(event, newValue) => setFoodAllergies(newValue)}
+          label="Food Allergies & Intolerances"
+          addText="Add allergy"
           renderTags={(value, getTagProps) =>
             value.map((option, index) => (
               <AllergyChip
@@ -282,167 +295,67 @@ const AddChildModal = ({ open, onClose, onSuccess }) => {
               />
             ))
           }
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Food Allergies & Intolerances"
-              variant="outlined"
-              helperText="Add known food allergies or intolerances"
-              sx={{ mb: 3 }}
-            />
-          )}
-        />
-
-        <Autocomplete
-          multiple
-          freeSolo
-          options={DIETARY_OPTIONS}
-          value={dietaryRestrictions}
-          onChange={(event, newValue) => setDietaryRestrictions(newValue)}
-          renderTags={(value, getTagProps) =>
-            value.map((option, index) => (
-              <Chip
-                {...getTagProps({ index })}
-                label={option}
-                color="info"
-                variant="outlined"
-                sx={{ mr: 0.5, mb: 0.5 }}
-              />
-            ))
-          }
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Dietary Restrictions"
-              variant="outlined"
-              helperText="Special diets or restrictions they follow"
-              sx={{ mb: 3 }}
-            />
-          )}
-        />
-
-        <Autocomplete
-          multiple
-          freeSolo
-          options={SENSORY_OPTIONS}
-          value={sensoryIssues}
-          onChange={(event, newValue) => setSensoryIssues(newValue)}
-          renderTags={(value, getTagProps) =>
-            value.map((option, index) => (
-              <Chip
-                {...getTagProps({ index })}
-                label={option}
-                color="secondary"
-                variant="outlined"
-                sx={{ mr: 0.5, mb: 0.5 }}
-              />
-            ))
-          }
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Sensory Sensitivities"
-              variant="outlined"
-              helperText="Things they are sensitive to"
-              sx={{ mb: 3 }}
-            />
-          )}
-        />
-
-        <Autocomplete
-          multiple
-          freeSolo
-          options={TRIGGER_OPTIONS}
-          value={behavioralTriggers}
-          onChange={(event, newValue) => setBehavioralTriggers(newValue)}
-          renderTags={(value, getTagProps) =>
-            value.map((option, index) => (
-              <Chip
-                {...getTagProps({ index })}
-                label={option}
-                color="error"
-                variant="outlined"
-                sx={{ mr: 0.5, mb: 0.5 }}
-              />
-            ))
-          }
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Known Behavioral Triggers"
-              variant="outlined"
-              helperText="Situations or things that tend to cause challenges"
-              sx={{ mb: 3 }}
-            />
-          )}
-        />
-
-        <TextField
-          label="Current Medications"
-          variant="outlined"
-          fullWidth
-          multiline
-          rows={2}
-          value={currentMedications.join(', ')}
-          onChange={(e) => setCurrentMedications(e.target.value.split(',').map(med => med.trim()).filter(Boolean))}
-          helperText="List current medications (separate with commas)"
           sx={{ mb: 3 }}
         />
 
-        <Autocomplete
-          multiple
-          freeSolo
+        <CustomizableAutocomplete
+          options={DIETARY_OPTIONS}
+          value={dietaryRestrictions}
+          onChange={(event, newValue) => setDietaryRestrictions(newValue)}
+          label="Dietary Restrictions"
+          addText="Add diet"
+          helperText="Special diets or restrictions they follow"
+          sx={{ mb: 3 }}
+        />
+
+        <CustomizableAutocomplete
+          options={SENSORY_OPTIONS}
+          value={sensoryIssues}
+          onChange={(event, newValue) => setSensoryIssues(newValue)}
+          label="Sensory Sensitivities"
+          addText="Add sensitivity"
+          helperText="Things they are sensitive to"
+          sx={{ mb: 3 }}
+        />
+
+        <CustomizableAutocomplete
+          options={TRIGGER_OPTIONS}
+          value={behavioralTriggers}
+          onChange={(event, newValue) => setBehavioralTriggers(newValue)}
+          label="Known Behavioral Triggers"
+          addText="Add trigger"
+          helperText="Situations or things that tend to cause challenges"
+          sx={{ mb: 3 }}
+        />
+
+        <CustomizableAutocomplete
+          options={[]} 
+          value={currentMedications}
+          onChange={(event, newValue) => setCurrentMedications(newValue)}
+          label="Current Medications"
+          addText="Add medication"
+          helperText="List current medications and dosages"
+          sx={{ mb: 3 }}
+        />
+
+        <CustomizableAutocomplete
           options={SLEEP_OPTIONS}
           value={sleepIssues}
           onChange={(event, newValue) => setSleepIssues(newValue)}
-          renderTags={(value, getTagProps) =>
-            value.map((option, index) => (
-              <Chip
-                {...getTagProps({ index })}
-                label={option}
-                color="primary"
-                variant="outlined"
-                sx={{ mr: 0.5, mb: 0.5 }}
-              />
-            ))
-          }
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Sleep Issues"
-              variant="outlined"
-              helperText="Any sleep-related challenges"
-              sx={{ mb: 3 }}
-            />
-          )}
+          label="Sleep Issues"
+          addText="Add sleep issue"
+          helperText="Any sleep-related challenges"
+          sx={{ mb: 3 }}
         />
 
-        <Autocomplete
-          multiple
-          freeSolo
+        <CustomizableAutocomplete
           options={COMMUNICATION_OPTIONS}
           value={communicationNeeds}
           onChange={(event, newValue) => setCommunicationNeeds(newValue)}
-          renderTags={(value, getTagProps) =>
-            value.map((option, index) => (
-              <Chip
-                {...getTagProps({ index })}
-                label={option}
-                color="success"
-                variant="outlined"
-                sx={{ mr: 0.5, mb: 0.5 }}
-              />
-            ))
-          }
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Communication Needs"
-              variant="outlined"
-              helperText="How they communicate best"
-              sx={{ mb: 3 }}
-            />
-          )}
+          label="Communication Needs"
+          addText="Add communication need"
+          helperText="How they communicate best"
+          sx={{ mb: 3 }}
         />
 
         {/* ChildPhotoUploader component */}
@@ -452,18 +365,23 @@ const AddChildModal = ({ open, onClose, onSuccess }) => {
           setPhotoURL={setPhotoURL}
         />
 
-        <GradientButton
-          variant="gradient"
-          color="success"
-          onClick={handleSubmit}
-          fullWidth
-          disabled={loading}
-          elevated
-          size="large"
-        >
-          {loading ? "Saving..." : "Add Child"}
-        </GradientButton>
           </ThemeSpacing>
+          </Box>
+
+          {/* Footer */}
+          <Box sx={{ p: 3, borderTop: 1, borderColor: 'divider', bgcolor: 'grey.50' }}>
+            <GradientButton
+              variant="gradient"
+              color="success"
+              onClick={handleSubmit}
+              fullWidth
+              disabled={loading}
+              elevated
+              size="large"
+            >
+              {loading ? "Saving..." : "Add Child"}
+            </GradientButton>
+          </Box>
         </ThemeCard>
       </Box>
     </Modal>

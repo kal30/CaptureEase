@@ -187,3 +187,4 @@ const IncidentQuickCapture = ({
 };
 
 export default IncidentQuickCapture;
+

@@ -22,7 +22,8 @@ import {
   Today as TodayIcon
 } from '@mui/icons-material';
 import { alpha, useTheme } from '@mui/material/styles';
-import { TIMELINE_TYPES } from '../../services/timelineService';
+import { TIMELINE_TYPES, getTimelineEntryGroup } from '../../services/timelineService';
+import { getTypeColor } from './utils/colors';
 
 const TimelineCalendar = ({ entries, onDayClick, filters }) => {
   const theme = useTheme();
@@ -118,17 +119,16 @@ const TimelineCalendar = ({ entries, onDayClick, filters }) => {
         }}
       >
         {types.slice(0, 6).map(type => {
-          const typeConfig = Object.values(TIMELINE_TYPES).find(t => t.type === type);
+          const group = getTimelineEntryGroup(type) || type;
+          const color = getTypeColor(theme, group);
           const count = dayEntries[type].length;
-          
           return (
-            <Box
-              key={type}
+            <Box key={type}
               sx={{
                 width: 8,
                 height: 8,
                 borderRadius: '50%',
-                bgcolor: typeConfig?.color || theme.palette.grey[400],
+                bgcolor: color,
                 border: '1px solid white',
                 boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
                 position: 'relative'
@@ -454,32 +454,18 @@ const TimelineCalendar = ({ entries, onDayClick, filters }) => {
               {Object.entries(hoverData.dayEntries).map(([type, typeEntries]) => {
                 const typeConfig = Object.values(TIMELINE_TYPES).find(t => t.type === type);
                 const count = typeEntries.length;
-                
+                const group = getTimelineEntryGroup(type) || type;
+                const color = getTypeColor(theme, group);
                 return (
                   <ListItem key={type} sx={{ px: 0, py: 0.5 }}>
                     <ListItemAvatar sx={{ minWidth: 36 }}>
-                      <Avatar
-                        sx={{
-                          width: 24,
-                          height: 24,
-                          bgcolor: typeConfig?.color || theme.palette.grey[400],
-                          fontSize: '0.8rem'
-                        }}
-                      >
+                      <Avatar sx={{ width: 24, height: 24, bgcolor: color, fontSize: '0.8rem' }}>
                         {typeConfig?.icon || '📝'}
                       </Avatar>
                     </ListItemAvatar>
                     <ListItemText
-                      primary={
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                          {typeConfig?.label || type}
-                        </Typography>
-                      }
-                      secondary={
-                        <Typography variant="caption" color="text.secondary">
-                          {count} {count === 1 ? 'entry' : 'entries'}
-                        </Typography>
-                      }
+                      primary={<Typography variant="body2" sx={{ fontWeight: 600 }}>{typeConfig?.label || type}</Typography>}
+                      secondary={<Typography variant="caption" color="text.secondary">{count} {count === 1 ? 'entry' : 'entries'}</Typography>}
                     />
                   </ListItem>
                 );

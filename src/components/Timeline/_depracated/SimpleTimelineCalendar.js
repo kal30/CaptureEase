@@ -412,3 +412,4 @@ const SimpleTimelineCalendar = ({ entries, onDayClick, filters }) => {
 };
 
 export default SimpleTimelineCalendar;
+

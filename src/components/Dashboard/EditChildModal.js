@@ -5,9 +5,11 @@ import {
   TextField,
   Typography,
   Chip,
+  IconButton,
 } from "@mui/material";
+import { Close as CloseIcon } from "@mui/icons-material";
 import Autocomplete, { createFilterOptions } from "@mui/material/Autocomplete";
-import AllergyChip from "../UI/AllergyChip";
+import AllergyChip from "../UI/Allergies";
 import { useTheme } from "@mui/material/styles"; // Import useTheme
 import {
   getStorage,
@@ -17,8 +19,9 @@ import {
 } from "firebase/storage";
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "../../services/firebase";
+import { USER_ROLES } from "../../services/rolePermissionService";
 import ChildPhotoUploader from "./ChildPhotoUploader";
-import { ThemeCard, GradientButton } from "../UI";
+import { ThemeCard, GradientButton, CustomizableAutocomplete } from "../UI";
 
 const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
   const theme = useTheme(); // Get the theme object
@@ -38,8 +41,8 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
   const storage = getStorage();
 
   // Permission checks
-  const canEdit = userRole === 'primary_parent' || userRole === 'co_parent' || userRole === 'parent';
-  const canEditMedicalInfo = userRole === 'primary_parent' || userRole === 'co_parent'; // More restrictive for medical data
+  const canEdit = userRole === USER_ROLES.PRIMARY_PARENT || userRole === USER_ROLES.CO_PARENT || userRole === 'parent';
+  const canEditMedicalInfo = userRole === USER_ROLES.PRIMARY_PARENT || userRole === USER_ROLES.CO_PARENT; // More restrictive for medical data
 
   const CONDITION_OPTIONS = [
     { code: "ASD", label: "Autism / ASD" },
@@ -119,6 +122,26 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
   const handleSubmit = async () => {
     if (!name || !age || !child) return;
     
+    // Debug logging for troubleshooting
+    console.log('EditChildModal handleSubmit:', {
+      userRole,
+      canEdit,
+      canEditMedicalInfo,
+      foodAllergies,
+      childId: child.id
+    });
+    
+    // Detailed allergy debugging
+    console.log('Food allergies breakdown:', {
+      count: foodAllergies.length,
+      items: foodAllergies.map((allergy, index) => ({
+        index,
+        value: allergy,
+        type: typeof allergy,
+        isString: typeof allergy === 'string'
+      }))
+    });
+    
     // Security check - ensure user has permission to edit
     if (!canEdit) {
       console.error('Unauthorized edit attempt');
@@ -163,6 +186,9 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
         sleepIssues,
         communicationNeeds,
       };
+      console.log('Adding medical profile to update:', updatedChild.medicalProfile);
+    } else {
+      console.log('User cannot edit medical info - medical profile not included in update');
     }
 
     try {
@@ -200,13 +226,27 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
       >
         <ThemeCard variant="modal" elevated sx={{ display: 'flex', flexDirection: 'column' }}>
         {/* Header */}
-        <Box sx={{ p: 3, pb: 2, borderBottom: 1, borderColor: 'divider' }}>
-          <Typography variant="h5" sx={{ fontWeight: 600, color: 'text.primary' }}>
-            Edit {child?.name || 'Child'}
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            Update your child's information and care profile
-          </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 3, pb: 2, borderBottom: 1, borderColor: 'divider' }}>
+          <Box>
+            <Typography variant="h5" sx={{ fontWeight: 600, color: 'text.primary' }}>
+              Edit {child?.name || 'Child'}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+              Update your child's information and care profile
+            </Typography>
+          </Box>
+          <IconButton
+            onClick={onClose}
+            sx={{
+              color: 'text.secondary',
+              '&:hover': {
+                color: 'text.primary',
+                backgroundColor: 'action.hover'
+              }
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
         </Box>
 
         {/* Scrollable Content */}
@@ -303,12 +343,19 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
           )}
 
           {canEditMedicalInfo && (
-            <Autocomplete
-              multiple
-              freeSolo
+            <CustomizableAutocomplete
               options={FOOD_ALLERGY_OPTIONS}
               value={foodAllergies}
-              onChange={(event, newValue) => setFoodAllergies(newValue)}
+              onChange={(event, newValue) => {
+                console.log('Food allergies changed:', { 
+                  newValue, 
+                  types: newValue.map(v => typeof v),
+                  values: newValue 
+                });
+                setFoodAllergies(newValue);
+              }}
+              label="Food Allergies & Sensitivities"
+              addText="Add allergy"
               renderTags={(value, getTagProps) =>
                 value.map((option, index) => (
                   <AllergyChip
@@ -320,69 +367,40 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
                   />
                 ))
               }
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Food Allergies & Sensitivities"
-                  variant="outlined"
-                  helperText="Select from list or add your own"
-                  sx={{ mb: 3 }}
-                />
-              )}
+              sx={{ mb: 3 }}
             />
           )}
 
           {canEditMedicalInfo && (
             <>
-              <Autocomplete
-                multiple
-                freeSolo
+              <CustomizableAutocomplete
                 options={DIETARY_OPTIONS}
                 value={dietaryRestrictions}
                 onChange={(event, newValue) => setDietaryRestrictions(newValue)}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Dietary Restrictions"
-                    variant="outlined"
-                    helperText="Special diets or food preferences"
-                    sx={{ mb: 3 }}
-                  />
-                )}
+                label="Dietary Restrictions"
+                addText="Add diet"
+                helperText="Special diets or food preferences"
+                sx={{ mb: 3 }}
               />
 
-              <Autocomplete
-                multiple
-                freeSolo
+              <CustomizableAutocomplete
                 options={SENSORY_OPTIONS}
                 value={sensoryIssues}
                 onChange={(event, newValue) => setSensoryIssues(newValue)}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Sensory Issues"
-                    variant="outlined"
-                    helperText="Light, sound, touch, or other sensitivities"
-                    sx={{ mb: 3 }}
-                  />
-                )}
+                label="Sensory Issues"
+                addText="Add sensitivity"
+                helperText="Light, sound, touch, or other sensitivities"
+                sx={{ mb: 3 }}
               />
 
-              <Autocomplete
-                multiple
-                freeSolo
+              <CustomizableAutocomplete
                 options={TRIGGER_OPTIONS}
                 value={behavioralTriggers}
                 onChange={(event, newValue) => setBehavioralTriggers(newValue)}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Behavioral Triggers"
-                    variant="outlined"
-                    helperText="Situations that may cause stress or behavioral changes"
-                    sx={{ mb: 3 }}
-                  />
-                )}
+                label="Behavioral Triggers"
+                addText="Add trigger"
+                helperText="Situations that may cause stress or behavioral changes"
+                sx={{ mb: 3 }}
               />
 
               <Autocomplete
@@ -402,38 +420,24 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
                 )}
               />
 
-              <Autocomplete
-                multiple
-                freeSolo
+              <CustomizableAutocomplete
                 options={SLEEP_OPTIONS}
                 value={sleepIssues}
                 onChange={(event, newValue) => setSleepIssues(newValue)}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Sleep Issues"
-                    variant="outlined"
-                    helperText="Any sleep challenges or patterns"
-                    sx={{ mb: 3 }}
-                  />
-                )}
+                label="Sleep Issues"
+                addText="Add sleep issue"
+                helperText="Any sleep challenges or patterns"
+                sx={{ mb: 3 }}
               />
 
-              <Autocomplete
-                multiple
-                freeSolo
+              <CustomizableAutocomplete
                 options={COMMUNICATION_OPTIONS}
                 value={communicationNeeds}
                 onChange={(event, newValue) => setCommunicationNeeds(newValue)}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Communication Needs"
-                    variant="outlined"
-                    helperText="How your child communicates and any support they need"
-                    sx={{ mb: 3 }}
-                  />
-                )}
+                label="Communication Needs"
+                addText="Add communication need"
+                helperText="How your child communicates and any support they need"
+                sx={{ mb: 3 }}
               />
             </>
           )}

@@ -1,269 +1,370 @@
 import React, { useState } from 'react';
 import {
   Box,
-  TextField,
+  ToggleButton,
+  ToggleButtonGroup,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
   Chip,
+  TextField,
   Typography,
-  Card,
-  CardContent,
-  Collapse,
+  Paper,
+  Divider,
   IconButton,
-  Grid,
-  Button,
-  InputAdornment
+  Popover
 } from '@mui/material';
 import {
+  Warning as IncidentIcon,
+  EventNote as JournalIcon,
+  Assignment as DailyLogIcon,
+  CheckCircle as FollowUpIcon,
+  Person as PersonIcon,
+  Today as DateIcon,
   Search as SearchIcon,
-  FilterList as FilterIcon,
   Clear as ClearIcon,
-  DateRange as DateRangeIcon,
-  ExpandMore as ExpandMoreIcon,
-  ExpandLess as ExpandLessIcon
+  CalendarToday as CalendarIcon
 } from '@mui/icons-material';
-import { alpha, useTheme } from '@mui/material/styles';
-import { TIMELINE_TYPES } from '../../services/timelineService';
 
-const TimelineFilters = ({ filters, onFiltersChange, totalEntries, filteredEntries }) => {
-  const [expanded, setExpanded] = useState(false);
-  const theme = useTheme();
+/**
+ * TimelineFilters - Filter controls for unified timeline
+ * Allows filtering by entry type, user role, and date navigation
+ * 
+ * @param {Object} props
+ * @param {Object} props.filters - Current filter state
+ * @param {Function} props.onFiltersChange - Callback when filters change
+ * @param {Date} props.selectedDate - Currently selected date
+ * @param {Object} props.summary - Timeline data summary for counts
+ * @param {boolean} props.compact - Whether to show compact version
+ * @param {Object} props.sx - Material-UI sx prop for styling
+ * @param {Function} props.onDateChange - Callback when date changes
+ */
+const TimelineFilters = ({
+  filters = {},
+  onFiltersChange,
+  selectedDate,
+  onDateChange,
+  summary = {},
+  compact = false,
+  sx = {}
+}) => {
+  const [datePickerAnchor, setDatePickerAnchor] = useState(null);
+  const [searchText, setSearchText] = useState(filters.searchText || '');
 
-  const handleFilterChange = (newFilters) => {
-    onFiltersChange({ ...filters, ...newFilters });
-  };
-
-  const handleTypeToggle = (type) => {
-    const currentTypes = filters.types || [];
-    const newTypes = currentTypes.includes(type)
-      ? currentTypes.filter(t => t !== type)
-      : [...currentTypes, type];
-    
-    handleFilterChange({ types: newTypes });
-  };
-
-  const handleClearFilters = () => {
+  const handleEntryTypeFilter = (event, newTypes) => {
     onFiltersChange({
-      types: [],
-      startDate: null,
-      endDate: null,
-      searchText: '',
-      author: ''
+      ...filters,
+      entryTypes: newTypes
     });
   };
 
-  const hasActiveFilters = 
-    (filters.types && filters.types.length > 0) ||
-    filters.startDate ||
-    filters.endDate ||
-    filters.searchText ||
-    filters.author;
+  const handleUserRoleFilter = (event) => {
+    const value = event.target.value;
+    onFiltersChange({
+      ...filters,
+      userRoles: value === '' ? [] : (typeof value === 'string' ? [value] : value)
+    });
+  };
 
-  const activeFilterCount = [
-    filters.types?.length > 0,
-    filters.startDate,
-    filters.endDate,
-    filters.searchText,
-    filters.author
-  ].filter(Boolean).length;
+  const handleDateChange = (newDate) => {
+    if (onDateChange) {
+      onDateChange(newDate);
+    }
+    onFiltersChange({
+      ...filters,
+      selectedDate: newDate
+    });
+    setDatePickerAnchor(null);
+  };
 
-  return (
-    <Card elevation={0} sx={{ mb: 3, border: `1px solid ${theme.palette.divider}` }}>
-      <CardContent sx={{ pb: expanded ? 2 : '16px !important' }}>
-        {/* Header with Search and Filter Toggle */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: expanded ? 2 : 0 }}>
-          {/* Search Field */}
-          <TextField
-            placeholder="Search timeline entries..."
-            variant="outlined"
-            size="small"
-            value={filters.searchText || ''}
-            onChange={(e) => handleFilterChange({ searchText: e.target.value })}
-            sx={{ flex: 1, maxWidth: 400 }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon color="action" />
-                </InputAdornment>
-              ),
-              endAdornment: filters.searchText && (
-                <InputAdornment position="end">
-                  <IconButton
-                    size="small"
-                    onClick={() => handleFilterChange({ searchText: '' })}
-                  >
-                    <ClearIcon />
-                  </IconButton>
-                </InputAdornment>
-              )
-            }}
-          />
+  const handleSearchChange = (event) => {
+    const value = event.target.value;
+    setSearchText(value);
+    onFiltersChange({
+      ...filters,
+      searchText: value || undefined
+    });
+  };
 
-          {/* Results Count */}
-          <Typography variant="body2" color="text.secondary">
-            {filteredEntries} of {totalEntries} entries
-          </Typography>
+  const clearAllFilters = () => {
+    setSearchText('');
+    onFiltersChange({});
+  };
 
-          {/* Filter Toggle Button */}
-          <Button
-            variant="outlined"
-            size="small"
-            startIcon={<FilterIcon />}
-            endIcon={expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-            onClick={() => setExpanded(!expanded)}
-            sx={{
-              color: hasActiveFilters ? theme.palette.primary.main : 'text.secondary',
-              borderColor: hasActiveFilters ? theme.palette.primary.main : theme.palette.divider,
-              bgcolor: hasActiveFilters ? alpha(theme.palette.primary.main, 0.04) : 'transparent'
-            }}
-          >
-            Filters {activeFilterCount > 0 && `(${activeFilterCount})`}
-          </Button>
+  const handleDatePickerOpen = (event) => {
+    setDatePickerAnchor(event.currentTarget);
+  };
 
-          {/* Clear Filters */}
-          {hasActiveFilters && (
-            <Button
-              variant="text"
+  const handleDatePickerClose = () => {
+    setDatePickerAnchor(null);
+  };
+
+  // Entry type options with icons and counts
+  const entryTypeOptions = [
+    { 
+      value: 'incident', 
+      label: 'Incidents', 
+      icon: <IncidentIcon sx={{ fontSize: 16 }} />,
+      count: summary.incidentCount || 0,
+      color: 'error'
+    },
+    { 
+      value: 'journal', 
+      label: 'Journal', 
+      icon: <JournalIcon sx={{ fontSize: 16 }} />,
+      count: summary.journalCount || 0,
+      color: 'info'
+    },
+    { 
+      value: 'dailyLog', 
+      label: 'Care Logs', 
+      icon: <DailyLogIcon sx={{ fontSize: 16 }} />,
+      count: summary.dailyLogCount || 0,
+      color: 'primary'
+    },
+    { 
+      value: 'followUp', 
+      label: 'Follow-ups', 
+      icon: <FollowUpIcon sx={{ fontSize: 16 }} />,
+      count: summary.followUpCount || 0,
+      color: 'success'
+    }
+  ];
+
+  // User role options
+  const userRoleOptions = [
+    { value: 'primary_parent', label: '👑 Primary Parent' },
+    { value: 'co_parent', label: '👨‍👩‍👧‍👦 Co-Parent' },
+    { value: 'family_member', label: '👵 Family' },
+    { value: 'caregiver', label: '🤱 Caregiver' },
+    { value: 'therapist', label: '🩺 Therapist' }
+  ];
+
+  const activeFiltersCount = Object.keys(filters).filter(key => 
+    key !== 'selectedDate' && filters[key]?.length > 0
+  ).length;
+
+  if (compact) {
+    // Compact mode for header display
+    return (
+      <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap', ...sx }}>
+        {/* Search Field */}
+        <TextField
+          size="small"
+          placeholder="Search entries..."
+          value={searchText}
+          onChange={handleSearchChange}
+          InputProps={{
+            startAdornment: <SearchIcon sx={{ fontSize: 16, mr: 0.5, color: 'text.secondary' }} />,
+            sx: { height: 24, fontSize: '0.75rem' }
+          }}
+          sx={{
+            minWidth: 120,
+            '& .MuiOutlinedInput-root': {
+              height: 24,
+              '& input': {
+                py: 0,
+                fontSize: '0.75rem'
+              }
+            }
+          }}
+        />
+
+        {/* Date Picker */}
+        <Chip
+          size="small"
+          icon={<CalendarIcon sx={{ fontSize: 14 }} />}
+          label={selectedDate?.toLocaleDateString() || 'Select Date'}
+          onClick={handleDatePickerOpen}
+          variant="outlined"
+          sx={{ fontSize: '0.7rem', height: 24 }}
+        />
+        
+        <Popover
+          open={Boolean(datePickerAnchor)}
+          anchorEl={datePickerAnchor}
+          onClose={handleDatePickerClose}
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'left',
+          }}
+        >
+          <Box sx={{ p: 1 }}>
+            <TextField
+              type="date"
               size="small"
-              startIcon={<ClearIcon />}
-              onClick={handleClearFilters}
-              color="secondary"
+              value={selectedDate ? selectedDate.toISOString().split('T')[0] : ''}
+              onChange={(e) => handleDateChange(new Date(e.target.value))}
+              InputLabelProps={{ shrink: true }}
+            />
+          </Box>
+        </Popover>
+
+        {/* Entry Type Chips */}
+        {entryTypeOptions.map((option) => {
+          const isActive = filters.entryTypes?.includes(option.value);
+          return (
+            <Chip
+              key={option.value}
+              label={`${option.label} (${option.count})`}
+              size="small"
+              variant={isActive ? 'filled' : 'outlined'}
+              color={isActive ? option.color : 'default'}
+              onClick={() => {
+                const newTypes = isActive 
+                  ? (filters.entryTypes || []).filter(type => type !== option.value)
+                  : [...(filters.entryTypes || []), option.value];
+                onFiltersChange({
+                  ...filters,
+                  entryTypes: newTypes.length > 0 ? newTypes : undefined
+                });
+              }}
+              sx={{ fontSize: '0.7rem', height: 24 }}
+            />
+          );
+        })}
+
+        {/* Clear All Filters */}
+        {(Object.keys(filters).length > 0 || searchText) && (
+          <IconButton
+            size="small"
+            onClick={clearAllFilters}
+            sx={{ width: 24, height: 24 }}
+            title="Clear all filters"
+          >
+            <ClearIcon sx={{ fontSize: 14 }} />
+          </IconButton>
+        )}
+      </Box>
+    );
+  }
+
+  // Full mode for main timeline display
+  return (
+    <Paper variant="outlined" sx={{ p: 2, mb: 2, ...sx }}>
+      <Box sx={{ mb: 2 }}>
+        <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
+          Timeline Filters
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Filter timeline entries by type, who logged them, or jump to a specific date
+        </Typography>
+      </Box>
+
+      {/* Entry Type Filters */}
+      <Box sx={{ mb: 2 }}>
+        <Typography variant="caption" sx={{ fontWeight: 600, mb: 1, display: 'block' }}>
+          ENTRY TYPES
+        </Typography>
+        <ToggleButtonGroup
+          value={filters.entryTypes || []}
+          onChange={handleEntryTypeFilter}
+          size="small"
+          sx={{ flexWrap: 'wrap', gap: 0.5 }}
+        >
+          {entryTypeOptions.map((option) => (
+            <ToggleButton
+              key={option.value}
+              value={option.value}
+              disabled={option.count === 0}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 0.5,
+                px: 1.5,
+                py: 0.5,
+                fontSize: '0.75rem',
+                textTransform: 'none',
+                border: '1px solid',
+                borderColor: 'divider',
+                '&.Mui-selected': {
+                  bgcolor: `${option.color}.50`,
+                  borderColor: `${option.color}.main`,
+                  color: `${option.color}.main`
+                }
+              }}
             >
-              Clear
-            </Button>
-          )}
-        </Box>
-
-        {/* Expanded Filters */}
-        <Collapse in={expanded} timeout="auto" unmountOnExit>
-          <Grid container spacing={3}>
-            {/* Entry Type Filters */}
-            <Grid item xs={12} md={6}>
-              <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
-                Entry Types
-              </Typography>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {Object.values(TIMELINE_TYPES).map(type => {
-                  const isSelected = filters.types?.includes(type.type);
-                  return (
-                    <Chip
-                      key={type.type}
-                      label={`${type.icon} ${type.label}`}
-                      variant={isSelected ? 'filled' : 'outlined'}
-                      onClick={() => handleTypeToggle(type.type)}
-                      sx={{
-                        bgcolor: isSelected ? alpha(type.color, 0.1) : 'transparent',
-                        borderColor: isSelected ? type.color : theme.palette.divider,
-                        color: isSelected ? type.color : 'text.secondary',
-                        '&:hover': {
-                          bgcolor: alpha(type.color, 0.1),
-                          borderColor: type.color
-                        }
-                      }}
-                    />
-                  );
-                })}
-              </Box>
-            </Grid>
-
-            {/* Date Range Filters */}
-            <Grid item xs={12} md={6}>
-              <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
-                Date Range
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 1, flexDirection: { xs: 'column', sm: 'row' } }}>
-                <TextField
-                  label="From"
-                  type="date"
-                  size="small"
-                  value={filters.startDate ? filters.startDate.toISOString().split('T')[0] : ''}
-                  onChange={(e) => handleFilterChange({ 
-                    startDate: e.target.value ? new Date(e.target.value) : null 
-                  })}
-                  InputLabelProps={{ shrink: true }}
-                  inputProps={{
-                    max: filters.endDate ? filters.endDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
-                  }}
-                  sx={{ flex: 1 }}
-                />
-                <TextField
-                  label="To"
-                  type="date"
-                  size="small"
-                  value={filters.endDate ? filters.endDate.toISOString().split('T')[0] : ''}
-                  onChange={(e) => handleFilterChange({ 
-                    endDate: e.target.value ? new Date(e.target.value) : null 
-                  })}
-                  InputLabelProps={{ shrink: true }}
-                  inputProps={{
-                    min: filters.startDate ? filters.startDate.toISOString().split('T')[0] : undefined,
-                    max: new Date().toISOString().split('T')[0]
-                  }}
-                  sx={{ flex: 1 }}
-                />
-              </Box>
-            </Grid>
-
-            {/* Author Filter */}
-            <Grid item xs={12} md={6}>
-              <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
-                Author
-              </Typography>
-              <TextField
-                placeholder="Filter by author name..."
-                variant="outlined"
-                size="small"
-                fullWidth
-                value={filters.author || ''}
-                onChange={(e) => handleFilterChange({ author: e.target.value })}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon color="action" />
-                    </InputAdornment>
-                  )
-                }}
+              {option.icon}
+              {option.label}
+              <Chip 
+                label={option.count} 
+                size="small" 
+                sx={{ 
+                  height: 16, 
+                  fontSize: '0.6rem',
+                  ml: 0.5,
+                  bgcolor: option.count > 0 ? `${option.color}.100` : 'action.disabled'
+                }} 
               />
-            </Grid>
+            </ToggleButton>
+          ))}
+        </ToggleButtonGroup>
+      </Box>
 
-            {/* Quick Date Filters */}
-            <Grid item xs={12} md={6}>
-              <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
-                Quick Filters
-              </Typography>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {[
-                  { label: 'Today', days: 0 },
-                  { label: 'Last 7 days', days: 7 },
-                  { label: 'Last 30 days', days: 30 },
-                  { label: 'Last 90 days', days: 90 }
-                ].map(({ label, days }) => {
-                  const startDate = new Date();
-                  startDate.setDate(startDate.getDate() - days);
-                  
+      {/* User Role Filter */}
+      <Box sx={{ mb: 2, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+        <FormControl size="small" sx={{ minWidth: 160 }}>
+          <InputLabel>Who logged it</InputLabel>
+          <Select
+            value={filters.userRoles || []}
+            onChange={handleUserRoleFilter}
+            multiple
+            label="Who logged it"
+            startAdornment={<PersonIcon sx={{ fontSize: 16, mr: 0.5 }} />}
+            renderValue={(selected) => (
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                {selected.map((value) => {
+                  const option = userRoleOptions.find(opt => opt.value === value);
                   return (
-                    <Chip
-                      key={label}
-                      label={label}
-                      variant="outlined"
-                      size="small"
-                      onClick={() => handleFilterChange({
-                        startDate: days === 0 ? new Date() : startDate,
-                        endDate: new Date()
-                      })}
-                      sx={{
-                        '&:hover': {
-                          bgcolor: alpha(theme.palette.primary.main, 0.1),
-                          borderColor: theme.palette.primary.main
-                        }
-                      }}
-                    />
+                    <Chip key={value} label={option?.label || value} size="small" />
                   );
                 })}
               </Box>
-            </Grid>
-          </Grid>
-        </Collapse>
-      </CardContent>
-    </Card>
+            )}
+          >
+            {userRoleOptions.map((option) => (
+              <MenuItem key={option.value} value={option.value}>
+                {option.label}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        {/* Date Picker */}
+        <TextField
+          type="date"
+          label="Jump to date"
+          size="small"
+          value={selectedDate.toISOString().split('T')[0]}
+          onChange={handleDateChange}
+          InputProps={{
+            startAdornment: <DateIcon sx={{ fontSize: 16, mr: 0.5 }} />
+          }}
+          sx={{ minWidth: 160 }}
+        />
+      </Box>
+
+      {/* Active Filters Summary */}
+      {activeFiltersCount > 0 && (
+        <>
+          <Divider sx={{ mb: 1 }} />
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="caption" color="text.secondary">
+              {activeFiltersCount} filter{activeFiltersCount > 1 ? 's' : ''} active
+            </Typography>
+            <Typography 
+              variant="caption" 
+              color="primary" 
+              sx={{ cursor: 'pointer', textDecoration: 'underline' }}
+              onClick={clearAllFilters}
+            >
+              Clear all filters
+            </Typography>
+          </Box>
+        </>
+      )}
+    </Paper>
   );
 };
 
