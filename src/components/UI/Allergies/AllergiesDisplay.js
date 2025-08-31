@@ -1,31 +1,28 @@
 import React from 'react';
 import { Warning as AllergyIcon } from '@mui/icons-material';
-import { useTheme } from '@mui/material/styles';
-import ProgressiveDisclosure from './ProgressiveDisclosure';
-import AllergyChip, { sortAllergiesByPriority } from './AllergyChip';
+import ProgressiveDisclosure from '../ProgressiveDisclosure';
+import AllergyChip, { sortAllergiesByPriority } from '.';
 
 /**
  * AllergiesDisplay - Smart allergies component with progressive disclosure
- * 
+ *
  * @param {Array} allergies - Array of allergy strings
  * @param {number} maxVisible - Maximum allergies to show in header (default: 2)
  * @param {Object} sx - Custom styling
  * @param {Function} onAllergyClick - Optional click handler for allergies
  */
-const AllergiesDisplay = ({ 
+const AllergiesDisplay = ({
   allergies = [],
   maxVisible = 2,
   sx = {},
-  onAllergyClick
+  onAllergyClick,
 }) => {
-  const theme = useTheme();
-
   // Sort allergies by priority (life-threatening first)
   const sortedAllergies = sortAllergiesByPriority(allergies);
 
   // Render allergy in header (compact)
   const renderAllergy = (allergy, index) => (
-    <AllergyChip 
+    <AllergyChip
       key={index}
       allergy={allergy}
       variant="compact"
@@ -35,7 +32,7 @@ const AllergiesDisplay = ({
 
   // Render allergy in popover (detailed)
   const renderExpandedAllergy = (allergy, index) => (
-    <AllergyChip 
+    <AllergyChip
       key={index}
       allergy={allergy}
       variant="detailed"
@@ -58,3 +55,4 @@ const AllergiesDisplay = ({
 };
 
 export default AllergiesDisplay;
+

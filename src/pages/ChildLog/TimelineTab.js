@@ -21,7 +21,7 @@ import { getTimelineEntries, filterTimelineEntries, exportTimelineData } from '.
 import TimelineEntry from '../../components/Timeline/TimelineEntry';
 import TimelineFilters from '../../components/Timeline/TimelineFilters';
 import PrintableTimelineCalendar from '../../components/Timeline/PrintableTimelineCalendar';
-import DayDetailModal from '../../components/Timeline/DayDetailModal';
+import DayDetailModal from '../../components/Timeline/_depracatedTab/DayDetailModal';
 
 const TimelineTab = ({ childId }) => {
   const [entries, setEntries] = useState([]);

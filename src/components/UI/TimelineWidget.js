@@ -12,26 +12,17 @@ import {
   Avatar,
   Chip,
   Button,
-  Modal,
-  Stack,
-  Divider,
-  Tabs,
-  Tab
 } from '@mui/material';
 import {
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
   Timeline as TimelineIcon,
   CalendarMonth as CalendarIcon,
-  ViewDay as DayViewIcon,
-  ViewList as ListViewIcon
 } from '@mui/icons-material';
 import TimelineProgressRing from './TimelineProgressRing';
-import TimelineCalendar from '../Timeline/TimelineCalendar';
 import MiniCalendar from './MiniCalendar';
-import DailyLogEntry from './DailyLogEntry';
+import { UnifiedTimeline, TimelineFullModal, TimelineFilters } from '../Timeline';
 import { useTimelineProgress } from '../../hooks/useTimelineProgress';
-import { useUnifiedDailyLog } from '../../hooks/useUnifiedDailyLog';
 
 /**
  * TimelineWidget - Self-contained timeline component with progress visualization and unified daily log
@@ -40,7 +31,6 @@ import { useUnifiedDailyLog } from '../../hooks/useUnifiedDailyLog';
  * @param {Object} props
  * @param {Object} props.child - Child object
  * @param {Array} props.entries - Timeline entries for the child
- * @param {Array} props.incidents - Incident entries for the child (optional)
  * @param {Object} props.dailyCareStatus - Daily care completion status
  * @param {boolean} props.defaultExpanded - Whether widget starts expanded
  * @param {string} props.variant - Display variant: 'compact', 'full'
@@ -49,7 +39,6 @@ import { useUnifiedDailyLog } from '../../hooks/useUnifiedDailyLog';
 const TimelineWidget = ({
   child,
   entries = [],
-  incidents = [],
   dailyCareStatus = {},
   defaultExpanded = false,
   variant = 'full',
@@ -58,10 +47,26 @@ const TimelineWidget = ({
   const [expanded, setExpanded] = useState(defaultExpanded);
   const [showTimelineModal, setShowTimelineModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState('daily'); // 'daily' or 'recent'
   
-  const timeline = useTimelineProgress(entries, dailyCareStatus);
-  const dailyLog = useUnifiedDailyLog(entries, incidents, selectedDate);
+  // Debug: Log current state
+  console.log('TimelineWidget state:', {
+    childId: child?.id,
+    childName: child?.name,
+    selectedDate,
+    entriesCount: entries.length,
+    childSpecificEntriesCount: entries.filter(entry => 
+      entry.childId === child?.id || entry.child?.id === child?.id
+    ).length
+  });
+ // 'daily' or 'recent'
+  const [timelineFilters, setTimelineFilters] = useState({}); // Unified timeline filters
+  
+  // Filter entries to ensure they belong to the current child
+  const childSpecificEntries = entries.filter(entry => 
+    entry.childId === child?.id || entry.child?.id === child?.id
+  );
+  
+  const timeline = useTimelineProgress(childSpecificEntries, dailyCareStatus);
   
   // Component styles - mobile-first responsive
   const widgetStyles = {
@@ -98,6 +103,7 @@ const TimelineWidget = ({
     if (e) {
       e.stopPropagation();
     }
+    console.log('Progress ring clicked for child:', child?.id, child?.name);
     if (!expanded) {
       setExpanded(true);
     }
@@ -107,15 +113,153 @@ const TimelineWidget = ({
     setShowTimelineModal(true);
   };
 
+  // Test function to check if any data exists at all
+  const testDataExists = async () => {
+    try {
+      console.log('🔍 Testing if ANY data exists in collections...');
+      
+      // Import Firebase functions locally for testing
+      const { collection, getDocs, query, limit, orderBy, where } = await import('firebase/firestore');
+      const { db } = await import('../../services/firebase');
+      
+      // Test each collection with a simple limit query - check multiple possible names
+      const collections = [
+        'incidents', 
+        'journalEntries', 'journal_entries', 'journals',
+        'dailyLogs', 'daily_logs', 'dailyLog', 'daily-logs',
+        'followUpResponses', 'follow_up_responses', 'followUps'
+      ];
+      
+      for (const collectionName of collections) {
+        try {
+          // Test 1: Any data at all
+          const testQuery = query(collection(db, collectionName), limit(5));
+          const snapshot = await getDocs(testQuery);
+          console.log(`📊 Collection '${collectionName}':`, {
+            exists: snapshot.size > 0,
+            count: snapshot.size
+          });
+          
+          // Test 2: Recent data (last 24 hours)
+          const yesterday = new Date();
+          yesterday.setDate(yesterday.getDate() - 1);
+          
+          try {
+            const recentQuery = query(
+              collection(db, collectionName),
+              where('timestamp', '>=', yesterday),
+              orderBy('timestamp', 'desc'),
+              limit(5)
+            );
+            const recentSnapshot = await getDocs(recentQuery);
+            console.log(`📅 Recent '${collectionName}' (last 24h):`, {
+              count: recentSnapshot.size,
+              docs: recentSnapshot.docs.map(doc => ({
+                id: doc.id,
+                timestamp: doc.data().timestamp?.toDate(),
+                childId: doc.data().childId,
+                ...doc.data()
+              }))
+            });
+          } catch (recentErr) {
+            console.log(`⚠️  No recent data for '${collectionName}' or index missing:`, recentErr.message);
+          }
+          
+          // Test 3: For current child specifically
+          if (child?.id) {
+            try {
+              const childQuery = query(
+                collection(db, collectionName),
+                where('childId', '==', child.id),
+                limit(5)
+              );
+              const childSnapshot = await getDocs(childQuery);
+              console.log(`👶 '${collectionName}' for child ${child.id}:`, {
+                count: childSnapshot.size,
+                docs: childSnapshot.docs.map(doc => ({
+                  id: doc.id,
+                  timestamp: doc.data().timestamp?.toDate(),
+                  ...doc.data()
+                }))
+              });
+            } catch (childErr) {
+              console.log(`⚠️  Error querying '${collectionName}' for child:`, childErr.message);
+            }
+          }
+          
+        } catch (err) {
+          console.error(`❌ Error testing collection '${collectionName}':`, err);
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error in testDataExists:', error);
+    }
+  };
+
+  // Specific test for journal/daily log collections
+  const testJournalCollections = async () => {
+    try {
+      console.log('📔 Testing specific journal/daily log collections...');
+      
+      const { collection, getDocs, query, limit, where } = await import('firebase/firestore');
+      const { db } = await import('../../services/firebase');
+      
+      // Test subcollections under children/{childId}/
+      const journalSubcollections = ['journals', 'journal_entries', 'journal'];
+      const dailyLogSubcollections = ['moodLogs', 'dailyLogs', 'daily_logs', 'logs'];
+      
+      if (child?.id) {
+        console.log(`Testing journal subcollections for child ${child.id}:`);
+        for (const name of journalSubcollections) {
+          try {
+            const snapshot = await getDocs(query(collection(db, 'children', child.id, name), limit(3)));
+            if (snapshot.size > 0) {
+              console.log(`✅ Found journal subcollection: 'children/${child.id}/${name}' (${snapshot.size} docs)`);
+              snapshot.docs.forEach((doc, i) => {
+                console.log(`  Journal ${i + 1}:`, doc.data());
+              });
+            } else {
+              console.log(`📭 Empty subcollection: 'children/${child.id}/${name}'`);
+            }
+          } catch (err) {
+            console.log(`❌ Subcollection 'children/${child.id}/${name}' doesn't exist or error:`, err.message);
+          }
+        }
+      }
+      
+      if (child?.id) {
+        console.log(`Testing daily log subcollections for child ${child.id}:`);
+        for (const name of dailyLogSubcollections) {
+          try {
+            const snapshot = await getDocs(query(collection(db, 'children', child.id, name), limit(3)));
+            if (snapshot.size > 0) {
+              console.log(`✅ Found daily log subcollection: 'children/${child.id}/${name}' (${snapshot.size} docs)`);
+              snapshot.docs.forEach((doc, i) => {
+                console.log(`  Daily Log ${i + 1}:`, doc.data());
+              });
+            } else {
+              console.log(`📭 Empty subcollection: 'children/${child.id}/${name}'`);
+            }
+          } catch (err) {
+            console.log(`❌ Subcollection 'children/${child.id}/${name}' doesn't exist or error:`, err.message);
+          }
+        }
+      }
+      
+      
+    } catch (error) {
+      console.error('❌ Error in testJournalCollections:', error);
+    }
+  };
+
   const handleDayClick = (day, dayEntries, date) => {
     // Handle day click from mini calendar or timeline calendar
+    console.log('Day clicked for child:', child?.id, child?.name, { day, date, entriesCount: dayEntries?.length || 0 });
     if (showUnifiedLog) {
       setSelectedDate(date);
-      setViewMode('daily');
       if (!expanded) {
         setExpanded(true);
       }
-      console.log('Daily log updated for:', { day, date, entriesCount: dayEntries?.length || 0 });
     } else {
       // Legacy behavior
       if (dayEntries?.length > 0) {
@@ -124,9 +268,6 @@ const TimelineWidget = ({
     }
   };
 
-  const handleViewModeChange = (event, newMode) => {
-    setViewMode(newMode);
-  };
 
   // Render recent entries list
   const renderRecentEntries = () => {
@@ -224,84 +365,6 @@ const TimelineWidget = ({
     );
   };
 
-  // Render unified daily log with enhanced features
-  const renderUnifiedDailyLog = () => {
-    return (
-      <>
-        {/* View Mode Tabs */}
-        <Box sx={{ mb: 2 }}>
-          <Tabs
-            value={viewMode}
-            onChange={handleViewModeChange}
-            variant="fullWidth"
-            sx={{
-              minHeight: 32,
-              '& .MuiTab-root': {
-                minHeight: 32,
-                fontSize: '0.75rem',
-                py: 0.5
-              }
-            }}
-          >
-            <Tab
-              icon={<DayViewIcon sx={{ fontSize: 16 }} />}
-              iconPosition="start"
-              label={`Daily Log (${dailyLog.totalCount})`}
-              value="daily"
-              sx={{ textTransform: 'none' }}
-            />
-            <Tab
-              icon={<ListViewIcon sx={{ fontSize: 16 }} />}
-              iconPosition="start"
-              label={`Recent Activity (${timeline.recentEntries.length})`}
-              value="recent"
-              sx={{ textTransform: 'none' }}
-            />
-          </Tabs>
-        </Box>
-
-        {/* Content based on view mode */}
-        {viewMode === 'daily' ? (
-          <>
-            {/* Calendar and Daily Log */}
-            <Box sx={{ 
-              display: 'flex', 
-              gap: { xs: 2, sm: 2, md: 3 }, 
-              flexDirection: { xs: 'column', md: 'row' },
-              alignItems: { xs: 'stretch', md: 'flex-start' }
-            }}>
-              {/* Mini Calendar */}
-              <Box sx={{ 
-                flexShrink: 0,
-                width: { xs: '100%', md: 'auto' },
-                display: 'flex',
-                justifyContent: { xs: 'center', md: 'flex-start' }
-              }}>
-                <MiniCalendar
-                  entries={[...entries, ...incidents]}
-                  onDayClick={handleDayClick}
-                  currentMonth={selectedDate}
-                  selectedDate={selectedDate}
-                />
-              </Box>
-              
-              {/* Daily Log Entries */}
-              <Box sx={{ 
-                flex: { xs: 'none', md: 1 }, 
-                minWidth: 0,
-                width: { xs: '100%', md: 'auto' }
-              }}>
-                {renderDailyLogEntries()}
-              </Box>
-            </Box>
-          </>
-        ) : (
-          /* Legacy Recent Entries View */
-          renderLegacyContent()
-        )}
-      </>
-    );
-  };
 
   // Render legacy content (original recent entries + calendar)
   const renderLegacyContent = () => {
@@ -320,7 +383,7 @@ const TimelineWidget = ({
           justifyContent: { xs: 'center', md: 'flex-start' }
         }}>
           <MiniCalendar
-            entries={entries}
+            entries={childSpecificEntries}
             onDayClick={handleDayClick}
             currentMonth={new Date()}
           />
@@ -338,83 +401,6 @@ const TimelineWidget = ({
     );
   };
 
-  // Render daily log entries using the new DailyLogEntry component
-  const renderDailyLogEntries = () => {
-    if (!dailyLog.hasEntries) {
-      return (
-        <Box sx={{ textAlign: 'center', py: 4 }}>
-          <TimelineIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 2 }} />
-          <Typography variant="h6" color="text.secondary" gutterBottom>
-            No activity for {selectedDate.toLocaleDateString()}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Select a different date or start logging activities
-          </Typography>
-        </Box>
-      );
-    }
-
-    return (
-      <Stack spacing={1} sx={{ maxHeight: 400, overflowY: 'auto' }}>
-        {/* Day Summary */}
-        <Box sx={{ mb: 2, p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
-          <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
-            {selectedDate.toDateString()}
-          </Typography>
-          
-          <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 0.5 }}>
-            <Chip
-              label={`${dailyLog.totalCount} entries`}
-              size="small"
-              color="primary"
-              variant="outlined"
-            />
-            
-            {dailyLog.incidentCount > 0 && (
-              <Chip
-                label={`${dailyLog.incidentCount} incidents`}
-                size="small"
-                color="warning"
-                variant="outlined"
-              />
-            )}
-            
-            {dailyLog.stats.highSeverityCount > 0 && (
-              <Chip
-                label={`${dailyLog.stats.highSeverityCount} high severity`}
-                size="small"
-                color="error"
-                variant="outlined"
-              />
-            )}
-            
-            {dailyLog.stats.pendingFollowUps > 0 && (
-              <Chip
-                label={`${dailyLog.stats.pendingFollowUps} pending follow-ups`}
-                size="small"
-                color="info"
-                variant="outlined"
-              />
-            )}
-          </Stack>
-        </Box>
-
-        {/* Entries List */}
-        <Divider sx={{ my: 1 }} />
-        
-        {dailyLog.entries.map((entry, index) => (
-          <DailyLogEntry
-            key={entry.id}
-            entry={entry}
-            formatTime={dailyLog.formatTime}
-            formatRelativeTime={dailyLog.formatRelativeTime}
-            getEntryTypeInfo={dailyLog.getEntryTypeInfo}
-            defaultExpanded={index === 0 && dailyLog.entries.length === 1}
-          />
-        ))}
-      </Stack>
-    );
-  };
 
   return (
     <>
@@ -451,30 +437,56 @@ const TimelineWidget = ({
             
             {/* Header Content */}
             <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography
-                variant="subtitle2"
-                sx={{ 
-                  fontWeight: 600, 
-                  color: 'text.primary',
-                  fontSize: { xs: '0.9rem', md: '1rem' }
-                }}
-              >
-                Daily Progress & Timeline
-              </Typography>
-              <Typography 
-                variant="caption" 
-                color="text.secondary"
-                sx={{ 
-                  fontSize: { xs: '0.7rem', md: '0.75rem' },
-                  display: 'block',
-                  lineHeight: 1.2
-                }}
-              >
-                {timeline.hasActivity ? 
-                  `${timeline.metrics?.totalCount || 0} total entries` : 
-                  'No activity yet'
-                }
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+                <Box>
+                  <Typography
+                    variant="subtitle2"
+                    sx={{ 
+                      fontWeight: 600, 
+                      color: 'text.primary',
+                      fontSize: { xs: '0.9rem', md: '1rem' }
+                    }}
+                  >
+                    Daily Progress & Timeline
+                  </Typography>
+                  <Typography 
+                    variant="caption" 
+                    color="text.secondary"
+                    sx={{ 
+                      fontSize: { xs: '0.7rem', md: '0.75rem' },
+                      display: 'block',
+                      lineHeight: 1.2
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const yesterday = new Date();
+                      yesterday.setDate(yesterday.getDate() - 1);
+                      setSelectedDate(yesterday);
+                      console.log('Switched to yesterday:', yesterday.toDateString());
+                    }}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    {timeline.hasActivity ? 
+                      `${timeline.metrics?.totalCount || 0} total entries` : 
+                      'No activity yet'
+                    } | <span onClick={(e) => {e.stopPropagation(); testDataExists();}}>🔍 Test DB</span> | <span onClick={(e) => {e.stopPropagation(); setSelectedDate(new Date(selectedDate));}}>🔄 Refresh</span> | <span onClick={(e) => {e.stopPropagation(); testJournalCollections();}}>📔 Test Journal</span>
+                  </Typography>
+                </Box>
+                
+                {/* Timeline Filters */}
+                {showUnifiedLog && expanded && (
+                  <Box onClick={(e) => e.stopPropagation()}>
+                    <TimelineFilters
+                      filters={timelineFilters}
+                      onFiltersChange={setTimelineFilters}
+                      selectedDate={selectedDate}
+                      onDateChange={(date) => setSelectedDate(date)}
+                      summary={{}}
+                      compact={true}
+                    />
+                  </Box>
+                )}
+              </Box>
             </Box>
 
             {/* Expand/Collapse Button */}
@@ -500,7 +512,44 @@ const TimelineWidget = ({
           >
             {variant === 'full' && renderMetrics()}
             
-            {showUnifiedLog ? renderUnifiedDailyLog() : renderLegacyContent()}
+            {showUnifiedLog ? (
+              <Box sx={{ 
+                display: 'flex', 
+                gap: { xs: 2, sm: 2, md: 3 }, 
+                flexDirection: { xs: 'column', md: 'row' },
+                alignItems: { xs: 'stretch', md: 'flex-start' }
+              }}>
+                {/* Mini Calendar */}
+                <Box sx={{ 
+                  flexShrink: 0,
+                  width: { xs: '100%', md: 'auto' },
+                  display: 'flex',
+                  justifyContent: { xs: 'center', md: 'flex-start' }
+                }}>
+                  <MiniCalendar
+                    entries={childSpecificEntries}
+                    onDayClick={handleDayClick}
+                    currentMonth={new Date()}
+                    selectedDate={selectedDate}
+                  />
+                </Box>
+                
+                {/* Unified Timeline */}
+                <Box sx={{ 
+                  flex: { xs: 'none', md: 1 }, 
+                  minWidth: 0,
+                  width: { xs: '100%', md: 'auto' }
+                }}>
+                  <UnifiedTimeline 
+                    child={child}
+                    selectedDate={selectedDate}
+                    filters={timelineFilters}
+                    onFiltersChange={setTimelineFilters}
+                    showFilters={false}
+                  />
+                </Box>
+              </Box>
+            ) : renderLegacyContent()}
             
             {/* Action Buttons */}
             {timeline.hasActivity && (
@@ -521,39 +570,13 @@ const TimelineWidget = ({
       </Paper>
 
       {/* Full Timeline Modal */}
-      <Modal
+      <TimelineFullModal
         open={showTimelineModal}
         onClose={() => setShowTimelineModal(false)}
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          p: 2
-        }}
-      >
-        <Paper
-          sx={{
-            maxWidth: '90vw',
-            maxHeight: '90vh',
-            width: 800,
-            overflow: 'auto',
-            borderRadius: 2
-          }}
-        >
-          <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
-            <Typography variant="h6">
-              Timeline for {child?.name}
-            </Typography>
-          </Box>
-          <Box sx={{ p: 2 }}>
-            <TimelineCalendar
-              entries={entries}
-              onDayClick={handleDayClick}
-              filters={{}}
-            />
-          </Box>
-        </Paper>
-      </Modal>
+        child={child}
+        entries={childSpecificEntries}
+        onDayClick={handleDayClick}
+      />
     </>
   );
 };

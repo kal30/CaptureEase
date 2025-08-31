@@ -168,6 +168,7 @@ export const getHabitEntries = async (childId, startDate, endDate, categories = 
         allEntries.push({
           id: doc.id,
           collection: collectionName,
+          childId: childId, // Explicitly add the childId since it's from subcollection
           ...doc.data()
         });
       });

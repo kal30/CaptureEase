@@ -18,14 +18,17 @@ export { default as NotificationPermissionPrompt } from "./NotificationPermissio
 // Progressive Disclosure Components
 export { default as ProgressiveDisclosure } from "./ProgressiveDisclosure";
 export { default as CareTeamDisplay } from "./CareTeamDisplay";
-export { default as AllergiesDisplay } from "./AllergiesDisplay";
+export { AllergiesDisplay } from "./Allergies";
 export { default as MemberChip } from "./MemberChip";
-export { default as AllergyChip } from "./AllergyChip";
+export { default as AllergyChip } from "./Allergies";
 
 //Incident and Daily Log Components
 export { default as TwoColumnGrid } from "./TwoColumnGrid";
 export { default as PillOptionCard } from "./PillOptionCard";
 export { default as StyledTextArea } from "./StyledTextArea";
+
+// Form Components
+export { default as CustomizableAutocomplete } from "./CustomizableAutocomplete";
 
 // Legacy components (consider migrating to new ones above)
 export { default as StyledButton } from "./StyledButton";

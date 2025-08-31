@@ -21,6 +21,7 @@ export const fetchProgressNotes = async (childId) => {
 export const addProgressNote = async (childId, progressNoteData) => {
   await addDoc(collection(db, `children/${childId}/progressNotes`), {
     ...progressNoteData,
+    childId: childId,
     date: Timestamp.fromDate(new Date()),
     timestamp: new Date(),
   });

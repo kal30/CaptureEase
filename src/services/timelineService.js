@@ -7,7 +7,8 @@ export const TIMELINE_TYPES = {
     type: 'daily_note',
     label: 'Daily Note', 
     icon: '📝',
-    color: '#2196F3', // Blue
+    color: '#2196F3', // Blue (UI should prefer theme)
+    entryGroup: 'dailyNote',
     collection: 'dailyLogs',
     isRootCollection: true // Indicates this is a root collection with childId filter
   },
@@ -15,58 +16,71 @@ export const TIMELINE_TYPES = {
     type: 'progress_note', 
     label: 'Progress Note',
     icon: '📈',
-    color: '#4CAF50', // Green
+    color: '#4CAF50', // Green (UI should prefer theme)
+    entryGroup: 'dailyNote',
     collection: 'progressNotes'
   },
   SENSORY_LOG: {
     type: 'sensory_log',
     label: 'Sensory Log', 
     icon: '🧠',
-    color: '#9C27B0', // Purple
+    color: '#9C27B0', // Purple (UI should prefer theme)
+    entryGroup: 'dailyHabit',
     collection: 'sensoryLogs'
   },
   BEHAVIOR: {
     type: 'behavior',
     label: 'Behavior',
     icon: '⚡',
-    color: '#FF9800', // Orange
+    color: '#FF9800', // Orange (UI should prefer theme)
+    entryGroup: 'dailyHabit',
     collection: 'behaviors'
   },
   MOOD_LOG: {
     type: 'mood_log',
     label: 'Mood Log',
     icon: '😊',
-    color: '#E91E63', // Pink
+    color: '#E91E63', // Pink (UI should prefer theme)
+    entryGroup: 'dailyHabit',
     collection: 'moodLogs'
   },
   MEDICATION_LOG: {
     type: 'medication_log',
     label: 'Medication Log',
     icon: '💊',
-    color: '#FF5722', // Deep Orange
+    color: '#FF5722', // Deep Orange (UI should prefer theme)
+    entryGroup: 'dailyHabit',
     collection: 'medicationLogs'
   },
   FOOD_LOG: {
     type: 'food_log',
     label: 'Food Log',
     icon: '🍎',
-    color: '#8BC34A', // Light Green
+    color: '#8BC34A', // Light Green (UI should prefer theme)
+    entryGroup: 'dailyHabit',
     collection: 'foodLogs'
   },
   MEDICAL_EVENT: {
     type: 'medical_event',
     label: 'Medical Event',
     icon: '🏥',
-    color: '#F44336', // Red
+    color: '#F44336', // Red (UI should prefer theme)
+    entryGroup: 'incident',
     collection: 'medicalEvents'
   },
   SLEEP_LOG: {
     type: 'sleep_log',
     label: 'Sleep Log',
     icon: '😴',
-    color: '#673AB7', // Deep Purple
+    color: '#673AB7', // Deep Purple (UI should prefer theme)
+    entryGroup: 'dailyHabit',
     collection: 'sleepLogs'
   }
+};
+
+export const getTimelineEntryGroup = (type) => {
+  const cfg = Object.values(TIMELINE_TYPES).find(t => t.type === type);
+  return cfg?.entryGroup || undefined;
 };
 
 // Normalize different data structures into a unified timeline entry format

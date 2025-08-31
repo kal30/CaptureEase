@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { INCIDENT_TYPES, getSeverityScale } from '../services/incidentService';
+import { getIncidentTypeConfig, getSeverityScale } from '../services/incidentService';
 
 /**
  * Enhanced hook for creating a unified daily log view
@@ -31,7 +31,7 @@ export const useUnifiedDailyLog = (timelineEntries = [], incidents = [], selecte
     
     // Convert incidents to unified format
     const normalizedIncidents = dayIncidents.map(incident => {
-      const incidentType = INCIDENT_TYPES[incident.type] || INCIDENT_TYPES.other;
+      const incidentType = getIncidentTypeConfig(incident.type);
       const severityScale = getSeverityScale(incident.type);
       const severityInfo = severityScale[incident.severity] || { label: 'Unknown', color: '#666' };
       
