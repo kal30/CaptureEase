@@ -21,8 +21,6 @@ import {
   FlashOn as FlashOnIcon
 } from '@mui/icons-material';
 import { alpha, useTheme } from '@mui/material/styles';
-import DataDrivenChildCard from '../Mobile/DataDrivenChildCard';
-import MicroDataCollector from '../Mobile/MicroDataCollector';
 import CorrelationDashboard from '../Analytics/CorrelationDashboard';
 
 const QuickDataSection = ({ children, userRole, onEditChild, onDeleteChild }) => {
@@ -139,15 +137,14 @@ const QuickDataSection = ({ children, userRole, onEditChild, onDeleteChild }) =>
             const childData = mockData[child.id] || {};
             return (
               <Grid item xs={12} md={6} lg={4} key={child.id}>
-                <DataDrivenChildCard
-                  child={child}
-                  onQuickDataEntry={handleQuickDataEntry}
-                  onEditChild={onEditChild}
-                  onDeleteChild={onDeleteChild}
-                  hasDataToday={childData.hasDataToday}
-                  dataCompleteness={childData.dataCompleteness || 0}
-                  recentInsights={childData.recentInsights || []}
-                />
+                <Card>
+                  <CardContent>
+                    <Typography>Quick data view for {child.name}</Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Data-driven insights not available
+                    </Typography>
+                  </CardContent>
+                </Card>
               </Grid>
             );
           })}

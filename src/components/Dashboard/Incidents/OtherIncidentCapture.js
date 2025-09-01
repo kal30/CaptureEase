@@ -111,15 +111,14 @@ const OtherIncidentCapture = ({
         type: isCustomCategory ? customCategoryType : 'other',
         customIncidentName: isCustomCategory ? '' : incidentName.trim(), // For custom categories, don't need custom name
         severity,
-        remedy: '', // No specific remedy for "Other" type or custom categories in this flow
+        remedy: notes || 'General observation and monitoring', // Use notes as remedy if provided, or default remedy
         notes,
-        followUpScheduled: false, // Could be made optional
         authorId: user?.uid,
         authorName: user?.displayName || user?.email?.split('@')[0] || 'User',
         authorEmail: user?.email
       };
 
-      await addIncident(childId, incidentData);
+      await addIncident(childId, incidentData, true, childName || 'child');
 
       // Only check for category suggestions if this is a regular "Other" incident
       if (!isCustomCategory) {

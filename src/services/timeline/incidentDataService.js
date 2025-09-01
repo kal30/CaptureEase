@@ -7,6 +7,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { getDayDateRange, isWithinDateRange } from './dateUtils';
+import { calculateTimeElapsed } from '../../utils/incidentGrouping';
 
 /**
  * Get incidents for a specific child and date
@@ -33,7 +34,7 @@ export const getIncidents = async (childId, selectedDate) => {
         id: doc.id,
         ...doc.data(),
         timestamp: doc.data().timestamp?.toDate() || new Date(doc.data().createdAt),
-        type: 'incident',
+        timelineType: 'incident', // Keep timeline type separate from incident type
         collection: 'incidents'
       }));
       
@@ -54,7 +55,7 @@ export const getIncidents = async (childId, selectedDate) => {
             id: doc.id,
             ...doc.data(),
             timestamp: doc.data().timestamp?.toDate() || new Date(doc.data().createdAt),
-            type: 'incident',
+            timelineType: 'incident', // Keep timeline type separate from incident type
             collection: 'incidents'
           }))
           .filter(incident => isWithinDateRange(incident.timestamp, start, end));
@@ -68,63 +69,50 @@ export const getIncidents = async (childId, selectedDate) => {
   }
 };
 
+
 /**
- * Get follow-up responses from completed incidents
- * Follow-ups are stored within incident documents, not as separate documents
+ * Get grouped incidents with their follow-ups for timeline display
+ * This combines incidents and their follow-up responses into grouped entries
  * @param {string} childId - Child ID
- * @param {Date} selectedDate - Date to fetch follow-ups for
- * @returns {Promise<Array>} - Array of follow-up response objects
+ * @param {Date} selectedDate - Date to fetch data for
+ * @returns {Promise<Array>} - Array of grouped incident objects with follow-ups
  */
-export const getFollowUpResponses = async (childId, selectedDate) => {
+export const getGroupedIncidents = async (childId, selectedDate) => {
   try {
-    const { start, end } = getDayDateRange(selectedDate);
+    // Get all incidents for the day
+    const incidentsForDay = await getIncidents(childId, selectedDate);
     
-    // Get all incidents for child that have any follow-up responses
-    // (Not just completed ones, so we can show partial follow-up progress)
-    const incidentsQuery = query(
-      collection(db, 'incidents'),
-      where('childId', '==', childId)
-    );
-    
-    const snapshot = await getDocs(incidentsQuery);
-    const followUpResponses = [];
-    
-    snapshot.docs.forEach(doc => {
-      const incident = doc.data();
-      const responses = incident.followUpResponses || [];
+    // Transform incidents to show their embedded follow-ups
+    const groupedIncidents = incidentsForDay.map(incident => {
+      const followUpResponses = incident.followUpResponses || [];
       
-      // Skip incidents that don't have any follow-up responses yet
-      if (!responses || responses.length === 0) return;
-      
-      responses.forEach((response, index) => {
-        const responseTimestamp = response.timestamp?.toDate ? 
-          response.timestamp.toDate() : 
-          new Date(response.timestamp);
+      // If incident has follow-ups, mark it as grouped and transform follow-ups
+      if (followUpResponses.length > 0) {
+        const transformedFollowUps = followUpResponses.map((response, index) => ({
+          id: `${incident.id}-followup-${index}`,
+          effectiveness: response.effectiveness,
+          notes: response.notes,
+          timestamp: response.timestamp?.toDate ? response.timestamp.toDate() : new Date(response.timestamp),
+          intervalMinutes: response.intervalMinutes || 0,
+          responseIndex: response.responseIndex || index,
+          timeElapsed: calculateTimeElapsed(incident.timestamp, response.timestamp?.toDate ? response.timestamp.toDate() : new Date(response.timestamp))
+        }));
         
-        // Only include responses that fall within the selected date
-        if (isWithinDateRange(responseTimestamp, start, end)) {
-          followUpResponses.push({
-            id: `${doc.id}-followup-${index}`,
-            incidentId: doc.id,
-            incidentType: incident.type,
-            customIncidentName: incident.customIncidentName,
-            originalSeverity: incident.severity,
-            effectiveness: response.effectiveness,
-            notes: response.notes,
-            timestamp: responseTimestamp,
-            intervalMinutes: response.intervalMinutes,
-            responseIndex: response.responseIndex || index,
-            type: 'followUp',
-            collection: 'followUpResponses',
-            childId: childId // Ensure childId is set
-          });
-        }
-      });
+        return {
+          ...incident,
+          isGroupedIncident: true,
+          followUps: transformedFollowUps,
+          totalFollowUps: transformedFollowUps.length
+        };
+      }
+      
+      return incident;
     });
     
-    return followUpResponses.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    return groupedIncidents.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
   } catch (error) {
-    console.error('Error fetching follow-up responses:', error);
+    console.error('Error fetching grouped incidents:', error);
     return [];
   }
 };
+

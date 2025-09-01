@@ -39,8 +39,13 @@ const IncidentFollowUpModal = ({
   };
 
   const handleSubmit = async () => {
-    if (!effectiveness || loading) return; // Prevent multiple clicks
-
+    // More robust validation - effectiveness should be a number 1-5
+    if (!effectiveness || effectiveness < 1 || effectiveness > 5 || loading) {
+      console.log('❌ Submit blocked:', { effectiveness, loading, type: typeof effectiveness });
+      return;
+    }
+    
+    console.log('✅ Submitting follow-up:', { effectiveness, loading });
     setLoading(true);
     setError('');
     

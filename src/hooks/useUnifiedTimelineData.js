@@ -17,7 +17,6 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
     incidents: [],
     journals: [],
     dailyLogs: [],
-    followUps: [],
     dailyHabits: []
   });
 
@@ -43,7 +42,6 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
           incidents: timelineData.incidents || [],
           journals: timelineData.journalEntries || [],
           dailyLogs: timelineData.dailyLogEntries || [],
-          followUps: timelineData.followUpResponses || [],
           dailyHabits: timelineData.dailyHabits || []
         });
         
@@ -71,9 +69,6 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
       dailyLogs: rawEntries.dailyLogs.filter(entry => 
         entry.childId === childId || entry.child?.id === childId
       ),
-      followUps: rawEntries.followUps.filter(entry => 
-        entry.childId === childId || entry.child?.id === childId
-      ),
       dailyHabits: rawEntries.dailyHabits.filter(entry => 
         entry.childId === childId || entry.child?.id === childId
       )
@@ -83,7 +78,6 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
       incidents: childFilteredEntries.incidents.length,
       journals: childFilteredEntries.journals.length,
       dailyLogs: childFilteredEntries.dailyLogs.length,
-      followUps: childFilteredEntries.followUps.length,
       dailyHabits: childFilteredEntries.dailyHabits.length
     });
     
@@ -167,20 +161,6 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
           userId: log.loggedBy?.id
         })),
       
-      // Keep follow-ups for incidents (merge with incidents later)
-      ...childFilteredEntries.followUps.map(followUp => ({
-        id: followUp.id,
-        type: 'followUp',
-        timestamp: followUp.timestamp,
-        status: followUp.status,
-        resolution: followUp.resolution,
-        notes: followUp.notes,
-        originalIncidentId: followUp.incidentId,
-        originalIncidentType: followUp.originalIncident?.type,
-        loggedByUser: followUp.loggedBy?.name,
-        userRole: followUp.loggedBy?.role,
-        userId: followUp.loggedBy?.id
-      }))
     ];
 
     // Sort all entries by timestamp (most recent first)
@@ -231,7 +211,6 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
       incidentCount: filteredEntries.filter(e => e.type === 'incident').length,
       journalCount: filteredEntries.filter(e => e.type === 'journal').length,
       dailyLogCount: filteredEntries.filter(e => e.type === 'dailyLog').length,
-      followUpCount: filteredEntries.filter(e => e.type === 'followUp').length,
       lastActivityTime: filteredEntries.length > 0 
         ? new Date(filteredEntries[0].timestamp).toLocaleTimeString([], { 
             hour: '2-digit', 
@@ -241,18 +220,15 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
       byTimePeriod: {
         morning: {
           hasIncidents: filteredEntries.some(e => e.type === 'incident' && getTimePeriod(e.timestamp) === 'morning'),
-          hasJournalEntries: filteredEntries.some(e => e.type === 'journal' && getTimePeriod(e.timestamp) === 'morning'),
-          hasFollowUps: filteredEntries.some(e => e.type === 'followUp' && getTimePeriod(e.timestamp) === 'morning')
+          hasJournalEntries: filteredEntries.some(e => e.type === 'journal' && getTimePeriod(e.timestamp) === 'morning')
         },
         afternoon: {
           hasIncidents: filteredEntries.some(e => e.type === 'incident' && getTimePeriod(e.timestamp) === 'afternoon'),
-          hasJournalEntries: filteredEntries.some(e => e.type === 'journal' && getTimePeriod(e.timestamp) === 'afternoon'),
-          hasFollowUps: filteredEntries.some(e => e.type === 'followUp' && getTimePeriod(e.timestamp) === 'afternoon')
+          hasJournalEntries: filteredEntries.some(e => e.type === 'journal' && getTimePeriod(e.timestamp) === 'afternoon')
         },
         evening: {
           hasIncidents: filteredEntries.some(e => e.type === 'incident' && getTimePeriod(e.timestamp) === 'evening'),
-          hasJournalEntries: filteredEntries.some(e => e.type === 'journal' && getTimePeriod(e.timestamp) === 'evening'),
-          hasFollowUps: filteredEntries.some(e => e.type === 'followUp' && getTimePeriod(e.timestamp) === 'evening')
+          hasJournalEntries: filteredEntries.some(e => e.type === 'journal' && getTimePeriod(e.timestamp) === 'evening')
         }
       }
     };

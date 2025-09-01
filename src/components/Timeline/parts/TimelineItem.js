@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box } from '@mui/material';
 
-const TimelineItem = ({ color, icon, onClick, children, ariaLabel }) => (
+const TimelineItem = ({ color, icon, children, ariaLabel }) => (
   <Box sx={{ position: 'relative', pb: 3 }} role="listitem" aria-label={ariaLabel}>
     <Box
       sx={{
@@ -30,11 +30,7 @@ const TimelineItem = ({ color, icon, onClick, children, ariaLabel }) => (
         p: 2,
         bgcolor: 'background.paper',
         borderRadius: 2,
-        cursor: 'pointer',
-        transition: 'all 0.2s',
-        '&:hover': { bgcolor: 'action.hover', transform: 'translateY(-1px)', boxShadow: 1 },
       }}
-      onClick={onClick}
     >
       {children}
     </Box>

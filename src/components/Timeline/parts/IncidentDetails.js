@@ -6,7 +6,7 @@ import { getSeverityColor } from '../utils/colors';
 
 const IncidentDetails = ({ entry }) => {
   const theme = useTheme();
-  const meta = getSeverityMeta(entry.incidentType);
+  const meta = getSeverityMeta(entry.type);
   const info = entry.severity ? meta[entry.severity] : null;
   const sevColor = entry.severity ? getSeverityColor(theme, entry.severity) : theme.palette.text.secondary;
   
@@ -16,10 +16,12 @@ const IncidentDetails = ({ entry }) => {
   return (
     <Box>
       {/* Main incident description or follow-up notes */}
-      <Typography variant="body2" sx={{ color: 'text.primary', mb: 1, lineHeight: 1.5 }}>
+      <Typography variant="body2" sx={{ color: 'text.primary', mb: 1, lineHeight: 1.5, fontWeight: 600 }}>
+        {/* Debug: log entry data */}
+        {console.log('🔍 Incident Entry data:', entry)}
         {isFollowUp 
           ? (entry.notes || entry.resolution || 'Follow-up logged') 
-          : (entry.description || entry.summary || 'Incident logged')
+          : (entry.customIncidentName || entry.incidentType || entry.type || 'Incident')
         }
       </Typography>
 
@@ -44,9 +46,9 @@ const IncidentDetails = ({ entry }) => {
         ) : (
           <>
             {/* Incident type */}
-            {entry.incidentType && (
+            {entry.type && entry.type !== entry.customIncidentName && entry.type !== entry.incidentType && (
               <Typography component="span" variant="caption" sx={{ px: 1, py: 0.25, bgcolor: 'grey.100', borderRadius: 1, fontSize: '0.7rem', fontWeight: 500 }}>
-                {entry.incidentType}
+                {entry.type}
               </Typography>
             )}
             {/* Severity */}

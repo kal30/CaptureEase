@@ -1,4 +1,4 @@
-import { getIncidents, getFollowUpResponses } from './incidentDataService';
+import { getIncidents, getGroupedIncidents } from './incidentDataService';
 import { getJournalEntries, getDailyLogEntries } from './journalDataService';
 import { getDailyHabits } from './habitDataService';
 
@@ -8,42 +8,38 @@ import { getDailyHabits } from './habitDataService';
  */
 
 /**
- * Get all timeline data for a specific child and date
- * Combines incidents, follow-ups, journal entries, and daily habits
+ * Get grouped timeline data for a specific child and date
+ * Uses grouped incidents that combine incidents with their follow-ups
  * @param {string} childId - Child ID
  * @param {Date} selectedDate - Date to fetch data for
  * @returns {Promise<Object>} - Object containing all timeline data arrays
  */
 export const getTimelineData = async (childId, selectedDate) => {
   try {
-    // Fetch all data sources in parallel for better performance
+    // Fetch grouped incidents and other data sources in parallel
     const [
-      incidents,
-      followUpResponses, 
+      groupedIncidents,
       journalEntries,
       dailyLogEntries,
       dailyHabits
     ] = await Promise.all([
-      getIncidents(childId, selectedDate),
-      getFollowUpResponses(childId, selectedDate),
+      getGroupedIncidents(childId, selectedDate),
       getJournalEntries(childId, selectedDate),
       getDailyLogEntries(childId, selectedDate),
       getDailyHabits(childId, selectedDate)
     ]);
 
     return {
-      incidents,
-      followUpResponses,
+      incidents: groupedIncidents, // Now contains grouped incidents with follow-ups
       journalEntries,
       dailyLogEntries,
       dailyHabits,
-      totalEntries: incidents.length + followUpResponses.length + journalEntries.length + dailyLogEntries.length + dailyHabits.length
+      totalEntries: groupedIncidents.length + journalEntries.length + dailyLogEntries.length + dailyHabits.length
     };
   } catch (error) {
     console.error('Error fetching timeline data:', error);
     return {
       incidents: [],
-      followUpResponses: [],
       journalEntries: [],
       dailyLogEntries: [],
       dailyHabits: [],
@@ -52,8 +48,10 @@ export const getTimelineData = async (childId, selectedDate) => {
   }
 };
 
+
 /**
  * Get combined and sorted timeline entries for display
+ * Now uses grouped incidents (incidents contain their follow-ups)
  * @param {string} childId - Child ID
  * @param {Date} selectedDate - Date to fetch data for
  * @returns {Promise<Array>} - Sorted array of all timeline entries
@@ -62,10 +60,9 @@ export const getCombinedTimelineEntries = async (childId, selectedDate) => {
   try {
     const data = await getTimelineData(childId, selectedDate);
     
-    // Combine all entries
+    // Combine all entries - incidents now contain their follow-ups
     const allEntries = [
-      ...data.incidents,
-      ...data.followUpResponses,
+      ...data.incidents, // These are now grouped incidents with follow-ups
       ...data.journalEntries,
       ...data.dailyLogEntries,
       ...data.dailyHabits
@@ -84,7 +81,7 @@ export const getCombinedTimelineEntries = async (childId, selectedDate) => {
 };
 
 // Re-export individual services for direct use if needed
-export { getIncidents, getFollowUpResponses } from './incidentDataService';
+export { getIncidents, getGroupedIncidents } from './incidentDataService';
 export { getJournalEntries, getDailyLogEntries } from './journalDataService';
 export { getDailyHabits } from './habitDataService';
 export { getDayDateRange } from './dateUtils';

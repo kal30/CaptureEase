@@ -14,7 +14,6 @@ import { getActionGroups } from "../constants/actionGroups";
 import DashboardHeader from "../components/Dashboard/DashboardHeader";
 import ChildGroup from "../components/Dashboard/ChildGroup";
 import QuickCheckIn from "../components/Mobile/QuickCheckIn";
-import MicroDataCollector from "../components/Mobile/MicroDataCollector";
 import InviteTeamMemberModal from "../components/InviteTeamMemberModal";
 import AddChildModal from "../components/Dashboard/AddChildModal";
 import EditChildModal from "../components/Dashboard/EditChildModal";
@@ -107,11 +106,7 @@ const PanelDashboard = () => {
       >
         <Box sx={{ maxWidth: 600, width: "100%", maxHeight: "90vh", overflow: "auto" }}>
           {hook.selectedChild && hook.entryType === "micro" && (
-            <MicroDataCollector
-              child={hook.selectedChild}
-              onComplete={hook.handleQuickEntryComplete}
-              onSkip={hook.handleQuickEntrySkip}
-            />
+            <div>Micro data collection not available</div>
           )}
           {hook.selectedChild && hook.entryType === "full" && (
             <QuickCheckIn

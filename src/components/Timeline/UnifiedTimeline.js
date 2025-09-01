@@ -1,23 +1,21 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import {
   Box,
   Typography,
   Stack,
-  Divider,
   CircularProgress,
   Alert,
 } from "@mui/material";
 import { Timeline as TimelineIcon } from "@mui/icons-material";
 import { getEntryTypeMeta, mapLegacyType, ENTRY_TYPE } from "../../constants/timeline";
-import { useTheme, alpha } from "@mui/material/styles";
+import { useTheme } from "@mui/material/styles";
 
 import TimelineFilters from "./TimelineFilters";
 import UnifiedTimelineEntry from "./UnifiedTimelineEntry";
 import { useUnifiedTimelineData } from "../../hooks/useUnifiedTimelineData";
-import { getSeverityMeta } from "../../services/incidentService";
-import { getSeverityColor } from "./utils/colors";
 import TimelineLegend from "./parts/TimelineLegend";
 import IncidentDetails from "./parts/IncidentDetails";
+import GroupedIncidentDetails from "./parts/GroupedIncidentDetails";
 import DailyHabitDetails from "./parts/DailyHabitDetails";
 import DailyNoteDetails from "./parts/DailyNoteDetails";
 import JournalDetails from "./parts/JournalDetails";
@@ -42,7 +40,6 @@ const UnifiedTimeline = ({
   onFiltersChange,
   showFilters = true,
 }) => {
-  const [expandedEntries, setExpandedEntries] = useState(new Set());
   const theme = useTheme();
 
   // Fetch unified timeline data
@@ -54,16 +51,6 @@ const UnifiedTimeline = ({
 
   // Note: entries are already pre-filtered; grouping by period is optional and not used here.
 
-  // Handle entry expansion
-  const handleToggleExpand = (entryId) => {
-    const newExpanded = new Set(expandedEntries);
-    if (newExpanded.has(entryId)) {
-      newExpanded.delete(entryId);
-    } else {
-      newExpanded.add(entryId);
-    }
-    setExpandedEntries(newExpanded);
-  };
 
   // Loading state
   if (loading) {
@@ -139,8 +126,10 @@ const UnifiedTimeline = ({
               });
 
               // Normalize entry type and get meta/color
-              const entryType = mapLegacyType(entry.type);
-              const meta = getEntryTypeMeta(entry.type);
+              // Use timelineType if available, otherwise fall back to type for legacy entries
+              const typeForTimeline = entry.timelineType || entry.collection === 'incidents' ? 'incident' : entry.type;
+              const entryType = mapLegacyType(typeForTimeline);
+              const meta = getEntryTypeMeta(typeForTimeline);
               const entryLabel = meta.label.replace(/s$/, '');
               const entryColor = theme.palette.timeline.entries[meta.key] || theme.palette.primary.main;
 
@@ -149,7 +138,6 @@ const UnifiedTimeline = ({
                   key={`${entry.type}-${entry.id}-${entryIndex}`}
                   color={entryColor}
                   icon={meta.icon}
-                  onClick={() => handleToggleExpand(entry.id)}
                   ariaLabel={`${entryLabel} at ${timeString}`}
                 >
                   <EntryHeader
@@ -159,21 +147,15 @@ const UnifiedTimeline = ({
                     loggedByUser={entry.loggedByUser}
                   />
 
-                      {entryType === ENTRY_TYPE.INCIDENT && (<IncidentDetails entry={entry} />)}
+                      {entryType === ENTRY_TYPE.INCIDENT && (
+                        entry.isGroupedIncident 
+                          ? <GroupedIncidentDetails entry={entry} />
+                          : <IncidentDetails entry={entry} />
+                      )}
                       {entryType === ENTRY_TYPE.DAILY_HABIT && (<DailyHabitDetails entry={entry} />)}
                       {entryType === ENTRY_TYPE.DAILY_NOTE && (<DailyNoteDetails entry={entry} />)}
                       {entryType === ENTRY_TYPE.JOURNAL && (<JournalDetails entry={entry} />)}
 
-                  {expandedEntries.has(entry.id) && (
-                    <UnifiedTimelineEntry
-                      entry={entry}
-                      isExpanded={true}
-                      onToggleExpand={() => handleToggleExpand(entry.id)}
-                      showTimestamp={false}
-                      showUser={false}
-                      compact={false}
-                    />
-                  )}
                 </TimelineItem>
               );
             })}
