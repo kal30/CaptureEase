@@ -24,18 +24,19 @@ export const getJournalEntries = async (childId, selectedDate) => {
         collection(db, 'dailyLogs'),
         where('childId', '==', childId),
         where('timestamp', '>=', start),
-        where('timestamp', '<=', end),
-        orderBy('timestamp', 'desc')
+        where('timestamp', '<=', end)
       );
       
       const snapshot = await getDocs(dailyLogQuery);
-      return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        timestamp: doc.data().timestamp?.toDate() || new Date(doc.data().createdAt),
-        type: 'journal',
-        collection: 'dailyLogs'
-      }));
+      return snapshot.docs
+        .map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          timestamp: doc.data().timestamp?.toDate() || new Date(doc.data().createdAt),
+          type: 'journal',
+          collection: 'dailyLogs'
+        }))
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
       
     } catch (indexError) {
       if (indexError.message.includes('index')) {
@@ -44,8 +45,7 @@ export const getJournalEntries = async (childId, selectedDate) => {
         // Fallback: get all journals for child and filter by date
         const fallbackQuery = query(
           collection(db, 'dailyLogs'),
-          where('childId', '==', childId),
-          orderBy('timestamp', 'desc')
+          where('childId', '==', childId)
         );
         
         const snapshot = await getDocs(fallbackQuery);
@@ -57,7 +57,8 @@ export const getJournalEntries = async (childId, selectedDate) => {
             type: 'journal',
             collection: 'dailyLogs'
           }))
-          .filter(entry => isWithinDateRange(entry.timestamp, start, end));
+          .filter(entry => isWithinDateRange(entry.timestamp, start, end))
+          .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
       } else {
         throw indexError;
       }

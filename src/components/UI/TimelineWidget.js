@@ -336,17 +336,21 @@ const TimelineWidget = ({
     return (
       <Box className="timeline-widget__metrics" sx={{ mb: 2 }}>
         <Box sx={{ display: 'flex', gap: 1, mb: 1, flexWrap: 'wrap' }}>
-          <Chip
-            label={`${metrics.todayCount} today`}
-            size="small"
-            color={timeline.hasActivityToday() ? 'primary' : 'default'}
-            variant={timeline.hasActivityToday() ? 'filled' : 'outlined'}
-          />
-          <Chip
-            label={`${metrics.weekCount} this week`}
-            size="small"
-            variant="outlined"
-          />
+          {metrics.todayCount > 0 && (
+            <Chip
+              label={`${metrics.todayCount} today`}
+              size="small"
+              color="primary"
+              variant="filled"
+            />
+          )}
+          {metrics.weekCount > 0 && (
+            <Chip
+              label={`${metrics.weekCount} this week`}
+              size="small"
+              variant="outlined"
+            />
+          )}
           {streak > 0 && (
             <Chip
               label={`${streak} day streak`}

@@ -26,10 +26,16 @@ const MiniCalendar = ({
   // State for current displayed month
   const [displayMonth, setDisplayMonth] = useState(initialMonth);
   
-  // Update display month when currentMonth prop changes
+  // Update display month when currentMonth prop changes or when selectedDate is in different month
   React.useEffect(() => {
-    setDisplayMonth(initialMonth);
-  }, [initialMonth]);
+    if (selectedDate) {
+      // If selectedDate is from different month, update displayMonth to show that month
+      const selectedMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
+      setDisplayMonth(selectedMonth);
+    } else {
+      setDisplayMonth(initialMonth);
+    }
+  }, [initialMonth, selectedDate]);
 
   // Month navigation handlers
   const goToPreviousMonth = () => {
@@ -81,7 +87,10 @@ const MiniCalendar = ({
       const dateKey = currentDate.toDateString();
       const dayEntries = entriesByDay[dateKey] || [];
       const isToday = currentDate.toDateString() === today.toDateString();
-      const isFuture = currentDate > today;
+      // Compare only date parts, not time, to properly identify future dates
+      const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const currentDateOnly = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
+      const isFuture = currentDateOnly > todayDateOnly;
       const isCurrentMonth = currentDate.getMonth() === monthToDisplay.getMonth();
       const isSelected = selectedDate && currentDate.toDateString() === selectedDate.toDateString();
       
@@ -105,8 +114,8 @@ const MiniCalendar = ({
   }, [entries, displayMonth]);
 
   const handleDayClick = (e, dayData) => {
-    // Allow clicking on any current month day, not just ones with activity
-    if (dayData.isCurrentMonth && !dayData.isFuture && onDayClick) {
+    // Allow clicking on any current month day that is today or in the past
+    if (dayData.isCurrentMonth && (dayData.isToday || !dayData.isFuture) && onDayClick) {
       e.stopPropagation();
       onDayClick(dayData.day, dayData.entries, dayData.date);
     }
@@ -134,19 +143,22 @@ const MiniCalendar = ({
     justifyContent: 'center',
     borderRadius: '50%',
     fontSize: { xs: '0.85rem', md: '0.75rem' },
-    fontWeight: dayData.isToday ? 600 : 400,
-    color: !dayData.isCurrentMonth ? 'text.disabled' : 
+    fontWeight: dayData.isToday || dayData.isSelected ? 600 : 400,
+    color: dayData.isSelected && !dayData.isToday ? 'white' :
+           !dayData.isCurrentMonth ? 'text.disabled' : 
            dayData.isFuture ? 'text.secondary' : 
            'text.primary',
     bgcolor: dayData.isToday ? 'primary.main' : 
-             dayData.isSelected ? 'action.selected' : 
+             dayData.isSelected ? 'secondary.main' : 
              'transparent',
-    cursor: dayData.isCurrentMonth && !dayData.isFuture ? 'pointer' : 'default',
+    border: dayData.isSelected && !dayData.isToday ? '2px solid' : 'none',
+    borderColor: dayData.isSelected && !dayData.isToday ? 'secondary.dark' : 'transparent',
+    cursor: dayData.isCurrentMonth && (dayData.isToday || !dayData.isFuture) ? 'pointer' : 'default',
     position: 'relative',
     transition: 'all 0.2s ease',
     opacity: dayData.isCurrentMonth ? 1 : 0.4,
     minHeight: { xs: 44, md: 24 }, // Meet accessibility touch target requirements
-    '&:hover': dayData.isCurrentMonth && !dayData.isFuture ? {
+    '&:hover': dayData.isCurrentMonth && (dayData.isToday || !dayData.isFuture) ? {
       bgcolor: dayData.isToday ? 'primary.dark' : 
                dayData.isSelected ? 'action.focus' :
                'action.hover',

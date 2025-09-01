@@ -23,6 +23,17 @@ const JournalDetails = ({ entry }) => {
           ))}
         </Box>
       )}
+
+      {/* Show media if present */}
+      {(entry.mediaURL || entry.voiceMemoURL) && (
+        <Box sx={{ mt: 1, p: 1, bgcolor: 'grey.50', borderRadius: 1, border: '1px solid', borderColor: 'grey.200' }}>
+          <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.7rem', fontWeight: 500 }}>
+            📎 Media attached
+            {entry.mediaURL && ' • Photo/Video'}
+            {entry.voiceMemoURL && ' • Voice Memo'}
+          </Typography>
+        </Box>
+      )}
     </Box>
   );
 };

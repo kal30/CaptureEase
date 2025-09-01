@@ -20,29 +20,35 @@ const TimelineMetrics = ({ timeline = {}, metrics = {} }) => {
 
   return (
     <Box className="timeline-widget__metrics" sx={{ mb: 2 }}>
-      {/* Activity Counts */}
+      {/* Activity Counts - Only show chips with counts > 0 */}
       <Box sx={{ display: 'flex', gap: 1, mb: 1, flexWrap: 'wrap' }}>
-        <Chip
-          label={`${todayCount} today`}
-          size="small"
-          variant="outlined"
-          color={todayCount > 0 ? 'primary' : 'default'}
-          sx={{ fontSize: '0.75rem' }}
-        />
-        <Chip
-          label={`${weekCount} this week`}
-          size="small"
-          variant="outlined"
-          color={weekCount > 0 ? 'secondary' : 'default'}
-          sx={{ fontSize: '0.75rem' }}
-        />
-        <Chip
-          label={`${totalCount} total`}
-          size="small"
-          variant="outlined"
-          color={totalCount > 0 ? 'info' : 'default'}
-          sx={{ fontSize: '0.75rem' }}
-        />
+        {todayCount > 0 && (
+          <Chip
+            label={`${todayCount} today`}
+            size="small"
+            variant="outlined"
+            color="primary"
+            sx={{ fontSize: '0.75rem' }}
+          />
+        )}
+        {weekCount > 0 && (
+          <Chip
+            label={`${weekCount} this week`}
+            size="small"
+            variant="outlined"
+            color="secondary"
+            sx={{ fontSize: '0.75rem' }}
+          />
+        )}
+        {totalCount > 0 && (
+          <Chip
+            label={`${totalCount} total`}
+            size="small"
+            variant="outlined"
+            color="info"
+            sx={{ fontSize: '0.75rem' }}
+          />
+        )}
       </Box>
 
       {/* Activity Insights */}

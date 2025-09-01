@@ -23,6 +23,7 @@ const FollowUpForm = ({
         value={followUpNotes}
         onChange={(e) => setFollowUpNotes(e.target.value)}
         placeholder="Any additional observations or changes needed..."
+        disabled={loading}
         sx={{ mb: 2 }}
       />
       

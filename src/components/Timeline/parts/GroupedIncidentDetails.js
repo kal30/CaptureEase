@@ -30,18 +30,33 @@ const GroupedIncidentDetails = ({ entry }) => {
       {/* Main incident details */}
       <Box>
         <Typography variant="body2" sx={{ color: 'text.primary', mb: 1, lineHeight: 1.5, fontWeight: 600 }}>
-          {/* Debug: log entry data */}
-          {console.log('🔍 Entry data:', entry)}
-          {console.log('🔍 Fields check:', {
-            customIncidentName: entry.customIncidentName,
-            notes: entry.notes, 
-            type: entry.type,
-            remedy: entry.remedy,
-            customRemedy: entry.customRemedy,
-            allKeys: Object.keys(entry)
-          })}
           {entry.customIncidentName || entry.incidentType || entry.type || `Incident (no data found)`}
         </Typography>
+
+        {/* Show description/notes for incidents - try multiple field names */}
+        {(entry.description || entry.notes || entry.summary) && (
+          <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1, lineHeight: 1.4 }}>
+            {entry.description || entry.notes || entry.summary}
+          </Typography>
+        )}
+
+        {/* Show remedy if present */}
+        {entry.remedy && (
+          <Typography variant="body2" sx={{ color: 'text.primary', mb: 1, lineHeight: 1.4, fontStyle: 'italic' }}>
+            <strong>Remedy:</strong> {entry.remedy}
+          </Typography>
+        )}
+
+        {/* Show media if present */}
+        {(entry.mediaURL || entry.mediaAttachments?.length > 0) && (
+          <Box sx={{ mt: 1, p: 1, bgcolor: 'grey.50', borderRadius: 1, border: '1px solid', borderColor: 'grey.200' }}>
+            <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.7rem', fontWeight: 500 }}>
+              📎 Media attached
+              {entry.mediaURL && ' • Photo/Video'}
+              {entry.mediaAttachments?.length > 0 && ` • ${entry.mediaAttachments.length} file(s)`}
+            </Typography>
+          </Box>
+        )}
 
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center', mb: 0.5 }}>
           {/* Incident type */}

@@ -16,16 +16,13 @@ import {
   Popover
 } from '@mui/material';
 import {
-  Warning as IncidentIcon,
-  EventNote as JournalIcon,
-  Assignment as DailyLogIcon,
-  CheckCircle as FollowUpIcon,
   Person as PersonIcon,
   Today as DateIcon,
   Search as SearchIcon,
   Clear as ClearIcon,
   CalendarToday as CalendarIcon
 } from '@mui/icons-material';
+import MiniCalendar from '../UI/MiniCalendar';
 
 /**
  * TimelineFilters - Filter controls for unified timeline
@@ -100,35 +97,28 @@ const TimelineFilters = ({
     setDatePickerAnchor(null);
   };
 
-  // Entry type options with icons and counts
+  // Entry type options with icons and counts (matching dashboard quick entries)
   const entryTypeOptions = [
     { 
       value: 'incident', 
       label: 'Incidents', 
-      icon: <IncidentIcon sx={{ fontSize: 16 }} />,
+      icon: '🛑',
       count: summary.incidentCount || 0,
       color: 'error'
     },
     { 
       value: 'journal', 
       label: 'Journal', 
-      icon: <JournalIcon sx={{ fontSize: 16 }} />,
+      icon: '💬',
       count: summary.journalCount || 0,
-      color: 'info'
+      color: 'secondary'
     },
     { 
-      value: 'dailyLog', 
-      label: 'Care Logs', 
-      icon: <DailyLogIcon sx={{ fontSize: 16 }} />,
+      value: 'dailyHabit', 
+      label: 'Daily Habits', 
+      icon: '📅',
       count: summary.dailyLogCount || 0,
       color: 'primary'
-    },
-    { 
-      value: 'followUp', 
-      label: 'Follow-ups', 
-      icon: <FollowUpIcon sx={{ fontSize: 16 }} />,
-      count: summary.followUpCount || 0,
-      color: 'success'
     }
   ];
 
@@ -189,14 +179,14 @@ const TimelineFilters = ({
             vertical: 'bottom',
             horizontal: 'left',
           }}
+          disableAutoFocus
         >
           <Box sx={{ p: 1 }}>
-            <TextField
-              type="date"
-              size="small"
-              value={selectedDate ? selectedDate.toISOString().split('T')[0] : ''}
-              onChange={(e) => handleDateChange(new Date(e.target.value))}
-              InputLabelProps={{ shrink: true }}
+            <MiniCalendar
+              entries={[]} 
+              onDayClick={(day, dayEntries, date) => handleDateChange(date)}
+              currentMonth={selectedDate || new Date()}
+              selectedDate={selectedDate}
             />
           </Box>
         </Popover>
@@ -207,7 +197,7 @@ const TimelineFilters = ({
           return (
             <Chip
               key={option.value}
-              label={`${option.label} (${option.count})`}
+              label={`${option.icon} ${option.label}`}
               size="small"
               variant={isActive ? 'filled' : 'outlined'}
               color={isActive ? option.color : 'default'}

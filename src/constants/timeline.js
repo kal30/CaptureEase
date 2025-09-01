@@ -50,10 +50,16 @@ const LEGACY_TO_ENTRY = new Set([
 ]);
 
 export const mapLegacyType = (type) => {
+  // Collection-based mapping (preferred):
+  // - incidents collection → 'incident' type
+  // - dailyCare collection → 'dailyHabit' type  
+  // - dailyLogs collection → 'journal' type
+  
   if (type === 'incident') return 'incident';
   if (type === 'followUp') return 'incident'; // Follow-ups should display as incidents
-  if (type === 'journal' || type === 'progressNote') return 'dailyNote';
-  if (type === 'dailyLog' && ENTRY_TYPES.journal) return 'journal';
+  if (type === 'journal') return 'journal'; // dailyLogs collection = journal entries
+  if (type === 'dailyHabit') return 'dailyHabit'; // dailyCare collection = daily habits
+  if (type === 'progressNote') return 'dailyNote';
   if (LEGACY_TO_ENTRY.has(type)) return 'dailyHabit';
   return type; // fallback
 };

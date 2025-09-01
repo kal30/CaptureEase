@@ -63,20 +63,18 @@ const IncidentFollowUpModal = ({
         
         // Show feedback about next follow-up if there is one
         if (result.hasMoreFollowUps) {
-          setSuccess(`Follow-up saved! Next check: ${result.nextFollowUpDescription}`);
+          console.log(`✅ Follow-up saved! Next check: ${result.nextFollowUpDescription}`);
         } else {
-          setSuccess('All follow-ups completed successfully!');
+          console.log('✅ All follow-ups completed successfully!');
         }
       } else {
         // Handle single follow-up (legacy)
         await updateIncidentEffectiveness(incident.id, effectiveness, followUpNotes);
-        setSuccess('Follow-up response saved successfully!');
+        console.log('✅ Follow-up response saved successfully!');
       }
       
-      // Close modal after a short delay to show success message
-      setTimeout(() => {
-        onClose();
-      }, 1500);
+      // Close modal immediately upon successful save
+      onClose();
       
     } catch (error) {
       console.error('❌ Error saving follow-up response:', error);
@@ -122,12 +120,6 @@ const IncidentFollowUpModal = ({
           </Alert>
         )}
 
-        {/* Success Alert */}
-        {success && (
-          <Alert severity="success" sx={{ mb: 2 }}>
-            {success}
-          </Alert>
-        )}
 
         <IncidentSummary 
           incident={incident}

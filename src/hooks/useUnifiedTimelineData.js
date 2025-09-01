@@ -84,13 +84,16 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
 
     // Transform raw data into unified entry format
     const transformedEntries = [
-      // Transform incidents
+      // Transform incidents (from incidents collection)
       ...childFilteredEntries.incidents.map(incident => ({
         id: incident.id,
         type: 'incident',
+        collection: 'incidents',
         timestamp: incident.timestamp,
         incidentType: incident.type,
         severity: incident.severity,
+        remedy: incident.remedy,
+        notes: incident.notes,
         description: incident.description,
         summary: incident.summary,
         triggers: incident.triggers,
@@ -102,15 +105,18 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
         userId: incident.loggedBy?.id
       })),
       
-      // Transform journal entries
+      // Transform journal entries (all dailyLogs are journal entries)
       ...childFilteredEntries.journals.map(journal => ({
         id: journal.id,
         type: 'journal',
-        timestamp: journal.timestamp,
-        title: journal.title,
-        content: journal.content,
-        mood: journal.mood,
+        timelineType: 'journal',
+        collection: 'dailyLogs',
+        timestamp: journal.timestamp?.toDate ? journal.timestamp.toDate() : new Date(journal.timestamp),
+        text: journal.text,
         tags: journal.tags,
+        mediaURL: journal.mediaURL,
+        mediaType: journal.mediaType,
+        voiceMemoURL: journal.voiceMemoURL,
         loggedByUser: journal.loggedBy?.name,
         userRole: journal.loggedBy?.role,
         userId: journal.loggedBy?.id
@@ -132,10 +138,11 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
         userId: log.loggedBy?.id
       })),
       
-      // Transform daily habits
+      // Transform daily habits (from dailyCare collection)
       ...childFilteredEntries.dailyHabits.map(habit => ({
         id: habit.id,
-        type: habit.collection?.replace('Logs', '') || 'dailyHabit', // moodLogs -> mood, etc.
+        type: 'dailyHabit',
+        collection: 'dailyCare',
         timestamp: habit.timestamp?.toDate ? habit.timestamp.toDate() : new Date(habit.timestamp),
         categoryId: habit.categoryId,
         categoryLabel: habit.categoryLabel,

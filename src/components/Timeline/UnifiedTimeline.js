@@ -11,9 +11,7 @@ import { getEntryTypeMeta, mapLegacyType, ENTRY_TYPE } from "../../constants/tim
 import { useTheme } from "@mui/material/styles";
 
 import TimelineFilters from "./TimelineFilters";
-import UnifiedTimelineEntry from "./UnifiedTimelineEntry";
 import { useUnifiedTimelineData } from "../../hooks/useUnifiedTimelineData";
-import TimelineLegend from "./parts/TimelineLegend";
 import IncidentDetails from "./parts/IncidentDetails";
 import GroupedIncidentDetails from "./parts/GroupedIncidentDetails";
 import DailyHabitDetails from "./parts/DailyHabitDetails";
@@ -82,8 +80,34 @@ const UnifiedTimeline = ({
         />
       )}
 
-      {/* Timeline Legend */}
-      {entries.length > 0 && <TimelineLegend />}
+      {/* Day Summary Header */}
+      {summary && entries.length > 0 && (
+        <Box
+          sx={{
+            mb: 2,
+            p: 2,
+            bgcolor: "background.default",
+            borderRadius: 1,
+            border: "1px solid",
+            borderColor: "divider",
+          }}
+        >
+          <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mb: 1 }}>
+            {selectedDate.toLocaleDateString('en-US', { 
+              weekday: 'long', 
+              month: 'long', 
+              day: 'numeric' 
+            })}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {summary.totalEntries} total activities
+            {summary.incidentCount > 0 && ` • ${summary.incidentCount} incidents`}
+            {summary.journalCount > 0 && ` • ${summary.journalCount} journal entries`}
+            {summary.dailyLogCount > 0 && ` • ${summary.dailyLogCount} daily habits`}
+            {summary.lastActivityTime && ` • Last activity at ${summary.lastActivityTime}`}
+          </Typography>
+        </Box>
+      )}
 
       {/* Timeline Content */}
       {entries.length === 0 ? (
@@ -125,9 +149,18 @@ const UnifiedTimeline = ({
                 minute: "2-digit",
               });
 
-              // Normalize entry type and get meta/color
-              // Use timelineType if available, otherwise fall back to type for legacy entries
-              const typeForTimeline = entry.timelineType || entry.collection === 'incidents' ? 'incident' : entry.type;
+              // Determine timeline type purely based on collection
+              let typeForTimeline;
+              if (entry.collection === 'incidents') {
+                typeForTimeline = 'incident';
+              } else if (entry.collection === 'dailyCare') {
+                typeForTimeline = 'dailyHabit';
+              } else if (entry.collection === 'dailyLogs') {
+                typeForTimeline = 'journal';
+              } else {
+                // Fallback to existing logic for backward compatibility
+                typeForTimeline = entry.timelineType || entry.type;
+              }
               const entryType = mapLegacyType(typeForTimeline);
               const meta = getEntryTypeMeta(typeForTimeline);
               const entryLabel = meta.label.replace(/s$/, '');
@@ -160,34 +193,6 @@ const UnifiedTimeline = ({
               );
             })}
           </Stack>
-        </Box>
-      )}
-
-      {/* Day Summary */}
-      {summary && entries.length > 0 && (
-        <Box
-          sx={{
-            mt: 3,
-            p: 2,
-            bgcolor: "background.default",
-            borderRadius: 1,
-            border: "1px solid",
-            borderColor: "divider",
-          }}
-        >
-          <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
-            Day Summary
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {summary.totalEntries} total activities •
-            {summary.incidentCount > 0 &&
-              ` ${summary.incidentCount} incidents • `}
-            {summary.journalCount > 0 &&
-              ` ${summary.journalCount} journal entries • `}
-            {summary.dailyLogCount > 0 &&
-              ` ${summary.dailyLogCount} care logs • `}
-            Last activity at {summary.lastActivityTime}
-          </Typography>
         </Box>
       )}
     </Box>
