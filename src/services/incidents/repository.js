@@ -224,6 +224,15 @@ export const recordFollowUpResponse = async (
     const nextIndex = responseIndex + 1;
     const hasMoreFollowUps = incident.followUpTimes && nextIndex < incident.followUpTimes.length;
 
+    console.log('🔍 DEBUG: Follow-up completion logic:', {
+      incidentId,
+      currentResponseIndex: responseIndex,
+      nextIndex,
+      totalFollowUpTimes: incident.followUpTimes?.length || 0,
+      hasMoreFollowUps,
+      willMarkCompleted: !hasMoreFollowUps
+    });
+
     const updateData = {
       followUpResponses: responses,
       lastFollowUpResponse: newResponse,
@@ -236,8 +245,6 @@ export const recordFollowUpResponse = async (
           }
         : {
             followUpCompleted: true,
-            effectiveness,
-            followUpNotes,
           }),
     };
 

@@ -84,6 +84,20 @@ export const getGroupedIncidents = async (childId, selectedDate) => {
     
     // Transform incidents to show their embedded follow-ups
     const groupedIncidents = incidentsForDay.map(incident => {
+      console.log('🔍 DEBUG: Processing incident for grouping:', {
+        id: incident.id,
+        type: incident.type,
+        customIncidentName: incident.customIncidentName,
+        incidentType: incident.incidentType,
+        hasFollowUpResponses: !!(incident.followUpResponses?.length > 0),
+        followUpResponseCount: incident.followUpResponses?.length || 0,
+        followUpResponses: incident.followUpResponses?.map(r => ({
+          effectiveness: r.effectiveness,
+          notes: r.notes,
+          timestamp: r.timestamp
+        })) || []
+      });
+      
       const followUpResponses = incident.followUpResponses || [];
       
       // If incident has follow-ups, mark it as grouped and transform follow-ups

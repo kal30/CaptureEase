@@ -30,6 +30,17 @@ const GroupedIncidentDetails = ({ entry }) => {
       {/* Main incident details */}
       <Box>
         <Typography variant="body2" sx={{ color: 'text.primary', mb: 1, lineHeight: 1.5, fontWeight: 600 }}>
+          {console.log('🔍 DEBUG: Grouped incident entry:', {
+            id: entry.id,
+            isGroupedIncident: entry.isGroupedIncident,
+            followUps: entry.followUps,
+            totalFollowUps: entry.totalFollowUps,
+            followUpCompleted: entry.followUpCompleted,
+            followUpNotes: entry.followUpNotes,
+            effectiveness: entry.effectiveness,
+            followUpResponses: entry.followUpResponses,
+            lastFollowUpResponse: entry.lastFollowUpResponse
+          })}
           {entry.customIncidentName || entry.incidentType || entry.type || `Incident (no data found)`}
         </Typography>
 

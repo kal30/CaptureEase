@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent, Alert, Snackbar } from '@mui/material';
-import { updateIncidentEffectiveness, recordFollowUpResponse, INCIDENT_TYPES, getSeverityScale } from '../../../../services/incidentService';
+import { recordFollowUpResponse, INCIDENT_TYPES, getSeverityScale } from '../../../../services/incidentService';
 import FollowUpHeader from './FollowUpHeader';
 import IncidentSummary from './IncidentSummary';
 import EffectivenessSelector from './EffectivenessSelector';
@@ -51,26 +51,28 @@ const IncidentFollowUpModal = ({
     
     try {
       
-      if (incident.isMultiStage) {
-        // Handle multi-stage follow-up
-        const result = await recordFollowUpResponse(
-          incident.id, 
-          effectiveness, 
-          followUpNotes, 
-          incident.currentFollowUpIndex
-        );
-        
-        
-        // Show feedback about next follow-up if there is one
-        if (result.hasMoreFollowUps) {
-          console.log(`✅ Follow-up saved! Next check: ${result.nextFollowUpDescription}`);
-        } else {
-          console.log('✅ All follow-ups completed successfully!');
-        }
+      // Always use the new follow-up response system
+      console.log('🔍 DEBUG: Saving follow-up response:', {
+        incidentId: incident.id,
+        incidentType: incident.type,
+        customIncidentName: incident.customIncidentName,
+        effectiveness,
+        followUpNotes,
+        currentIndex: incident.currentFollowUpIndex || 0
+      });
+      
+      const result = await recordFollowUpResponse(
+        incident.id, 
+        effectiveness, 
+        followUpNotes, 
+        incident.currentFollowUpIndex || 0
+      );
+      
+      // Show feedback about next follow-up if there is one
+      if (result.hasMoreFollowUps) {
+        console.log(`✅ Follow-up saved! Next check: ${result.nextFollowUpDescription}`);
       } else {
-        // Handle single follow-up (legacy)
-        await updateIncidentEffectiveness(incident.id, effectiveness, followUpNotes);
-        console.log('✅ Follow-up response saved successfully!');
+        console.log('✅ All follow-ups completed successfully!');
       }
       
       // Close modal immediately upon successful save

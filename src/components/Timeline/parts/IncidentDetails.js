@@ -6,9 +6,6 @@ import { getSeverityColor } from '../utils/colors';
 
 const IncidentDetails = ({ entry }) => {
   const theme = useTheme();
-  const meta = getSeverityMeta(entry.type);
-  const info = entry.severity ? meta[entry.severity] : null;
-  const sevColor = entry.severity ? getSeverityColor(theme, entry.severity) : theme.palette.text.secondary;
   
   // Check if this is a follow-up entry
   const isFollowUp = entry.type === 'followUp';
@@ -39,6 +36,32 @@ const IncidentDetails = ({ entry }) => {
         </Typography>
       )}
 
+      {/* Show severity chip right after remedy */}
+      {!isFollowUp && (() => {
+        const meta = getSeverityMeta(entry.type || entry.incidentType);
+        const info = entry.severity ? meta[entry.severity] : null;
+        const sevColor = entry.severity ? getSeverityColor(theme, entry.severity) : theme.palette.text.secondary;
+        
+        return info ? (
+          <Box sx={{ mb: 1 }}>
+            <Typography
+              component="span"
+              sx={{
+                px: 1,
+                py: 0.25,
+                bgcolor: alpha(sevColor, 0.15),
+                color: sevColor,
+                borderRadius: 1,
+                fontSize: '0.7rem',
+                fontWeight: 600,
+              }}
+            >
+              {info.label} ({entry.severity}/10) - {info.description}
+            </Typography>
+          </Box>
+        ) : null;
+      })()}
+
       {/* Show media if present */}
       {!isFollowUp && (entry.mediaURL || entry.mediaAttachments?.length > 0) && (
         <Box sx={{ mt: 1, p: 1, bgcolor: 'grey.50', borderRadius: 1, border: '1px solid', borderColor: 'grey.200' }}>
@@ -50,56 +73,38 @@ const IncidentDetails = ({ entry }) => {
         </Box>
       )}
 
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center', mb: 0.5 }}>
-        {/* Follow-up specific info */}
-        {isFollowUp ? (
-          <>
-            <Typography component="span" variant="caption" sx={{ px: 1, py: 0.25, bgcolor: 'info.light', color: 'info.contrastText', borderRadius: 1, fontSize: '0.7rem', fontWeight: 500 }}>
-              Follow-up
+      {/* Show follow-up response data if present */}
+      {!isFollowUp && entry.lastFollowUpResponse && (
+        <Box sx={{ mt: 2, ml: 2 }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#1565C0', mb: 1 }}>
+            Follow-up Response
+          </Typography>
+          {entry.lastFollowUpResponse.notes && (
+            <Typography variant="body2" sx={{ mb: 1, lineHeight: 1.4, color: '#1565C0' }}>
+              {entry.lastFollowUpResponse.notes}
             </Typography>
-            {entry.status && (
-              <Typography component="span" variant="caption" sx={{ px: 1, py: 0.25, bgcolor: 'grey.100', borderRadius: 1, fontSize: '0.7rem', fontWeight: 500 }}>
-                Status: {entry.status}
-              </Typography>
-            )}
-            {entry.originalIncidentType && (
-              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                • for {entry.originalIncidentType} incident
-              </Typography>
-            )}
-          </>
-        ) : (
-          <>
-            {/* Incident type */}
-            {entry.type && entry.type !== entry.customIncidentName && entry.type !== entry.incidentType && (
-              <Typography component="span" variant="caption" sx={{ px: 1, py: 0.25, bgcolor: 'grey.100', borderRadius: 1, fontSize: '0.7rem', fontWeight: 500 }}>
-                {entry.type}
-              </Typography>
-            )}
-            {/* Severity */}
-            {info && (
-              <Typography
-                component="span"
-                sx={{
-                  px: 1,
-                  py: 0.25,
-                  bgcolor: alpha(sevColor, 0.15),
-                  color: sevColor,
-                  borderRadius: 1,
-                  fontSize: '0.7rem',
-                  fontWeight: 600,
-                }}
-              >
-                {info.label} ({entry.severity}/10) - {info.description}
-              </Typography>
-            )}
-            {/* Duration */}
-            {entry.duration && (
-              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                • Lasted {entry.duration}
-              </Typography>
-            )}
-          </>
+          )}
+          {entry.lastFollowUpResponse.effectiveness && (
+            <Typography variant="caption" sx={{ color: '#1565C0', fontWeight: 500 }}>
+              Effectiveness: {entry.lastFollowUpResponse.effectiveness}/5
+            </Typography>
+          )}
+        </Box>
+      )}
+
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center', mb: 0.5 }}>
+        {/* Duration for incidents */}
+        {!isFollowUp && entry.duration && (
+          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+            • Lasted {entry.duration}
+          </Typography>
+        )}
+        
+        {/* Follow-up type indicator */}
+        {isFollowUp && (
+          <Typography component="span" variant="caption" sx={{ px: 1, py: 0.25, bgcolor: 'info.light', color: 'info.contrastText', borderRadius: 1, fontSize: '0.7rem', fontWeight: 500 }}>
+            Follow-up
+          </Typography>
         )}
       </Box>
 

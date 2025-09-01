@@ -84,12 +84,24 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
 
     // Transform raw data into unified entry format
     const transformedEntries = [
-      // Transform incidents (from incidents collection)
+      // Transform incidents (from incidents collection) - includes grouped incidents with follow-ups
       ...childFilteredEntries.incidents.map(incident => ({
         id: incident.id,
         type: 'incident',
         collection: 'incidents',
         timestamp: incident.timestamp,
+        // Follow-up related fields (for grouped incidents)
+        isGroupedIncident: incident.isGroupedIncident,
+        followUps: incident.followUps,
+        totalFollowUps: incident.totalFollowUps,
+        // Include legacy follow-up fields
+        effectiveness: incident.effectiveness,
+        followUpNotes: incident.followUpNotes,
+        followUpCompleted: incident.followUpCompleted,
+        // Include follow-up response arrays from new system
+        followUpResponses: incident.followUpResponses,
+        lastFollowUpResponse: incident.lastFollowUpResponse,
+        // Include all incident fields
         incidentType: incident.type,
         severity: incident.severity,
         remedy: incident.remedy,
@@ -100,6 +112,7 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
         duration: incident.duration,
         interventions: incident.interventions,
         mediaAttachments: incident.mediaAttachments,
+        mediaURL: incident.mediaURL,
         loggedByUser: incident.loggedBy?.name,
         userRole: incident.loggedBy?.role,
         userId: incident.loggedBy?.id
