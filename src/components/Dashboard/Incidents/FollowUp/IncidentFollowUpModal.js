@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent, Alert, Snackbar } from '@mui/material';
 import { recordFollowUpResponse, INCIDENT_TYPES, getSeverityScale } from '../../../../services/incidentService';
+import { useAsyncForm } from '../../../../hooks/useAsyncForm';
 import FollowUpHeader from './FollowUpHeader';
 import IncidentSummary from './IncidentSummary';
 import EffectivenessSelector from './EffectivenessSelector';
@@ -14,9 +15,21 @@ const IncidentFollowUpModal = ({
 }) => {
   const [effectiveness, setEffectiveness] = useState('');
   const [followUpNotes, setFollowUpNotes] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  
+  // Use async form hook for consistent state management
+  const followUpForm = useAsyncForm({
+    onClose,
+    validate: ({ effectiveness }) => {
+      if (!effectiveness) {
+        throw new Error('Please select an effectiveness rating');
+      }
+    }
+  });
+  
+  // Separate hook for resolve incident operation
+  const resolveOperation = useAsyncForm({
+    onClose
+  });
 
   if (!incident) return null;
 
@@ -39,70 +52,38 @@ const IncidentFollowUpModal = ({
   };
 
   const handleSubmit = async () => {
-    // More robust validation - effectiveness should be a number 1-5
-    if (!effectiveness || loading) {
-      return;
-    }
-    setLoading(true);
-    setError('');
-    
-    try {
-      
-      // Always use the new follow-up response system
-      
-      const result = await recordFollowUpResponse(
-        incident.id,
-        effectiveness,
-        followUpNotes
-      );
-      
-      // Show feedback about next follow-up if there is one (could add user notification here later)
-      
-      // Close modal immediately upon successful save
-      onClose();
-      
-    } catch (error) {
-      console.error('❌ Error saving follow-up response:', error);
-      setError(`Failed to save follow-up: ${error.message}`);
-      // Don't close modal on error
-    } finally {
-      setLoading(false);
-    }
+    await followUpForm.submitForm(
+      async () => {
+        return await recordFollowUpResponse(
+          incident.id,
+          effectiveness,
+          followUpNotes
+        );
+      },
+      { effectiveness }
+    );
   };
 
   const handleResolveIncident = async () => {
-    setLoading(true);
-    setError('');
-    
-    try {
-
-      // Create a final response marking the incident as resolved and force completion
-      const result = await recordFollowUpResponse(
+    await resolveOperation.submitForm(async () => {
+      // Create a final response marking the incident as resolved
+      await recordFollowUpResponse(
         incident.id,
-        'completely', // Mark as completely effective since issue is resolved
+        'resolved',
         followUpNotes || 'Issue has been resolved - skipping remaining follow-ups'
       );
       
-      // Force mark as completed regardless of remaining follow-ups
-      await import('../../../../services/incidents/repository').then(({ forceCompleteFollowUp }) => {
-        return forceCompleteFollowUp(incident.id);
-      });
-      
-      onClose();
-      
-    } catch (error) {
-      console.error('❌ Error resolving incident:', error);
-      setError(`Failed to resolve incident: ${error.message}`);
-    } finally {
-      setLoading(false);
-    }
+      // Force complete remaining follow-ups
+      const { forceCompleteFollowUp } = await import('../../../../services/incidents/repository');
+      await forceCompleteFollowUp(incident.id);
+    });
   };
 
   const handleClose = () => {
     setEffectiveness('');
     setFollowUpNotes('');
-    setError('');
-    setSuccess('');
+    followUpForm.reset();
+    resolveOperation.reset();
     onClose();
   };
 
@@ -126,10 +107,17 @@ const IncidentFollowUpModal = ({
       />
 
       <DialogContent sx={{ p: 3 }}>
-        {/* Error Alert */}
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
-            {error}
+        {/* Error Alert - Show error from either operation */}
+        {(followUpForm.error || resolveOperation.error) && (
+          <Alert 
+            severity="error" 
+            sx={{ mb: 2 }} 
+            onClose={() => {
+              followUpForm.clearError();
+              resolveOperation.clearError();
+            }}
+          >
+            {followUpForm.error || resolveOperation.error}
           </Alert>
         )}
 
@@ -149,7 +137,7 @@ const IncidentFollowUpModal = ({
           followUpNotes={followUpNotes}
           setFollowUpNotes={setFollowUpNotes}
           effectiveness={effectiveness}
-          loading={loading}
+          loading={followUpForm.loading || resolveOperation.loading}
           onSubmit={handleSubmit}
           onClose={handleClose}
           onResolveIncident={handleResolveIncident}

@@ -105,14 +105,43 @@ export const clearProcessedQuickResponses = () => {
   }
 };
 
+// Start listening for quick responses from the Service Worker and record them immediately
+export const startQuickResponseListener = () => {
+  if (!('serviceWorker' in navigator)) return;
+  // Avoid registering multiple times
+  if (window.__captureeaseQuickResponseListenerRegistered) return;
+  window.__captureeaseQuickResponseListenerRegistered = true;
+
+  navigator.serviceWorker.addEventListener('message', async (event) => {
+    try {
+      const { data } = event;
+      if (!data || data.type !== 'FOLLOWUP_QUICK_RESPONSE') return;
+      const { incidentId, effectiveness, followUpIndex } = data.payload || {};
+      if (!incidentId || !effectiveness) return;
+
+      // Lazy import to avoid circular deps at module load
+      const { recordFollowUpResponse } = await import('./incidentService');
+      await recordFollowUpResponse(
+        incidentId,
+        effectiveness,
+        'Quick response from notification',
+        followUpIndex || 0
+      );
+      console.log(`✅ Recorded quick response via SW message for incident ${incidentId}`);
+    } catch (err) {
+      console.error('Error handling SW quick response message:', err);
+    }
+  });
+};
+
 // Test notification system with action buttons
 export const testNotification = async () => {
   const hasPermission = await requestNotificationPermission();
   if (hasPermission) {
     const actions = [
-      { action: 'completely', title: '😊 Great!', icon: '/favicon.ico' },
-      { action: 'somewhat', title: '😐 OK', icon: '/favicon.ico' },
-      { action: 'not_effective', title: '😞 No', icon: '/favicon.ico' }
+      { action: 'resolved', title: '😊 Resolved', icon: '/favicon.ico' },
+      { action: 'improved', title: '😐 Improved', icon: '/favicon.ico' },
+      { action: 'no_change', title: '😞 No Change', icon: '/favicon.ico' }
     ];
     
     showNotification(

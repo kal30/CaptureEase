@@ -1,19 +1,18 @@
 // Effectiveness levels for incident follow-ups (kept as-is)
 export const EFFECTIVENESS_LEVELS = {
   COMPLETELY: {
-    label: 'Completely Effective',
-    value: 'completely',
+    label: 'Resolved',
+    value: 'resolved',
     color: '#4CAF50',
   },
   SOMEWHAT: {
-    label: 'Somewhat Effective',
-    value: 'somewhat',
+    label: 'Improved',
+    value: 'improved',
     color: '#FF9800',
   },
   NOT_EFFECTIVE: {
-    label: 'Not Effective',
-    value: 'not_effective',
+    label: 'No Change',
+    value: 'no_change',
     color: '#F44336',
   },
 };
-

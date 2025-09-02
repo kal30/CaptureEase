@@ -80,7 +80,7 @@ const IncidentSummary = ({
             })}
           </Box>
           <Typography variant="body2" sx={{ mt: 1, fontStyle: 'italic', color: 'text.secondary' }}>
-            💡 <strong>Tip:</strong> If the issue is completely resolved, click "Issue Resolved" below to skip all remaining follow-ups.
+            💡 <strong>Tip:</strong> If the issue is resolved, click "Issue Resolved" below to skip all remaining follow-ups.
           </Typography>
         </Alert>
       )}

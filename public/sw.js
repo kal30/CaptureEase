@@ -25,12 +25,15 @@ self.addEventListener('notificationclick', (event) => {
   
   notification.close();
 
-  if (action === 'effective' || action === 'somewhat' || action === 'not-effective') {
+  if (action === 'resolved' || action === 'improved' || action === 'no_change') {
     // Handle quick response actions
     console.log(`Quick response: ${action} for incident ${data.incidentId}`);
-    
-    // Store the response to be handled when app opens
-    storeQuickResponse(data.incidentId, action, data.followUpIndex || 0);
+    // Broadcast the response to any open client pages
+    broadcastQuickResponse({
+      incidentId: data.incidentId,
+      effectiveness: action,
+      followUpIndex: data.followUpIndex || 0
+    });
     
     // Show confirmation notification
     self.registration.showNotification('Response Recorded! 🎉', {
@@ -73,31 +76,24 @@ self.addEventListener('notificationclick', (event) => {
   }
 });
 
-// Store quick response for when app opens
-function storeQuickResponse(incidentId, effectiveness, followUpIndex) {
-  const responses = getStoredResponses();
-  const responseId = `${incidentId}-${followUpIndex}-${Date.now()}`;
-  
-  responses[responseId] = {
-    incidentId,
-    effectiveness,
-    followUpIndex,
-    timestamp: new Date().toISOString(),
-    processed: false
-  };
-  
-  localStorage.setItem('captureease-quick-responses', JSON.stringify(responses));
-  console.log('Stored quick response:', responseId, responses[responseId]);
-}
-
-// Get stored responses
-function getStoredResponses() {
+// Broadcast quick response to all clients; if none, open a window with params
+async function broadcastQuickResponse(payload) {
   try {
-    const stored = localStorage.getItem('captureease-quick-responses');
-    return stored ? JSON.parse(stored) : {};
-  } catch (error) {
-    console.error('Error getting stored responses:', error);
-    return {};
+    const allClients = await clients.matchAll({ type: 'window', includeUncontrolled: true });
+    if (allClients && allClients.length) {
+      allClients.forEach((client) => {
+        try {
+          client.postMessage({ type: 'FOLLOWUP_QUICK_RESPONSE', payload });
+        } catch (e) {
+          console.error('Error posting message to client:', e);
+        }
+      });
+    } else if (clients.openWindow) {
+      const url = `${self.location.origin}/?followup=${encodeURIComponent(payload.incidentId)}&effectiveness=${encodeURIComponent(payload.effectiveness)}&index=${encodeURIComponent(payload.followUpIndex || 0)}`;
+      await clients.openWindow(url);
+    }
+  } catch (err) {
+    console.error('Error broadcasting quick response:', err);
   }
 }
 

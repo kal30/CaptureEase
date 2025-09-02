@@ -58,7 +58,7 @@ const EffectivenessSelector = ({
                 {key === 'NOT_EFFECTIVE' && '😔'}
               </Box>
               <Box>
-                {level.label.replace(' Effective', '')}
+                {level.label}
               </Box>
             </Box>
           </ButtonBase>

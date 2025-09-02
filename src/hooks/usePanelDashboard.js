@@ -6,7 +6,7 @@ import { useChildContext } from "../contexts/ChildContext";
 import { getTimelineEntries, TIMELINE_TYPES } from "../services/timelineService";
 import { useRole } from "../contexts/RoleContext";
 import { useDailyCareStatus } from "./useDailyCareStatus";
-import { listenForFollowUps, initializeNotificationsForPendingFollowUps, processQuickResponses } from "../services/followUpService";
+import { listenForFollowUps, initializeNotificationsForPendingFollowUps, processQuickResponses, startQuickResponseListener } from "../services/followUpService";
 import { analyzeOtherIncidentPatterns, getIncidents } from "../services/incidentService";
 
 export const usePanelDashboard = () => {
@@ -61,6 +61,9 @@ export const usePanelDashboard = () => {
   const [dailyHabitsChild, setDailyHabitsChild] = useState(null);
 
   useEffect(() => {
+    // Start SW quick response listener once on mount
+    startQuickResponseListener();
+
     if (roleLoading) return;
 
     const loadChildren = async () => {

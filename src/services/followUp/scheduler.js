@@ -43,9 +43,9 @@ export const scheduleFollowUpNotification = (incident, childName, followUpIndex 
     }?`;
 
     const actions = [
-      { action: 'completely', title: '😊 Worked Great', icon: '/favicon.ico' },
-      { action: 'somewhat', title: '😐 Somewhat', icon: '/favicon.ico' },
-      { action: 'not_effective', title: "😞 Didn't Help", icon: '/favicon.ico' },
+      { action: 'resolved', title: '😊 Resolved', icon: '/favicon.ico' },
+      { action: 'improved', title: '😐 Improved', icon: '/favicon.ico' },
+      { action: 'no_change', title: '😞 No Change', icon: '/favicon.ico' },
     ];
 
     showNotification(
@@ -102,4 +102,3 @@ export const cancelFollowUpNotifications = (incidentId) => {
     `🚫 Cancelled ${timersToCancel.length} follow-up notifications for incident ${incidentId}`
   );
 };
-

@@ -74,14 +74,14 @@ export const groupIncidentsWithFollowUps = (incidents, followUps) => {
 
 /**
  * Get effectiveness display info
- * @param {string} effectiveness - Effectiveness rating ('not_effective', 'somewhat', 'completely')
+ * @param {string} effectiveness - Effectiveness rating ('no_change', 'improved', 'resolved')
  * @returns {Object} - Display info with emoji and color
  */
 export const getEffectivenessDisplay = (effectiveness) => {
   const effectivenessMap = {
-    'not_effective': { stars: '😔', color: '#f44336', label: 'Not Effective' },
-    'somewhat': { stars: '😐', color: '#ff9800', label: 'Somewhat Effective' },
-    'completely': { stars: '😊', color: '#4caf50', label: 'Completely Effective' }
+    'no_change': { stars: '😔', color: '#f44336', label: 'No Change' },
+    'improved': { stars: '😐', color: '#ff9800', label: 'Improved' },
+    'resolved': { stars: '😊', color: '#4caf50', label: 'Resolved' }
   };
   
   return effectivenessMap[effectiveness] || 

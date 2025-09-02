@@ -1,0 +1,117 @@
+{
+  "sensory": {
+    "name": "Sensory Issues",
+    "schedules": {
+      "severity_8_plus": {
+        "intervals": [30, 90, 240],
+        "description": "sensory crisis"
+      },
+      "severity_5_7": {
+        "intervals": [60, 180],
+        "description": "sensory overload"
+      },
+      "severity_below_5": {
+        "intervals": [120],
+        "description": "sensory sensitivity"
+      }
+    }
+  },
+  "behavioral": {
+    "name": "Behavioral Issues", 
+    "schedules": {
+      "severity_8_plus": {
+        "intervals": [30, 120, 480],
+        "description": "dangerous behavior"
+      },
+      "severity_5_7": {
+        "intervals": [60, 240],
+        "description": "disruptive behavior"
+      },
+      "severity_below_5": {
+        "intervals": [120],
+        "description": "minor behavior issue"
+      }
+    }
+  },
+  "pain_medical": {
+    "name": "Pain/Medical Issues",
+    "schedules": {
+      "severity_8_plus": {
+        "intervals": [30, 120, 360],
+        "description": "severe pain"
+      },
+      "severity_5_7": {
+        "intervals": [60, 240], 
+        "description": "moderate pain"
+      },
+      "severity_below_5": {
+        "intervals": [120],
+        "description": "mild pain"
+      }
+    }
+  },
+  "mood": {
+    "name": "Mood Issues",
+    "schedules": {
+      "severity_8_plus": {
+        "intervals": [45, 180],
+        "description": "emotional crisis"
+      },
+      "severity_5_7": {
+        "intervals": [90, 360],
+        "description": "distress" 
+      },
+      "severity_below_5": {
+        "intervals": [180],
+        "description": "mood dip"
+      }
+    }
+  },
+  "sleep": {
+    "name": "Sleep Issues",
+    "schedules": {
+      "night_time": {
+        "intervals": [480, 1200],
+        "description": "sleep difficulty"
+      },
+      "day_time": {
+        "intervals": [240],
+        "description": "sleep difficulty"
+      }
+    }
+  },
+  "eating_nutrition": {
+    "name": "Eating/Nutrition Issues",
+    "schedules": {
+      "severity_8_plus": {
+        "intervals": [60, 180, 360],
+        "description": "severe eating difficulty"
+      },
+      "severity_5_7": {
+        "intervals": [120, 360],
+        "description": "eating resistance"
+      },
+      "severity_below_5": {
+        "intervals": [240],
+        "description": "mild pickiness"
+      }
+    }
+  },
+  "other": {
+    "name": "Other Issues",
+    "schedules": {
+      "severity_8_plus": {
+        "intervals": [60, 180, 480],
+        "description": "urgent issue"
+      },
+      "severity_5_7": {
+        "intervals": [120, 360],
+        "description": "moderate issue"
+      },
+      "severity_below_5": {
+        "intervals": [240],
+        "description": "minor issue"
+      }
+    }
+  }
+}
