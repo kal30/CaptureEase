@@ -40,40 +40,23 @@ const IncidentFollowUpModal = ({
 
   const handleSubmit = async () => {
     // More robust validation - effectiveness should be a number 1-5
-    if (!effectiveness || effectiveness < 1 || effectiveness > 5 || loading) {
-      console.log('❌ Submit blocked:', { effectiveness, loading, type: typeof effectiveness });
+    if (!effectiveness || loading) {
       return;
     }
-    
-    console.log('✅ Submitting follow-up:', { effectiveness, loading });
     setLoading(true);
     setError('');
     
     try {
       
       // Always use the new follow-up response system
-      console.log('🔍 DEBUG: Saving follow-up response:', {
-        incidentId: incident.id,
-        incidentType: incident.type,
-        customIncidentName: incident.customIncidentName,
-        effectiveness,
-        followUpNotes,
-        currentIndex: incident.currentFollowUpIndex || 0
-      });
       
       const result = await recordFollowUpResponse(
-        incident.id, 
-        effectiveness, 
-        followUpNotes, 
-        incident.currentFollowUpIndex || 0
+        incident.id,
+        effectiveness,
+        followUpNotes
       );
       
-      // Show feedback about next follow-up if there is one
-      if (result.hasMoreFollowUps) {
-        console.log(`✅ Follow-up saved! Next check: ${result.nextFollowUpDescription}`);
-      } else {
-        console.log('✅ All follow-ups completed successfully!');
-      }
+      // Show feedback about next follow-up if there is one (could add user notification here later)
       
       // Close modal immediately upon successful save
       onClose();
@@ -92,17 +75,12 @@ const IncidentFollowUpModal = ({
     setError('');
     
     try {
-      console.log('🔍 DEBUG: Resolving incident and skipping remaining follow-ups:', {
-        incidentId: incident.id,
-        incidentType: incident.type
-      });
 
       // Create a final response marking the incident as resolved and force completion
       const result = await recordFollowUpResponse(
-        incident.id, 
+        incident.id,
         'completely', // Mark as completely effective since issue is resolved
-        followUpNotes || 'Issue has been resolved - skipping remaining follow-ups',
-        incident.currentFollowUpIndex || 0
+        followUpNotes || 'Issue has been resolved - skipping remaining follow-ups'
       );
       
       // Force mark as completed regardless of remaining follow-ups
@@ -110,7 +88,6 @@ const IncidentFollowUpModal = ({
         return forceCompleteFollowUp(incident.id);
       });
       
-      console.log('✅ Incident marked as resolved - all follow-ups skipped!');
       onClose();
       
     } catch (error) {

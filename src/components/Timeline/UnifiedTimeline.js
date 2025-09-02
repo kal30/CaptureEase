@@ -142,18 +142,6 @@ const UnifiedTimeline = ({
           {/* Timeline Entries */}
           <Stack spacing={0} role="list">
             {entries.map((entry, entryIndex) => {
-              console.log('🔍 DEBUG: Rendering timeline entry:', {
-                id: entry.id,
-                type: entry.type,
-                incidentType: entry.incidentType,
-                customIncidentName: entry.customIncidentName,
-                collection: entry.collection,
-                isGroupedIncident: entry.isGroupedIncident,
-                totalFollowUps: entry.totalFollowUps,
-                hasLastFollowUpResponse: !!entry.lastFollowUpResponse,
-                lastFollowUpResponseNotes: entry.lastFollowUpResponse?.notes,
-                followUpCount: entry.followUps?.length || 0
-              });
 
               const timestamp = new Date(entry.timestamp);
               const timeString = timestamp.toLocaleTimeString([], {

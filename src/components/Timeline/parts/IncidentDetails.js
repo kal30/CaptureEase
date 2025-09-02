@@ -14,8 +14,6 @@ const IncidentDetails = ({ entry }) => {
     <Box>
       {/* Main incident description or follow-up notes */}
       <Typography variant="body2" sx={{ color: 'text.primary', mb: 1, lineHeight: 1.5, fontWeight: 600 }}>
-        {/* Debug: log entry data */}
-        {console.log('🔍 Incident Entry data:', entry)}
         {isFollowUp 
           ? (entry.notes || entry.resolution || 'Follow-up logged') 
           : (entry.customIncidentName || entry.incidentType || entry.type || 'Incident')
