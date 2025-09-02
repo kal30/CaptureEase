@@ -1,4 +1,6 @@
 import React from "react";
+import { Box, Container, Typography } from "@mui/material";
+
 import Expert from "../components/Landing/Expert";
 import Footer from "../components/Landing/Footer";
 import HeaderSection from "../components/Landing/HeaderSection";
@@ -9,7 +11,6 @@ const LandingPage = () => {
   return (
     <ResponsiveLayout pageTitle="CaptureEz" showBottomNav={false}>
       <HeaderSection />
-
       <Expert />
       <Footer />
     </ResponsiveLayout>

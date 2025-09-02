@@ -6,6 +6,15 @@ import HomeIcon from "@mui/icons-material/Home";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { auth } from "../../services/firebase";
+import {
+  containerStyles as breadcrumbsContainer,
+  listStyles as breadcrumbsList,
+  linkStyles as breadcrumbLink,
+  homeIconStyles as breadcrumbHomeIcon,
+  parentTextStyles as breadcrumbParentText,
+  activeTextStyles as breadcrumbActiveText,
+  separatorIconStyles as breadcrumbSeparatorIcon,
+} from "../../assets/theme/breadcrumbsTheme";
 
 const BreadcrumbsComponent = () => {
   const location = useLocation();
@@ -57,20 +66,9 @@ const BreadcrumbsComponent = () => {
           color="inherit"
           to="/dashboard"
           key="dashboard"
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 0.5,
-            color: "#5B8C51",
-            fontWeight: 500,
-            textDecoration: "none",
-            "&:hover": {
-              color: "#4B7345",
-              textDecoration: "underline",
-            },
-          }}
+          sx={(theme) => breadcrumbLink(theme)}
         >
-          <HomeIcon sx={{ fontSize: 18, color: "#5B8C51" }} />
+          <HomeIcon sx={(theme) => breadcrumbHomeIcon(theme)} />
           Dashboard
         </Link>
       );
@@ -86,7 +84,7 @@ const BreadcrumbsComponent = () => {
             fontWeight: 600,
           }}
         >
-          <HomeIcon sx={{ fontSize: 18, color: "#5B8C51" }} />
+          <HomeIcon sx={(theme) => breadcrumbHomeIcon(theme)} />
           Dashboard
         </Typography>
       );
@@ -102,20 +100,9 @@ const BreadcrumbsComponent = () => {
           color="inherit"
           to="/"
           key="home"
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 0.5,
-            color: "#5B8C51",
-            fontWeight: 500,
-            textDecoration: "none",
-            "&:hover": {
-              color: "#4B7345",
-              textDecoration: "underline",
-            },
-          }}
+          sx={(theme) => breadcrumbLink(theme)}
         >
-          <HomeIcon sx={{ fontSize: 18, color: "#5B8C51" }} />
+          <HomeIcon sx={(theme) => breadcrumbHomeIcon(theme)} />
           Home
         </Link>
       );
@@ -126,28 +113,14 @@ const BreadcrumbsComponent = () => {
   if (location.pathname === "/log" || location.pathname === "/log/daily-note") {
     // Add "Child Log" as non-clickable parent
     breadcrumbsItems.push(
-      <Typography
-        color="text.secondary"
-        key="child-log-parent"
-        sx={{
-          fontWeight: 500,
-          color: "#64748B",
-        }}
-      >
+      <Typography color="text.secondary" key="child-log-parent" sx={(theme) => breadcrumbParentText(theme)}>
         Child Log
       </Typography>
     );
     
     // Add "Daily Log" as final breadcrumb
     breadcrumbsItems.push(
-      <Typography
-        color="text.primary"
-        key="daily-log"
-        sx={{
-          fontWeight: 600,
-          color: "#1E293B",
-        }}
-      >
+      <Typography color="text.primary" key="daily-log" sx={(theme) => breadcrumbActiveText(theme)}>
         Daily Log
       </Typography>
     );
@@ -168,14 +141,7 @@ const BreadcrumbsComponent = () => {
 
       if (isLast) {
         breadcrumbsItems.push(
-          <Typography
-            color="text.primary"
-            key={currentPath}
-            sx={{
-              fontWeight: 600,
-              color: "#1E293B",
-            }}
-          >
+          <Typography color="text.primary" key={currentPath} sx={(theme) => breadcrumbActiveText(theme)}>
             {decodeURIComponent(name)}
           </Typography>
         );
@@ -187,15 +153,7 @@ const BreadcrumbsComponent = () => {
             color="inherit"
             to={currentPath}
             key={currentPath}
-            sx={{
-              color: "#5B8C51",
-              fontWeight: 500,
-              textDecoration: "none",
-              "&:hover": {
-                color: "#4B7345",
-                textDecoration: "underline",
-              },
-            }}
+            sx={(theme) => breadcrumbLink(theme)}
           >
             {decodeURIComponent(name)}
           </Link>
@@ -205,39 +163,16 @@ const BreadcrumbsComponent = () => {
   }
 
   return (
-    <Box
-      sx={{
-        backgroundColor: (theme) => theme.palette.background.default,
-        borderBottom: "none",
-        padding: "20px 0",
-        marginBottom: 2,
-        position: "relative",
-      }}
-    >
+    <Box sx={(theme) => breadcrumbsContainer(theme)}>
       <Container
         disableGutters
         maxWidth="xl"
         sx={{ px: 2, background: "transparent" }}
       >
         <Breadcrumbs
-          separator={
-            <NavigateNextIcon fontSize="small" sx={{ color: "#94A3B8" }} />
-          }
+          separator={<NavigateNextIcon fontSize="small" sx={(theme) => breadcrumbSeparatorIcon(theme)} />}
           aria-label="breadcrumb"
-          sx={{
-            "& ol": {
-              display: "flex",
-              flexWrap: "nowrap",
-              alignItems: "center",
-              margin: 0,
-              padding: 0,
-              listStyle: "none",
-            },
-            "& li": {
-              display: "flex",
-              alignItems: "center",
-            },
-          }}
+          sx={breadcrumbsList}
         >
           {breadcrumbsItems}
         </Breadcrumbs>

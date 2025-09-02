@@ -35,10 +35,12 @@ const HeaderSection = () => {
       sx={{
         backgroundColor: "background.default",
         position: "relative",
+        mt: 10,
         ...landingLayout.heroSection.padding,
         minHeight: { xs: "auto", md: "auto", lg: "auto" },
         display: "flex",
         alignItems: "center",
+        overflow: "hidden",
       }}
     >
       <Container maxWidth="xl">
@@ -146,7 +148,7 @@ const HeaderSection = () => {
                 sx={{
                   width: "100%",
                   height: "auto",
-                  borderRadius: { xs: 2, md: 3, lg: 4 },
+                  //borderRadius: { xs: 2, md: 3, lg: 4 },
                   boxShadow: "0px 8px 32px rgba(0, 0, 0, 0.12)",
                   objectFit: "cover",
                 }}
