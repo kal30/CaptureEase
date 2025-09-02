@@ -9,7 +9,8 @@ const FollowUpForm = ({
   effectiveness,
   loading,
   onSubmit,
-  onClose
+  onClose,
+  onResolveIncident
 }) => {
   const theme = useTheme();
 
@@ -27,10 +28,27 @@ const FollowUpForm = ({
         sx={{ mb: 2 }}
       />
       
-      <DialogActions sx={{ p: 3, pt: 0 }}>
+      <DialogActions sx={{ p: 3, pt: 0, gap: 1, flexWrap: 'wrap' }}>
         <Button onClick={onClose} disabled={loading}>
           Skip for Now
         </Button>
+        
+        <Button
+          variant="outlined"
+          onClick={onResolveIncident}
+          disabled={loading}
+          sx={{
+            borderColor: '#4CAF50',
+            color: '#4CAF50',
+            '&:hover': {
+              borderColor: '#4CAF50',
+              bgcolor: 'rgba(76, 175, 80, 0.1)',
+            },
+          }}
+        >
+          ✅ Issue Resolved - Skip All Follow-ups
+        </Button>
+        
         <Button
           variant="contained"
           onClick={onSubmit}

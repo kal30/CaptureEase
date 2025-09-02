@@ -318,6 +318,31 @@ export const getIncidents = async (childId, startDate = null, endDate = null) =>
   }
 };
 
+export const forceCompleteFollowUp = async (incidentId) => {
+  try {
+    const incidentRef = doc(db, 'incidents', incidentId);
+    await updateDoc(incidentRef, {
+      followUpCompleted: true,
+      followUpTime: null,
+      nextFollowUpIndex: null,
+      followUpDescription: null
+    });
+    
+    // Cancel any remaining notifications
+    try {
+      const { cancelFollowUpNotifications } = await import('../followUpService');
+      cancelFollowUpNotifications(incidentId);
+    } catch (error) {
+      console.error('Error cancelling notifications:', error);
+    }
+    
+    console.log('✅ Incident force completed - all follow-ups cancelled');
+  } catch (error) {
+    console.error('Error force completing follow-up:', error);
+    throw error;
+  }
+};
+
 export const getIncidentsPendingFollowUp = async (childId) => {
   try {
     const q = query(

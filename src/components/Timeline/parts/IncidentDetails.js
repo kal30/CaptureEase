@@ -86,7 +86,14 @@ const IncidentDetails = ({ entry }) => {
           )}
           {entry.lastFollowUpResponse.effectiveness && (
             <Typography variant="caption" sx={{ color: '#1565C0', fontWeight: 500 }}>
-              Effectiveness: {entry.lastFollowUpResponse.effectiveness}/5
+              Effectiveness: {(() => {
+                const effectivenessMap = {
+                  'not_effective': 'Not Effective',
+                  'somewhat': 'Somewhat Effective', 
+                  'completely': 'Completely Effective'
+                };
+                return effectivenessMap[entry.lastFollowUpResponse.effectiveness] || entry.lastFollowUpResponse.effectiveness;
+              })()}
             </Typography>
           )}
         </Box>

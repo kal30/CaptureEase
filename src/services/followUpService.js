@@ -237,7 +237,7 @@ export const scheduleFollowUpNotification = (incident, childName, followUpIndex 
     // Define quick response actions
     const actions = [
       {
-        action: 'effective',
+        action: 'completely',
         title: '😊 Worked Great',
         icon: '/favicon.ico'
       },
@@ -247,7 +247,7 @@ export const scheduleFollowUpNotification = (incident, childName, followUpIndex 
         icon: '/favicon.ico'
       },
       {
-        action: 'not-effective',
+        action: 'not_effective',
         title: '😞 Didn\'t Help',
         icon: '/favicon.ico'
       }
@@ -344,13 +344,8 @@ export const processQuickResponses = async () => {
         const { recordFollowUpResponse } = await import('./incidentService');
         
         // Map quick response values to effectiveness values
-        const effectivenessMap = {
-          'effective': 'completely',
-          'somewhat': 'somewhat', 
-          'not-effective': 'not_effective'
-        };
-        
-        const effectiveness = effectivenessMap[response.effectiveness] || response.effectiveness;
+        // Use the response effectiveness value directly (already in correct format)
+        const effectiveness = response.effectiveness;
         
         // Record the follow-up response
         const result = await recordFollowUpResponse(
@@ -423,9 +418,9 @@ export const testNotification = async () => {
   const hasPermission = await requestNotificationPermission();
   if (hasPermission) {
     const actions = [
-      { action: 'effective', title: '😊 Great!', icon: '/favicon.ico' },
+      { action: 'completely', title: '😊 Great!', icon: '/favicon.ico' },
       { action: 'somewhat', title: '😐 OK', icon: '/favicon.ico' },
-      { action: 'not-effective', title: '😞 No', icon: '/favicon.ico' }
+      { action: 'not_effective', title: '😞 No', icon: '/favicon.ico' }
     ];
     
     showNotification(

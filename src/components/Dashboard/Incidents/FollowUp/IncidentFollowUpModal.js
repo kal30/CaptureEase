@@ -87,6 +87,40 @@ const IncidentFollowUpModal = ({
     }
   };
 
+  const handleResolveIncident = async () => {
+    setLoading(true);
+    setError('');
+    
+    try {
+      console.log('🔍 DEBUG: Resolving incident and skipping remaining follow-ups:', {
+        incidentId: incident.id,
+        incidentType: incident.type
+      });
+
+      // Create a final response marking the incident as resolved and force completion
+      const result = await recordFollowUpResponse(
+        incident.id, 
+        'completely', // Mark as completely effective since issue is resolved
+        followUpNotes || 'Issue has been resolved - skipping remaining follow-ups',
+        incident.currentFollowUpIndex || 0
+      );
+      
+      // Force mark as completed regardless of remaining follow-ups
+      await import('../../../../services/incidents/repository').then(({ forceCompleteFollowUp }) => {
+        return forceCompleteFollowUp(incident.id);
+      });
+      
+      console.log('✅ Incident marked as resolved - all follow-ups skipped!');
+      onClose();
+      
+    } catch (error) {
+      console.error('❌ Error resolving incident:', error);
+      setError(`Failed to resolve incident: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleClose = () => {
     setEffectiveness('');
     setFollowUpNotes('');
@@ -141,6 +175,7 @@ const IncidentFollowUpModal = ({
           loading={loading}
           onSubmit={handleSubmit}
           onClose={handleClose}
+          onResolveIncident={handleResolveIncident}
         />
       </DialogContent>
     </Dialog>
