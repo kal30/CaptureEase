@@ -13,6 +13,7 @@ import {
   FormLabel,
   Fade,
   LinearProgress,
+  Alert,
 } from '@mui/material';
 import {
   Close as CloseIcon,
@@ -22,6 +23,7 @@ import { alpha, useTheme } from '@mui/material/styles';
 import StyledButton from '../UI/StyledButton';
 import { getDailyCareConfig } from './dailyCareConfig';
 import { saveDailyCareEntry } from '../../services/dailyCareService';
+import { useAsyncForm } from '../../hooks/useAsyncForm';
 
 const modalStyle = {
   position: 'absolute',
@@ -42,21 +44,46 @@ const DailyCareModal = ({ open, onClose, child, actionType, onComplete }) => {
   const theme = useTheme();
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({});
-  const [loading, setLoading] = useState(false);
 
   // Get configuration for the specific action type
   const config = getDailyCareConfig(actionType, child);
+
+  // Use async form hook for daily care entry submission
+  const careForm = useAsyncForm({
+    onSuccess: (result) => {
+      onComplete(actionType, result);
+      onClose();
+    },
+    validate: (data) => {
+      const currentField = config?.fields[currentStep];
+      if (currentField?.required) {
+        const value = data.formData?.[currentField.key];
+        if (value === undefined || value === null || value === '') {
+          throw new Error(`${currentField.label} is required`);
+        }
+      }
+    }
+  });
 
   useEffect(() => {
     // Reset form when action type changes
     setCurrentStep(0);
     setFormData({});
-  }, [actionType, open]);
+    careForm.reset();
+  }, [actionType, open, careForm]);
+
+  // Define handleClose first to avoid circular dependency
+  const handleClose = () => {
+    setCurrentStep(0);
+    setFormData({});
+    careForm.reset();
+    onClose();
+  };
 
   // Always render the same structure to maintain consistent hooks
   if (!config || !open) {
     return (
-      <Modal open={false} onClose={onClose}>
+      <Modal open={false} onClose={handleClose}>
         <Box />
       </Modal>
     );
@@ -79,27 +106,24 @@ const DailyCareModal = ({ open, onClose, child, actionType, onComplete }) => {
     return value !== undefined && value !== null && value !== '';
   };
 
-  const handleNext = async () => {
+  const handleNext = () => {
     if (isLastStep) {
       // Save the data
-      setLoading(true);
-      try {
-        const entryData = {
-          childId: child.id,
-          actionType,
-          data: formData,
-          timestamp: new Date(),
-          completedBy: 'current_user', // TODO: Get from auth context
-        };
+      careForm.submitForm(
+        async () => {
+          const entryData = {
+            childId: child.id,
+            actionType,
+            data: formData,
+            timestamp: new Date(),
+            completedBy: 'current_user', // TODO: Get from auth context
+          };
 
-        await saveDailyCareEntry(entryData);
-        onComplete(actionType, entryData);
-        onClose();
-      } catch (error) {
-        console.error('Error saving daily care entry:', error);
-      } finally {
-        setLoading(false);
-      }
+          await saveDailyCareEntry(entryData);
+          return entryData;
+        },
+        { formData }
+      );
     } else {
       setCurrentStep(prev => prev + 1);
     }
@@ -232,7 +256,7 @@ const DailyCareModal = ({ open, onClose, child, actionType, onComplete }) => {
   };
 
   return (
-    <Modal open={open} onClose={onClose}>
+    <Modal open={open} onClose={handleClose}>
       <Box sx={modalStyle}>
         {/* Header */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
@@ -242,7 +266,7 @@ const DailyCareModal = ({ open, onClose, child, actionType, onComplete }) => {
               {config.title}
             </Typography>
           </Box>
-          <IconButton size="small" onClick={onClose} disabled={loading}>
+          <IconButton size="small" onClick={handleClose} disabled={careForm.loading}>
             <CloseIcon />
           </IconButton>
         </Box>
@@ -269,6 +293,17 @@ const DailyCareModal = ({ open, onClose, child, actionType, onComplete }) => {
           </Box>
         )}
 
+        {/* Error Alert */}
+        {careForm.error && (
+          <Alert 
+            severity="error" 
+            sx={{ mb: 3 }} 
+            onClose={() => careForm.clearError()}
+          >
+            {careForm.error}
+          </Alert>
+        )}
+
         {/* Current Field */}
         <Fade in={true} key={currentStep}>
           <Box sx={{ minHeight: 200 }}>
@@ -290,7 +325,7 @@ const DailyCareModal = ({ open, onClose, child, actionType, onComplete }) => {
         {/* Navigation */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 4 }}>
           <StyledButton
-            disabled={currentStep === 0 || loading}
+            disabled={currentStep === 0 || careForm.loading}
             onClick={handleBack}
           >
             Back
@@ -303,7 +338,7 @@ const DailyCareModal = ({ open, onClose, child, actionType, onComplete }) => {
           <StyledButton
             variant="contained"
             onClick={handleNext}
-            disabled={!canProceed() || loading}
+            disabled={!canProceed() || careForm.loading}
             endIcon={isLastStep ? <CheckIcon /> : null}
             sx={{
               bgcolor: '#6D28D9',
@@ -316,14 +351,14 @@ const DailyCareModal = ({ open, onClose, child, actionType, onComplete }) => {
               }
             }}
           >
-            {loading ? 'Saving...' : isLastStep ? 'Complete' : 'Next'}
+            {careForm.loading ? 'Saving...' : isLastStep ? 'Complete' : 'Next'}
           </StyledButton>
         </Box>
 
         {/* Skip option for optional fields */}
         {!currentField.required && !canProceed() && (
           <Box sx={{ textAlign: 'center', mt: 1 }}>
-            <Button variant="text" size="small" onClick={handleNext} disabled={loading}>
+            <Button variant="text" size="small" onClick={handleNext} disabled={careForm.loading}>
               Skip this step
             </Button>
           </Box>

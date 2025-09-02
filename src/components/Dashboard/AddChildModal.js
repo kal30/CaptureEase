@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Box, Modal, TextField, Chip, IconButton, Typography } from "@mui/material";
+import { Box, Modal, TextField, Chip, IconButton, Typography, Alert } from "@mui/material";
 import { Close as CloseIcon } from "@mui/icons-material";
 import AllergyChip from "../UI/Allergies";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -8,13 +8,13 @@ import { getAuth } from "firebase/auth"; // Import Firestore functions
 import { db } from "../../services/firebase"; // Adjust the path based on your structure
 import ChildPhotoUploader from "./ChildPhotoUploader"; // Import the ChildPhotoUploader component
 import { ThemeCard, GradientButton, ThemeSpacing, ThemeText, CustomizableAutocomplete } from "../UI";
+import { useAsyncForm } from "../../hooks/useAsyncForm";
 
 const AddChildModal = ({ open, onClose, onSuccess }) => {
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
   const [photo, setPhoto] = useState(null); // State for photo file
   const [photoURL, setPhotoURL] = useState(null); // State for photo URL
-  const [loading, setLoading] = useState(false); // State to manage loading
   const [selectedConditions, setSelectedConditions] = useState([]); // [{ code, label, custom? }]
   const [foodAllergies, setFoodAllergies] = useState([]);
   const [dietaryRestrictions, setDietaryRestrictions] = useState([]);
@@ -24,6 +24,26 @@ const AddChildModal = ({ open, onClose, onSuccess }) => {
   const [sleepIssues, setSleepIssues] = useState([]);
   const [communicationNeeds, setCommunicationNeeds] = useState([]);
   const storage = getStorage();
+
+  // Use async form hook for child creation
+  const childForm = useAsyncForm({
+    onSuccess: () => {
+      resetForm();
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        onClose();
+      }
+    },
+    validate: ({ name, age }) => {
+      if (!name?.trim()) {
+        throw new Error('Please enter the child\'s name');
+      }
+      if (!age?.trim()) {
+        throw new Error('Please enter the child\'s age');
+      }
+    }
+  });
 
   const CONDITION_OPTIONS = [
     { code: "ASD", label: "Autism / ASD" },
@@ -80,74 +100,56 @@ const AddChildModal = ({ open, onClose, onSuccess }) => {
 
 
   // Handle the form submission
-  const handleSubmit = async () => {
-    if (!name || !age) return; // Ensure both name and age are provided
+  const handleSubmit = () => {
+    childForm.submitForm(
+      async () => {
+        let photoDownloadURL = "";
 
-    setLoading(true); // Start loading state
-    let photoDownloadURL = "";
+        // Upload photo if it exists
+        if (photo) {
+          const photoRef = ref(storage, `children/${photo.name}`);
+          await uploadBytes(photoRef, photo);
+          photoDownloadURL = await getDownloadURL(photoRef);
+        }
 
-    // Upload photo if it exists
-    if (photo) {
-      try {
-        const photoRef = ref(storage, `children/${photo.name}`);
-        await uploadBytes(photoRef, photo);
-        photoDownloadURL = await getDownloadURL(photoRef); // Get the download URL of the photo
-      } catch (error) {
-        console.error("Error uploading photo:", error);
-        setLoading(false);
-        return;
-      }
-    }
+        const conditionCodes = selectedConditions.map((c) => c.code);
+        const currentUserId = getAuth().currentUser.uid;
+        
+        const newChild = {
+          name,
+          age,
+          photoURL: photoDownloadURL,
+          // Role-based user structure
+          users: {
+            parent: currentUserId,
+            co_parents: [],
+            family_members: [],
+            caregivers: [],
+            therapists: []
+          },
+          // Structured condition fields
+          conditions: selectedConditions,
+          conditionCodes,
+          // Medical/Behavioral baseline for correlation analysis
+          medicalProfile: {
+            foodAllergies,
+            dietaryRestrictions,
+            sensoryIssues,
+            behavioralTriggers,
+            currentMedications,
+            sleepIssues,
+            communicationNeeds
+          }
+        };
 
-    const conditionCodes = selectedConditions.map((c) => c.code);
-
-    // Create the new child object
-    const currentUserId = getAuth().currentUser.uid;
-    
-    const newChild = {
-      name,
-      age,
-      photoURL: photoDownloadURL,
-      // Role-based user structure
-      users: {
-        parent: currentUserId,
-        co_parents: [],
-        family_members: [],
-        caregivers: [],
-        therapists: []
+        // Save child to Firestore
+        const docRef = await addDoc(collection(db, "children"), newChild);
+        console.log("Child added to Firestore with ID:", docRef.id);
+        
+        return docRef;
       },
-      // Structured condition fields
-      conditions: selectedConditions, // [{code,label,custom?}]
-      conditionCodes, // ["ASD", "OTHER", ...]
-      // Medical/Behavioral baseline for correlation analysis
-      medicalProfile: {
-        foodAllergies,
-        dietaryRestrictions,
-        sensoryIssues,
-        behavioralTriggers,
-        currentMedications,
-        sleepIssues,
-        communicationNeeds
-      }
-    };
-
-    try {
-      // Save child to Firestore
-      const docRef = await addDoc(collection(db, "children"), newChild);
-      console.log("Child added to Firestore with ID:", docRef.id);
-
-      // Call success callback to refresh the children list
-      if (onSuccess) {
-        onSuccess();
-      } else {
-        onClose(); // Close the modal if no success callback
-      }
-      resetForm(); // Reset form fields after submission
-    } catch (error) {
-      console.error("Error saving child:", error);
-    } finally {
-      setLoading(false); // Stop loading state
-    }
+      { name, age }
+    );
   };
 
   // Reset form fields
@@ -164,10 +166,17 @@ const AddChildModal = ({ open, onClose, onSuccess }) => {
     setCurrentMedications([]);
     setSleepIssues([]);
     setCommunicationNeeds([]);
+    childForm.reset();
+  };
+
+  // Handle modal close with form reset
+  const handleClose = () => {
+    resetForm();
+    onClose();
   };
 
   return (
-    <Modal open={open} onClose={onClose}>
+    <Modal open={open} onClose={handleClose}>
       <Box
         sx={{
           position: "absolute",
@@ -191,7 +200,7 @@ const AddChildModal = ({ open, onClose, onSuccess }) => {
               </Typography>
             </Box>
             <IconButton
-              onClick={onClose}
+              onClick={handleClose}
               sx={{
                 color: 'text.secondary',
                 '&:hover': {
@@ -206,6 +215,15 @@ const AddChildModal = ({ open, onClose, onSuccess }) => {
 
           {/* Content */}
           <Box sx={{ flex: 1, overflow: 'auto', p: 3 }}>
+            {childForm.error && (
+              <Alert 
+                severity="error" 
+                sx={{ mb: 3 }} 
+                onClose={() => childForm.clearError()}
+              >
+                {childForm.error}
+              </Alert>
+            )}
           <ThemeSpacing variant="modal-content">
 
             <ThemeSpacing variant="field">
@@ -375,11 +393,11 @@ const AddChildModal = ({ open, onClose, onSuccess }) => {
               color="success"
               onClick={handleSubmit}
               fullWidth
-              disabled={loading}
+              disabled={childForm.loading}
               elevated
               size="large"
             >
-              {loading ? "Saving..." : "Add Child"}
+              {childForm.loading ? "Saving..." : "Add Child"}
             </GradientButton>
           </Box>
         </ThemeCard>

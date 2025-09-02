@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Button } from '@mui/material';
+import { Box, Typography, Button, Alert } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '../../../services/firebase';
@@ -11,6 +11,7 @@ import {
   formatFollowUpSchedule,
   getIncidentTypeConfig
 } from '../../../services/incidentService';
+import { useAsyncForm } from '../../../hooks/useAsyncForm';
 
 // Import refactored components
 import DateTimeSection from './QuickCapture/DateTimeSection';
@@ -38,8 +39,20 @@ const IncidentQuickCapture = ({
   const [notes, setNotes] = useState('');
   const [scheduleFollowUp, setScheduleFollowUp] = useState(true);
   const [incidentDateTime, setIncidentDateTime] = useState(new Date());
-  const [loading, setLoading] = useState(false);
   const [customCategories, setCustomCategories] = useState({});
+  
+  // Use async form hook for incident creation
+  const incidentForm = useAsyncForm({
+    onSuccess: () => onSaved(),
+    validate: ({ remedy, customRemedy }) => {
+      if (!remedy) {
+        throw new Error('Please select a remedy');
+      }
+      if (remedy === 'Other' && !customRemedy?.trim()) {
+        throw new Error('Please describe the custom remedy');
+      }
+    }
+  });
   
   // Media state
   const [mediaFile, setMediaFile] = useState(null);
@@ -83,36 +96,28 @@ const IncidentQuickCapture = ({
     setAudioBlob(mediaData.audioBlob);
   };
 
-  const handleSave = async () => {
-    if (!remedy) return;
+  const handleSave = () => {
+    incidentForm.submitForm(
+      async () => {
+        const incidentData = {
+          type: incidentType,
+          severity,
+          remedy: remedy === 'Other' ? customRemedy : remedy,
+          customRemedy: remedy === 'Other' ? customRemedy : '',
+          notes,
+          incidentDateTime,
+          mediaFile,
+          audioBlob,
+          authorId: user?.uid,
+          authorName: user?.displayName || user?.email?.split('@')[0] || 'User',
+          authorEmail: user?.email
+        };
 
-    setLoading(true);
-    try {
-      const incidentData = {
-        type: incidentType,
-        severity,
-        remedy: remedy === 'Other' ? customRemedy : remedy,
-        customRemedy: remedy === 'Other' ? customRemedy : '',
-        notes,
-        incidentDateTime,
-        mediaFile,
-        audioBlob,
-        authorId: user?.uid,
-        authorName: user?.displayName || user?.email?.split('@')[0] || 'User',
-        authorEmail: user?.email
-      };
-
-      // Use smart timing system when follow-up is scheduled
-      const result = await createIncidentWithSmartFollowUp(childId, incidentData, scheduleFollowUp, childName);
-      
-      // Follow-up scheduling completed if enabled
-      
-      onSaved();
-    } catch (error) {
-      console.error('Error saving incident:', error);
-    } finally {
-      setLoading(false);
-    }
+        // Use smart timing system when follow-up is scheduled
+        return await createIncidentWithSmartFollowUp(childId, incidentData, scheduleFollowUp, childName);
+      },
+      { remedy, customRemedy } // Data for validation
+    );
   };
 
   const canSave = remedy && (remedy !== 'Other' || customRemedy.trim());
@@ -139,6 +144,16 @@ const IncidentQuickCapture = ({
 
   return (
     <Box sx={{ p: 4, backgroundColor: '#fafbfc', minHeight: '100%' }}>
+      {incidentForm.error && (
+        <Alert 
+          severity="error" 
+          sx={{ mb: 3 }} 
+          onClose={() => incidentForm.clearError()}
+        >
+          {incidentForm.error}
+        </Alert>
+      )}
+
       <DateTimeSection 
         value={incidentDateTime}
         onChange={setIncidentDateTime}
@@ -173,8 +188,8 @@ const IncidentQuickCapture = ({
       <ActionButtons 
         onCancel={onClose}
         onSave={handleSave}
-        canSave={canSave}
-        loading={loading}
+        canSave={canSave && incidentForm.canSubmit}
+        loading={incidentForm.loading}
         incidentConfig={incidentConfig}
       />
     </Box>

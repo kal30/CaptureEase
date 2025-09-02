@@ -8,7 +8,8 @@ import {
   Paper,
   Chip,
   CircularProgress,
-  Autocomplete
+  Autocomplete,
+  Alert
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import { useTheme } from '@mui/material/styles';
@@ -23,6 +24,8 @@ import {
   checkForCategorySuggestion,
   getCustomCategories 
 } from '../../../services/incidentService';
+import { useAsyncForm } from '../../../hooks/useAsyncForm';
+import { useAsyncOperation } from '../../../hooks/useAsyncOperation';
 import CategoryCreationModal from '../CategoryCreationModal';
 
 const OtherIncidentCapture = ({ 
@@ -40,12 +43,22 @@ const OtherIncidentCapture = ({
   const [incidentName, setIncidentName] = useState('');
   const [severity, setSeverity] = useState(5);
   const [notes, setNotes] = useState('');
-  const [loading, setLoading] = useState(false);
   const [similarNames, setSimilarNames] = useState([]);
-  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [categorySuggestion, setCategorySuggestion] = useState(null);
   const [customCategories, setCustomCategories] = useState({});
+
+  // Use async form hook for incident submission
+  const incidentForm = useAsyncForm({
+    validate: ({ incidentName, isCustomCategory }) => {
+      if (!isCustomCategory && !incidentName?.trim()) {
+        throw new Error('Please enter an incident name');
+      }
+    }
+  });
+
+  // Use async operation hook for suggestions loading
+  const suggestionsOperation = useAsyncOperation();
 
   // Load custom categories on mount
   useEffect(() => {
@@ -79,14 +92,11 @@ const OtherIncidentCapture = ({
   useEffect(() => {
     const loadSimilarNames = async () => {
       if (incidentName.length >= 2) {
-        setLoadingSuggestions(true);
-        try {
-          const names = await getSimilarIncidentNames(childId, incidentName);
+        const names = await suggestionsOperation.execute(async () => {
+          return await getSimilarIncidentNames(childId, incidentName);
+        });
+        if (names) {
           setSimilarNames(names);
-        } catch (error) {
-          console.error('Error loading similar names:', error);
-        } finally {
-          setLoadingSuggestions(false);
         }
       } else {
         setSimilarNames([]);
@@ -95,50 +105,43 @@ const OtherIncidentCapture = ({
 
     const debounceTimer = setTimeout(loadSimilarNames, 300);
     return () => clearTimeout(debounceTimer);
-  }, [incidentName, childId]);
+  }, [incidentName, childId, suggestionsOperation]);
 
   const handleSeverityChange = (event, newValue) => {
     setSeverity(newValue);
   };
 
-  const handleSave = async () => {
-    // For custom categories, we don't need incident name validation
-    if (!isCustomCategory && !incidentName.trim()) return;
+  const handleSave = () => {
+    incidentForm.submitForm(
+      async () => {
+        const incidentData = {
+          type: isCustomCategory ? customCategoryType : 'other',
+          customIncidentName: isCustomCategory ? '' : incidentName.trim(),
+          severity,
+          remedy: notes || 'General observation and monitoring',
+          notes,
+          authorId: user?.uid,
+          authorName: user?.displayName || user?.email?.split('@')[0] || 'User',
+          authorEmail: user?.email
+        };
 
-    setLoading(true);
-    try {
-      const incidentData = {
-        type: isCustomCategory ? customCategoryType : 'other',
-        customIncidentName: isCustomCategory ? '' : incidentName.trim(), // For custom categories, don't need custom name
-        severity,
-        remedy: notes || 'General observation and monitoring', // Use notes as remedy if provided, or default remedy
-        notes,
-        authorId: user?.uid,
-        authorName: user?.displayName || user?.email?.split('@')[0] || 'User',
-        authorEmail: user?.email
-      };
+        await addIncident(childId, incidentData, true, childName || 'child');
 
-      await addIncident(childId, incidentData, true, childName || 'child');
-
-      // Only check for category suggestions if this is a regular "Other" incident
-      if (!isCustomCategory) {
-        console.log('🚀 About to check for category suggestion:', { childId, incidentName: incidentName.trim() });
-        const suggestionCheck = await checkForCategorySuggestion(childId, incidentName.trim());
-        console.log('🎯 Category suggestion result:', suggestionCheck);
-        
-        if (suggestionCheck.shouldSuggest) {
-          setCategorySuggestion(suggestionCheck.suggestion);
-          setShowCategoryModal(true);
-          return; // Don't call onSaved yet, let the category modal handle it
+        // Only check for category suggestions if this is a regular "Other" incident
+        if (!isCustomCategory) {
+          const suggestionCheck = await checkForCategorySuggestion(childId, incidentName.trim());
+          
+          if (suggestionCheck.shouldSuggest) {
+            setCategorySuggestion(suggestionCheck.suggestion);
+            setShowCategoryModal(true);
+            return; // Don't call onSaved yet, let the category modal handle it
+          }
         }
-      }
 
-      onSaved();
-    } catch (error) {
-      console.error('Error saving incident:', error);
-    } finally {
-      setLoading(false);
-    }
+        onSaved();
+      },
+      { incidentName, isCustomCategory }
+    );
   };
 
   const handleCategoryCreated = (result) => {
@@ -169,10 +172,19 @@ const OtherIncidentCapture = ({
     return marks;
   };
 
-  const canSave = incidentName.trim().length > 0;
+  const canSave = isCustomCategory || incidentName.trim().length > 0;
 
   return (
     <Box sx={{ p: 4, backgroundColor: '#fafbfc', minHeight: '100%' }}>
+      {incidentForm.error && (
+        <Alert 
+          severity="error" 
+          sx={{ mb: 3 }} 
+          onClose={() => incidentForm.clearError()}
+        >
+          {incidentForm.error}
+        </Alert>
+      )}
 
       {/* Incident Name Input */}
       <Paper 
@@ -204,7 +216,7 @@ const OtherIncidentCapture = ({
             setIncidentName(newInputValue);
           }}
           options={similarNames}
-          loading={loadingSuggestions}
+          loading={suggestionsOperation.loading}
           freeSolo
           renderInput={(params) => (
             <TextField
@@ -215,7 +227,7 @@ const OtherIncidentCapture = ({
                 ...params.InputProps,
                 endAdornment: (
                   <>
-                    {loadingSuggestions ? <CircularProgress color="inherit" size={20} /> : null}
+                    {suggestionsOperation.loading ? <CircularProgress color="inherit" size={20} /> : null}
                     {params.InputProps.endAdornment}
                   </>
                 ),
@@ -340,8 +352,8 @@ const OtherIncidentCapture = ({
         <Button
           variant="contained"
           onClick={handleSave}
-          disabled={!canSave || loading}
-          startIcon={loading ? <CircularProgress size={20} /> : <SaveIcon />}
+          disabled={!canSave || incidentForm.loading}
+          startIcon={incidentForm.loading ? <CircularProgress size={20} /> : <SaveIcon />}
           sx={{
             flex: 2,
             bgcolor: incidentConfig.color,
@@ -351,7 +363,7 @@ const OtherIncidentCapture = ({
             },
           }}
         >
-          {loading ? 'Saving...' : 'Save Incident'}
+          {incidentForm.loading ? 'Saving...' : 'Save Incident'}
         </Button>
       </Box>
 

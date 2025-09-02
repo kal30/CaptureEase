@@ -6,6 +6,7 @@ import {
   Typography,
   Chip,
   IconButton,
+  Alert,
 } from "@mui/material";
 import { Close as CloseIcon } from "@mui/icons-material";
 import Autocomplete, { createFilterOptions } from "@mui/material/Autocomplete";
@@ -22,6 +23,7 @@ import { db } from "../../services/firebase";
 import { USER_ROLES } from "../../services/rolePermissionService";
 import ChildPhotoUploader from "./ChildPhotoUploader";
 import { ThemeCard, GradientButton, CustomizableAutocomplete } from "../UI";
+import { useAsyncForm } from "../../hooks/useAsyncForm";
 
 const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
   const theme = useTheme(); // Get the theme object
@@ -29,7 +31,6 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
   const [age, setAge] = useState("");
   const [photo, setPhoto] = useState(null);
   const [photoURL, setPhotoURL] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [selectedConditions, setSelectedConditions] = useState([]);
   const [foodAllergies, setFoodAllergies] = useState([]);
   const [dietaryRestrictions, setDietaryRestrictions] = useState([]);
@@ -43,6 +44,22 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
   // Permission checks
   const canEdit = userRole === USER_ROLES.PRIMARY_PARENT || userRole === USER_ROLES.CO_PARENT || userRole === 'parent';
   const canEditMedicalInfo = userRole === USER_ROLES.PRIMARY_PARENT || userRole === USER_ROLES.CO_PARENT; // More restrictive for medical data
+
+  // Use async form hook for child editing
+  const childForm = useAsyncForm({
+    onSuccess: () => {
+      if (onSuccess) onSuccess();
+      onClose();
+    },
+    validate: ({ name, age }) => {
+      if (!name?.trim()) {
+        throw new Error('Please enter the child\'s name');
+      }
+      if (!age?.trim()) {
+        throw new Error('Please enter the child\'s age');
+      }
+    }
+  });
 
   const CONDITION_OPTIONS = [
     { code: "ASD", label: "Autism / ASD" },
@@ -103,8 +120,17 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
       setCurrentMedications(medicalProfile.currentMedications || []);
       setSleepIssues(medicalProfile.sleepIssues || []);
       setCommunicationNeeds(medicalProfile.communicationNeeds || []);
+      
+      // Reset form hook state when child data loads
+      childForm.reset();
     }
-  }, [child]);
+  }, [child, childForm]);
+
+  // Handle modal close with form reset
+  const handleClose = () => {
+    childForm.reset();
+    onClose();
+  };
 
   const normalizeCondition = (item) => {
     if (typeof item === "string") {
@@ -119,88 +145,60 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
     stringify: (option) => (typeof option === "string" ? option : option.label),
   });
 
-  const handleSubmit = async () => {
-    if (!name || !age || !child) return;
-    
-    // Debug logging for troubleshooting
-    console.log('EditChildModal handleSubmit:', {
-      userRole,
-      canEdit,
-      canEditMedicalInfo,
-      foodAllergies,
-      childId: child.id
-    });
-    
-    // Detailed allergy debugging
-    console.log('Food allergies breakdown:', {
-      count: foodAllergies.length,
-      items: foodAllergies.map((allergy, index) => ({
-        index,
-        value: allergy,
-        type: typeof allergy,
-        isString: typeof allergy === 'string'
-      }))
-    });
-    
+  const handleSubmit = () => {
     // Security check - ensure user has permission to edit
     if (!canEdit) {
-      console.error('Unauthorized edit attempt');
-      return;
+      throw new Error('You do not have permission to edit this child\'s information');
     }
 
-    setLoading(true);
-    let photoDownloadURL = child.photoURL;
-
-    if (photo) {
-      try {
-        const photoRef = ref(storage, `children/${photo.name}`);
-        await uploadBytes(photoRef, photo);
-        photoDownloadURL = await getDownloadURL(photoRef);
-      } catch (error) {
-        console.error("Error uploading photo:", error);
-        setLoading(false);
-        return;
-      }
+    if (!child) {
+      throw new Error('Child data is not available');
     }
 
-    const primaryLabel = selectedConditions[0]?.label || "";
-    const conditionCodes = selectedConditions.map((c) => c.code);
+    childForm.submitForm(
+      async () => {
+        let photoDownloadURL = child.photoURL;
 
-    const updatedChild = {
-      name,
-      age,
-      photoURL: photoDownloadURL,
-      diagnosis: primaryLabel,
-      concerns: selectedConditions,
-      conditionCodes,
-    };
+        // Upload photo if changed
+        if (photo) {
+          const photoRef = ref(storage, `children/${photo.name}`);
+          await uploadBytes(photoRef, photo);
+          photoDownloadURL = await getDownloadURL(photoRef);
+        }
 
-    // Only include medical profile if user has permission to edit it
-    if (canEditMedicalInfo) {
-      updatedChild.medicalProfile = {
-        foodAllergies,
-        dietaryRestrictions,
-        sensoryIssues,
-        behavioralTriggers,
-        currentMedications,
-        sleepIssues,
-        communicationNeeds,
-      };
-      console.log('Adding medical profile to update:', updatedChild.medicalProfile);
-    } else {
-      console.log('User cannot edit medical info - medical profile not included in update');
-    }
+        const primaryLabel = selectedConditions[0]?.label || "";
+        const conditionCodes = selectedConditions.map((c) => c.code);
 
-    try {
-      const childRef = doc(db, "children", child.id);
-      await updateDoc(childRef, updatedChild);
-      onSuccess?.(); // Call success callback to refresh data
-      onClose();
-    } catch (error) {
-      console.error("Error updating child:", error);
-    } finally {
-      setLoading(false);
-    }
+        const updatedChild = {
+          name,
+          age,
+          photoURL: photoDownloadURL,
+          diagnosis: primaryLabel,
+          concerns: selectedConditions,
+          conditionCodes,
+        };
+
+        // Only include medical profile if user has permission to edit it
+        if (canEditMedicalInfo) {
+          updatedChild.medicalProfile = {
+            foodAllergies,
+            dietaryRestrictions,
+            sensoryIssues,
+            behavioralTriggers,
+            currentMedications,
+            sleepIssues,
+            communicationNeeds,
+          };
+        }
+
+        // Update child in Firestore
+        const childRef = doc(db, "children", child.id);
+        await updateDoc(childRef, updatedChild);
+        
+        return updatedChild;
+      },
+      { name, age }
+    );
   };
 
   // Security check - only parents can edit
@@ -210,7 +208,7 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
   }
 
   return (
-    <Modal open={open} onClose={onClose}>
+    <Modal open={open} onClose={handleClose}>
       <Box
         sx={{
           position: "absolute",
@@ -236,7 +234,7 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
             </Typography>
           </Box>
           <IconButton
-            onClick={onClose}
+            onClick={handleClose}
             sx={{
               color: 'text.secondary',
               '&:hover': {
@@ -251,6 +249,15 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
 
         {/* Scrollable Content */}
         <Box sx={{ flex: 1, overflow: 'auto', p: 3 }}>
+          {childForm.error && (
+            <Alert 
+              severity="error" 
+              sx={{ mb: 3 }} 
+              onClose={() => childForm.clearError()}
+            >
+              {childForm.error}
+            </Alert>
+          )}
           {/* Basic Information Section */}
           <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: theme.palette.primary.main }}>
             Basic Information
@@ -347,11 +354,6 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
               options={FOOD_ALLERGY_OPTIONS}
               value={foodAllergies}
               onChange={(event, newValue) => {
-                console.log('Food allergies changed:', { 
-                  newValue, 
-                  types: newValue.map(v => typeof v),
-                  values: newValue 
-                });
                 setFoodAllergies(newValue);
               }}
               label="Food Allergies & Sensitivities"
@@ -451,11 +453,11 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
             color="success"
             onClick={handleSubmit}
             fullWidth
-            disabled={loading}
+            disabled={childForm.loading}
             elevated
             size="large"
           >
-            {loading ? "Saving..." : "Save Changes"}
+            {childForm.loading ? "Saving..." : "Save Changes"}
           </GradientButton>
         </Box>
         </ThemeCard>
