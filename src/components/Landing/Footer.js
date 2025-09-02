@@ -1,11 +1,11 @@
 import React from "react";
 import { Box, Typography, Link } from "@mui/material";
+import { landingColors } from "../../assets/theme/landingTheme";
 
 const Footer = () => {
   return (
     <Box
       sx={{
-        backgroundColor: "#F4DECB", // a soft sand tone from the CaptureEase palette
         padding: "12px 0",
         textAlign: "center",
         position: "relative",
@@ -18,7 +18,7 @@ const Footer = () => {
         variant="body1"
         sx={{
           fontWeight: "bold",
-          color: "#49274A", // Eggplant tone
+          color: landingColors.deepNavy, // Eggplant tone
           fontSize: "0.95rem", // Footer font size
           mb: 1,
         }}
@@ -30,9 +30,9 @@ const Footer = () => {
         <Link
           href="/privacy-policy"
           sx={{
-            color: "#49274A",
+            color: landingColors.deepNavy,
             textDecoration: "none",
-            "&:hover": { color: "#94618E" },
+            "&:hover": { color: landingColors.brandAccent },
           }}
         >
           Privacy Policy
@@ -40,9 +40,9 @@ const Footer = () => {
         <Link
           href="/terms-of-service"
           sx={{
-            color: "#49274A",
+            color: landingColors.deepNavy,
             textDecoration: "none",
-            "&:hover": { color: "#94618E" },
+            "&:hover": { color: landingColors.brandAccent },
           }}
         >
           Terms of Service
@@ -50,9 +50,9 @@ const Footer = () => {
         <Link
           href="/contact-us"
           sx={{
-            color: "#49274A",
+            color: landingColors.deepNavy,
             textDecoration: "none",
-            "&:hover": { color: "#94618E" },
+            "&:hover": { color: landingColors.brandAccent },
           }}
         >
           Contact Us

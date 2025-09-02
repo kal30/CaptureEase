@@ -1,27 +1,36 @@
 import { createTheme } from "@mui/material/styles";
 import { alpha } from "@mui/material/styles";
+import brand from "./brand";
+import getMuiButtonTheme from "./components/buttonTheme";
 
 const theme = createTheme({
   breakpoints: { values: { xs: 0, sm: 480, md: 768, lg: 1200, xl: 1536 } },
+
   palette: {
     mode: "light",
+    background: {
+      default: "#c8d9e6",
+      paper: "#FFFFFF",
+      container: "#fff8ed", // light blue background for containers
+    },
     primary: {
-      main: "#5B8C51", // Green
-      dark: "#4a7342", // Slightly darker green for hover
-      light: "#82b17a", // Lighter green
-      secondary: "#F27F45", // softer orange
-      darkSecondary: "#E85D2F", // used for hover/active
-      lightSecondary: "#F9A06B",
+      main: brand.palette.primary.main,
+      dark: brand.palette.primary.dark,
+      light: brand.palette.primary.light,
     },
     secondary: {
-      // A complementary, softer tone to the green info color
-      main: "#7C6F57", // muted brown/khaki, complements green
+      main: brand.palette.secondary.main,
+      light: brand.palette.secondary.light,
+      dark: brand.palette.secondary.dark,
     },
     info: {
-      main: "#5B8C51",
+      main: brand.palette.primary.main,
     },
     accent: {
-      main: "#FFC857",
+      main: brand.palette.secondary.main,
+    },
+    success: {
+      main: "#4CAF50", // Keep existing mapping for success
     },
     tertiary: {
       main: "#7C6F57", // muted brown/khaki
@@ -77,7 +86,7 @@ const theme = createTheme({
         morning: "#0284C7", // info-like
         afternoon: "#F59E0B", // warning-like
         evening: "#7C6F57", // secondary-like
-      }
+      },
     },
     incident: {
       // Base incident type colors for chips/buttons
@@ -89,7 +98,7 @@ const theme = createTheme({
         sensory: "#8B5CF6",
         pain_medical: "#DC2626",
         other: "#6B7280",
-      }
+      },
     },
     safety: {
       allergy: "#FF9800", // Orange for allergies
@@ -99,11 +108,7 @@ const theme = createTheme({
       allergyBorder: "rgba(255, 152, 0, 0.3)", // Orange border
       medicationBorder: "rgba(76, 175, 80, 0.3)", // Green border
     },
-    background: {
-      default: "#FFF8ED",
-      paper: "#FFFFFF",
-      container: "#fff8ed", // light blue background for containers
-    },
+
     text: {
       primary: "#333333",
       secondary: "#666666",
@@ -113,10 +118,26 @@ const theme = createTheme({
   },
   typography: {
     fontSize: 16,
-    fontFamily: "'Inter', 'Roboto', 'Helvetica', 'Arial', sans-serif",
+    fontFamily: "'Lancelot', 'Roboto', 'Helvetica', 'Arial', sans-serif",
     // Poppins for special UI elements (buttons, headers, etc.)
     hero: {
       fontFamily: "'Poppins', 'Inter', 'Roboto', sans-serif",
+    },
+    // App UI typography variants
+    sectionHeader: {
+      fontWeight: 600,
+      marginTop: 4,
+      marginBottom: 2,
+    },
+    modalTitle: {
+      fontWeight: 700,
+    },
+    fieldLabel: {
+      fontWeight: 600,
+      marginBottom: 1.5,
+    },
+    formHelper: {
+      marginBottom: 3,
     },
     h1: {
       fontSize: {
@@ -188,7 +209,7 @@ const theme = createTheme({
       fontSize: "0.95rem",
       fontWeight: 600,
       letterSpacing: "0.025em",
-      fontFamily: "'Poppins', 'Inter', 'Roboto', sans-serif", // Poppins for all buttons
+      fontFamily: brand.typography.buttonFontFamily,
     },
     caption: {
       fontSize: "0.75rem",
@@ -211,48 +232,7 @@ const theme = createTheme({
         },
       },
     },
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          borderRadius: "14px",
-          padding: "12px 24px",
-          fontSize: "0.95rem",
-          fontWeight: 600,
-          textTransform: "none",
-          transition: "background-color 120ms ease, transform 120ms ease",
-          minHeight: 44,
-        },
-        containedPrimary: {
-          background: "#5B8C51",
-          color: "#FFFFFF",
-          "&:hover": {
-            background: "#4a7342",
-          },
-        },
-        containedSecondary: {
-          background: "#5B8C51", // Use info.main for containedSecondary
-          color: "#FFFFFF",
-          "&:hover": {
-            background: "#4a7342", // Slightly darker shade for hover
-          },
-        },
-        outlined: {
-          borderWidth: "2px",
-          borderColor: "#5B8C51",
-          color: "#5B8C51",
-          "&:hover": {
-            borderWidth: "2px",
-            borderColor: "#4a7342",
-            backgroundColor: alpha("#5B8C51", 0.1),
-          },
-        },
-        text: {
-          "&:hover": {
-            backgroundColor: alpha("#5B8C51", 0.1),
-          },
-        },
-      },
-    },
+    MuiButton: getMuiButtonTheme(brand),
     MuiIconButton: {
       styleOverrides: {
         root: {

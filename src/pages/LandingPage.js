@@ -9,7 +9,7 @@ const LandingPage = () => {
   return (
     <ResponsiveLayout pageTitle="CaptureEz" showBottomNav={false}>
       <HeaderSection />
-      <TestimonialCarousel />
+
       <Expert />
       <Footer />
     </ResponsiveLayout>

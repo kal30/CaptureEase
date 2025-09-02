@@ -56,19 +56,6 @@ const AppScreenshots = ({ items }) => {
         maxWidth: { xs: 300, sm: 360, md: 480, lg: 520 },
       }}
     >
-      {/* <Typography
-        variant="h4"
-        align="center"
-        sx={{
-          mb: 3,
-          fontFamily: '"Dancing Script", cursive',
-          fontWeight: 700,
-          fontSize: { xs: "1.5rem", md: "2rem", lg: "2.25rem" },
-          color: "#49274A",
-        }}
-      >
-        See CaptureEz in Action
-      </Typography> */}
       <Slider {...settings}>
         {(items || defaultItems).map(({ src, alt, caption }, index) => (
           <Box key={index} sx={{ textAlign: "center" }}>

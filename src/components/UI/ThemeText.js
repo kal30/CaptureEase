@@ -1,6 +1,10 @@
 import React from 'react';
 import { Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import { 
+  landingTypography, 
+  landingColors 
+} from '../../assets/theme/landingTheme';
 
 /**
  * ThemeText - Handles all typography patterns consistently  
@@ -28,78 +32,51 @@ const ThemeText = ({
     const textVariants = {
       // Landing page hero styles
       'hero-main': {
-        ...theme.typography.h1,
-        fontWeight: 'bold',
-        fontSize: {
-          xs: '2rem',
-          sm: '2.5rem', 
-          md: '3rem',
-          lg: '3.5rem',
-          xl: '4rem'
-        },
-        fontFamily: '"Montserrat", sans-serif',
-        lineHeight: { xs: 1.3, md: 1.1, lg: 1.15 },
-        color: theme.palette.primary.darkSecondary,
-        mb: { xs: 2, md: 3, lg: 4 }
+        ...landingTypography.heroMain,
+        color: landingColors.heroText,
       },
       
       'hero-subtitle': {
-        ...theme.typography.body1,
-        mt: { xs: 3, md: 4, lg: 5 },
-        color: theme.palette.text.primary,
-        fontWeight: 300,
-        lineHeight: 1.75,
-        fontFamily: '"Poppins", sans-serif',
-        fontSize: {
-          xs: '1rem',
-          sm: '1.1rem',
-          md: '1.25rem', 
-          lg: '1.35rem',
-          xl: '1.5rem'
-        },
-        maxWidth: { xs: '100%', md: '90%', lg: '85%' }
+        ...landingTypography.heroSubtitle,
+        color: landingColors.bodyText,
       },
       
       // Brand name accent styling
       'brand-accent': {
-        fontFamily: '"Dancing Script", cursive',
-        fontWeight: 600,
-        color: theme.palette.success.main
+        ...landingTypography.brandAccent,
+        color: landingColors.brandAccent
       },
       
       // Product name highlight
       'product-highlight': {
-        color: theme.palette.success.main,
-        fontWeight: 'bold'
+        ...landingTypography.productHighlight,
+        color: landingColors.productHighlight,
       },
       
       // Section headers in modals/forms
       'section-header': {
         ...theme.typography.h6,
-        fontWeight: 600,
+        ...theme.typography.sectionHeader,
         color: theme.palette.info.main,
-        mt: 4,
-        mb: 2
       },
       
       // Modal/dialog titles
       'modal-title': {
         ...theme.typography.h5,
-        fontWeight: 700
+        ...theme.typography.modalTitle,
       },
       
       // Form field labels with emoji
       'field-label': {
         ...theme.typography.subtitle1,
-        fontWeight: 600,
-        mb: 1.5
+        ...theme.typography.fieldLabel,
       },
       
       // Helper text for forms
       'form-helper': {
         ...theme.typography.body2,
+        ...theme.typography.formHelper,
         color: theme.palette.text.secondary,
-        mb: 3
       },
       
       // Responsive card text

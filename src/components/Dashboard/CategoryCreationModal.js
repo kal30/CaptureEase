@@ -14,11 +14,11 @@ import {
   ListItemText,
   ListItemIcon,
   Alert,
-  CircularProgress,
-  FormControl,
-  Select,
-  MenuItem
+  CircularProgress
 } from '@mui/material';
+import CategoryPreview from './CategoryPreview';
+import EmojiSelector from './EmojiSelector';
+import ColorSelector from './ColorSelector';
 import CloseIcon from '@mui/icons-material/Close';
 import CheckIcon from '@mui/icons-material/Check';
 import InfoIcon from '@mui/icons-material/Info';
@@ -30,24 +30,6 @@ import {
   getCustomCategories
 } from '../../services/incidentService';
 import { useAsyncForm } from '../../hooks/useAsyncForm';
-
-// Color options from theme
-const COLOR_OPTIONS = [
-  { value: '#6D28D9', label: 'Purple', preview: '#6D28D9' },
-  { value: '#10B981', label: 'Emerald', preview: '#10B981' },
-  { value: '#F59E0B', label: 'Amber', preview: '#F59E0B' },
-  { value: '#EF4444', label: 'Red', preview: '#EF4444' },
-  { value: '#3B82F6', label: 'Blue', preview: '#3B82F6' },
-  { value: '#EC4899', label: 'Pink', preview: '#EC4899' },
-  { value: '#6B7280', label: 'Gray', preview: '#6B7280' },
-  { value: '#8B5CF6', label: 'Violet', preview: '#8B5CF6' },
-];
-
-// Emoji options
-const EMOJI_OPTIONS = [
-  '🤢', '🤒', '😷', '🤧', '😪', '😣', '🔴', '💊', 
-  '🌡️', '🩹', '🧠', '💙', '⚡', '🔥', '❄️', '📝'
-];
 
 const CategoryCreationModal = ({ 
   open, 
@@ -61,8 +43,8 @@ const CategoryCreationModal = ({
   
   // Form state
   const [categoryName, setCategoryName] = useState(suggestion?.suggestedCategory || '');
-  const [selectedColor, setSelectedColor] = useState(suggestion?.suggestedColor || COLOR_OPTIONS[0].value);
-  const [selectedEmoji, setSelectedEmoji] = useState(suggestion?.suggestedIcon || EMOJI_OPTIONS[0]);
+  const [selectedColor, setSelectedColor] = useState(suggestion?.suggestedColor || '#6D28D9');
+  const [selectedEmoji, setSelectedEmoji] = useState(suggestion?.suggestedIcon || '🤢');
   const [remedies, setRemedies] = useState(suggestion?.suggestedRemedies?.join(', ') || 'Monitor symptoms, Comfort measures, Other');
   const [confirmMigration] = useState(true);
 
@@ -186,17 +168,11 @@ const CategoryCreationModal = ({
             )}
 
             {/* Category preview */}
-            <Paper sx={{ p: 3, mb: 3, textAlign: 'center' }}>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                Category Preview
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
-                <Typography sx={{ fontSize: '2rem' }}>{selectedEmoji}</Typography>
-                <Typography variant="h6" sx={{ fontWeight: 600, color: selectedColor }}>
-                  {categoryName || 'Category Name'}
-                </Typography>
-              </Box>
-            </Paper>
+            <CategoryPreview 
+              emoji={selectedEmoji}
+              name={categoryName}
+              color={selectedColor}
+            />
 
             {/* Category Name */}
             <Box sx={{ mb: 3 }}>
@@ -212,73 +188,16 @@ const CategoryCreationModal = ({
             </Box>
 
             {/* Emoji Selection */}
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>
-                Icon
-              </Typography>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {EMOJI_OPTIONS.map(emoji => (
-                  <Button
-                    key={emoji}
-                    variant={selectedEmoji === emoji ? 'contained' : 'outlined'}
-                    onClick={() => setSelectedEmoji(emoji)}
-                    sx={{ 
-                      minWidth: 48,
-                      height: 48,
-                      fontSize: '1.25rem',
-                      p: 0
-                    }}
-                  >
-                    {emoji}
-                  </Button>
-                ))}
-              </Box>
-            </Box>
+            <EmojiSelector 
+              selectedEmoji={selectedEmoji}
+              onEmojiSelect={setSelectedEmoji}
+            />
 
             {/* Color Selection */}
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>
-                Color
-              </Typography>
-              <FormControl fullWidth>
-                <Select
-                  value={selectedColor}
-                  onChange={(e) => setSelectedColor(e.target.value)}
-                  renderValue={(value) => {
-                    const option = COLOR_OPTIONS.find(opt => opt.value === value);
-                    return (
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Box
-                          sx={{
-                            width: 20,
-                            height: 20,
-                            borderRadius: '50%',
-                            backgroundColor: value
-                          }}
-                        />
-                        {option?.label}
-                      </Box>
-                    );
-                  }}
-                >
-                  {COLOR_OPTIONS.map(option => (
-                    <MenuItem key={option.value} value={option.value}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Box
-                          sx={{
-                            width: 20,
-                            height: 20,
-                            borderRadius: '50%',
-                            backgroundColor: option.preview
-                          }}
-                        />
-                        {option.label}
-                      </Box>
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Box>
+            <ColorSelector 
+              selectedColor={selectedColor}
+              onColorSelect={setSelectedColor}
+            />
 
             {/* Remedies */}
             <Box sx={{ mb: 3 }}>

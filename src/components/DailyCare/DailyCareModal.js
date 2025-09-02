@@ -5,7 +5,6 @@ import {
   Typography,
   IconButton,
   Button,
-  Stack,
   Slider,
   Chip,
   TextField,

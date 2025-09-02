@@ -51,7 +51,8 @@ const GradientButton = ({
         py: { xs: 1.5, md: 2, lg: 2.5 },
         px: { xs: 4, md: 5, lg: 6 },
         fontSize: { xs: "1rem", md: "1.1rem", lg: "1.25rem" },
-        fontFamily: theme.typography.hero.fontFamily
+        // Use the global button font (Harmattan) for all buttons, including hero
+        fontFamily: theme.typography.button.fontFamily
       }
     };
     return sizeConfigs[sizeType] || sizeConfigs.medium;

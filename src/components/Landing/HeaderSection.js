@@ -1,9 +1,14 @@
 import React from "react";
-import { Box, Container } from "@mui/material";
+import { Box, Container, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { PRODUCT_NAME } from "../../constants/config";
-import AppScreenshots from "./AppScreenshot";
-import { GradientButton, ThemeSpacing, ThemeText } from "../UI";
+import landingImage from "../../assets/image/landing/landingimageRealisitic4.jpg";
+import { GradientButton, ThemeSpacing } from "../UI";
+import {
+  landingLayout,
+  landingTypography,
+  landingColors,
+} from "../../assets/theme/landingTheme";
 
 const HeaderSection = () => {
   const navigate = useNavigate();
@@ -30,8 +35,7 @@ const HeaderSection = () => {
       sx={{
         backgroundColor: "background.default",
         position: "relative",
-        pt: { xs: 5, md: 6, lg: 7 },
-        pb: { xs: 4, md: 6, lg: 8 },
+        ...landingLayout.heroSection.padding,
         minHeight: { xs: "auto", md: "auto", lg: "auto" },
         display: "flex",
         alignItems: "center",
@@ -44,33 +48,49 @@ const HeaderSection = () => {
             flexDirection: { xs: "column", md: "row" },
             alignItems: "center",
             justifyContent: { xs: "center", md: "space-between" },
-            gap: { xs: 3, md: 4, lg: 5 },
-            padding: { xs: 1, md: 2, lg: 3 },
+            ...landingLayout.heroSection.container,
           }}
         >
           {/* Left Side - Text */}
           <Box
             sx={{
-              width: { xs: "100%", md: "50%", lg: "45%" },
-              pr: { md: 2, lg: 4 },
+              ...landingLayout.heroSection.leftColumn,
             }}
           >
-            <ThemeText variant="hero-main">
-              Simplifying Care for{" "}
-              <ThemeText variant="brand-accent" component="span">
-                Everyone Who Cares
-              </ThemeText>
-            </ThemeText>
+            {/* Hero Heading */}
+            <Box sx={landingLayout.heroHeading}>
+              <Typography
+                sx={{
+                  ...landingTypography.heroMain,
+                  color: landingColors.heroText,
+                }}
+              >
+                SIMPLIFYING CARE FOR
+              </Typography>
+              <Typography
+                sx={{
+                  ...landingTypography.heroMain,
+                  color: landingColors.heroText,
+                }}
+              >
+                EVERYONE WHO
+              </Typography>
+              <Typography
+                sx={{
+                  ...landingTypography.heroSubtitle,
+                  color: landingColors.heroText,
+                }}
+              >
+                CARES
+              </Typography>
+            </Box>
 
-            <ThemeText variant="hero-subtitle">
+            <Typography sx={landingTypography.heroBody}>
               No more sticky notes, endless texts, or scattered updates. With{" "}
-              <ThemeText variant="product-highlight" component="span">
-                {PRODUCT_NAME}
-              </ThemeText>
-              , everything that matters—notes, photos, and reminders—lives in
-              one place. Clear, accessible, and stress‑free so you can focus on
-              caring.
-            </ThemeText>
+              {PRODUCT_NAME}, everything that matters—notes, photos, and
+              reminders—lives in one place. Clear, accessible, and stress‑free
+              so you can focus on caring.
+            </Typography>
 
             <ThemeSpacing variant="section-large">
               <GradientButton
@@ -87,41 +107,50 @@ const HeaderSection = () => {
           {/* Right Side - Image and Floating Circle */}
           <Box
             sx={{
-              width: { xs: "100%", md: "50%", lg: "55%" },
+              ...landingLayout.heroSection.rightColumn,
               position: "relative",
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
-              minHeight: { xs: 300, md: 400, lg: 500, xl: 600 },
-              ...{ mt: { xs: 4, md: 0 } },
             }}
           >
             {/* Floating Circle Shape */}
             <Box
               sx={{
                 position: "absolute",
-                width: { xs: 180, md: 260, lg: 320, xl: 380 },
-                height: { xs: 180, md: 260, lg: 320, xl: 380 },
+                width: landingLayout.floatingCircle.width,
+                height: landingLayout.floatingCircle.height,
                 backgroundColor: "secondary.main",
                 borderRadius: "50%",
                 zIndex: 0,
-                opacity: 0.04,
-                top: { xs: "-10%", md: "-15%", lg: "-12%" },
-                right: { xs: "-8%", md: "-10%", lg: "-8%" },
+                opacity: landingLayout.floatingCircle.opacity,
+                top: landingLayout.floatingCircle.position.top,
+                right: landingLayout.floatingCircle.position.right,
                 boxShadow: "0px 10px 20px rgba(0, 0, 0, 0.1)",
                 pointerEvents: "none",
               }}
             />
 
-            {/* Carousel in place of image */}
+            {/* Landing Image */}
             <Box
               sx={{
                 width: "100%",
-                maxWidth: { xs: 240, md: 360, lg: 440, xl: 480 },
+                maxWidth: { xs: 280, md: 400, lg: 480, xl: 520 },
                 zIndex: 1,
               }}
             >
-              <AppScreenshots compact />
+              <Box
+                component="img"
+                src={landingImage}
+                alt="CaptureEase app interface showing care tracking features"
+                sx={{
+                  width: "100%",
+                  height: "auto",
+                  borderRadius: { xs: 2, md: 3, lg: 4 },
+                  boxShadow: "0px 8px 32px rgba(0, 0, 0, 0.12)",
+                  objectFit: "cover",
+                }}
+              />
             </Box>
           </Box>
         </Box>
