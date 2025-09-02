@@ -140,7 +140,7 @@ const LogInput = ({ childId, selectedDate = new Date() }) => {
   return (
     <Box>
       {/* Template Buttons */}
-      <Box sx={{ mb: 2 }}>
+      <Box sx={{ mb: 3 }}>
         <Typography variant="subtitle2" sx={{ mb: 1, color: 'text.secondary', fontSize: '0.8rem' }}>
           Quick Templates:
         </Typography>

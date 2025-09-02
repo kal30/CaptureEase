@@ -3,13 +3,12 @@ import {
   Box,
   Typography,
   TextField,
-  Button,
   Container,
   Paper,
-  CircularProgress,
   Alert,
   Divider,
 } from "@mui/material";
+import { EnhancedLoadingButton } from "../components/UI";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import GoogleAuth from "../components/AuthProviders/GoogleAuth";
@@ -135,25 +134,21 @@ const Login = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-          <Button
+          <EnhancedLoadingButton
             type="submit"
             fullWidth
-            variant="contained"
+            variant="gradient"
+            loading={loading}
+            loadingStyle="spinner"
+            loadingText="Signing in..."
             sx={{
               mt: 3,
               mb: 2,
               py: 1.5,
-              backgroundColor: "primary.main",
-              "&:hover": { backgroundColor: "primary.dark" },
             }}
-            disabled={loading}
           >
-            {loading ? (
-              <CircularProgress size={24} color="inherit" />
-            ) : (
-              "Sign In"
-            )}
-          </Button>
+            Sign In
+          </EnhancedLoadingButton>
         </Box>
         <Divider sx={{ width: "100%", my: 2 }}>OR</Divider>
         <Box sx={{ width: "100%", mb: 2 }}>

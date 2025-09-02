@@ -3,6 +3,8 @@
 
 export { default as ThemeCard } from "./ThemeCard";
 export { default as GradientButton } from "./GradientButton";
+export { default as EnhancedLoadingButton } from "./EnhancedLoadingButton";
+export { default as LoadingButtonVariants } from "./LoadingButtonVariants";
 export { default as RoleIndicator } from "./RoleIndicator";
 export { default as CompletionIndicator } from "./CompletionIndicator";
 export { default as ThemeSpacing } from "./ThemeSpacing";

@@ -7,7 +7,7 @@ import { addDoc, collection } from "firebase/firestore";
 import { getAuth } from "firebase/auth"; // Import Firestore functions
 import { db } from "../../services/firebase"; // Adjust the path based on your structure
 import ChildPhotoUploader from "./ChildPhotoUploader"; // Import the ChildPhotoUploader component
-import { ThemeCard, GradientButton, ThemeSpacing, ThemeText, CustomizableAutocomplete } from "../UI";
+import { ThemeCard, EnhancedLoadingButton, ThemeSpacing, ThemeText, CustomizableAutocomplete } from "../UI";
 import { useAsyncForm } from "../../hooks/useAsyncForm";
 
 const AddChildModal = ({ open, onClose, onSuccess }) => {
@@ -388,17 +388,18 @@ const AddChildModal = ({ open, onClose, onSuccess }) => {
 
           {/* Footer */}
           <Box sx={{ p: 3, borderTop: 1, borderColor: 'divider', bgcolor: 'grey.50' }}>
-            <GradientButton
-              variant="gradient"
-              color="success"
+            <EnhancedLoadingButton
+              variant="success-gradient"
+              loading={childForm.loading}
+              loadingStyle="pulse"
+              loadingText="Adding child..."
               onClick={handleSubmit}
               fullWidth
-              disabled={childForm.loading}
               elevated
               size="large"
             >
-              {childForm.loading ? "Saving..." : "Add Child"}
-            </GradientButton>
+              Add Child
+            </EnhancedLoadingButton>
           </Box>
         </ThemeCard>
       </Box>

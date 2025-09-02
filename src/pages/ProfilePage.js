@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Typography, TextField, Button, Box, Paper, CircularProgress, Alert, Divider } from '@mui/material';
-import { useTheme } from '@mui/material/styles'; // Import useTheme
+import { Container, Typography, TextField, Box, Paper, Alert, Divider } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
+import { EnhancedLoadingButton } from '../components/UI';
 import { getAuth, updateProfile, updatePassword } from 'firebase/auth';
 import PasskeyAuth from '../components/AuthProviders/PasskeyAuth';
 import ResponsiveLayout from '../components/Layout/ResponsiveLayout';
@@ -88,7 +89,6 @@ const ProfilePage = () => {
           User Profile
         </Typography>
 
-        {loading && <CircularProgress sx={{ mb: 2 }} />}
         {message && <Alert severity="success" sx={{ width: '100%', mb: 2 }}>{message}</Alert>}
         {error && <Alert severity="error" sx={{ width: '100%', mb: 2 }}>{error}</Alert>}
 
@@ -103,14 +103,16 @@ const ProfilePage = () => {
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
           />
-          <Button
+          <EnhancedLoadingButton
             type="submit"
-            variant="contained"
-            sx={{ mt: 2, mb: 2, backgroundColor: theme.palette.primary.main, '&:hover': { backgroundColor: theme.palette.primary.dark } }}
-            disabled={loading}
+            variant="gradient"
+            loading={loading}
+            loadingStyle="waves"
+            loadingText="Saving name..."
+            sx={{ mt: 2, mb: 2 }}
           >
             Save Display Name
-          </Button>
+          </EnhancedLoadingButton>
         </Box>
 
         <Divider sx={{ width: '100%', my: 3 }} />
@@ -141,14 +143,17 @@ const ProfilePage = () => {
             value={confirmNewPassword}
             onChange={(e) => setConfirmNewPassword(e.target.value)}
           />
-          <Button
+          <EnhancedLoadingButton
             type="submit"
-            variant="contained"
-            sx={{ mt: 2, mb: 2, backgroundColor: theme.palette.primary.main, '&:hover': { backgroundColor: theme.palette.primary.dark } }}
-            disabled={loading}
+            variant="outlined"
+            color="secondary"
+            loading={loading}
+            loadingStyle="pulse"
+            loadingText="Updating password..."
+            sx={{ mt: 2, mb: 2 }}
           >
             Change Password
-          </Button>
+          </EnhancedLoadingButton>
         </Box>
 
         <Divider sx={{ width: '100%', my: 3 }} />

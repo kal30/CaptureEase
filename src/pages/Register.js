@@ -3,13 +3,12 @@ import {
   Box,
   Typography,
   TextField,
-  Button,
   Container,
   Paper,
-  CircularProgress,
   Alert,
   Divider,
 } from "@mui/material";
+import { EnhancedLoadingButton } from "../components/UI";
 import { Link, useNavigate } from "react-router-dom";
 import {
   getAuth,
@@ -162,25 +161,21 @@ const Register = () => {
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
           />
-          <Button
+          <EnhancedLoadingButton
             type="submit"
             fullWidth
-            variant="contained"
+            variant="success-gradient"
+            loading={loading}
+            loadingStyle="pulse"
+            loadingText="Creating account..."
             sx={{
               mt: 3,
               mb: 2,
               py: 1.5,
-              backgroundColor: "primary.main",
-              "&:hover": { backgroundColor: "primary.dark" },
             }}
-            disabled={loading}
           >
-            {loading ? (
-              <CircularProgress size={24} color="inherit" />
-            ) : (
-              "Register"
-            )}
-          </Button>
+            Register
+          </EnhancedLoadingButton>
         </Box>
         <Divider sx={{ width: "100%", my: 2 }}>OR</Divider>
         <GoogleAuth buttonText="Sign Up with Google" />

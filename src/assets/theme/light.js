@@ -9,7 +9,7 @@ const theme = createTheme({
   palette: {
     mode: "light",
     background: {
-      default: "#c8d9e6",
+      default: "#FFFFFF",
       paper: "#FFFFFF",
       container: "#fff8ed", // light blue background for containers
     },

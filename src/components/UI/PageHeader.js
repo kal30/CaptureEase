@@ -23,7 +23,7 @@ const PageHeader = ({ title, subtitle, actions }) => {
         )} 0%, ${alpha(theme.palette.secondary.main, 0.05)} 100%)`,
         py: 4,
         px: 3,
-        borderRadius: theme.shape.borderRadius,
+        borderRadius: theme.spacing(0.5),
         border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
       }}
     >
@@ -38,7 +38,9 @@ const PageHeader = ({ title, subtitle, actions }) => {
       >
         {/* Left: Title and Subtitle */}
         <Box sx={{ display: "flex", alignItems: "center", flex: 1 }}>
-          <SparkleIcon sx={{ fontSize: 40, color: theme.palette.primary.main, mr: 2 }} />
+          <SparkleIcon
+            sx={{ fontSize: 40, color: theme.palette.primary.main, mr: 2 }}
+          />
           <Box>
             <Typography
               variant="h3"

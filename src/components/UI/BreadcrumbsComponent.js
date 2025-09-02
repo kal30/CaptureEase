@@ -40,15 +40,13 @@ const BreadcrumbsComponent = () => {
     messages: "Messages",
     journal: "Journal",
     sensory: "Sensory",
-    log: "Child Log",
+    log: "Daily Log",
     medical: "Medical Log",
     templates: "Templates",
     "care-team": "Care Team",
     "daily-activities": "Daily Activities",
     "health-info": "Health Info",
     "progress-notes": "Progress Notes",
-    "daily-log": "Daily Log",
-    "daily-note": "Daily Log",
     profile: "Profile",
   };
 
@@ -109,58 +107,41 @@ const BreadcrumbsComponent = () => {
     }
   }
 
-  // Special handling for Daily Log hierarchy
-  if (location.pathname === "/log" || location.pathname === "/log/daily-note") {
-    // Add "Child Log" as non-clickable parent
-    breadcrumbsItems.push(
-      <Typography color="text.secondary" key="child-log-parent" sx={(theme) => breadcrumbParentText(theme)}>
-        Child Log
-      </Typography>
-    );
-    
-    // Add "Daily Log" as final breadcrumb
-    breadcrumbsItems.push(
-      <Typography color="text.primary" key="daily-log" sx={(theme) => breadcrumbActiveText(theme)}>
-        Daily Log
-      </Typography>
-    );
-  } else {
-    // Original logic for other routes
-    let currentPath = "";
-    pathnames.forEach((value, index) => {
-      // Skip 'dashboard' as it's the root of our breadcrumbs
-      if (value === "dashboard") {
-        return;
-      }
+  // Build breadcrumbs for all routes
+  let currentPath = "";
+  pathnames.forEach((value, index) => {
+    // Skip 'dashboard' as it's the root of our breadcrumbs
+    if (value === "dashboard") {
+      return;
+    }
 
-      // Build the path incrementally
-      currentPath += `/${value}`;
-      const isLast = index === pathnames.length - 1;
-      const rawName = breadcrumbNameMap[value] || value;
-      const name = capitalize(rawName);
+    // Build the path incrementally
+    currentPath += `/${value}`;
+    const isLast = index === pathnames.length - 1;
+    const rawName = breadcrumbNameMap[value] || value;
+    const name = capitalize(rawName);
 
-      if (isLast) {
-        breadcrumbsItems.push(
-          <Typography color="text.primary" key={currentPath} sx={(theme) => breadcrumbActiveText(theme)}>
-            {decodeURIComponent(name)}
-          </Typography>
-        );
-      } else {
-        breadcrumbsItems.push(
-          <Link
-            component={RouterLink}
-            underline="hover"
-            color="inherit"
-            to={currentPath}
-            key={currentPath}
-            sx={(theme) => breadcrumbLink(theme)}
-          >
-            {decodeURIComponent(name)}
-          </Link>
-        );
-      }
-    });
-  }
+    if (isLast) {
+      breadcrumbsItems.push(
+        <Typography color="text.primary" key={currentPath} sx={(theme) => breadcrumbActiveText(theme)}>
+          {decodeURIComponent(name)}
+        </Typography>
+      );
+    } else {
+      breadcrumbsItems.push(
+        <Link
+          component={RouterLink}
+          underline="hover"
+          color="inherit"
+          to={currentPath}
+          key={currentPath}
+          sx={(theme) => breadcrumbLink(theme)}
+        >
+          {decodeURIComponent(name)}
+        </Link>
+      );
+    }
+  });
 
   return (
     <Box sx={(theme) => breadcrumbsContainer(theme)}>

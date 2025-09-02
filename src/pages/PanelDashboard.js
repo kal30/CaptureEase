@@ -4,6 +4,8 @@ import {
   Container,
   Typography,
   Modal,
+  CircularProgress,
+  Fade,
 } from "@mui/material";
 
 // Hooks and Services
@@ -50,7 +52,79 @@ const PanelDashboard = () => {
   if (hook.loading) {
     return (
       <Container maxWidth="xl" sx={{ mt: 4 }}>
-        <Typography>Loading...</Typography>
+        <Fade in={true}>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              minHeight: '60vh',
+              gap: 3,
+            }}
+          >
+            <Box
+              sx={{
+                position: 'relative',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <CircularProgress
+                size={60}
+                thickness={4}
+                sx={{
+                  color: 'primary.main',
+                  '& .MuiCircularProgress-circle': {
+                    strokeLinecap: 'round',
+                  },
+                }}
+              />
+              <Box
+                sx={{
+                  position: 'absolute',
+                  fontSize: '2rem',
+                  animation: 'pulse 2s ease-in-out infinite',
+                  '@keyframes pulse': {
+                    '0%, 100%': {
+                      opacity: 0.7,
+                      transform: 'scale(1)',
+                    },
+                    '50%': {
+                      opacity: 1,
+                      transform: 'scale(1.1)',
+                    },
+                  },
+                }}
+              >
+                🏠
+              </Box>
+            </Box>
+            <Typography
+              variant="h6"
+              sx={{
+                color: 'text.secondary',
+                fontWeight: 500,
+                textAlign: 'center',
+                fontFamily: '"Lancelot", serif',
+              }}
+            >
+              Loading your dashboard...
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{
+                color: 'text.secondary',
+                opacity: 0.7,
+                textAlign: 'center',
+                maxWidth: 300,
+              }}
+            >
+              Getting your children's information and care updates ready
+            </Typography>
+          </Box>
+        </Fade>
       </Container>
     );
   }

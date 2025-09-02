@@ -16,6 +16,7 @@ import {
   Alert,
   CircularProgress
 } from '@mui/material';
+import { EnhancedLoadingButton } from '../UI';
 import CategoryPreview from './CategoryPreview';
 import EmojiSelector from './EmojiSelector';
 import ColorSelector from './ColorSelector';
@@ -293,14 +294,16 @@ const CategoryCreationModal = ({
               <Button variant="outlined" onClick={() => setStep(1)}>
                 Back
               </Button>
-              <Button 
-                variant="contained" 
+              <EnhancedLoadingButton 
+                variant="success-gradient"
+                loading={categoryForm.loading}
+                loadingStyle="waves"
+                loadingText="Creating category..."
                 onClick={createCategory}
-                disabled={categoryForm.loading}
-                startIcon={categoryForm.loading ? <CircularProgress size={20} /> : <CheckIcon />}
+                startIcon={<CheckIcon />}
               >
-                {categoryForm.loading ? 'Creating...' : 'Create Category'}
-              </Button>
+                Create Category
+              </EnhancedLoadingButton>
             </Box>
           </Box>
         )}

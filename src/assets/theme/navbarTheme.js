@@ -50,7 +50,6 @@ export const appBarStyles = (theme, colorScheme) => ({
   borderBottomLeftRadius: "0.75rem",
   borderBottomRightRadius: "0.75rem",
   borderTopLeftRadius: "0.5rem",
-  borderTopLeftRadius: "0.5rem",
   borderTopRightRadius: "0.5rem",
   position: "relative",
   overflow: "hidden",

@@ -98,7 +98,16 @@ const DailyLogPage = () => {
   if (!currentChildId) {
     return (
       <ResponsiveLayout pageTitle="Daily Log">
-        <Paper elevation={2} sx={{ p: 3, textAlign: "center" }}>
+        <Paper 
+          elevation={3} 
+          sx={{ 
+            p: 3, 
+            textAlign: "center",
+            backgroundColor: 'background.paper',
+            borderRadius: 3,
+            border: '1px solid rgba(8, 31, 92, 0.08)'
+          }}
+        >
           <Typography variant="h6" gutterBottom>
             No child selected
           </Typography>
@@ -128,25 +137,27 @@ const DailyLogPage = () => {
           <IconButton
             onClick={handleBackToDashboard}
             sx={{
-              bgcolor: theme.palette.primary.main,
+              bgcolor: '#081f5c',
               color: "white",
-              "&:hover": { bgcolor: theme.palette.primary.dark },
+              boxShadow: '0px 2px 8px rgba(8, 31, 92, 0.2)',
+              "&:hover": { 
+                bgcolor: '#0a2270',
+                transform: 'translateY(-1px)',
+                boxShadow: '0px 4px 12px rgba(8, 31, 92, 0.3)'
+              },
             }}
           >
             <ArrowBackIcon />
           </IconButton>
 
           <Box sx={{ flex: 1 }}>
-            <Typography
-              variant="h4"
-              component="h1"
-              sx={{ fontWeight: 700, mb: 0.5 }}
-            >
-              📝 Daily Log
-            </Typography>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <Typography variant="h6" color="text.secondary">
-                {childName}
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 0.5 }}>
+              <Typography
+                variant="h4"
+                component="h1"
+                sx={{ fontWeight: 700 }}
+              >
+                📝 Daily Log
               </Typography>
               <Chip
                 label={selectedDate.toLocaleDateString()}
@@ -157,13 +168,24 @@ const DailyLogPage = () => {
                 onClick={(e) => setCalendarAnchor(e.currentTarget)}
                 icon={<CalendarTodayIcon />}
                 sx={{
-                  border: "none",
-                  "& .MuiChip-root": {
-                    border: "none"
+                  backgroundColor: '#081f5c',
+                  color: 'white',
+                  fontWeight: 600,
+                  boxShadow: '0px 2px 6px rgba(8, 31, 92, 0.2)',
+                  '&:hover': {
+                    backgroundColor: '#0a2270',
+                    transform: 'translateY(-1px)',
+                    boxShadow: '0px 3px 8px rgba(8, 31, 92, 0.3)'
+                  },
+                  '& .MuiSvgIcon-root': {
+                    color: 'white'
                   }
                 }}
               />
             </Box>
+            <Typography variant="h6" color="text.secondary">
+              {childName}
+            </Typography>
           </Box>
         </Box>
 
@@ -172,7 +194,7 @@ const DailyLogPage = () => {
       {/* Timeline View - Input and Feed Together */}
       <Box sx={{ display: "flex", flexDirection: "column", gap: 3, minHeight: "60vh" }}>
         {/* Add New Entry */}
-        <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
+        <Box sx={{ mb: 3 }}>
           <LogInput childId={currentChildId} selectedDate={selectedDate} />
           
           {/* Search Bar - inside the same card */}
@@ -203,22 +225,26 @@ const DailyLogPage = () => {
                 ),
               }}
               sx={{
+                backgroundColor: 'rgba(8, 31, 92, 0.02)',
+                borderRadius: 2,
                 '& .MuiOutlinedInput-root': {
                   '& fieldset': {
-                    borderColor: 'transparent',
-                  },
-                  '&:hover fieldset': {
-                    borderColor: 'grey.300',
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: theme.palette.primary.main,
+                    borderColor: 'rgba(8, 31, 92, 0.12)',
                     borderWidth: '1px',
                   },
+                  '&:hover fieldset': {
+                    borderColor: 'rgba(8, 31, 92, 0.25)',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#081f5c',
+                    borderWidth: '2px',
+                  },
+                  backgroundColor: 'background.paper',
                 },
               }}
             />
           </Box>
-        </Paper>
+        </Box>
 
         {/* Timeline */}
         <DailyLogFeed
@@ -255,26 +281,34 @@ const DailyLogPage = () => {
               day: CustomDay,
             }}
             sx={{
+              backgroundColor: 'background.paper',
+              borderRadius: 2,
+              boxShadow: '0px 8px 24px rgba(8, 31, 92, 0.15)',
               "& .MuiPickersDay-today": {
-                border: "none",
+                border: "2px solid #081f5c",
                 backgroundColor: "transparent",
-                color: "text.primary",
-                fontWeight: "600",
+                color: "#081f5c",
+                fontWeight: "700",
                 "&:hover": {
-                  backgroundColor: "grey.100",
+                  backgroundColor: "rgba(8, 31, 92, 0.08)",
                 },
               },
               "& .MuiPickersDay-root": {
                 border: "none",
+                color: 'text.primary',
                 "&:focus": {
                   outline: "none",
-                  boxShadow: "0 0 0 2px rgba(25, 118, 210, 0.2)",
+                  boxShadow: "0 0 0 2px rgba(8, 31, 92, 0.3)",
+                },
+                "&:hover": {
+                  backgroundColor: "rgba(8, 31, 92, 0.06)",
                 },
                 "&.Mui-selected": {
-                  backgroundColor: "grey.800",
+                  backgroundColor: "#081f5c",
                   color: "white",
+                  fontWeight: 600,
                   "&:hover": {
-                    backgroundColor: "grey.900",
+                    backgroundColor: "#0a2270",
                   },
                 },
               },
