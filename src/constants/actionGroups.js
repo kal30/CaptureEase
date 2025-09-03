@@ -1,9 +1,14 @@
+import { getIncidentDisplayInfo } from './uiDisplayConstants';
+
 /**
  * Configuration for dashboard action groups.
  * @param {import('@mui/material').Theme} theme - The MUI theme object.
  * @returns {function(string): Array<object>} A function that takes a user role and returns the appropriate action groups.
  */
 export const getActionGroups = (theme) => (userRole) => {
+  // Get centralized display info
+  const incidentDisplay = getIncidentDisplayInfo();
+  
   const USER_ROLES = {
     PRIMARY_PARENT: 'primary_parent',
     CO_PARENT: 'co_parent',
@@ -30,10 +35,10 @@ export const getActionGroups = (theme) => (userRole) => {
       title: 'Daily Care',
       icon: '💜',
       color: theme.palette.dailyCare.primary, // Themed color
-      tooltip: 'Essential daily tracking with notes, incidents, health and safety',
+      tooltip: `Essential daily tracking with notes, ${incidentDisplay.pluralLabelLowercase}, health and safety`,
       actions: [
         { key: 'journal', label: 'Journal', icon: '💬', types: ['journal_entry'], trackingType: 'daily', description: 'Free-form notes and thoughts' },
-        { key: 'incident', label: 'Log Incident', icon: '🛑', types: ['incident_log'], trackingType: 'task' },
+        { key: 'incident', label: `Log ${incidentDisplay.label}`, icon: incidentDisplay.emoji, types: ['incident_log'], trackingType: 'task' },
         { key: 'food_health', label: 'Food & Medicine', icon: '🍎', types: ['food_log', 'medication_log', 'medical_event'], trackingType: 'daily' },
         { key: 'safety', label: 'Safety Check', icon: '🛡️', types: ['safety_log'], trackingType: 'task' },
       ],

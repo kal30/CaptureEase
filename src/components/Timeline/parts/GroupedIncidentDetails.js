@@ -5,6 +5,7 @@ import { alpha, useTheme } from '@mui/material/styles';
 import { getSeverityMeta } from '../../../services/incidentService';
 import { getSeverityColor } from '../utils/colors';
 import { getEffectivenessDisplay } from '../../../utils/incidentGrouping';
+import { getIncidentDisplayInfo } from '../../../constants/uiDisplayConstants';
 
 /**
  * GroupedIncidentDetails - Display component for grouped incidents with follow-ups
@@ -14,6 +15,9 @@ import { getEffectivenessDisplay } from '../../../utils/incidentGrouping';
  * @param {Object} props.entry - Grouped incident entry with follow-ups array
  */
 const GroupedIncidentDetails = ({ entry }) => {
+  // Get centralized display info
+  const incidentDisplay = getIncidentDisplayInfo();
+  
   const theme = useTheme();
   const [followUpsExpanded, setFollowUpsExpanded] = useState(false);
   
@@ -30,7 +34,7 @@ const GroupedIncidentDetails = ({ entry }) => {
       {/* Main incident details */}
       <Box>
         <Typography variant="body2" sx={{ color: 'text.primary', mb: 1, lineHeight: 1.5, fontWeight: 600 }}>
-          {entry.customIncidentName || entry.incidentType || entry.type || `Incident (no data found)`}
+          {entry.customIncidentName || entry.incidentType || entry.type || `${incidentDisplay.label} (no data found)`}
         </Typography>
 
         {/* Show description/notes for incidents - try multiple field names */}

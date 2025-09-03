@@ -23,6 +23,7 @@ import {
   CalendarToday as CalendarIcon
 } from '@mui/icons-material';
 import MiniCalendar from '../UI/MiniCalendar';
+import { getIncidentDisplayInfo } from '../../constants/uiDisplayConstants';
 
 /**
  * TimelineFilters - Filter controls for unified timeline
@@ -97,12 +98,15 @@ const TimelineFilters = ({
     setDatePickerAnchor(null);
   };
 
+  // Get centralized display info
+  const incidentDisplay = getIncidentDisplayInfo();
+
   // Entry type options with icons and counts (matching dashboard quick entries)
   const entryTypeOptions = [
     { 
       value: 'incident', 
-      label: 'Incidents', 
-      icon: '🛑',
+      label: incidentDisplay.pluralLabel, 
+      icon: incidentDisplay.emoji,
       count: summary.incidentCount || 0,
       color: 'error'
     },

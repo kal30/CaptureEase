@@ -3,8 +3,12 @@ import { Box, Typography } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
 import { getSeverityMeta } from '../../../services/incidentService';
 import { getSeverityColor } from '../utils/colors';
+import { getIncidentDisplayInfo } from '../../../constants/uiDisplayConstants';
 
 const IncidentDetails = ({ entry }) => {
+  // Get centralized display info
+  const incidentDisplay = getIncidentDisplayInfo();
+  
   const theme = useTheme();
   
   // Check if this is a follow-up entry
@@ -16,7 +20,7 @@ const IncidentDetails = ({ entry }) => {
       <Typography variant="body2" sx={{ color: 'text.primary', mb: 1, lineHeight: 1.5, fontWeight: 600 }}>
         {isFollowUp 
           ? (entry.notes || entry.resolution || 'Follow-up logged') 
-          : (entry.customIncidentName || entry.incidentType || entry.type || 'Incident')
+          : (entry.customIncidentName || entry.incidentType || entry.type || incidentDisplay.label)
         }
       </Typography>
 

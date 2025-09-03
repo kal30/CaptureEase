@@ -12,6 +12,7 @@ import {
 import { useTheme } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
 import { useChildContext } from '../../contexts/ChildContext';
+import { getIncidentDisplayInfo } from '../../constants/uiDisplayConstants';
 
 /**
  * QuickEntrySection - Integrated Quick Entry circles with Daily Report
@@ -33,6 +34,9 @@ const QuickEntrySection = ({
   const { setCurrentChildId } = useChildContext();
   const [hoveredAction, setHoveredAction] = useState(null);
 
+  // Get centralized display info
+  const incidentDisplay = getIncidentDisplayInfo();
+
   // Quick action items with theme-driven colors and distinct styling
   const quickActions = [
     { 
@@ -47,9 +51,9 @@ const QuickEntrySection = ({
     },
     { 
       key: 'incident', 
-      emoji: '🛑', 
-      label: 'Incident', 
-      description: 'Log medical incidents with follow-ups',
+      emoji: incidentDisplay.emoji, 
+      label: incidentDisplay.label, 
+      description: incidentDisplay.description,
       color: '#DC2626', // Red for urgent/incidents
       bgColor: '#FEF2F2',
       type: 'input', // Indicates this opens an input form

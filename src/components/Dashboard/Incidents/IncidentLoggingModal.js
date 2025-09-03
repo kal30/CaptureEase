@@ -13,10 +13,14 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import IncidentTypeSelector from "./IncidentTypeSelector";
 import IncidentQuickCapture from "./IncidentQuickCapture";
+import { getIncidentDisplayInfo } from '../../../constants/uiDisplayConstants';
 import OtherIncidentCapture from "./OtherIncidentCapture";
 import { INCIDENT_TYPES } from "../../../services/incidentService";
 
 const IncidentLoggingModal = ({ open, onClose, childId, childName }) => {
+  // Get centralized display info
+  const incidentDisplay = getIncidentDisplayInfo();
+  
   const [currentStep, setCurrentStep] = useState(1); // 1 = type selection, 2 = quick capture
   const [selectedIncidentType, setSelectedIncidentType] = useState(null);
 
@@ -62,7 +66,7 @@ const IncidentLoggingModal = ({ open, onClose, childId, childName }) => {
               variant="h6"
               sx={{ fontWeight: 700, letterSpacing: "-0.5px" }}
             >
-              Log Incident {childName}
+              Log {incidentDisplay.label} {childName}
             </Typography>
           </Box>
           <Typography variant="body2" sx={{ color: "text.secondary" }}>

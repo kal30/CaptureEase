@@ -19,6 +19,7 @@ import DailyNoteDetails from "./parts/DailyNoteDetails";
 import JournalDetails from "./parts/JournalDetails";
 import EntryHeader from "./parts/EntryHeader";
 import TimelineItem from "./parts/TimelineItem";
+import { getIncidentDisplayInfo } from '../../constants/uiDisplayConstants';
 
 /**
  * UnifiedTimeline - Main unified timeline component
@@ -38,6 +39,9 @@ const UnifiedTimeline = ({
   onFiltersChange,
   showFilters = true,
 }) => {
+  // Get centralized display info
+  const incidentDisplay = getIncidentDisplayInfo();
+  
   const theme = useTheme();
 
   // Fetch unified timeline data
@@ -101,7 +105,7 @@ const UnifiedTimeline = ({
           </Typography>
           <Typography variant="body2" color="text.secondary">
             {summary.totalEntries} total activities
-            {summary.incidentCount > 0 && ` • ${summary.incidentCount} incidents`}
+            {summary.incidentCount > 0 && ` • ${summary.incidentCount} ${incidentDisplay.pluralLabelLowercase}`}
             {summary.journalCount > 0 && ` • ${summary.journalCount} journal entries`}
             {summary.dailyLogCount > 0 && ` • ${summary.dailyLogCount} daily habits`}
             {summary.lastActivityTime && ` • Last activity at ${summary.lastActivityTime}`}

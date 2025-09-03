@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, Typography, Chip } from '@mui/material';
+import { getIncidentDisplayInfo } from '../../constants/uiDisplayConstants';
 
 /**
  * TimeGroupHeader - Header for time period groups (Morning, Afternoon, Evening)
@@ -17,6 +18,8 @@ const TimeGroupHeader = ({
   entryCount = 0, 
   summary 
 }) => {
+  // Get centralized display info
+  const incidentDisplay = getIncidentDisplayInfo();
   
   // Get time period color
   const getTimeColor = (period) => {
@@ -75,7 +78,7 @@ const TimeGroupHeader = ({
         <Box sx={{ display: 'flex', gap: 0.5, ml: 'auto' }}>
           {summary.hasIncidents && (
             <Chip
-              label="Incidents"
+              label={incidentDisplay.pluralLabel}
               size="small"
               color="error"
               variant="filled"

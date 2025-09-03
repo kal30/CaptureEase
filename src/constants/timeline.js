@@ -1,31 +1,40 @@
 // Theme-driven timeline type metadata and helpers
+import { getIncidentDisplayInfo } from './uiDisplayConstants';
 
-export const ENTRY_TYPES = {
-  incident: {
-    key: 'incident',
-    label: 'Incidents',
-    icon: '🛑',
-    paletteKey: 'timeline.entries.incident',
-  },
-  dailyHabit: {
-    key: 'dailyHabit',
-    label: 'Daily Habits',
-    icon: '📋',
-    paletteKey: 'timeline.entries.dailyHabit',
-  },
-  dailyNote: {
-    key: 'dailyNote',
-    label: 'Daily Notes',
-    icon: '📝',
-    paletteKey: 'timeline.entries.dailyNote',
-  },
-  journal: {
-    key: 'journal',
-    label: 'Journal',
-    icon: '📔',
-    paletteKey: 'timeline.entries.journal',
-  },
+// Dynamic function to get entry types with centralized labels
+export const getEntryTypes = () => {
+  const incidentDisplay = getIncidentDisplayInfo();
+  
+  return {
+    incident: {
+      key: 'incident',
+      label: incidentDisplay.pluralLabel,
+      icon: incidentDisplay.emoji,
+      paletteKey: 'timeline.entries.incident',
+    },
+    dailyHabit: {
+      key: 'dailyHabit',
+      label: 'Daily Habits',
+      icon: '📋',
+      paletteKey: 'timeline.entries.dailyHabit',
+    },
+    dailyNote: {
+      key: 'dailyNote',
+      label: 'Daily Notes',
+      icon: '📝',
+      paletteKey: 'timeline.entries.dailyNote',
+    },
+    journal: {
+      key: 'journal',
+      label: 'Journal',
+      icon: '📔',
+      paletteKey: 'timeline.entries.journal',
+    },
+  };
 };
+
+// Legacy static export for backward compatibility
+export const ENTRY_TYPES = getEntryTypes();
 
 // String constants for entry type keys to avoid magic strings in components
 export const ENTRY_TYPE = {
@@ -66,7 +75,8 @@ export const mapLegacyType = (type) => {
 
 export const getEntryTypeMeta = (type) => {
   const normalized = mapLegacyType(type);
-  return ENTRY_TYPES[normalized] || ENTRY_TYPES.dailyNote;
+  const entryTypes = getEntryTypes();
+  return entryTypes[normalized] || entryTypes.dailyNote;
 };
 
 // Time-of-day periods for grouping entries

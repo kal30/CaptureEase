@@ -88,14 +88,17 @@ const HeaderSection = () => {
             </Box>
 
             <Typography sx={landingTypography.heroBody}>
-              No more sticky notes, endless texts, or scattered updates. With{" "}
-              {PRODUCT_NAME}, everything that matters—notes, photos, and
-              reminders—lives in one place. Clear, accessible, and stress‑free
-              so you can focus on caring.
+              No more sticky notes, group texts, or scattered updates. Whether
+              you’re raising kids, caring for a parent with dementia, supporting
+              a loved one with disabilities, or working alongside teachers and
+              caregivers, {PRODUCT_NAME} brings everything together. Notes,
+              photos, and reminders stay in one place — clear, accessible, and
+              stress-free — so you can spend less time coordinating and more
+              time caring.
             </Typography>
 
             <ThemeSpacing variant="section-large">
-              <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+              <Box sx={{ display: "flex", justifyContent: "center" }}>
                 <GradientButton
                   variant="gradient"
                   size="hero"
