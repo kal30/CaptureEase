@@ -26,39 +26,39 @@ const ThemeCard = ({
 }) => {
   const theme = useTheme();
 
-  // Role-based styling configurations - theme-driven, no hardcoded colors
-  const getRoleConfig = (role) => {
-    const roleConfigs = {
-      therapist: {
-        border: alpha(theme.palette.info.main, 0.2),
-        borderLeft: theme.palette.info.main,
-        background: alpha(theme.palette.info.main, 0.02),
-        shadow: alpha(theme.palette.info.main, 0.08),
-        hoverShadow: alpha(theme.palette.info.main, 0.15)
-      },
-      caregiver: {
-        border: alpha(theme.palette.warning.main, 0.2),
-        borderLeft: theme.palette.warning.main,
-        background: alpha(theme.palette.warning.main, 0.02),
-        shadow: alpha(theme.palette.warning.main, 0.08),
-        hoverShadow: alpha(theme.palette.warning.main, 0.15)
-      },
-      parent: {
-        border: alpha(theme.palette.success.main, 0.2),
-        borderLeft: theme.palette.success.main,
-        background: alpha(theme.palette.success.main, 0.02),
-        shadow: alpha(theme.palette.success.main, 0.08),
-        hoverShadow: alpha(theme.palette.success.main, 0.15)
-      },
-      family: {
-        border: alpha(theme.palette.secondary.main, 0.2),
-        borderLeft: theme.palette.secondary.main,
-        background: alpha(theme.palette.secondary.main, 0.02),
-        shadow: alpha(theme.palette.secondary.main, 0.08),
-        hoverShadow: alpha(theme.palette.secondary.main, 0.15)
+  // Role-based styling configurations using centralized theme.palette.roles
+  const getRoleConfig = (roleName) => {
+    const mapRoleKey = (r) => {
+      switch (r) {
+        case 'parent':
+        case 'primary_parent':
+          return 'primary_parent';
+        case 'family':
+        case 'family_member':
+          return 'family_member';
+        case 'co_parent':
+          return 'co_parent';
+        case 'caregiver':
+        case 'therapist':
+          return r;
+        default:
+          return 'primary_parent';
       }
     };
-    return roleConfigs[role] || roleConfigs.parent;
+
+    const key = mapRoleKey(roleName);
+    const roleToken = theme.palette.roles?.[key];
+    const primary = roleToken?.primary || theme.palette.primary.main;
+    const background = roleToken?.background || alpha(primary, 0.02);
+    const borderColor = roleToken?.border || alpha(primary, 0.2);
+
+    return {
+      border: alpha(borderColor, 1),
+      borderLeft: primary,
+      background,
+      shadow: alpha(primary, 0.08),
+      hoverShadow: alpha(primary, 0.15)
+    };
   };
 
   // Size configurations

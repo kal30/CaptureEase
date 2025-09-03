@@ -1,6 +1,5 @@
 import React from 'react';
 import { Box, Avatar } from '@mui/material';
-import RoleIndicator from './RoleIndicator';
 
 /**
  * ChildAvatar - Reusable avatar component with role indicator
@@ -46,22 +45,7 @@ const ChildAvatar = ({
         {!child.profilePhoto && child.name?.[0]?.toUpperCase()}
       </Avatar>
       
-      {/* Role Indicator Overlay */}
-      {showRole && userRole && (
-        <Box
-          sx={{
-            position: 'absolute',
-            bottom: -4,
-            right: -4,
-            zIndex: 1
-          }}
-        >
-          <RoleIndicator 
-            role={userRole}
-            size={size === 'small' ? 'tiny' : 'small'}
-          />
-        </Box>
-      )}
+      {/* Role indicator removed (deprecated). Kept props for backward compatibility. */}
     </Box>
   );
 };

@@ -45,16 +45,24 @@ const UnifiedTimelineEntry = ({
   const typeMeta = getEntryTypeMeta(entry.type);
   const typeColor = theme.palette.timeline?.entries?.[typeMeta.key] || theme.palette.primary.main;
 
-  // Get user role color
+  // Get user role color using centralized theme.palette.roles
   const getUserRoleColor = (userRole) => {
-    switch (userRole) {
-      case 'primary_parent': return 'primary.main';
-      case 'co_parent': return 'secondary.main';
-      case 'family_member': return 'info.main';
-      case 'caregiver': return 'warning.main';
-      case 'therapist': return 'success.main';
-      default: return 'text.secondary';
-    }
+    const mapRoleKey = (r) => {
+      switch (r) {
+        case 'parent':
+        case 'primary_parent': return 'primary_parent';
+        case 'family':
+        case 'family_member': return 'family_member';
+        case 'co_parent': return 'co_parent';
+        case 'caregiver': return 'caregiver';
+        case 'therapist': return 'therapist';
+        default: return null;
+      }
+    };
+    const key = mapRoleKey(userRole);
+    return key && theme.palette.roles?.[key]?.primary
+      ? theme.palette.roles[key].primary
+      : theme.palette.text.secondary;
   };
 
   const timestamp = new Date(entry.timestamp);

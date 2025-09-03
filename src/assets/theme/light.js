@@ -11,7 +11,7 @@ const theme = createTheme({
     background: {
       default: "#FFFFFF",
       paper: "#FFFFFF",
-      container: "#fff8ed", // light blue background for containers
+      container: "#fff8ed", // light warm background for containers
     },
     primary: {
       main: brand.palette.primary.main,
@@ -26,11 +26,8 @@ const theme = createTheme({
     info: {
       main: brand.palette.primary.main,
     },
-    accent: {
-      main: brand.palette.secondary.main,
-    },
     success: {
-      main: "#4CAF50", // Keep existing mapping for success
+      main: "#4CAF50",
     },
     tertiary: {
       main: "#7C6F57", // muted brown/khaki
@@ -78,8 +75,7 @@ const theme = createTheme({
       border: "rgba(109, 40, 217, 0.1)",
       entries: {
         incident: "#DC2626",
-        dailyHabit: "#D97706",
-        dailyNote: "#059669",
+        dailyHabit: "#059669",
         journal: "#8B5CF6",
       },
       periods: {
@@ -101,14 +97,71 @@ const theme = createTheme({
       },
     },
     safety: {
-      allergy: "#FF9800", // Orange for allergies
-      medication: "#4CAF50", // Green for medications
-      allergyBg: "rgba(255, 152, 0, 0.15)", // Light orange background
-      medicationBg: "rgba(76, 175, 80, 0.15)", // Light green background
-      allergyBorder: "rgba(255, 152, 0, 0.3)", // Orange border
-      medicationBorder: "rgba(76, 175, 80, 0.3)", // Green border
+      allergy: "#FF9800",
+      medication: "#4CAF50",
+      allergyBg: "rgba(255, 152, 0, 0.15)",
+      medicationBg: "rgba(76, 175, 80, 0.15)",
+      allergyBorder: "rgba(255, 152, 0, 0.3)",
+      medicationBorder: "rgba(76, 175, 80, 0.3)",
     },
-
+    /* roles: {
+      therapist: {
+        primary: "#1976D2",
+        dark: "#0D47A1",
+        light: "#E3F2FD",
+        background: "#FAFCFF",
+        gradient: "linear-gradient(90deg, #E3F2FD 0%, #BBDEFB 100%)",
+        border: "#E3F2FD",
+        icon: "🩺",
+      },
+      caregiver: {
+        primary: "#C06C84",
+        dark: "#6C567B",
+        light: "#FDEDEC",
+        background: "#FFF9FB",
+        gradient: "linear-gradient(90deg, #FDEDEC 0%, #FADADD 100%)",
+        border: "#FDEDEC",
+        icon: "🤗",
+      },
+      primary_parent: {
+        primary: "#388E3C",
+        dark: "#1B5E20",
+        light: "#E8F5E8",
+        background: "#FAFFFE",
+        gradient: "linear-gradient(90deg, #E8F5E8 0%, #C8E6C9 100%)",
+        border: "#E8F5E8",
+        icon: "👑",
+      },
+      co_parent: {
+        primary: brand.palette.primary.main,
+        dark: brand.palette.primary.dark,
+        light: "rgba(91, 140, 81, 0.15)",
+        background: "rgba(91, 140, 81, 0.03)",
+        gradient:
+          "linear-gradient(90deg, rgba(91, 140, 81, 0.15) 0%, rgba(91, 140, 81, 0.08) 100%)",
+        border: "rgba(91, 140, 81, 0.3)",
+        icon: "👨‍👩‍👧‍👦",
+      },
+      family_member: {
+        primary: "#E99787",
+        dark: "#d48a7a",
+        light: "rgba(233, 151, 135, 0.15)",
+        background: "rgba(233, 151, 135, 0.03)",
+        gradient:
+          "linear-gradient(90deg, rgba(233, 151, 135, 0.12) 0%, rgba(233, 151, 135, 0.06) 100%)",
+        border: "rgba(233, 151, 135, 0.4)",
+        icon: "👵",
+      },
+      unknown: {
+        primary: "#666",
+        dark: "#424242",
+        light: "#f5f5f5",
+        background: "#fafafa",
+        gradient: "linear-gradient(90deg, #f5f5f5 0%, #eeeeee 100%)",
+        border: "#f0f0f0",
+        icon: "👤",
+      },
+    }, */
     text: {
       primary: "#333333",
       secondary: "#666666",
@@ -275,12 +328,12 @@ const theme = createTheme({
               borderWidth: "2px",
             },
             "&:hover fieldset": {
-              borderColor: "#5B8C51",
+              borderColor: brand.palette.primary.main,
             },
             "&.Mui-focused fieldset": {
-              borderColor: "#5B8C51",
+              borderColor: brand.palette.primary.main,
               borderWidth: "2px",
-              boxShadow: "0px 0px 0px 3px rgba(91, 140, 81, 0.12)",
+              boxShadow: `0px 0px 0px 3px ${alpha(brand.palette.primary.main, 0.12)}`,
             },
             "&.Mui-focused": {
               backgroundColor: "#FFFFFF",
@@ -289,7 +342,7 @@ const theme = createTheme({
           "& .MuiInputLabel-root": {
             color: "#666666",
             "&.Mui-focused": {
-              color: "#5B8C51",
+              color: brand.palette.primary.main,
             },
           },
         },
@@ -299,7 +352,7 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           "& .MuiTabs-indicator": {
-            backgroundColor: "#5B8C51",
+            backgroundColor: brand.palette.primary.main,
             height: "3px",
             borderRadius: "2px",
           },
@@ -315,10 +368,10 @@ const theme = createTheme({
           minHeight: "48px",
           color: "#666666",
           "&.Mui-selected": {
-            color: "#5B8C51",
+            color: brand.palette.primary.main,
           },
           "&:hover": {
-            backgroundColor: alpha("#5B8C51", 0.06),
+            backgroundColor: alpha(brand.palette.primary.main, 0.06),
           },
         },
       },
@@ -330,7 +383,7 @@ const theme = createTheme({
           marginBottom: "8px",
           transition: "all 0.2s ease-in-out",
           "&:hover": {
-            backgroundColor: alpha("#5B8C51", 0.05),
+            backgroundColor: alpha(brand.palette.primary.main, 0.05),
           },
         },
       },
@@ -342,7 +395,7 @@ const theme = createTheme({
           marginBottom: "4px",
           transition: "all 0.2s ease-in-out",
           "&:hover": {
-            backgroundColor: alpha("#5B8C51", 0.08),
+            backgroundColor: alpha(brand.palette.primary.main, 0.08),
           },
           minHeight: 48,
         },
@@ -356,10 +409,10 @@ const theme = createTheme({
           fontSize: "0.8rem",
         },
         filled: {
-          backgroundColor: "#5B8C51",
+          backgroundColor: brand.palette.primary.main,
           color: "#FFFFFF",
           "&:hover": {
-            backgroundColor: "#4a7342",
+            backgroundColor: brand.palette.primary.dark,
           },
         },
       },
@@ -433,11 +486,11 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           "& .MuiBreadcrumbs-ol": {
-            color: "#5B8C51",
+            color: brand.palette.primary.main,
             fontWeight: 500,
           },
           "& .MuiBreadcrumbs-separator": {
-            color: "#5B8C51",
+            color: brand.palette.primary.main,
           },
         },
       },

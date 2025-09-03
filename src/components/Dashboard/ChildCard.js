@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box } from '@mui/material';
+import { childCardHeaderStyles } from '../../assets/theme/childCardTheme';
 import GroupStyledCard from '../UI/GroupStyledCard';
 import ChildCardHeader from './ChildCard/ChildCardHeader';
 import ChildCardContent from './ChildCard/ChildCardContent';
@@ -47,25 +48,7 @@ const ChildCard = ({
       >
 
         {/* Header Section with Role-Based Background */}
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 2,
-            p: 2,
-            flexWrap: { xs: 'wrap', md: 'nowrap' },
-            minHeight: { xs: 'auto', md: 100 },
-            // Role-based header background using theme colors
-            background: 
-              userRole === "therapist"
-                ? "linear-gradient(135deg, #E8F5E8 0%, #F1F8E9 100%)" // Green theme
-                : userRole === "caregiver"  
-                  ? "linear-gradient(135deg, #FFF3E0 0%, #FFEBE3 100%)" // Orange theme
-                  : userRole && userRole.includes("parent")
-                    ? "linear-gradient(135deg, #E3F2FD 0%, #E1F5FE 100%)" // Blue theme
-                    : "linear-gradient(135deg, #FAFAFA 0%, #F5F5F5 100%)" // Default gray
-          }}
-        >
+        <Box sx={(theme) => childCardHeaderStyles(theme, userRole)}>
           {/* Header with Avatar and Basic Info */}
           <ChildCardHeader
             child={child}
