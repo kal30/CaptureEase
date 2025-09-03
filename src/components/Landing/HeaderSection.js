@@ -33,7 +33,7 @@ const HeaderSection = () => {
   return (
     <Box
       sx={{
-        backgroundColor: "background.default",
+        backgroundColor: "transparent",
         position: "relative",
         mt: 10,
         ...landingLayout.heroSection.padding,

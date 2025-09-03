@@ -18,11 +18,6 @@ const ExpertProgram = () => {
       <Box sx={expertCardStyles}>
         {/* Left Side: Text */}
         <Box
-          sx={{
-            backgroundColor: "#D6E8EE",
-            borderRadius: "16px",
-            padding: "24px",
-          }}
         >
           <Box sx={expertLeftColumnStyles}>
             <Typography variant="h2" sx={expertTitleStyles}>

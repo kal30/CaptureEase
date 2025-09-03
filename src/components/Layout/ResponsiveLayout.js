@@ -16,7 +16,8 @@ const ResponsiveLayout = ({
   fullWidth = false,
   customMobile = null,
   customTablet = null,
-  customDesktop = null
+  customDesktop = null,
+  sx = {}
 }) => {
   const { isMobileDevice, isTabletDevice } = useDeviceType();
 
@@ -61,6 +62,7 @@ const ResponsiveLayout = ({
     <DesktopLayout 
       pageTitle={pageTitle}
       fullWidth={fullWidth}
+      sx={sx}
     >
       {children}
     </DesktopLayout>

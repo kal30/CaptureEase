@@ -4,13 +4,14 @@ import {
   Container
 } from '@mui/material';
 
-const DesktopLayout = ({ children, pageTitle, fullWidth = false }) => {
+const DesktopLayout = ({ children, pageTitle, fullWidth = false, sx = {} }) => {
   return (
     <Box
       sx={{
         minHeight: "100vh",
         bgcolor: "background.default",
         py: 4,
+        ...sx
       }}
     >
       <Container maxWidth={fullWidth ? false : "xl"}>

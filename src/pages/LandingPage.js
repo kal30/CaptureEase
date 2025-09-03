@@ -1,19 +1,22 @@
 import React from "react";
-import { Box, Container, Typography } from "@mui/material";
-
 import Expert from "../components/Landing/Expert";
 import Footer from "../components/Landing/Footer";
 import HeaderSection from "../components/Landing/HeaderSection";
-import TestimonialCarousel from "../components/Landing/TestimonialCarousel";
 import ResponsiveLayout from "../components/Layout/ResponsiveLayout";
+import { landingPageStyles } from "../assets/theme/landingTheme";
 
 const LandingPage = () => {
   return (
-    <ResponsiveLayout pageTitle="CaptureEz" showBottomNav={false}>
-      <HeaderSection />
-      <Expert />
-      <Footer />
-    </ResponsiveLayout>
+    <ResponsiveLayout 
+      pageTitle="CaptureEz" 
+      showBottomNav={false} 
+      fullWidth
+      sx={landingPageStyles}
+    >
+        <HeaderSection />
+        <Expert />
+        <Footer />
+      </ResponsiveLayout>
   );
 };
 

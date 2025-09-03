@@ -13,7 +13,7 @@ export const landingColors = {
   midNavy: "#02457A", // For gradients
   cyanPop: "#018ABE", // CTA buttons or icons
   pastelAqua: "#97CADB", // Light, cool aqua
-  softBackground: "#D6E8EE", // Backgrounds or hover
+  pageBackground: "#c8d9e6", // Main landing page background
 
   heroText: "#081f5c",
   bodyText: "#333333",
@@ -101,4 +101,10 @@ export const landingLayout = {
     gap: 0,
     mt: { xs: -2, md: -3, lg: -4 },
   },
+};
+
+// Landing page component styles
+export const landingPageStyles = {
+  backgroundColor: landingColors.pageBackground,
+  minHeight: "100vh"
 };

@@ -6,7 +6,7 @@
 // Section wrapper styles with decorative background shape
 export const expertSectionStyles = {
   position: "relative",
-  bgcolor: "background.default",
+  bgcolor: "transparent",
   px: { xs: 2, md: 5 },
   pt: { xs: 1, md: 3 },
   pb: { xs: 8, md: 10 },
@@ -29,7 +29,7 @@ export const expertSectionStyles = {
 
 // Card container styles
 export const expertCardStyles = {
-  bgcolor: "#D6E8EE", // softBackground
+  bgcolor: "transparent", // transparent background
   borderRadius: 1,
   boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
   position: "relative",
