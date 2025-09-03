@@ -45,7 +45,7 @@ export const landingTypography = {
     fontSize: { xs: "1.1rem", md: "1.3rem", lg: "1.4rem" },
     lineHeight: { xs: 1.6, md: 1.7, lg: 1.8 },
     color: landingColors.bodyText,
-    textAlign: "center",
+    textAlign: { xs: "center", md: "left" },
     fontFamily: '"Lancelot", "Inter", "Segoe UI", Roboto, sans-serif',
     fontWeight: 300,
     maxWidth: { xs: "100%", md: "90%", lg: "85%" },

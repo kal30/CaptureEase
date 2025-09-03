@@ -95,14 +95,16 @@ const HeaderSection = () => {
             </Typography>
 
             <ThemeSpacing variant="section-large">
-              <GradientButton
-                variant="gradient"
-                size="hero"
-                elevated
-                onClick={handleGetStarted}
-              >
-                Try CaptureEz Free
-              </GradientButton>
+              <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                <GradientButton
+                  variant="gradient"
+                  size="hero"
+                  elevated
+                  onClick={handleGetStarted}
+                >
+                  Try CaptureEz Free
+                </GradientButton>
+              </Box>
             </ThemeSpacing>
           </Box>
 
