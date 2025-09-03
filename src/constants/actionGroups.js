@@ -1,4 +1,4 @@
-import { getIncidentDisplayInfo } from './uiDisplayConstants';
+import { getIncidentDisplayInfo, getMessagesDisplayInfo } from './uiDisplayConstants';
 
 /**
  * Configuration for dashboard action groups.
@@ -8,6 +8,7 @@ import { getIncidentDisplayInfo } from './uiDisplayConstants';
 export const getActionGroups = (theme) => (userRole) => {
   // Get centralized display info
   const incidentDisplay = getIncidentDisplayInfo();
+  const messagesDisplay = getMessagesDisplayInfo();
   
   const USER_ROLES = {
     PRIMARY_PARENT: 'primary_parent',
@@ -60,6 +61,7 @@ export const getActionGroups = (theme) => (userRole) => {
       color: theme.palette.calendar.accent, // Themed color (was coral pink)
       tooltip: 'Organize schedules, coordinate with team, and manage shared access',
       actions: [
+        { key: 'messages', label: messagesDisplay.label, icon: messagesDisplay.emoji, types: ['messages'], trackingType: 'navigation', description: messagesDisplay.description },
         { key: 'routines', label: 'Schedule & Appointments', icon: '📅', types: ['routine', 'appointment'], trackingType: 'task' },
         { key: 'notes', label: 'Team Notes', icon: '📋', types: ['caregiver_note'], trackingType: 'task' },
         { key: 'access', label: 'Share Access', icon: '👥', types: ['access_management'], trackingType: 'task' },

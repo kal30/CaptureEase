@@ -19,6 +19,7 @@ import ProfilePage from "../pages/ProfilePage";
 import InvitationPage from "../pages/InvitationPage";
 import AcceptInvite from "../pages/AcceptInvite";
 import DailyLogPage from "../pages/DailyLogPage";
+import MessagesPage from "../pages/MessagesPage";
 
 //When you update here update breadcrumbscomponent.js
 
@@ -56,6 +57,7 @@ const AppRoutes = () => {
         <Route path="/templates" element={<TemplateLibraryPage />} />
         <Route path="/medical" element={<MedicalLogPage />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/messages" element={<MessagesPage />} />
         <Route path="/invitation/:invitationId" element={<InvitationPage />} />
         <Route path="/accept-invite" element={<AcceptInvite />} />
       </Routes>

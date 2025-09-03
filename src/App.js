@@ -9,6 +9,7 @@ import { auth } from "./services/firebase";
 import { ChildProvider } from "./contexts/ChildContext";
 import { RoleProvider } from "./contexts/RoleContext";
 import { ErrorBoundary } from "./contexts/ErrorContext";
+import "./services/messaging/setupTests";
 
 const App = () => {
   useEffect(() => {

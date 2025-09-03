@@ -1,6 +1,7 @@
 import React from 'react';
-import { Box, Button } from '@mui/material';
+import { Box, Button, IconButton, Tooltip } from '@mui/material';
 import { useRole } from '../../../contexts/RoleContext';
+import { getMessagesDisplayInfo } from '../../../constants/uiDisplayConstants';
 import QuickEntrySection from '../QuickEntrySection';
 
 /**
@@ -17,6 +18,7 @@ import QuickEntrySection from '../QuickEntrySection';
  * @param {string} props.hoveredQuickAction - Currently hovered quick action
  * @param {function} props.onHoverAction - Handler for action hover
  * @param {function} props.onLeaveAction - Handler for action leave
+ * @param {function} props.onMessages - Handler for Messages button click
  * @param {Object} props.sx - Additional styling
  */
 const ChildCardActions = ({
@@ -29,9 +31,11 @@ const ChildCardActions = ({
   hoveredQuickAction,
   onHoverAction,
   onLeaveAction,
+  onMessages,
   sx = {}
 }) => {
   const { USER_ROLES } = useRole();
+  const messagesDisplay = getMessagesDisplayInfo();
 
   const handleQuickActionHover = (actionType) => {
     if (onHoverAction) {
@@ -75,7 +79,7 @@ const ChildCardActions = ({
           alignItems: 'center',
           gap: 2,
           alignSelf: 'stretch',
-          pt: { xs: 0, md: 1.5 },
+          pt: { xs: 0, md: 0.5 },
           width: { xs: '100%', md: 'auto' },
           justifyContent: { xs: 'center', md: 'flex-end' },
           order: { xs: 2, md: 0 }
@@ -87,11 +91,39 @@ const ChildCardActions = ({
             display: 'flex',
             flexDirection: 'column',
             gap: 1,
-            mt: { xs: 0, md: 0.5 },
+            alignItems: 'center',
             width: { xs: '100%', md: 'auto' }
           }}
         >
-          {userRole === USER_ROLES.THERAPIST ? (
+          {/* Messages Icon Button - Available for all roles */}
+          <Tooltip title={`${messagesDisplay.label}: ${messagesDisplay.description}`} arrow>
+            <IconButton
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent card expansion
+                if (onMessages) {
+                  onMessages(child);
+                }
+              }}
+              sx={{
+                width: 40,
+                height: 40,
+                backgroundColor: '#6366F1', // Indigo for messages
+                color: 'white',
+                fontSize: '1.1rem',
+                border: '2px solid #E0E7FF',
+                mb: userRole === USER_ROLES.THERAPIST ? 1 : 0,
+                '&:hover': {
+                  backgroundColor: '#4F46E5',
+                  transform: 'scale(1.05)',
+                },
+                transition: 'all 0.2s ease-in-out',
+              }}
+            >
+              {messagesDisplay.emoji}
+            </IconButton>
+          </Tooltip>
+
+          {userRole === USER_ROLES.THERAPIST && (
             // Professional tools for therapists
             <Button
               variant="contained"
@@ -104,7 +136,7 @@ const ChildCardActions = ({
               sx={{
                 py: 0.5,
                 px: 1.5,
-                fontSize: '1.2rem',
+                fontSize: '0.875rem',
                 minWidth: 'auto',
                 borderRadius: 1,
                 background:
@@ -118,9 +150,6 @@ const ChildCardActions = ({
             >
               📊 Analytics
             </Button>
-          ) : (
-            // No additional buttons for other roles since Daily Report is now in QuickEntrySection
-            null
           )}
         </Box>
       </Box>

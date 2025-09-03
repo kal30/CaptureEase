@@ -23,7 +23,7 @@ import {
   CalendarToday as CalendarIcon
 } from '@mui/icons-material';
 import MiniCalendar from '../UI/MiniCalendar';
-import { getIncidentDisplayInfo } from '../../constants/uiDisplayConstants';
+import { getIncidentDisplayInfo, getJournalDisplayInfo, getDailyHabitsDisplayInfo } from '../../constants/uiDisplayConstants';
 
 /**
  * TimelineFilters - Filter controls for unified timeline
@@ -100,6 +100,8 @@ const TimelineFilters = ({
 
   // Get centralized display info
   const incidentDisplay = getIncidentDisplayInfo();
+  const journalDisplay = getJournalDisplayInfo();
+  const dailyHabitsDisplay = getDailyHabitsDisplayInfo();
 
   // Entry type options with icons and counts (matching dashboard quick entries)
   const entryTypeOptions = [
@@ -110,17 +112,17 @@ const TimelineFilters = ({
       count: summary.incidentCount || 0,
       color: 'error'
     },
-    { 
-      value: 'journal', 
-      label: 'Journal', 
-      icon: '💬',
+    {
+      value: 'journal',
+      label: journalDisplay.label,
+      icon: journalDisplay.emoji,
       count: summary.journalCount || 0,
       color: 'secondary'
     },
-    { 
-      value: 'dailyHabit', 
-      label: 'Daily Habits', 
-      icon: '📅',
+    {
+      value: 'dailyHabit',
+      label: dailyHabitsDisplay.label,
+      icon: dailyHabitsDisplay.emoji,
       count: summary.dailyLogCount || 0,
       color: 'primary'
     }

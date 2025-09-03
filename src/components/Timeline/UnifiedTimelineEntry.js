@@ -18,7 +18,7 @@ import {
 } from '@mui/icons-material';
 import { alpha, useTheme } from '@mui/material/styles';
 import { getEntryTypeMeta, mapLegacyType } from '../../constants/timeline';
-import { getIncidentDisplayInfo } from '../../constants/uiDisplayConstants';
+import { getIncidentDisplayInfo, getJournalDisplayInfo } from '../../constants/uiDisplayConstants';
 
 /**
  * UnifiedTimelineEntry - Single timeline entry display with expandable details
@@ -42,6 +42,7 @@ const UnifiedTimelineEntry = ({
 }) => {
   // Get centralized display info
   const incidentDisplay = getIncidentDisplayInfo();
+  const journalDisplay = getJournalDisplayInfo();
 
   const theme = useTheme();
   const normalizedType = mapLegacyType(entry.type);
@@ -85,7 +86,7 @@ const UnifiedTimelineEntry = ({
         };
       case 'journal':
         return {
-          primary: entry.title || 'Journal Entry',
+          primary: entry.title || `${journalDisplay.label} Entry`,
           secondary: entry.content?.substring(0, 100) + (entry.content?.length > 100 ? '...' : ''),
           hasMedia: false
         };
@@ -257,7 +258,7 @@ const UnifiedTimelineEntry = ({
             {normalizedType === 'journal' && (
               <Stack spacing={1}>
                 <Typography variant="subtitle2" gutterBottom>
-                  Full Journal Entry
+                  Full {journalDisplay.label} Entry
                 </Typography>
                 <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
                   {entry.content}

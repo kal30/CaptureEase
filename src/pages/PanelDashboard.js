@@ -40,6 +40,7 @@ const PanelDashboard = () => {
     onEditChild: hook.handleEditChild,
     onInviteTeamMember: hook.handleInviteTeamMember,
     onDailyReport: hook.handleDailyReport,
+    onMessages: hook.handleMessages,
     getActionGroups: actionGroups,
     handleGroupActionClick: hook.handleGroupActionClick,
     highlightedActions: hook.highlightedActions,

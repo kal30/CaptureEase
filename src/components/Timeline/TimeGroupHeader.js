@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Typography, Chip } from '@mui/material';
-import { getIncidentDisplayInfo } from '../../constants/uiDisplayConstants';
+import { getIncidentDisplayInfo, getJournalDisplayInfo } from '../../constants/uiDisplayConstants';
 
 /**
  * TimeGroupHeader - Header for time period groups (Morning, Afternoon, Evening)
@@ -20,6 +20,7 @@ const TimeGroupHeader = ({
 }) => {
   // Get centralized display info
   const incidentDisplay = getIncidentDisplayInfo();
+  const journalDisplay = getJournalDisplayInfo();
   
   // Get time period color
   const getTimeColor = (period) => {
@@ -87,7 +88,7 @@ const TimeGroupHeader = ({
           )}
           {summary.hasJournalEntries && (
             <Chip
-              label="Journal"
+              label={journalDisplay.label}
               size="small"
               color="info"
               variant="filled"

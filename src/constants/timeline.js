@@ -1,9 +1,11 @@
 // Theme-driven timeline type metadata and helpers
-import { getIncidentDisplayInfo } from './uiDisplayConstants';
+import { getIncidentDisplayInfo, getJournalDisplayInfo, getDailyHabitsDisplayInfo } from './uiDisplayConstants';
 
 // Dynamic function to get entry types with centralized labels
 export const getEntryTypes = () => {
   const incidentDisplay = getIncidentDisplayInfo();
+  const journalDisplay = getJournalDisplayInfo();
+  const dailyHabitsDisplay = getDailyHabitsDisplayInfo();
   
   return {
     incident: {
@@ -14,8 +16,8 @@ export const getEntryTypes = () => {
     },
     dailyHabit: {
       key: 'dailyHabit',
-      label: 'Daily Habits',
-      icon: '📋',
+      label: dailyHabitsDisplay.label,
+      icon: dailyHabitsDisplay.emoji,
       paletteKey: 'timeline.entries.dailyHabit',
     },
     dailyNote: {
@@ -26,8 +28,8 @@ export const getEntryTypes = () => {
     },
     journal: {
       key: 'journal',
-      label: 'Journal',
-      icon: '📔',
+      label: journalDisplay.label,
+      icon: journalDisplay.emoji,
       paletteKey: 'timeline.entries.journal',
     },
   };

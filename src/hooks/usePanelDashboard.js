@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "@mui/material/styles";
+import { useNavigate } from "react-router-dom";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "../services/firebase";
 import { useChildContext } from "../contexts/ChildContext";
@@ -11,6 +12,7 @@ import { analyzeOtherIncidentPatterns, getIncidents } from "../services/incident
 
 export const usePanelDashboard = () => {
   const theme = useTheme();
+  const navigate = useNavigate();
   const [user] = useAuthState(auth);
   const { currentChildId, setCurrentChildId } = useChildContext();
   const {
@@ -320,6 +322,12 @@ export const usePanelDashboard = () => {
     setShowDailyReportModal(true);
   };
 
+  const handleMessages = (child) => {
+    // Navigate to messages page with child context
+    setCurrentChildId(child.id);
+    navigate("/messages", { state: { selectedChildId: child.id } });
+  };
+
   const handleGroupActionClick = (action, child) => {
     setCurrentChildId(child.id);
 
@@ -341,6 +349,9 @@ export const usePanelDashboard = () => {
     if (action.key === "report") return;
 
     switch (action.key) {
+      case "messages":
+        navigate("/messages");
+        break;
       case "routines":
         alert("Routines & Appointments: Navigate to scheduling page (to be implemented)");
         break;
@@ -435,6 +446,7 @@ export const usePanelDashboard = () => {
     handleQuickDataEntry,
     handleEditChild,
     handleDailyReport,
+    handleMessages,
     handleGroupActionClick,
     getTypeConfig,
     formatTimeAgo,

@@ -3,26 +3,35 @@
 
 export const UI_LABELS = {
   INCIDENT_SECTION: {
-    emoji: '⚡',
-    label: 'Important Moment',
-    description: 'Log behaviors, challenges, or milestones',
-    pluralLabel: 'Important Moments', // For filters and headers
-    pluralLabelLowercase: 'important moments', // For inline text
+    emoji: "⚡",
+    label: "Important Moment",
+    description: "Log behaviors, challenges, or milestones",
+    pluralLabel: "Important Moments", // For filters and headers
+    pluralLabelLowercase: "important moments", // For inline text
   },
-  
+
   // Future: could add other UI sections here
   JOURNAL_SECTION: {
-    emoji: '💬',
-    label: 'Journaling',
-    description: 'Rich daily journal with photos, videos & templates',
+    emoji: "📒",
+    label: "Journaling",
+    description: "Rich daily journal with photos, videos & templates",
   },
-  
+
   DAILY_HABITS_SECTION: {
-    emoji: '📅', 
-    label: 'Daily Habits',
-    description: 'Track mood, sleep, nutrition, progress & quick notes',
+    emoji: "📅",
+    label: "Daily Habits",
+    description: "Track mood, sleep, nutrition, progress & quick notes",
+  },
+
+  Messages: {
+    emoji: "💬",
+    label: "Messages",
+    description: "Securely communicate with your care team",
   },
 };
 
-// Helper function to get incident display info
+// Helper functions to get display info
 export const getIncidentDisplayInfo = () => UI_LABELS.INCIDENT_SECTION;
+export const getMessagesDisplayInfo = () => UI_LABELS.Messages;
+export const getJournalDisplayInfo = () => UI_LABELS.JOURNAL_SECTION;
+export const getDailyHabitsDisplayInfo = () => UI_LABELS.DAILY_HABITS_SECTION;

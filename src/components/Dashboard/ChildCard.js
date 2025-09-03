@@ -21,6 +21,7 @@ const ChildCard = ({
   onDeleteChild,
   onInviteTeamMember,
   onDailyReport,
+  onMessages,
 }) => {
   // Business logic hook
   const {
@@ -72,6 +73,7 @@ const ChildCard = ({
             completedToday={completedToday}
             onQuickEntry={onQuickEntry}
             onDailyReport={onDailyReport}
+            onMessages={onMessages}
             hoveredQuickAction={hoveredQuickAction}
             onHoverAction={handleQuickActionHover}
             onLeaveAction={handleQuickActionLeave}

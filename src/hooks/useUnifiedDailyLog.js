@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { getIncidentDisplayInfo } from '../constants/uiDisplayConstants';
 import { getIncidentTypeConfig, getSeverityScale } from '../services/incidentService';
 
 /**
@@ -143,10 +144,11 @@ export const useUnifiedDailyLog = (timelineEntries = [], incidents = [], selecte
    */
   const getEntryTypeInfo = (entry) => {
     if (entry.entryType === 'incident') {
+      const incidentDisplay = getIncidentDisplayInfo();
       return {
         icon: entry.icon,
         color: entry.color,
-        label: 'Incident'
+        label: incidentDisplay.label
       };
     }
     

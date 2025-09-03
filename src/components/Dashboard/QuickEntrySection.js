@@ -12,7 +12,7 @@ import {
 import { useTheme } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
 import { useChildContext } from '../../contexts/ChildContext';
-import { getIncidentDisplayInfo } from '../../constants/uiDisplayConstants';
+import { getIncidentDisplayInfo, getJournalDisplayInfo, getDailyHabitsDisplayInfo } from '../../constants/uiDisplayConstants';
 
 /**
  * QuickEntrySection - Integrated Quick Entry circles with Daily Report
@@ -36,14 +36,16 @@ const QuickEntrySection = ({
 
   // Get centralized display info
   const incidentDisplay = getIncidentDisplayInfo();
+  const journalDisplay = getJournalDisplayInfo();
+  const dailyHabitsDisplay = getDailyHabitsDisplayInfo();
 
   // Quick action items with theme-driven colors and distinct styling
   const quickActions = [
-    { 
-      key: 'journal', 
-      emoji: '📅', 
-      label: 'Daily Habits', 
-      description: 'Track mood, sleep, nutrition, progress & quick notes',
+    {
+      key: 'journal',
+      emoji: dailyHabitsDisplay.emoji,
+      label: dailyHabitsDisplay.label,
+      description: dailyHabitsDisplay.description,
       color: '#f9d030', // Yellow for daily habits
       bgColor: '#fef9e7',
       type: 'input', // Indicates this opens an input
@@ -59,11 +61,11 @@ const QuickEntrySection = ({
       type: 'input', // Indicates this opens an input form
       shape: 'circle' // Back to circle shape
     },
-    { 
-      key: 'journaling', 
-      emoji: '💬', 
-      label: 'Journaling', 
-      description: 'Rich daily journal with photos, videos & templates',
+    {
+      key: 'journaling',
+      emoji: journalDisplay.emoji,
+      label: journalDisplay.label,
+      description: journalDisplay.description,
       color: '#795548', // Brown for journaling
       bgColor: '#f3e5ab',
       type: 'navigation', // Indicates this navigates to a page
