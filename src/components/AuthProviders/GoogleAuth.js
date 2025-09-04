@@ -34,7 +34,7 @@ const GoogleAuth = ({ buttonText }) => {
         await setDoc(userRef, {
           displayName: user.displayName,
           email: user.email,
-          role: 'primary_parent', // Default role for new Google sign-ups
+          role: 'care_owner', // Default role for new Google sign-ups - CLEAN
           createdAt: new Date(),
         });
       } else {

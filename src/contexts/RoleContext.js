@@ -5,10 +5,9 @@ import {
   getCurrentUserRoleForChild, 
   hasCurrentUserPermission,
   getUserDisplayInfo,
-  getChildrenWithRoles,
-  USER_ROLES,
-  PERMISSIONS 
+  getChildrenWithRoles
 } from '../services/rolePermissionService';
+import { USER_ROLES, PERMISSIONS } from '../constants/roles';
 
 const RoleContext = createContext({});
 

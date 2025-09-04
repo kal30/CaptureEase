@@ -7,7 +7,7 @@ import { Box, Avatar } from '@mui/material';
  * 
  * @param {Object} props
  * @param {Object} props.child - Child object with name, profilePhoto
- * @param {string} props.userRole - User role for this child (primary_parent, co_parent, etc.)
+ * @param {string} props.userRole - User role for this child (care_owner, care_partner, caregiver, therapist)
  * @param {string} props.size - Avatar size: 'small', 'medium', 'large' 
  * @param {boolean} props.showRole - Whether to show role indicator (default: true)
  * @param {Object} props.sx - Additional styling

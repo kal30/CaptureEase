@@ -1,20 +1,12 @@
 import { alpha } from "@mui/material/styles";
 
-// Normalize role names
-const normalizeRole = (role) => {
-  if (!role) return null;
-  if (role.includes("parent")) return "primary_parent";
-  return role;
-};
-
-// Explicit hex mapping per role (brand-aligned blues)
+// CLEAN: Role hex mapping with new role names
 const roleHex = {
-  therapist: "#F7EA8C", // "#02457A",       // deep blue
-  caregiver: "#0097A7", // teal-blue
-  primary_parent: "#4F7ABB", // brand ink
-  co_parent: "#081f5c", // same as primary parent
-  family_member: "#97CADB", // light blue
-  default: "#c8d9e6", // brand tint (fallback)
+  care_owner: "#4F7ABB",      // brand ink - main responsible person
+  care_partner: "#97CADB",    // light blue - family/friends
+  caregiver: "#0097A7",       // teal-blue - professional helpers
+  therapist: "#F7EA8C",       // yellow - professional advisors
+  default: "#c8d9e6",         // brand tint (fallback)
 };
 
 // Build a soft gradient from a hex color
@@ -25,8 +17,7 @@ const makeSoftGradientFromHex = (theme, baseHex) => {
 };
 
 export const childCardHeaderStyles = (theme, userRole) => {
-  const key = normalizeRole(userRole || "");
-  const baseHex = roleHex[key] || roleHex.default;
+  const baseHex = roleHex[userRole] || roleHex.default;
   return {
     display: "flex",
     alignItems: "center",

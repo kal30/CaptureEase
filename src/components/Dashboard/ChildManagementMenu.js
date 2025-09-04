@@ -13,6 +13,7 @@ import {
   Delete as DeleteIcon,
 } from '@mui/icons-material';
 import { alpha, useTheme } from '@mui/material/styles';
+import { USER_ROLES } from '../../constants/roles';
 
 /**
  * ChildManagementMenu - Extracted settings menu component for child management
@@ -28,8 +29,9 @@ const ChildManagementMenu = ({
   const [menuAnchor, setMenuAnchor] = useState(null);
   const theme = useTheme();
 
-  // Only show for parents/co-parents
-  const canManage = userRole === "primary_parent" || userRole === "co_parent";
+  // IRON-CLAD: Only Care Owner can manage children
+  const canManage = userRole === USER_ROLES.CARE_OWNER;
+  const canInvite = userRole === USER_ROLES.CARE_OWNER; // Only Care Owner can invite
   
   if (!canManage) return null;
 
@@ -112,12 +114,14 @@ const ChildManagementMenu = ({
           <ListItemText>Edit Child Info</ListItemText>
         </MenuItem>
         
-        <MenuItem onClick={handleInviteTeamMember}>
-          <ListItemIcon>
-            <AddIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Add Care Team</ListItemText>
-        </MenuItem>
+        {canInvite && (
+          <MenuItem onClick={handleInviteTeamMember}>
+            <ListItemIcon>
+              <AddIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Add Care Team</ListItemText>
+          </MenuItem>
+        )}
         
         <MenuItem 
           onClick={handleDeleteChild}

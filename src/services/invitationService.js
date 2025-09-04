@@ -1,7 +1,9 @@
 import { db } from "./firebase";
 import { collection, doc, getDoc, updateDoc, arrayUnion, query, where, getDocs } from "firebase/firestore";
 import { getAuth, fetchSignInMethodsForEmail } from "firebase/auth";
-import { getFunctions, httpsCallable } from 'firebase/functions'; // Import functions SDK
+import { getFunctions, httpsCallable } from 'firebase/functions';
+import { USER_ROLES } from '../constants/roles';
+import { getUserRoleForChild } from './rolePermissionService';
 
 // Initialize Firebase Functions
 const functions = getFunctions(); // Use default region. If you set a specific region for your functions, pass it here: getFunctions(app, 'your-region')
@@ -11,12 +13,25 @@ const sendInvitationEmailCallable = httpsCallable(functions, 'sendInvitationEmai
 
 
 // Function to send an invitation to a team member
+// IRON-CLAD SECURITY: Only Care Owner can invite
 export const sendInvitation = async (childId, email, role, specialization = null, personalMessage = null) => {
     const auth = getAuth();
     const currentUser = auth.currentUser;
 
     if (!currentUser) {
         throw new Error("User not logged in.");
+    }
+
+    // CRITICAL: Server-side validation - ONLY Care Owner can invite
+    const requesterRole = await getUserRoleForChild(currentUser.uid, childId);
+    if (requesterRole !== USER_ROLES.CARE_OWNER) {
+        throw new Error("Access denied. Only the Care Owner can invite team members for this child.");
+    }
+
+    // Validate role is one of the allowed invitation types
+    const validRoles = [USER_ROLES.CARE_PARTNER, USER_ROLES.CAREGIVER, USER_ROLES.THERAPIST];
+    if (!validRoles.includes(role)) {
+        throw new Error(`Invalid role: ${role}. Can only invite Care Partners, Caregivers, or Therapists.`);
     }
 
     const senderName = currentUser.displayName || currentUser.email || 'A parent';
@@ -62,16 +77,26 @@ export const sendInvitation = async (childId, email, role, specialization = null
                 const userId = userDoc.id;
 
                 const childRef = doc(db, "children", childId);
-                if (role === "caregiver") {
-                    await updateDoc(childRef, {
-                        "users.caregivers": arrayUnion(userId),
-                    });
-                } else if (role === "therapist") {
-                    await updateDoc(childRef, {
-                        "users.therapists": arrayUnion(userId),
-                    });
-                    // Optionally update therapist's specialization if needed
-                    // await updateDoc(userDoc.ref, { specialization: specialization });
+                
+                // Clean role structure - NO LEGACY CODE
+                switch (role) {
+                    case USER_ROLES.CARE_PARTNER:
+                        await updateDoc(childRef, {
+                            "users.care_partners": arrayUnion(userId),
+                        });
+                        break;
+                    case USER_ROLES.CAREGIVER:
+                        await updateDoc(childRef, {
+                            "users.caregivers": arrayUnion(userId),
+                        });
+                        break;
+                    case USER_ROLES.THERAPIST:
+                        await updateDoc(childRef, {
+                            "users.therapists": arrayUnion(userId),
+                        });
+                        break;
+                    default:
+                        throw new Error(`Invalid role: ${role}`);
                 }
                 return { status: "assigned", message: `User ${email} assigned as ${role}.` };
             } else {
@@ -113,12 +138,27 @@ export const sendInvitation = async (childId, email, role, specialization = null
 };
 
 // Function to send a single invitation for multiple children
+// IRON-CLAD SECURITY: Only Care Owner can invite for ALL children
 export const sendMultiChildInvitation = async (childIds, email, role, specialization = null, personalMessage = null) => {
     const auth = getAuth();
     const currentUser = auth.currentUser;
 
     if (!currentUser) {
         throw new Error("User not logged in.");
+    }
+
+    // CRITICAL: Validate user is Care Owner for ALL children
+    for (const childId of childIds) {
+        const requesterRole = await getUserRoleForChild(currentUser.uid, childId);
+        if (requesterRole !== USER_ROLES.CARE_OWNER) {
+            throw new Error(`Access denied. You must be the Care Owner for all selected children to send invitations.`);
+        }
+    }
+
+    // Validate role is one of the allowed invitation types
+    const validRoles = [USER_ROLES.CARE_PARTNER, USER_ROLES.CAREGIVER, USER_ROLES.THERAPIST];
+    if (!validRoles.includes(role)) {
+        throw new Error(`Invalid role: ${role}. Can only invite Care Partners, Caregivers, or Therapists.`);
     }
 
     const senderName = currentUser.displayName || currentUser.email || 'A parent';

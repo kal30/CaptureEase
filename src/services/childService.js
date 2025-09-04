@@ -10,8 +10,9 @@ import {
   arrayRemove,
 } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
+import { USER_ROLES } from '../constants/roles';
 
-// Fetch all children for the current user
+// Fetch all children for the current user - CLEAN VERSION
 export const getChildren = async () => {
   const auth = getAuth();
   const user = auth.currentUser;
@@ -23,11 +24,14 @@ export const getChildren = async () => {
   const children = [];
   snapshot.forEach((doc) => {
     const data = doc.data();
-    // Check if the current user is the parent, a caregiver, or a therapist
+    const users = data.users || {};
+    
+    // CLEAN: Check new database structure only
     if (
-      data.users.parent === user.uid ||
-      data.users.caregivers?.includes(user.uid) ||
-      data.users.therapists?.includes(user.uid)
+      users.care_owner === user.uid ||
+      users.care_partners?.includes(user.uid) ||
+      users.caregivers?.includes(user.uid) ||
+      users.therapists?.includes(user.uid)
     ) {
       children.push({
         id: doc.id,
@@ -49,7 +53,7 @@ export const fetchChildName = async (childId) => {
   }
 };
 
-// Add a new child
+// Add a new child - CLEAN VERSION
 export const addChild = async (childData) => {
   const auth = getAuth();
   const user = auth.currentUser;
@@ -60,10 +64,14 @@ export const addChild = async (childData) => {
   const docRef = await addDoc(collection(db, "children"), {
     ...childData,
     users: {
-      parent: user.uid,
-      caregivers: [],
-      therapists: [],
+      care_owner: user.uid,        // User becomes Care Owner
+      care_partners: [],           // Empty array for Care Partners
+      caregivers: [],              // Empty array for Caregivers
+      therapists: [],              // Empty array for Therapists
     },
+    settings: {
+      allow_therapist_family_logs: false  // Default privacy setting
+    }
   });
   return docRef.id;
 };
@@ -113,21 +121,30 @@ export const assignTherapist = async (childId, therapistId) => {
   }
 };
 
-// Assign a co-parent to a child
-export const assignCoParent = async (childId, coParentId) => {
-  const childRef = doc(db, "children", childId);
-  await updateDoc(childRef, {
-    "users.co_parents": arrayUnion(coParentId),
-  });
+// Assign a Care Partner to a child - CLEAN VERSION
+export const assignCarePartner = async (childId, carePartnerId) => {
+  console.log('assignCarePartner called:', { childId, carePartnerId });
+  try {
+    const childRef = doc(db, "children", childId);
+    
+    // Check document exists
+    const childDoc = await getDoc(childRef);
+    if (!childDoc.exists()) {
+      throw new Error(`Child document ${childId} not found`);
+    }
+    
+    await updateDoc(childRef, {
+      "users.care_partners": arrayUnion(carePartnerId),
+    });
+    
+    console.log('assignCarePartner success: care partner added to child');
+  } catch (error) {
+    console.error('assignCarePartner error:', error);
+    throw error;
+  }
 };
 
-// Assign a family member to a child
-export const assignFamilyMember = async (childId, familyMemberId) => {
-  const childRef = doc(db, "children", childId);
-  await updateDoc(childRef, {
-    "users.family_members": arrayUnion(familyMemberId),
-  });
-};
+// No legacy functions - clean system only
 
 // Unassign a caregiver from a child
 export const unassignCaregiver = async (childId, caregiverId) => {

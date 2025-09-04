@@ -123,7 +123,7 @@ const theme = createTheme({
         border: "#FDEDEC",
         icon: "🤗",
       },
-      primary_parent: {
+      care_owner: {
         primary: "#388E3C",
         dark: "#1B5E20",
         light: "#E8F5E8",
@@ -132,17 +132,7 @@ const theme = createTheme({
         border: "#E8F5E8",
         icon: "👑",
       },
-      co_parent: {
-        primary: brand.palette.primary.main,
-        dark: brand.palette.primary.dark,
-        light: "rgba(91, 140, 81, 0.15)",
-        background: "rgba(91, 140, 81, 0.03)",
-        gradient:
-          "linear-gradient(90deg, rgba(91, 140, 81, 0.15) 0%, rgba(91, 140, 81, 0.08) 100%)",
-        border: "rgba(91, 140, 81, 0.3)",
-        icon: "👨‍👩‍👧‍👦",
-      },
-      family_member: {
+      care_partner: {
         primary: "#E99787",
         dark: "#d48a7a",
         light: "rgba(233, 151, 135, 0.15)",
@@ -150,7 +140,7 @@ const theme = createTheme({
         gradient:
           "linear-gradient(90deg, rgba(233, 151, 135, 0.12) 0%, rgba(233, 151, 135, 0.06) 100%)",
         border: "rgba(233, 151, 135, 0.4)",
-        icon: "👵",
+        icon: "👨‍👩‍👧‍👦",
       },
       unknown: {
         primary: "#666",

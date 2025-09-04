@@ -1,4 +1,5 @@
 import { getIncidentDisplayInfo, getMessagesDisplayInfo } from './uiDisplayConstants';
+import { USER_ROLES } from './roles';
 
 /**
  * Configuration for dashboard action groups.
@@ -10,13 +11,7 @@ export const getActionGroups = (theme) => (userRole) => {
   const incidentDisplay = getIncidentDisplayInfo();
   const messagesDisplay = getMessagesDisplayInfo();
   
-  const USER_ROLES = {
-    PRIMARY_PARENT: 'primary_parent',
-    CO_PARENT: 'co_parent',
-    FAMILY_MEMBER: 'family_member',
-    CAREGIVER: 'caregiver',
-    THERAPIST: 'therapist',
-  };
+  // USER_ROLES imported from constants/roles.js
 
   const parentGroups = [
     {

@@ -20,7 +20,7 @@ import {
 } from "firebase/storage";
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "../../services/firebase";
-import { USER_ROLES } from "../../services/rolePermissionService";
+import { USER_ROLES } from "../../constants/roles";
 import ChildPhotoUploader from "./ChildPhotoUploader";
 import { ThemeCard, GradientButton, CustomizableAutocomplete } from "../UI";
 import { useAsyncForm } from "../../hooks/useAsyncForm";
@@ -41,9 +41,9 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
   const [communicationNeeds, setCommunicationNeeds] = useState([]);
   const storage = getStorage();
 
-  // Permission checks
-  const canEdit = userRole === USER_ROLES.PRIMARY_PARENT || userRole === USER_ROLES.CO_PARENT || userRole === 'parent';
-  const canEditMedicalInfo = userRole === USER_ROLES.PRIMARY_PARENT || userRole === USER_ROLES.CO_PARENT; // More restrictive for medical data
+  // Permission checks - updated for new role system
+  const canEdit = userRole === USER_ROLES.CARE_OWNER || userRole === USER_ROLES.CARE_PARTNER || userRole === 'parent'; // Legacy support
+  const canEditMedicalInfo = userRole === USER_ROLES.CARE_OWNER || userRole === USER_ROLES.CARE_PARTNER; // Family can edit medical info
 
   // Use async form hook for child editing
   const childForm = useAsyncForm({

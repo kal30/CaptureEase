@@ -1,0 +1,43 @@
+{
+  "headerTitle": "Invite Team Member",
+  "headerSubtitle": "Add someone to a care team.",
+  "warningOwnedProfilesTitle": "You can only invite team members for profiles you own.",
+  "warningOwnedProfilesBody": "You must be the Care Owner of at least one profile to send invitations.",
+
+  "emailLabel": "Email Address",
+  "emailPlaceholder": "teammate@email.com",
+
+  "teamRoleLabel": "Team Role",
+  "addToCareTeamFor": "Add to Care Team For",
+
+  "allProfilesTitle": "All Profiles (Recommended)",
+  "giveAccessAll": "Grant access to all {{count}} {{profiles}} you care for",
+  "selectSpecificProfiles": "Or select specific profiles:",
+  "age": "Age {{age}}",
+
+  "specializationLabel": "Specialization (Optional)",
+  "specializationPlaceholder": "e.g., Speech Therapy, Occupational Therapy, ABA",
+
+  "personalMessageLabel": "Personal Message",
+  "personalMessageHelper": "This message will be included in the invitation email",
+
+  "cancel": "Cancel",
+  "sending": "Sending...",
+  "sendInvitation": "Send Invitation",
+
+  "errorNoProfileSelected": "Please select at least one profile to invite for.",
+  "sendFailed": "Failed to send invitation. Please try again.",
+  "successInvitationSentFor": "Invitation sent successfully for {{names}}",
+  "selectedCount": "\u2713 {{count}} {{profiles}} selected",
+
+  "defaultMessage": {
+    "caregiver": {
+      "single": "Hi! I'd love for you to help track {{name}}'s daily progress in our CaptureEase app. You'll be able to log daily activities, behaviors, and milestones that help us understand {{name}} better. Looking forward to working together!",
+      "multi": "Hi! I'd love for you to help track daily progress for {{names}} in our CaptureEase app. You'll be able to log daily activities, behaviors, and milestones that help us understand progress better. Looking forward to working together!"
+    },
+    "therapist": {
+      "single": "Hi! I'd like to invite you to view {{name}}'s progress in our CaptureEase app. You'll have access to timeline data, analytics, and progress tracking that might be helpful for our sessions. Thanks for being part of the care team!",
+      "multi": "Hi! I'd like to invite you to view progress for {{names}} in our CaptureEase app. You'll have access to timeline data, analytics, and progress tracking that might be helpful for your sessions. Thanks for being part of the care team!"
+    }
+  }
+}

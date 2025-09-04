@@ -23,16 +23,12 @@ const CareTeamDisplay = ({
 }) => {
   const theme = useTheme();
 
-  // Collect and sort all team members
+  // Collect and sort all team members - CLEAN VERSION
   const getAllMembers = () => {
     const members = [
-      ...(child.users?.co_parents?.map((parent) => ({
-        ...parent,
-        role: "Co-Parent",
-      })) || []),
-      ...(child.users?.family_members?.map((member) => ({
-        ...member,
-        role: "Family Member",
+      ...(child.users?.care_partners?.map((partner) => ({
+        ...partner,
+        role: "Care Partner",
       })) || []),
       ...(child.users?.caregivers?.map((caregiver) => ({
         ...caregiver,
@@ -50,7 +46,7 @@ const CareTeamDisplay = ({
   const members = getAllMembers();
   
   // Check if user can invite team members
-  const canInvite = userRole === "primary_parent" || userRole === "co_parent";
+  const canInvite = userRole === "care_owner"; // CLEAN: Only Care Owner can invite
 
   // Render member in header (compact)
   const renderMember = (member, index) => (

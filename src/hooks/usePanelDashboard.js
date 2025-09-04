@@ -394,8 +394,8 @@ export const usePanelDashboard = () => {
   };
 
 
-  const ownChildren = children.filter(child => getUserRoleForChild?.(child.id) === USER_ROLES.PRIMARY_PARENT);
-  const familyChildren = children.filter(child => [USER_ROLES.CO_PARENT, USER_ROLES.FAMILY_MEMBER].includes(getUserRoleForChild?.(child.id)));
+  const ownChildren = children.filter(child => getUserRoleForChild?.(child.id) === USER_ROLES.CARE_OWNER);
+  const familyChildren = children.filter(child => getUserRoleForChild?.(child.id) === USER_ROLES.CARE_PARTNER);
   const professionalChildren = children.filter(child => [USER_ROLES.CAREGIVER, USER_ROLES.THERAPIST].includes(getUserRoleForChild?.(child.id)));
 
   return {

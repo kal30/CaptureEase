@@ -128,12 +128,11 @@ const TimelineFilters = ({
     }
   ];
 
-  // User role options
+  // User role options - CLEAN VERSION
   const userRoleOptions = [
-    { value: 'primary_parent', label: '👑 Primary Parent' },
-    { value: 'co_parent', label: '👨‍👩‍👧‍👦 Co-Parent' },
-    { value: 'family_member', label: '👵 Family' },
-    { value: 'caregiver', label: '🤱 Caregiver' },
+    { value: 'care_owner', label: '👑 Care Owner' },
+    { value: 'care_partner', label: '👨‍👩‍👧‍👦 Care Partner' },
+    { value: 'caregiver', label: '👤 Caregiver' },
     { value: 'therapist', label: '🩺 Therapist' }
   ];
 

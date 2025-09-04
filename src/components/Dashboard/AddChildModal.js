@@ -119,13 +119,15 @@ const AddChildModal = ({ open, onClose, onSuccess }) => {
           name,
           age,
           photoURL: photoDownloadURL,
-          // Role-based user structure
+          // CLEAN: New role-based user structure
           users: {
-            parent: currentUserId,
-            co_parents: [],
-            family_members: [],
-            caregivers: [],
-            therapists: []
+            care_owner: currentUserId,        // User becomes Care Owner
+            care_partners: [],                // Empty array for Care Partners
+            caregivers: [],                   // Empty array for Caregivers
+            therapists: []                    // Empty array for Therapists
+          },
+          settings: {
+            allow_therapist_family_logs: false  // Default privacy setting
           },
           // Structured condition fields
           conditions: selectedConditions,

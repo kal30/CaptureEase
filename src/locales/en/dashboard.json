@@ -1,0 +1,13 @@
+{
+  "smartDataTitle": "Smart Data Collection",
+  "smartDataSubtitle": "Quick daily insights • 30 seconds per {{unit}} • Discover patterns",
+  "loggedDataToday": "logged data today",
+  "quickDataFor": "Quick data view for {{name}}",
+  "insightsUnavailable": "Data-driven insights not available",
+  "thisWeekProgress": "This Week's Progress",
+  "weeklyDays": "{{count}}/7 days",
+  "progressExcellent": "Excellent!",
+  "progressGood": "Good progress",
+  "progressNeedsMore": "Need more data"
+}
+

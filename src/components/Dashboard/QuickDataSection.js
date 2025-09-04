@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Typography,
@@ -25,6 +26,7 @@ import CorrelationDashboard from '../Analytics/CorrelationDashboard';
 
 const QuickDataSection = ({ children, userRole, onEditChild, onDeleteChild }) => {
   const theme = useTheme();
+  const { t } = useTranslation(['dashboard', 'terms']);
   const [showDataCollector, setShowDataCollector] = useState(false);
   const [selectedChild, setSelectedChild] = useState(null);
   const [expanded, setExpanded] = useState(true);
@@ -102,10 +104,10 @@ const QuickDataSection = ({ children, userRole, onEditChild, onDeleteChild }) =>
           <FlashOnIcon sx={{ color: 'info.main', fontSize: 28 }} />
           <Box>
             <Typography variant="h5" sx={{ fontWeight: 700, color: 'info.main' }}>
-              Smart Data Collection
+              {t('dashboard:smartDataTitle')}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Quick daily insights • 30 seconds per child • Discover patterns
+              {t('dashboard:smartDataSubtitle', { unit: t('terms:profile', { count: 1 }) })}
             </Typography>
           </Box>
         </Box>
@@ -124,7 +126,10 @@ const QuickDataSection = ({ children, userRole, onEditChild, onDeleteChild }) =>
         icon={<InsightsIcon />}
       >
         <Typography variant="body2">
-          <strong>{getChildrenWithDataToday()}/{children.length} children</strong> logged data today • 
+          <strong>
+            {getChildrenWithDataToday()}/{children.length} {t('terms:profile', { count: children.length })}
+          </strong>
+          {' '}{t('dashboard:loggedDataToday')} • 
           <strong> {Math.round(getTotalDataCompleteness())}%</strong> weekly completion rate • 
           Keep it up for better insights!
         </Typography>
@@ -139,9 +144,9 @@ const QuickDataSection = ({ children, userRole, onEditChild, onDeleteChild }) =>
               <Grid item xs={12} md={6} lg={4} key={child.id}>
                 <Card>
                   <CardContent>
-                    <Typography>Quick data view for {child.name}</Typography>
+                    <Typography>{t('dashboard:quickDataFor', { name: child.name })}</Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Data-driven insights not available
+                      {t('dashboard:insightsUnavailable')}
                     </Typography>
                   </CardContent>
                 </Card>
@@ -154,7 +159,7 @@ const QuickDataSection = ({ children, userRole, onEditChild, onDeleteChild }) =>
         <Card elevation={0} sx={{ border: `1px solid ${theme.palette.divider}` }}>
           <CardContent>
             <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-              📈 This Week's Progress
+              📈 {t("dashboard:thisWeekProgress")}
             </Typography>
             
             <Grid container spacing={3}>
@@ -170,7 +175,7 @@ const QuickDataSection = ({ children, userRole, onEditChild, onDeleteChild }) =>
                           {child.name}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          {childData.weeklyEntries || 0}/7 days
+                          {t('dashboard:weeklyDays', { count: childData.weeklyEntries || 0 })}
                         </Typography>
                       </Box>
                       <LinearProgress
@@ -180,7 +185,11 @@ const QuickDataSection = ({ children, userRole, onEditChild, onDeleteChild }) =>
                         color={weeklyProgress >= 70 ? 'success' : weeklyProgress >= 40 ? 'warning' : 'error'}
                       />
                       <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-                        {weeklyProgress >= 70 ? 'Excellent!' : weeklyProgress >= 40 ? 'Good progress' : 'Need more data'}
+                        {weeklyProgress >= 70
+                          ? t('dashboard:progressExcellent')
+                          : weeklyProgress >= 40
+                            ? t('dashboard:progressGood')
+                            : t('dashboard:progressNeedsMore')}
                       </Typography>
                     </Box>
                   </Grid>

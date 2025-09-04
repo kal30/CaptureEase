@@ -25,11 +25,10 @@ const DashboardHeader = ({
     ? "Support and track progress for the individuals you care for — personally or professionally."
     : "Monitor updates and stay connected to the people you support.";
 
+  // IRON-CLAD: Only Care Owners can invite
   const canInvite = children?.some((child) => {
     const userRole = getUserRoleForChild?.(child.id);
-    return (
-      userRole === USER_ROLES.PRIMARY_PARENT || userRole === USER_ROLES.CO_PARENT
-    );
+    return userRole === USER_ROLES.CARE_OWNER;
   });
 
   const actions = (

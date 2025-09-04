@@ -21,7 +21,8 @@ import {
 import { alpha, useTheme } from '@mui/material/styles';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '../services/firebase';
-import { assignCaregiver, assignTherapist, assignCoParent, assignFamilyMember } from '../services/childService';
+import { assignCaregiver, assignTherapist, assignCarePartner } from '../services/childService';
+import { USER_ROLES } from '../constants/roles';
 import { createUserProfile } from '../services/userService';
 import StyledButton from '../components/UI/StyledButton';
 
@@ -114,18 +115,22 @@ const AcceptInvite = () => {
       console.log('Assigning user to children with role:', inviteData.role, 'Children:', childIds);
       
       for (const childId of childIds) {
-        if (inviteData.role === 'co_parent') {
-          console.log('Assigning as co-parent to child:', childId);
-          await assignCoParent(childId, user.uid);
-        } else if (inviteData.role === 'family_member') {
-          console.log('Assigning as family member to child:', childId);
-          await assignFamilyMember(childId, user.uid);
-        } else if (inviteData.role === 'caregiver') {
-          console.log('Assigning as caregiver to child:', childId);
-          await assignCaregiver(childId, user.uid);
-        } else if (inviteData.role === 'therapist') {
-          console.log('Assigning as therapist to child:', childId);
-          await assignTherapist(childId, user.uid);
+        // CLEAN: Only handle new role types - NO LEGACY
+        switch (inviteData.role) {
+          case USER_ROLES.CARE_PARTNER:
+            console.log('Assigning as care partner to child:', childId);
+            await assignCarePartner(childId, user.uid);
+            break;
+          case USER_ROLES.CAREGIVER:
+            console.log('Assigning as caregiver to child:', childId);
+            await assignCaregiver(childId, user.uid);
+            break;
+          case USER_ROLES.THERAPIST:
+            console.log('Assigning as therapist to child:', childId);
+            await assignTherapist(childId, user.uid);
+            break;
+          default:
+            throw new Error(`Invalid role: ${inviteData.role}`);
         }
       }
       console.log('Assignment completed successfully for all children');

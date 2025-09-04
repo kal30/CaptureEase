@@ -1,12 +1,12 @@
 import { useMemo } from 'react';
+import { USER_ROLES, ROLE_DISPLAY } from '../constants/roles';
 
 const useChildCardChips = (userRole, completedToday) => {
   const roleConfig = useMemo(() => ({
-    'primary_parent': { label: '👑 Primary Parent', color: 'primary' },
-    'co_parent': { label: '👨‍👩‍👧‍👦 Co-Parent', color: 'secondary' },
-    'family_member': { label: '👵 Family', color: 'info' },
-    'caregiver': { label: '🤱 Caregiver', color: 'warning' },
-    'therapist': { label: '🩺 Therapist', color: 'success' }
+    [USER_ROLES.CARE_OWNER]: { label: ROLE_DISPLAY[USER_ROLES.CARE_OWNER].label, color: 'primary' },
+    [USER_ROLES.CARE_PARTNER]: { label: ROLE_DISPLAY[USER_ROLES.CARE_PARTNER].label, color: 'secondary' },
+    [USER_ROLES.CAREGIVER]: { label: ROLE_DISPLAY[USER_ROLES.CAREGIVER].label, color: 'warning' },
+    [USER_ROLES.THERAPIST]: { label: ROLE_DISPLAY[USER_ROLES.THERAPIST].label, color: 'success' }
   }), []);
 
   const allChips = useMemo(() => {

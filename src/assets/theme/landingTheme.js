@@ -42,7 +42,7 @@ export const landingTypography = {
   },
   heroBody: {
     marginTop: { xs: 3, md: 4, lg: 5 }, // Increased spacing
-    fontSize: { xs: "1.1rem", md: "1.3rem", lg: "1.4rem" },
+    fontSize: { xs: "1.0rem", md: "1.0rem", lg: "1.2rem" },
     lineHeight: { xs: 1.6, md: 1.7, lg: 1.8 },
     color: landingColors.bodyText,
     textAlign: { xs: "center", md: "left" },
@@ -106,5 +106,5 @@ export const landingLayout = {
 // Landing page component styles
 export const landingPageStyles = {
   backgroundColor: landingColors.pageBackground,
-  minHeight: "100vh"
+  minHeight: "100vh",
 };

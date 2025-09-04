@@ -23,6 +23,7 @@ import {
   ChildCare as ChildIcon
 } from '@mui/icons-material';
 import { useTheme, alpha } from '@mui/material/styles'; // Import alpha
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '../../services/firebase';
@@ -31,15 +32,16 @@ const DRAWER_WIDTH = 240;
 
 const TabletLayout = ({ children, pageTitle, showSidebar = true }) => {
   const theme = useTheme();
+  const { t } = useTranslation(['nav', 'terms']);
   const navigate = useNavigate();
   const location = useLocation();
   const [user] = useAuthState(auth);
 
   const navigationItems = [
-    { label: 'Dashboard', icon: <HomeIcon />, path: '/dashboard' },
-    { label: 'Timeline', icon: <TimelineIcon />, path: '/timeline' },
-    { label: 'Children', icon: <ChildIcon />, path: '/children' },
-    { label: 'Profile', icon: <PersonIcon />, path: '/profile' },
+    { label: t('nav:dashboard'), icon: <HomeIcon />, path: '/dashboard' },
+    { label: t('nav:timeline'), icon: <TimelineIcon />, path: '/timeline' },
+    { label: t('nav:profiles'), icon: <ChildIcon />, path: '/children' },
+    { label: t('nav:profile'), icon: <PersonIcon />, path: '/profile' },
   ];
 
   return (
@@ -137,7 +139,7 @@ const TabletLayout = ({ children, pageTitle, showSidebar = true }) => {
         >
           <Toolbar>
             <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 600 }}>
-              {pageTitle || 'Dashboard'}
+              {pageTitle || t('nav:dashboard')}
             </Typography>
             
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>

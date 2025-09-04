@@ -52,12 +52,10 @@ const UnifiedTimelineEntry = ({
   // Get user role color using centralized theme.palette.roles
   const getUserRoleColor = (userRole) => {
     const mapRoleKey = (r) => {
+      // CLEAN: Only new role types
       switch (r) {
-        case 'parent':
-        case 'primary_parent': return 'primary_parent';
-        case 'family':
-        case 'family_member': return 'family_member';
-        case 'co_parent': return 'co_parent';
+        case 'care_owner': return 'care_owner';
+        case 'care_partner': return 'care_partner';
         case 'caregiver': return 'caregiver';
         case 'therapist': return 'therapist';
         default: return null;
