@@ -1,7 +1,7 @@
 // New Conversation Modal Component
 // Modal for creating new conversations with team members
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -39,6 +39,10 @@ import {
 // Services and hooks
 import { createConversation } from '../../services/messaging';
 import { useChildContext } from '../../contexts/ChildContext';
+import { getChildren } from '../../services/childService';
+import { getAuth } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../../services/firebase';
 
 /**
  * User selection item component
@@ -140,44 +144,192 @@ const NewConversationModal = ({
   currentUserId,
   selectedChildId = null
 }) => {
-  const { children } = useChildContext();
+  const { currentChildId } = useChildContext();
   
   // State management
   const [conversationType, setConversationType] = useState('group');
   const [conversationTitle, setConversationTitle] = useState('');
-  const [selectedChild, setSelectedChild] = useState(selectedChildId || '');
+  const [selectedChild, setSelectedChild] = useState(selectedChildId || currentChildId || '');
   const [selectedParticipants, setSelectedParticipants] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [availableUsers, setAvailableUsers] = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [children, setChildren] = useState([]);
+  const [loadingChildren, setLoadingChildren] = useState(false);
 
-  // Mock team members - TODO: Replace with real data from child access/team members
-  const [availableUsers] = useState([
-    {
-      id: 'user_parent_1',
-      name: 'Sarah Parent',
-      email: 'sarah@example.com',
-      role: 'Parent'
-    },
-    {
-      id: 'user_caregiver_1',
-      name: 'Maria Caregiver',
-      email: 'maria@example.com',
-      role: 'Caregiver'
-    },
-    {
-      id: 'user_therapist_1',
-      name: 'Dr. Johnson',
-      email: 'johnson@therapy.com',
-      role: 'Therapist'
-    },
-    {
-      id: 'user_teacher_1',
-      name: 'Ms. Anderson',
-      email: 'anderson@school.edu',
-      role: 'Teacher'
+  /**
+   * Fetch children for current user
+   */
+  const fetchChildren = async () => {
+    setLoadingChildren(true);
+    try {
+      const childrenData = await getChildren();
+      setChildren(childrenData);
+      
+      // If no child is selected but we have children, select the first one or current one
+      if (!selectedChild && childrenData.length > 0) {
+        const childToSelect = currentChildId || childrenData[0].id;
+        setSelectedChild(childToSelect);
+      }
+    } catch (error) {
+      console.error('Error fetching children:', error);
+      setError('Failed to load children');
+    } finally {
+      setLoadingChildren(false);
     }
-  ]);
+  };
+
+  /**
+   * Fetch user details from users collection
+   */
+  const fetchUserDetails = async (userId) => {
+    try {
+      const userRef = doc(db, 'users', userId);
+      const userDoc = await getDoc(userRef);
+      
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        return {
+          id: userId,
+          name: userData.displayName || userData.name || userData.email,
+          email: userData.email,
+        };
+      }
+      
+      // Fallback if user document doesn't exist
+      return {
+        id: userId,
+        name: `User (${userId.substring(0, 8)}...)`,
+        email: null,
+      };
+    } catch (error) {
+      console.error('Error fetching user details:', userId, error);
+      return {
+        id: userId,
+        name: `User (${userId.substring(0, 8)}...)`,
+        email: null,
+      };
+    }
+  };
+
+  /**
+   * Fetch real care team members from Firestore
+   * RESTRICTION: Only care team members (care partners, caregivers, therapists) 
+   * can participate in conversations. This enforces child privacy and security.
+   */
+  const fetchCareTeamMembers = async (childId) => {
+    if (!childId) {
+      setAvailableUsers([]);
+      return;
+    }
+
+    setLoadingUsers(true);
+    try {
+      // Get child document from Firestore
+      const childRef = doc(db, 'children', childId);
+      const childDoc = await getDoc(childRef);
+      
+      if (!childDoc.exists()) {
+        console.error('Child document not found:', childId);
+        setAvailableUsers([]);
+        return;
+      }
+
+      const childData = childDoc.data();
+      const currentUser = getAuth().currentUser;
+      const userIds = new Set(); // Collect all unique user IDs
+
+      // Note: Current user will be automatically added as a participant
+      // when creating the conversation, so we don't add them to the selectable list
+
+      // Collect all team member IDs (excluding current user)
+      const collectUserIds = (userList, roleName) => {
+        if (!userList) return;
+        
+        userList.forEach(user => {
+          let userId;
+          if (typeof user === 'string') {
+            userId = user;
+          } else {
+            userId = user.uid || user.userId || user.email;
+          }
+          
+          if (userId && userId !== currentUser?.uid && userId !== currentUser?.email) {
+            userIds.add(userId);
+            console.log(`Added ${roleName}: ${userId}`);
+          } else {
+            console.log(`Skipped ${roleName}: ${userId} (current user or invalid)`);
+          }
+        });
+      };
+
+      // Collect IDs from all roles
+      collectUserIds(childData.users?.care_partners, 'Care Partner');
+      collectUserIds(childData.users?.caregivers, 'Caregiver'); 
+      collectUserIds(childData.users?.therapists, 'Therapist');
+
+      // Fetch user details for all collected IDs
+      const teamMembers = [];
+      const userDetailsPromises = Array.from(userIds).map(async (userId) => {
+        const userDetails = await fetchUserDetails(userId);
+        
+        // Determine role based on which array the user is in
+        let role = 'Team Member';
+        if (childData.users?.care_partners?.includes(userId)) {
+          role = 'Care Partner';
+        } else if (childData.users?.caregivers?.includes(userId)) {
+          role = 'Caregiver';
+        } else if (childData.users?.therapists?.includes(userId)) {
+          role = 'Therapist';
+        }
+        
+        return {
+          ...userDetails,
+          role,
+          isCurrentUser: false
+        };
+      });
+
+      // Wait for all user details to be fetched
+      const resolvedTeamMembers = await Promise.all(userDetailsPromises);
+      teamMembers.push(...resolvedTeamMembers);
+
+      console.log(`🏥 Found ${teamMembers.length} care team members for ${childData.name}`);
+      console.log('🔒 RESTRICTED: Only care team members can participate in conversations');
+      console.log('Care team members:', teamMembers);
+      
+      // Debug: Log raw data to see what's in the child document
+      console.log('Raw child data users:', childData.users);
+      console.log('Current user UID:', currentUser?.uid);
+      
+      setAvailableUsers(teamMembers);
+      
+    } catch (error) {
+      console.error('Error fetching care team members:', error);
+      setError(`Failed to load team members: ${error.message}`);
+      setAvailableUsers([]);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  // Fetch children when modal opens
+  useEffect(() => {
+    if (open) {
+      fetchChildren();
+    }
+  }, [open]);
+
+  // Fetch team members when selected child changes
+  useEffect(() => {
+    if (selectedChild) {
+      fetchCareTeamMembers(selectedChild);
+    } else {
+      setAvailableUsers([]);
+    }
+  }, [selectedChild]);
 
   /**
    * Filter available users based on search
@@ -237,7 +389,6 @@ const NewConversationModal = ({
     }
     
     if (selectedParticipants.length > 0) {
-      const participantNames = selectedParticipants.map(p => p.name || p.email).join(', ');
       return `${childName} Care Team`;
     }
     
@@ -269,7 +420,15 @@ const NewConversationModal = ({
       }
 
       const title = conversationTitle.trim() || generateTitle();
-      const participantIds = [currentUserId, ...selectedParticipants.map(p => p.id)];
+      // Ensure current user is included and remove duplicates
+      const participantIds = Array.from(new Set([currentUserId, ...selectedParticipants.map(p => p.id)]))
+        .filter(id => id && typeof id === 'string'); // Ensure all IDs are valid strings
+
+      // Additional validation after filtering
+      if (participantIds.length < 2) {
+        setError('Unable to create conversation - invalid participant data. Please try selecting participants again.');
+        return;
+      }
 
       console.log('🆕 Creating conversation:', {
         participants: participantIds,
@@ -360,10 +519,12 @@ const NewConversationModal = ({
       onClose={handleClose}
       maxWidth="sm"
       fullWidth
-      PaperProps={{
-        sx: {
-          borderRadius: 2,
-          maxHeight: '80vh'
+      slotProps={{
+        paper: {
+          sx: {
+            borderRadius: 2,
+            maxHeight: '80vh'
+          }
         }
       }}
     >
@@ -449,6 +610,24 @@ const NewConversationModal = ({
           </Select>
         </FormControl>
 
+        {/* Selected Child Context Display */}
+        {selectedChild && children && (
+          <Alert 
+            severity="info" 
+            sx={{ mb: 2, bgcolor: 'primary.50', border: '1px solid', borderColor: 'primary.200' }}
+            icon={false}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Avatar sx={{ width: 24, height: 24, fontSize: '0.875rem', bgcolor: 'primary.main' }}>
+                {children.find(c => c.id === selectedChild)?.name?.charAt(0)?.toUpperCase()}
+              </Avatar>
+              <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                Creating conversation for: {children.find(c => c.id === selectedChild)?.name}
+              </Typography>
+            </Box>
+          </Alert>
+        )}
+
         {/* Conversation Title */}
         <TextField
           fullWidth
@@ -480,16 +659,29 @@ const NewConversationModal = ({
 
         <Divider sx={{ my: 2 }} />
 
+        {/* Care Team Notice */}
+        <Alert 
+          severity="info" 
+          sx={{ mb: 2 }}
+          icon={<Group />}
+        >
+          <Typography variant="body2">
+            Only care team members (care partners, caregivers, therapists) can participate in conversations about this child.
+          </Typography>
+        </Alert>
+
         {/* User Search */}
         <TextField
           fullWidth
           size="small"
-          placeholder="Search team members..."
+          placeholder="Search care team members..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           disabled={loading}
-          InputProps={{
-            startAdornment: <Search sx={{ color: 'text.secondary', mr: 1 }} />
+          slotProps={{
+            input: {
+              startAdornment: <Search sx={{ color: 'text.secondary', mr: 1 }} />
+            }
           }}
           sx={{ mb: 2 }}
         />
@@ -497,13 +689,38 @@ const NewConversationModal = ({
         {/* Available Users */}
         <Box sx={{ mb: 2 }}>
           <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
-            Available Team Members
+            Care Team Members
           </Typography>
           <List sx={{ maxHeight: 200, overflow: 'auto', border: 1, borderColor: 'divider', borderRadius: 1 }}>
-            {filteredUsers.length === 0 ? (
+            {loadingUsers ? (
+              <ListItem>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', py: 2 }}>
+                  <CircularProgress size={24} sx={{ mr: 2 }} />
+                  <Typography variant="body2" color="text.secondary">
+                    Loading care team members...
+                  </Typography>
+                </Box>
+              </ListItem>
+            ) : !selectedChild ? (
               <ListItem>
                 <ListItemText
-                  primary="No team members found"
+                  primary="Select a profile first"
+                  secondary="Choose a profile to see available team members"
+                  sx={{ textAlign: 'center' }}
+                />
+              </ListItem>
+            ) : availableUsers.length === 0 ? (
+              <ListItem>
+                <ListItemText
+                  primary="No care team members found"
+                  secondary="Only care team members (care partners, caregivers, therapists) can participate in conversations"
+                  sx={{ textAlign: 'center' }}
+                />
+              </ListItem>
+            ) : filteredUsers.length === 0 ? (
+              <ListItem>
+                <ListItemText
+                  primary="No members match your search"
                   secondary="Try a different search term"
                   sx={{ textAlign: 'center' }}
                 />

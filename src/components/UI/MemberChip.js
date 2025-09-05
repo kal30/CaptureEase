@@ -1,67 +1,69 @@
 import React from 'react';
 import { Chip, Box, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
+import { useTranslation } from 'react-i18next';
+
+// Role configuration with styling and emojis
+const getRoleConfig = (role, t) => {
+  const configs = {
+    [t('owner_one')]: { color: "#8B5CF6", emoji: "👑", priority: 0 },
+    [t('partner_one')]: { color: "#45B7D1", emoji: "👨‍👩‍👧‍👦", priority: 1 },
+    [t('caregiver_one')]: { color: "#4ECDC4", emoji: "🤱", priority: 2 },
+    [t('therapist_one')]: { color: "#FF6B6B", emoji: "🩺", priority: 3 },
+  };
+  return configs[role] || { color: "#94A3B8", emoji: "👤", priority: 5 };
+};
 
 /**
- * MemberChip - Reusable component for displaying care team members
- * 
- * @param {Object} member - Member object with name, role, etc.
- * @param {string} variant - Display variant: 'compact' | 'detailed'
- * @param {boolean} showRole - Whether to show role in detailed view
+ * MemberChip - Displays care team members with role styling
  */
 const MemberChip = ({ 
   member, 
   variant = 'compact',
   showRole = true,
-  onClick
+  onClick,
+  currentUserId
 }) => {
-  // Role-based styling and emojis
-  const getRoleConfig = (role) => {
-    switch (role) {
-      case "Therapist":
-        return { color: "#FF6B6B", emoji: "🩺", priority: 2 };
-      case "Caregiver":
-        return { color: "#4ECDC4", emoji: "🤱", priority: 3 };
-      case "Co-Parent":
-        return { color: "#45B7D1", emoji: "👨‍👩‍👧‍👦", priority: 1 };
-      case "Family Member":
-        return { color: "#EB684A", emoji: "👵", priority: 4 };
-      case "Primary Parent":
-        return { color: "#8B5CF6", emoji: "👑", priority: 0 };
-      default:
-        return { color: "#94A3B8", emoji: "👤", priority: 5 };
-    }
-  };
-
-  const roleConfig = getRoleConfig(member.role);
-  const displayName = member.name || member.displayName || 'Unknown';
-  const firstName = displayName.split(' ')[0];
+  const { t } = useTranslation('terms');
+  
+  const roleConfig = getRoleConfig(member.role, t);
+  const isCurrentUser = currentUserId && (member.userId === currentUserId || member.uid === currentUserId);
+  const rawDisplayName = member.name || member.displayName || member.email || t('team_member_one');
+  const displayName = isCurrentUser ? t('me') : rawDisplayName;
+  const firstName = isCurrentUser ? t('me') : displayName.split(' ')[0];
 
   if (variant === 'compact') {
     return (
       <Chip
         label={
-          <Box sx={{ display: "flex", alignItems: "center", gap: 0.3 }}>
-            <Typography sx={{ fontSize: "0.7rem" }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+            <Typography sx={{ fontSize: "0.8rem", lineHeight: 1 }}>
               {roleConfig.emoji}
             </Typography>
-            <Typography sx={{ fontSize: "0.7rem" }}>
+            <Typography sx={{ fontSize: "0.75rem", fontWeight: 600 }}>
               {firstName}
             </Typography>
           </Box>
         }
-        size="small"
+        size="medium"
         onClick={onClick}
         sx={{
-          height: 18,
-          fontSize: "0.65rem",
-          bgcolor: alpha(roleConfig.color, 0.15),
+          height: 24,
+          fontSize: "0.75rem",
+          bgcolor: alpha(roleConfig.color, 0.12),
           color: roleConfig.color,
-          fontWeight: 500,
-          borderRadius: 0.5,
+          fontWeight: 600,
+          borderRadius: 1,
+          border: `1px solid ${alpha(roleConfig.color, 0.2)}`,
           cursor: onClick ? 'pointer' : 'default',
           '&:hover': onClick ? {
-            bgcolor: alpha(roleConfig.color, 0.25),
+            bgcolor: alpha(roleConfig.color, 0.8), // Darker background for better contrast with white text
+            color: '#FFFFFF', // Force white text on hover
+            transform: 'translateY(-1px)',
+            boxShadow: `0 2px 8px ${alpha(roleConfig.color, 0.3)}`,
+            '& .MuiTypography-root': {
+              color: '#FFFFFF', // Force all typography to be white on hover
+            }
           } : {}
         }}
       />
@@ -103,21 +105,12 @@ const MemberChip = ({
   );
 };
 
-// Helper function to sort members by priority
-export const sortMembersByPriority = (members) => {
+// Helper function to sort members by priority - CLEAN VERSION
+export const sortMembersByPriority = (members, t) => {
   return [...members].sort((a, b) => {
-    const getRoleConfig = (role) => {
-      switch (role) {
-        case "Primary Parent": return { priority: 0 };
-        case "Co-Parent": return { priority: 1 };
-        case "Therapist": return { priority: 2 };
-        case "Caregiver": return { priority: 3 };
-        case "Family Member": return { priority: 4 };
-        default: return { priority: 5 };
-      }
-    };
-    
-    return getRoleConfig(a.role).priority - getRoleConfig(b.role).priority;
+    const aPriority = getRoleConfig(a.role, t).priority;
+    const bPriority = getRoleConfig(b.role, t).priority;
+    return aPriority - bPriority;
   });
 };
 

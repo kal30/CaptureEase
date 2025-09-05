@@ -5,7 +5,13 @@ service cloud.firestore {
   
   // Check if user has access to a specific child
   function hasChildAccess(userId, childId) {
-    return exists(/databases/$(database)/documents/child_access/$(userId + '_' + childId));
+    let child = get(/databases/$(database)/documents/children/$(childId)).data;
+    return (
+      child.users.care_owner == userId ||
+      userId in child.users.care_partners ||
+      userId in child.users.caregivers ||
+      userId in child.users.therapists
+    );
   }
   
   // Check if user is authenticated
@@ -35,17 +41,16 @@ service cloud.firestore {
       allow read, write: if isAuthenticated() && request.auth.uid == userId;
     }
     
-    // Child access control
-    match /child_access/{accessId} {
-      allow read: if isAuthenticated() && 
-        (request.auth.uid == resource.data.userId || 
-         request.auth.uid in resource.data.sharedWith);
-    }
+    // Child access is now handled through the children collection directly
     
     // Children collection
     match /children/{childId} {
+      // Allow read/write if user has access to this child
       allow read, write: if isAuthenticated() && 
-        hasChildAccess(request.auth.uid, childId);
+        (resource.data.users.care_owner == request.auth.uid ||
+         request.auth.uid in resource.data.users.care_partners ||
+         request.auth.uid in resource.data.users.caregivers ||
+         request.auth.uid in resource.data.users.therapists);
     }
     
     // === NEW MESSAGING COLLECTIONS ===

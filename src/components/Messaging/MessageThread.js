@@ -14,6 +14,7 @@ import {
   Alert,
   Fade
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import {
   Info,
   MoreVert,
@@ -25,6 +26,7 @@ import {
 // Services and utils
 import { getMessages, markMessageAsRead } from '../../services/messaging';
 import { formatMessageTime, getDateGroupLabel, needsDateSeparator } from '../../utils/dateUtils';
+import { getMessagingTheme } from '../../assets/theme/messagingTheme';
 
 // Components
 import MessageComposer from './MessageComposer';
@@ -39,6 +41,8 @@ const MessageBubble = ({
   showTimestamp = true,
   onReply 
 }) => {
+  const theme = useTheme();
+  const messagingTheme = getMessagingTheme(theme);
   const isOwnMessage = message.senderId === currentUserId;
   const isRead = message.readBy && Object.keys(message.readBy).length > 1; // More than just sender
 
@@ -59,10 +63,8 @@ const MessageBubble = ({
       {showAvatar && !isOwnMessage && (
         <Avatar
           sx={{
-            width: 32,
-            height: 32,
-            fontSize: '0.875rem',
-            bgcolor: 'primary.main'
+            ...messagingTheme.childContext.avatar,
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
           }}
         >
           {message.senderName?.charAt(0)?.toUpperCase() || '?'}
@@ -118,22 +120,31 @@ const MessageBubble = ({
 
         {/* Message bubble */}
         <Paper
-          elevation={1}
+          elevation={0}
+          className="message-bubble"
           sx={{
             px: 2,
-            py: 1,
-            borderRadius: 2,
-            backgroundColor: isOwnMessage ? 'primary.main' : 'grey.100',
-            color: isOwnMessage ? 'primary.contrastText' : 'text.primary',
+            py: 1.5,
             position: 'relative',
             maxWidth: '100%',
             wordBreak: 'break-word',
-            ...(isOwnMessage && {
-              borderBottomRightRadius: 4,
-            }),
-            ...(!isOwnMessage && {
-              borderBottomLeftRadius: 4,
-            }),
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+            transition: messagingTheme.transitions.fast,
+            ...(isOwnMessage 
+              ? {
+                  ...messagingTheme.messageBubble.own,
+                  background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+                }
+              : {
+                  ...messagingTheme.messageBubble.other,
+                  background: theme.palette.background.paper,
+                  border: `1px solid ${theme.palette.divider}`,
+                }
+            ),
+            '&:hover': {
+              transform: 'translateY(-1px)',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+            }
           }}
         >
           {/* Message text */}
@@ -183,11 +194,17 @@ const MessageBubble = ({
           <Box
             sx={{
               position: 'absolute',
-              top: -8,
-              ...(isOwnMessage ? { left: -40 } : { right: -40 }),
+              top: -12,
+              ...(isOwnMessage ? { left: -50 } : { right: -50 }),
               display: 'flex',
+              gap: 0.5,
               opacity: 0,
-              transition: 'opacity 0.2s',
+              transition: messagingTheme.transitions.fast,
+              background: 'rgba(255,255,255,0.9)',
+              backdropFilter: 'blur(10px)',
+              borderRadius: '20px',
+              padding: '4px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
               '.message-bubble:hover &': {
                 opacity: 1
               }
@@ -198,14 +215,18 @@ const MessageBubble = ({
               size="small"
               onClick={() => onReply?.(message)}
               sx={{
+                width: 28,
+                height: 28,
                 backgroundColor: 'background.paper',
-                boxShadow: 1,
+                border: `1px solid ${theme.palette.divider}`,
                 '&:hover': {
-                  backgroundColor: 'action.hover'
+                  backgroundColor: theme.palette.primary.main,
+                  color: 'white',
+                  transform: 'scale(1.1)',
                 }
               }}
             >
-              <Reply fontSize="small" />
+              <Reply sx={{ fontSize: 14 }} />
             </IconButton>
           </Box>
         </Paper>

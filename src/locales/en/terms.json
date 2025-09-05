@@ -4,6 +4,19 @@
   "owner_one": "Care Owner",
   "owner_other": "Care Owners",
   "partner_one": "Care Partner",
-  "partner_other": "Care Partners"
+  "partner_other": "Care Partners",
+  "caregiver_one": "Caregiver",
+  "caregiver_other": "Caregivers",
+  "therapist_one": "Therapist",
+  "therapist_other": "Therapists",
+  "team_member_one": "Team Member",
+  "team_member_other": "Team Members",
+  "care_team": "Care Team",
+  "me": "me",
+  "profile_name": "Profile Name",
+  "profile_age": "Profile Age",
+  "create_profile_description": "Create a profile with care information",
+  "update_profile_description": "Update profile information and care details",
+  "medical_behavioral_profile": "Medical & Behavioral Profile"
 }
 

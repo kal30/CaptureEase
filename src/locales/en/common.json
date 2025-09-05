@@ -1,7 +1,7 @@
 {
   "actions": {
     "add": "Add",
-    "cancel": "Cancel",
+    "cancel": "Cancel", 
     "close": "Close",
     "save": "Save",
     "delete": "Delete",
@@ -10,7 +10,13 @@
     "confirm": "Confirm",
     "back": "Back",
     "next": "Next",
-    "previous": "Previous"
+    "previous": "Previous",
+    "saving": "Saving...",
+    "save_changes": "Save Changes"
+  },
+  "modal": {
+    "add_new": "Add New {{item}}",
+    "edit_item": "Edit {{item}}"
   }
 }
 

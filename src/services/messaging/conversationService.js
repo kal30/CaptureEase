@@ -107,6 +107,7 @@ export const createConversation = async ({ participants, childId, type, title, c
 export const getConversations = async (userId, options = {}) => {
   try {
     console.log('📋 Fetching conversations for user:', { userId, options });
+    console.log('🔧 DEBUG: User should now have access with updated Firestore rules');
     
     // 1. Validate user ID
     if (!userId || typeof userId !== 'string') {
@@ -377,17 +378,44 @@ const validateChildAccess = async (userId, childId) => {
   try {
     console.log('🔍 Validating child access:', { userId, childId });
     
-    // Check if child_access document exists for this user-child combination
-    const accessId = `${userId}_${childId}`;
-    const accessDocRef = doc(db, COLLECTIONS.CHILD_ACCESS, accessId);
-    const accessDoc = await getDoc(accessDocRef);
+    // Check the child document directly for user access
+    const childDocRef = doc(db, COLLECTIONS.CHILDREN, childId);
+    const childDoc = await getDoc(childDocRef);
     
-    if (accessDoc.exists()) {
-      console.log('✅ User has access to child');
+    if (!childDoc.exists()) {
+      console.log('❌ Child document not found');
+      return false;
+    }
+    
+    const childData = childDoc.data();
+    const users = childData.users || {};
+    
+    // Check if user is care owner
+    if (users.care_owner === userId) {
+      console.log('✅ User is care owner');
       return true;
     }
     
-    console.log('❌ User does not have access to child');
+    // Check if user is in care_partners array
+    if (users.care_partners && users.care_partners.includes(userId)) {
+      console.log('✅ User is care partner');
+      return true;
+    }
+    
+    // Check if user is in caregivers array  
+    if (users.caregivers && users.caregivers.includes(userId)) {
+      console.log('✅ User is caregiver');
+      return true;
+    }
+    
+    // Check if user is in therapists array
+    if (users.therapists && users.therapists.includes(userId)) {
+      console.log('✅ User is therapist');
+      return true;
+    }
+    
+    console.log('❌ User does not have access to child - not in any care team roles');
+    console.log('Child users:', users);
     return false;
     
   } catch (error) {

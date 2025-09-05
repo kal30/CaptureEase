@@ -5,7 +5,8 @@ import {
   getCurrentUserRoleForChild, 
   hasCurrentUserPermission,
   getUserDisplayInfo,
-  getChildrenWithRoles
+  getChildrenWithRoles,
+  populateChildTeamMembers
 } from '../services/rolePermissionService';
 import { USER_ROLES, PERMISSIONS } from '../constants/roles';
 
@@ -44,14 +45,20 @@ export const RoleProvider = ({ children }) => {
         
         // Get all children with roles
         const childrenWithRoles = await getChildrenWithRoles();
-        setChildrenWithAccess(childrenWithRoles);
+        
+        // Populate team member details for each child
+        const childrenWithTeamDetails = await Promise.all(
+          childrenWithRoles.map(populateChildTeamMembers)
+        );
+        
+        setChildrenWithAccess(childrenWithTeamDetails);
 
         // Build role, permission, and display info mappings
         const roleMap = {};
         const permissionMap = {};
         const displayInfoMap = {};
 
-        for (const child of childrenWithRoles) {
+        for (const child of childrenWithTeamDetails) {
           roleMap[child.id] = child.userRole;
           permissionMap[child.id] = child.permissions || [];
           

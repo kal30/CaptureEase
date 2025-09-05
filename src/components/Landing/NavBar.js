@@ -2,6 +2,7 @@ import { Link as RouterLink } from "react-router-dom";
 import { getAuth } from "firebase/auth";
 import { useEffect, useState } from "react";
 import { AppBar, Toolbar, Button, Box, Container } from "@mui/material";
+import { useRole } from "../../contexts/RoleContext";
 import NavButton from "./NavButton";
 import InfoIcon from "@mui/icons-material/Info";
 import DashboardIcon from "@mui/icons-material/Dashboard";
@@ -24,6 +25,7 @@ import {
 
 const Navbar = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { childrenWithAccess } = useRole();
 
   useEffect(() => {
     const auth = getAuth();
@@ -34,6 +36,9 @@ const Navbar = () => {
   }, []);
 
   const colorScheme = getNavbarColorScheme("current");
+
+  // Simple check - only show if user has children (let page handle role validation)
+  const canSeeCareTeamMenu = isLoggedIn && childrenWithAccess && childrenWithAccess.length > 0;
 
   return (
     <>
@@ -91,16 +96,18 @@ const Navbar = () => {
                     }
                     to="/dashboard"
                   />
-                  <NavButton
-                    text="Care Team"
-                    icon={
-                      <GroupIcon
-                        sx={navbarIconStyles}
-                        htmlColor={navbarIconStyles.color}
-                      />
-                    }
-                    to="/care-team"
-                  />
+                  {canSeeCareTeamMenu && (
+                    <NavButton
+                      text="Care Team"
+                      icon={
+                        <GroupIcon
+                          sx={navbarIconStyles}
+                          htmlColor={navbarIconStyles.color}
+                        />
+                      }
+                      to="/care-team"
+                    />
+                  )}
                 </>
               )}
             </Box>

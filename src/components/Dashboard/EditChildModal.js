@@ -10,8 +10,9 @@ import {
 } from "@mui/material";
 import { Close as CloseIcon } from "@mui/icons-material";
 import Autocomplete, { createFilterOptions } from "@mui/material/Autocomplete";
+import { useTranslation } from 'react-i18next';
 import AllergyChip from "../UI/Allergies";
-import { useTheme } from "@mui/material/styles"; // Import useTheme
+import { useTheme } from "@mui/material/styles";
 import {
   getStorage,
   ref,
@@ -26,7 +27,8 @@ import { ThemeCard, GradientButton, CustomizableAutocomplete } from "../UI";
 import { useAsyncForm } from "../../hooks/useAsyncForm";
 
 const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
-  const theme = useTheme(); // Get the theme object
+  const { t } = useTranslation(['terms', 'common']);
+  const theme = useTheme();
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
   const [photo, setPhoto] = useState(null);
@@ -53,10 +55,10 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
     },
     validate: ({ name, age }) => {
       if (!name?.trim()) {
-        throw new Error('Please enter the child\'s name');
+        throw new Error(`Please enter the ${t('terms:profile_name').toLowerCase()}`);
       }
       if (!age?.trim()) {
-        throw new Error('Please enter the child\'s age');
+        throw new Error(`Please enter the ${t('terms:profile_age').toLowerCase()}`);
       }
     }
   });
@@ -227,10 +229,10 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 3, pb: 2, borderBottom: 1, borderColor: 'divider' }}>
           <Box>
             <Typography variant="h5" sx={{ fontWeight: 600, color: 'text.primary' }}>
-              Edit {child?.name || 'Child'}
+              {t('common:modal.edit_item', { item: child?.name || t('terms:profile_one') })}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-              Update your child's information and care profile
+              {t('terms:update_profile_description')}
             </Typography>
           </Box>
           <IconButton
@@ -264,7 +266,7 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
           </Typography>
 
           <TextField
-          label="Child's Name"
+          label={t('terms:profile_name')}
           variant="outlined"
           fullWidth
           value={name}
@@ -273,7 +275,7 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
         />
 
         <TextField
-          label="Child's Age"
+          label={t('terms:profile_age')}
           variant="outlined"
           fullWidth
           value={age}
@@ -341,10 +343,10 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
           {canEditMedicalInfo && (
             <Box sx={{ mt: 4, pt: 3, borderTop: 1, borderColor: 'divider' }}>
               <Typography variant="h6" sx={{ mb: 1, fontWeight: 600, color: theme.palette.primary.main }}>
-                Medical & Behavioral Profile
+                {t('terms:medical_behavioral_profile')}
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                This information helps us understand your child's specific needs and identify patterns in their behavior and wellbeing.
+                This information helps us understand specific needs and identify patterns in behavior and wellbeing.
               </Typography>
             </Box>
           )}
@@ -457,7 +459,7 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
             elevated
             size="large"
           >
-            {childForm.loading ? "Saving..." : "Save Changes"}
+            {childForm.loading ? t('common:actions.saving') : t('common:actions.save_changes')}
           </GradientButton>
         </Box>
         </ThemeCard>

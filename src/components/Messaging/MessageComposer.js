@@ -28,6 +28,7 @@ import {
 // Services
 import { sendMessage } from '../../services/messaging';
 import { MessageTypes, MessagePriority } from '../../models/messaging';
+import { getMessagingTheme } from '../../assets/theme/messagingTheme';
 
 /**
  * Message priority selector
@@ -119,6 +120,7 @@ const MessageComposer = ({
   onCancelReply = null
 }) => {
   const theme = useTheme();
+  const messagingTheme = getMessagingTheme(theme);
   
   // State management
   const [messageText, setMessageText] = useState('');
@@ -276,12 +278,14 @@ const MessageComposer = ({
 
   return (
     <Paper
-      elevation={2}
+      elevation={0}
       sx={{
-        borderRadius: 0,
-        borderTop: 1,
-        borderColor: 'divider',
-        backgroundColor: 'background.paper'
+        borderRadius: '20px 20px 0 0',
+        borderTop: `2px solid ${theme.palette.divider}`,
+        backgroundColor: theme.palette.background.paper,
+        boxShadow: '0 -4px 12px rgba(0,0,0,0.1)',
+        backdropFilter: 'blur(10px)',
+        background: `linear-gradient(to bottom, ${theme.palette.background.paper} 0%, ${theme.palette.grey[50]} 100%)`,
       }}
     >
       {/* Reply Preview */}
@@ -363,24 +367,35 @@ const MessageComposer = ({
           variant="outlined"
           size="small"
           sx={{
+            ...messagingTheme.search.input,
             '& .MuiOutlinedInput-root': {
-              borderRadius: 3,
-              backgroundColor: 'background.default',
-              minHeight: 40,
+              backgroundColor: theme.palette.background.default,
+              minHeight: 48,
+              borderRadius: '24px',
+              border: `2px solid ${theme.palette.divider}`,
+              transition: messagingTheme.transitions.fast,
               '& fieldset': {
-                borderColor: 'divider',
+                border: 'none',
               },
-              '&:hover fieldset': {
-                borderColor: 'primary.main',
+              '&:hover': {
+                borderColor: theme.palette.primary.light,
+                transform: 'translateY(-1px)',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
               },
-              '&.Mui-focused fieldset': {
-                borderColor: 'primary.main',
+              '&.Mui-focused': {
+                borderColor: theme.palette.primary.main,
+                boxShadow: `0 0 0 3px ${theme.palette.primary.main}20`,
               },
             },
             '& .MuiInputBase-input': {
               py: 1.5,
+              px: 2,
               lineHeight: 1.4,
-              fontSize: '0.875rem',
+              fontSize: '0.95rem',
+              '&::placeholder': {
+                color: theme.palette.text.secondary,
+                opacity: 0.7,
+              }
             }
           }}
         />
@@ -421,16 +436,23 @@ const MessageComposer = ({
               onClick={handleSendMessage}
               disabled={!messageText.trim() || sending || !conversationId}
               sx={{
-                backgroundColor: 'primary.main',
-                color: 'primary.contrastText',
-                width: 44,
-                height: 44,
+                ...messagingTheme.buttons.messages,
+                background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+                width: 48,
+                height: 48,
+                borderRadius: '50%',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                transition: messagingTheme.transitions.fast,
                 '&:hover': {
-                  backgroundColor: 'primary.dark',
+                  background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)`,
+                  transform: 'scale(1.05) translateY(-1px)',
+                  boxShadow: '0 6px 20px rgba(0,0,0,0.25)',
                 },
                 '&.Mui-disabled': {
-                  backgroundColor: 'action.disabledBackground',
-                  color: 'action.disabled',
+                  backgroundColor: theme.palette.action.disabledBackground,
+                  color: theme.palette.action.disabled,
+                  transform: 'none',
+                  boxShadow: 'none',
                 }
               }}
             >

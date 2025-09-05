@@ -42,17 +42,17 @@ export {
   sendSystemMessage
 } from './messageHelpers.js';
 
-// Test helpers for development
+// Real messaging helpers
 export {
-  testCreateConversation,
-  testGetConversations,
-  testGetConversationById,
-  testUpdateConversation,
-  testSendMessage,
-  testGetMessages,
-  testMarkMessageAsRead,
-  testGetUnreadMessages,
-  runCompleteTest,
-  attachTestFunctionsToWindow,
-  createTestData
+  getCurrentUser,
+  createCareTeamConversation,
+  getUserConversations,
+  getConversationDetails,
+  sendRealMessage,
+  getConversationMessages,
+  markMessageRead,
+  getUserUnreadMessages,
+  initializeMessagingForChild,
+  quickStartMessaging,
+  attachMessagingFunctionsToWindow
 } from './testHelpers.js';

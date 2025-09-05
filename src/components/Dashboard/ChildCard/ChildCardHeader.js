@@ -125,12 +125,12 @@ const ChildCardHeader = memo(({
         )}
 
         {/* Care Team */}
-        {child.careTeamMembers && child.careTeamMembers.length > 0 && (
+        {child.users && (child.users.care_partners?.length > 0 || child.users.caregivers?.length > 0 || child.users.therapists?.length > 0) && (
           <CareTeamDisplay
-            members={child.careTeamMembers}
-            maxVisible={3}
-            size="small"
-            sx={{ mt: 0.5 }}
+            child={child}
+            userRole={userRole}
+            onInviteTeamMember={onInviteTeamMember}
+            maxVisible={4}
           />
         )}
       </Box>

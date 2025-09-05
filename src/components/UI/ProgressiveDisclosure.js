@@ -66,8 +66,13 @@ const ProgressiveDisclosure = ({
         {/* Icon and Label */}
         {icon}
         <Typography
-          variant="caption"
-          sx={{ fontSize: "0.75rem", color: theme.palette.text.secondary }}
+          variant="body2"
+          sx={{ 
+            fontSize: "0.85rem", 
+            color: theme.palette.text.primary,
+            fontWeight: 600,
+            mr: 0.5
+          }}
         >
           {label} ({items.length}):
         </Typography>

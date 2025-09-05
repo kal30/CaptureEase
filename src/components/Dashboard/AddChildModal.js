@@ -1,21 +1,23 @@
 import React, { useState } from "react";
 import { Box, Modal, TextField, Chip, IconButton, Typography, Alert } from "@mui/material";
 import { Close as CloseIcon } from "@mui/icons-material";
+import { useTranslation } from 'react-i18next';
 import AllergyChip from "../UI/Allergies";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { addDoc, collection } from "firebase/firestore";
-import { getAuth } from "firebase/auth"; // Import Firestore functions
-import { db } from "../../services/firebase"; // Adjust the path based on your structure
-import ChildPhotoUploader from "./ChildPhotoUploader"; // Import the ChildPhotoUploader component
+import { getAuth } from "firebase/auth";
+import { db } from "../../services/firebase";
+import ChildPhotoUploader from "./ChildPhotoUploader";
 import { ThemeCard, EnhancedLoadingButton, ThemeSpacing, ThemeText, CustomizableAutocomplete } from "../UI";
 import { useAsyncForm } from "../../hooks/useAsyncForm";
 
 const AddChildModal = ({ open, onClose, onSuccess }) => {
+  const { t } = useTranslation(['terms', 'common']);
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
-  const [photo, setPhoto] = useState(null); // State for photo file
-  const [photoURL, setPhotoURL] = useState(null); // State for photo URL
-  const [selectedConditions, setSelectedConditions] = useState([]); // [{ code, label, custom? }]
+  const [photo, setPhoto] = useState(null);
+  const [photoURL, setPhotoURL] = useState(null);
+  const [selectedConditions, setSelectedConditions] = useState([]);
   const [foodAllergies, setFoodAllergies] = useState([]);
   const [dietaryRestrictions, setDietaryRestrictions] = useState([]);
   const [sensoryIssues, setSensoryIssues] = useState([]);
@@ -37,10 +39,10 @@ const AddChildModal = ({ open, onClose, onSuccess }) => {
     },
     validate: ({ name, age }) => {
       if (!name?.trim()) {
-        throw new Error('Please enter the child\'s name');
+        throw new Error(`Please enter the ${t('terms:profile_name').toLowerCase()}`);
       }
       if (!age?.trim()) {
-        throw new Error('Please enter the child\'s age');
+        throw new Error(`Please enter the ${t('terms:profile_age').toLowerCase()}`);
       }
     }
   });
@@ -195,10 +197,10 @@ const AddChildModal = ({ open, onClose, onSuccess }) => {
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 3, pb: 2, borderBottom: 1, borderColor: 'divider' }}>
             <Box>
               <Typography variant="h5" sx={{ fontWeight: 600, color: 'text.primary' }}>
-                Add New Child
+                {t('common:modal.add_new', { item: t('terms:profile_one') })}
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                Create a profile for your child with care information
+                {t('terms:create_profile_description')}
               </Typography>
             </Box>
             <IconButton
@@ -230,7 +232,7 @@ const AddChildModal = ({ open, onClose, onSuccess }) => {
 
             <ThemeSpacing variant="field">
               <TextField
-                label="Child's Name"
+                label={t('terms:profile_name')}
                 variant="outlined"
                 fullWidth
                 value={name}
@@ -240,7 +242,7 @@ const AddChildModal = ({ open, onClose, onSuccess }) => {
 
             <ThemeSpacing variant="field">
               <TextField
-                label="Child's Age"
+                label={t('terms:profile_age')}
                 variant="outlined"
                 fullWidth
                 value={age}
@@ -292,7 +294,7 @@ const AddChildModal = ({ open, onClose, onSuccess }) => {
 
         {/* Medical & Behavioral Profile */}
         <ThemeText variant="section-header">
-          📋 Medical & Behavioral Profile
+          📋 {t('terms:medical_behavioral_profile')}
         </ThemeText>
         <ThemeText variant="form-helper">
           This information helps us identify patterns and correlations in daily tracking
@@ -394,13 +396,13 @@ const AddChildModal = ({ open, onClose, onSuccess }) => {
               variant="success-gradient"
               loading={childForm.loading}
               loadingStyle="pulse"
-              loadingText="Adding child..."
+              loadingText={`${t('common:actions.add')}ing ${t('terms:profile_one').toLowerCase()}...`}
               onClick={handleSubmit}
               fullWidth
               elevated
               size="large"
             >
-              Add Child
+              {t('common:actions.add')} {t('terms:profile_one')}
             </EnhancedLoadingButton>
           </Box>
         </ThemeCard>
