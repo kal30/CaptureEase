@@ -5,6 +5,10 @@ import "./i18n";
 import "./assets/css/App.css";
 import reportWebVitals from "./reportWebVitals";
 import { ErrorProvider } from "./contexts/ErrorContext";
+// import suppressAllResizeObserverErrors from "./utils/suppressAllResizeObserverErrors";
+
+// Completely suppress ResizeObserver loop errors - TEMPORARILY DISABLED FOR TESTING
+// suppressAllResizeObserverErrors();
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(

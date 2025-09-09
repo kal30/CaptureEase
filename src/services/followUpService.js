@@ -56,7 +56,6 @@ export const processQuickResponses = async () => {
           result
         });
         
-        console.log(`✅ Processed quick response: ${response.effectiveness} for incident ${response.incidentId}`);
         
       } catch (error) {
         console.error(`❌ Error processing quick response ${responseId}:`, error);
@@ -99,7 +98,6 @@ export const clearProcessedQuickResponses = () => {
     });
     
     localStorage.setItem('captureease-quick-responses', JSON.stringify(unprocessed));
-    console.log('🧹 Cleared processed quick responses');
   } catch (error) {
     console.error('Error clearing processed quick responses:', error);
   }
@@ -127,7 +125,6 @@ export const startQuickResponseListener = () => {
         'Quick response from notification',
         followUpIndex || 0
       );
-      console.log(`✅ Recorded quick response via SW message for incident ${incidentId}`);
     } catch (err) {
       console.error('Error handling SW quick response message:', err);
     }
@@ -235,7 +232,6 @@ export const initializeNotificationsForPendingFollowUps = async (childrenData) =
       }
     }
     
-    console.log(`✅ Notification initialization complete. Found ${pendingFollowUps.length} overdue follow-ups.`);
   } catch (error) {
     console.error('Error initializing follow-up notifications:', error);
   }

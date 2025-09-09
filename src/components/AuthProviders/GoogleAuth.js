@@ -2,21 +2,23 @@ import React, { useEffect } from "react";
 import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "../../services/firebase";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { handlePostAuthRedirect } from "../../services/auth/navigation";
 import { Box, Button, Typography, Container } from "@mui/material";
 import GoogleIcon from "@mui/icons-material/Google"; // Import Google Icon
 
 const GoogleAuth = ({ buttonText }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const auth = getAuth();
   const user = auth.currentUser;
 
-  // Check if the user is already logged in, and redirect to dashboard
+  // Check if the user is already logged in, and redirect appropriately
   useEffect(() => {
     if (user) {
-      navigate("/dashboard");
+      handlePostAuthRedirect(navigate, location, user);
     }
-  }, [user, navigate]);
+  }, [user, navigate, location]);
 
   // Handle Google sign-in
   const handleGoogleLogin = async () => {
@@ -45,7 +47,8 @@ const GoogleAuth = ({ buttonText }) => {
         }, { merge: true });
       }
 
-      navigate("/dashboard"); // Redirect to dashboard after successful login
+      // Use shared post-auth redirect utility
+      handlePostAuthRedirect(navigate, location, user);
     } catch (error) {
       console.error("Error during sign-in", error);
     }

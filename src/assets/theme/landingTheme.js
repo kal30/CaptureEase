@@ -27,14 +27,14 @@ export const landingTypography = {
     fontWeight: 300,
     letterSpacing: "0.12em",
     textTransform: "uppercase",
-    lineHeight: { xs: 0.95, md: 0.95, lg: 0.95 },
+    lineHeight: { xs: 1.1, md: 1.1, lg: 1.1 },
     marginBottom: { xs: 0.5, md: 1, lg: 1.5 },
   },
   heroSubtitle: {
     marginTop: { xs: 1, md: 1.5, lg: 2 },
     fontFamily: '"ITC New Baskerville", serif',
     fontWeight: 700,
-    lineHeight: 0.5,
+    lineHeight: 1.1,
     textTransform: "uppercase",
     letterSpacing: "0.02em",
     fontSize: { xs: "1.6rem", md: "2.0rem", lg: "2.2rem" },
@@ -98,8 +98,9 @@ export const landingLayout = {
     alignItems: "center",
     justifyContent: "center",
     textAlign: "center",
-    gap: 0,
-    mt: { xs: -2, md: -3, lg: -4 },
+    gap: { xs: 0.5, md: 0.5, lg: 0.5 },
+    mt: { xs: 0, md: 0, lg: 0 },
+    mb: { xs: 2, md: 3, lg: 4 },
   },
 };
 

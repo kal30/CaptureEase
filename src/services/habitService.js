@@ -3,32 +3,21 @@ import {
   collection, 
   addDoc, 
   serverTimestamp, 
-  doc, 
-  updateDoc,
   query,
   where,
   getDocs,
-  orderBy,
-  limit
+  orderBy
 } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
 
 /**
- * Habit Service - Comprehensive daily habit tracking with rich data
- * Integrates with existing timeline and daily care systems
+ * Habit Service - Daily habit tracking using dailyCare collection
+ * Consistent with other services - all data goes to top-level dailyCare collection
  * Supports: mood, sleep, nutrition, progress, and custom habits
  */
 
-// Map our habit types to existing Firebase collections
-const HABIT_COLLECTION_MAP = {
-  mood: 'moodLogs',
-  sleep: 'sleepLogs', 
-  nutrition: 'foodLogs',
-  progress: 'progressNotes',
-  other: 'customHabits' // New collection for custom habits
-};
-
 /**
- * Save a habit entry with rich data (level, notes, media)
+ * Save a habit entry - all data goes to dailyCare collection
  * @param {Object} habitEntry - The habit entry data
  * @param {string} habitEntry.childId - Child ID
  * @param {string} habitEntry.categoryId - Habit category ID (mood, sleep, etc.)
@@ -38,11 +27,16 @@ const HABIT_COLLECTION_MAP = {
  * @param {string} habitEntry.notes - Rich text notes
  * @param {File} habitEntry.mediaFile - Optional media attachment
  * @param {Blob} habitEntry.audioBlob - Optional audio recording
- * @param {Date} habitEntry.timestamp - Entry timestamp
  * @param {Object} habitEntry.customHabit - Custom habit data (if applicable)
  */
 export const saveHabitEntry = async (habitEntry) => {
   try {
+    const auth = getAuth();
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      throw new Error('User must be authenticated to save habit entries');
+    }
+
     const { 
       childId, 
       categoryId, 
@@ -52,50 +46,69 @@ export const saveHabitEntry = async (habitEntry) => {
       notes, 
       mediaFile, 
       audioBlob, 
-      timestamp,
       customHabit
     } = habitEntry;
 
-    // Get the appropriate collection name
-    const collectionName = HABIT_COLLECTION_MAP[categoryId] || 'customHabits';
+    // Map habit categories to dailyCare action types
+    const actionTypeMap = {
+      mood: 'mood',
+      sleep: 'sleep', 
+      nutrition: 'food_health',
+      progress: 'energy', // Map progress to energy
+      other: 'mood' // Map custom to mood
+    };
+
+    const actionType = actionTypeMap[categoryId] || 'mood';
     
-    // Create the base entry
+    // Create the dailyCare entry with all rich data
     const entry = {
-      categoryId,
-      categoryLabel,
-      level,
-      date: date.toDateString(), // For daily queries
-      notes: notes || '',
-      timestamp: serverTimestamp(),
+      // Required fields for Firestore rules
+      childId,
+      createdBy: currentUser.uid,
       createdAt: serverTimestamp(),
-      // Legacy compatibility fields
-      ...(categoryId === 'mood' && { mood: level }),
-      ...(categoryId === 'sleep' && { sleepQuality: level, sleepHours: level }),
-      ...(categoryId === 'nutrition' && { nutritionLevel: level }),
-      ...(categoryId === 'progress' && { progressLevel: level }),
-      // Custom habit data
-      ...(customHabit && { customHabit })
+      
+      // DailyCare standard fields
+      actionType,
+      data: { 
+        level, 
+        source: 'habits',
+        categoryId,
+        categoryLabel,
+        notes: notes || '',
+        ...(customHabit && { customHabit })
+      },
+      completedBy: currentUser.uid,
+      timestamp: serverTimestamp(),
+      date: date.toDateString(),
+      
+      // Status for soft delete system
+      status: 'active'
     };
 
     // TODO: Handle media uploads to Firebase Storage
     if (mediaFile) {
-      // entry.mediaUrl = await uploadMediaFile(mediaFile, childId);
+      // entry.data.mediaUrl = await uploadMediaFile(mediaFile, childId);
       console.log('Media file upload not yet implemented:', mediaFile.name);
     }
 
     if (audioBlob) {
-      // entry.audioUrl = await uploadAudioBlob(audioBlob, childId);
+      // entry.data.audioUrl = await uploadAudioBlob(audioBlob, childId);
       console.log('Audio blob upload not yet implemented');
     }
 
-    // Save to child-specific collection
-    const docRef = await addDoc(
-      collection(db, "children", childId, collectionName), 
-      entry
-    );
+    // Debug logging to see exactly what's being sent
+    console.log('🔍 HabitService Debug Info:');
+    console.log('  childId:', childId);
+    console.log('  user?.uid:', currentUser?.uid);
+    console.log('  user object:', currentUser);
+    console.log('  entry being sent:', {
+      ...entry,
+      createdAt: '[serverTimestamp()]', // serverTimestamp shows as function, not actual value
+      timestamp: '[serverTimestamp()]'
+    });
 
-    // Also save to dailyCare for compatibility with existing dashboard
-    await saveToDailyCare(childId, categoryId, level, timestamp);
+    // Save to dailyCare collection (canonical store)
+    const docRef = await addDoc(collection(db, "dailyCare"), entry);
 
     console.log(`Habit entry (${categoryLabel}) saved successfully with ID:`, docRef.id);
     return docRef.id;
@@ -107,40 +120,7 @@ export const saveHabitEntry = async (habitEntry) => {
 };
 
 /**
- * Save to daily care for dashboard compatibility
- */
-const saveToDailyCare = async (childId, categoryId, level, timestamp) => {
-  try {
-    // Map habit categories to daily care action types
-    const actionTypeMap = {
-      mood: 'mood',
-      sleep: 'sleep', 
-      nutrition: 'food_health',
-      progress: 'mood', // Map progress to mood for now
-      other: 'mood' // Map custom to mood for now
-    };
-
-    const actionType = actionTypeMap[categoryId];
-    if (!actionType) return;
-
-    const entry = {
-      childId,
-      actionType,
-      data: { level, source: 'habits' },
-      completedBy: 'current_user', // TODO: Get actual user ID
-      timestamp: serverTimestamp(),
-      date: new Date().toDateString()
-    };
-
-    await addDoc(collection(db, "dailyCare"), entry);
-  } catch (error) {
-    console.error('Error saving to daily care:', error);
-    // Don't throw - this is just for compatibility
-  }
-};
-
-/**
- * Get habit entries for a child within a date range
+ * Get habit entries for a child within a date range - queries dailyCare collection
  * @param {string} childId - Child ID
  * @param {Date} startDate - Start date
  * @param {Date} endDate - End date
@@ -148,39 +128,38 @@ const saveToDailyCare = async (childId, categoryId, level, timestamp) => {
  */
 export const getHabitEntries = async (childId, startDate, endDate, categories = []) => {
   try {
-    const allEntries = [];
-    const collectionsToQuery = categories.length > 0 
-      ? categories.map(cat => HABIT_COLLECTION_MAP[cat]).filter(Boolean)
-      : Object.values(HABIT_COLLECTION_MAP);
+    // Build query for dailyCare collection
+    let q = query(
+      collection(db, "dailyCare"),
+      where("childId", "==", childId),
+      where("timestamp", ">=", startDate),
+      where("timestamp", "<=", endDate),
+      orderBy("timestamp", "desc")
+    );
 
-    // Query each collection
-    for (const collectionName of collectionsToQuery) {
-      const q = query(
-        collection(db, "children", childId, collectionName),
-        where("timestamp", ">=", startDate),
-        where("timestamp", "<=", endDate),
-        orderBy("timestamp", "desc")
-      );
-
-      const querySnapshot = await getDocs(q);
-      
-      querySnapshot.forEach((doc) => {
-        allEntries.push({
-          id: doc.id,
-          collection: collectionName,
-          childId: childId, // Explicitly add the childId since it's from subcollection
-          ...doc.data()
-        });
-      });
-    }
-
-    // Sort by timestamp
-    return allEntries.sort((a, b) => {
-      const aTime = a.timestamp?.toDate?.() || new Date(a.timestamp);
-      const bTime = b.timestamp?.toDate?.() || new Date(b.timestamp);
-      return bTime - aTime;
+    const querySnapshot = await getDocs(q);
+    const entries = [];
+    
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      // Only include entries that came from habits and match category filter
+      if (data.data?.source === 'habits') {
+        if (categories.length === 0 || categories.includes(data.data?.categoryId)) {
+          entries.push({
+            id: doc.id,
+            childId: data.childId,
+            categoryId: data.data?.categoryId,
+            categoryLabel: data.data?.categoryLabel,
+            level: data.data?.level,
+            notes: data.data?.notes,
+            customHabit: data.data?.customHabit,
+            ...data
+          });
+        }
+      }
     });
 
+    return entries;
   } catch (error) {
     console.error("Error getting habit entries:", error);
     throw error;
@@ -193,78 +172,28 @@ export const getHabitEntries = async (childId, startDate, endDate, categories = 
  */
 export const getTodayHabitStatus = async (childId) => {
   try {
-    const today = new Date();
-    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
-
-    const entries = await getHabitEntries(childId, startOfDay, endOfDay);
+    const today = new Date().toDateString();
     
+    const q = query(
+      collection(db, "dailyCare"),
+      where("childId", "==", childId),
+      where("date", "==", today)
+    );
+
+    const querySnapshot = await getDocs(q);
     const status = {};
-    entries.forEach(entry => {
-      if (entry.categoryId) {
-        status[entry.categoryId] = true;
+    
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      // Only count entries from habits
+      if (data.data?.source === 'habits' && data.data?.categoryId) {
+        status[data.data.categoryId] = true;
       }
     });
 
     return status;
   } catch (error) {
     console.error("Error getting today's habit status:", error);
-    throw error;
-  }
-};
-
-/**
- * Save or update a custom habit for a child
- * @param {string} childId - Child ID
- * @param {Object} customHabit - Custom habit data
- */
-export const saveCustomHabit = async (childId, customHabit) => {
-  try {
-    const habit = {
-      ...customHabit,
-      childId,
-      createdAt: serverTimestamp(),
-      active: true
-    };
-
-    const docRef = await addDoc(
-      collection(db, "children", childId, "customHabits"), 
-      habit
-    );
-
-    console.log("Custom habit saved successfully with ID:", docRef.id);
-    return docRef.id;
-  } catch (error) {
-    console.error("Error saving custom habit:", error);
-    throw error;
-  }
-};
-
-/**
- * Get custom habits for a child
- * @param {string} childId - Child ID
- */
-export const getCustomHabits = async (childId) => {
-  try {
-    const q = query(
-      collection(db, "children", childId, "customHabits"),
-      where("active", "==", true),
-      orderBy("createdAt", "desc")
-    );
-
-    const querySnapshot = await getDocs(q);
-    const habits = [];
-
-    querySnapshot.forEach((doc) => {
-      habits.push({
-        id: doc.id,
-        ...doc.data()
-      });
-    });
-
-    return habits;
-  } catch (error) {
-    console.error("Error getting custom habits:", error);
     throw error;
   }
 };

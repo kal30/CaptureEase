@@ -40,7 +40,7 @@ const HeaderSection = () => {
         minHeight: { xs: "auto", md: "auto", lg: "auto" },
         display: "flex",
         alignItems: "center",
-        overflow: "hidden",
+        overflow: "visible",
       }}
     >
       <Container maxWidth="xl">

@@ -104,3 +104,17 @@ code {
     transform: rotate(360deg);
   }
 }
+
+/* Prevent ResizeObserver loops by stabilizing layouts */
+.MuiChip-root,
+.MuiButton-root,
+.MuiCard-root,
+.MuiBox-root,
+.MuiTypography-root,
+.MuiAlert-root {
+  /* Use transform instead of changing dimensions when possible */
+  will-change: transform;
+  transform: translateZ(0); /* Force hardware acceleration */
+  /* Prevent layout thrashing */
+  contain: layout style;
+}

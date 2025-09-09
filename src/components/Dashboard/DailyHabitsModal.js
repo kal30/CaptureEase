@@ -19,7 +19,7 @@ import { useTheme, alpha } from "@mui/material/styles";
 import HabitCategorySelector from "./HabitCategorySelector";
 import EntryForm from "../Common/EntryForm";
 import { getHabitScale } from "../../constants/habitTypes";
-import { saveHabitEntry, getCustomHabits } from "../../services/habitService";
+import { saveHabitEntry } from "../../services/habitService";
 
 
 /**
@@ -38,25 +38,8 @@ const DailyHabitsModal = ({ open, onClose, childId, childName, onHabitSaved }) =
   const [currentStep, setCurrentStep] = useState('select'); // 'select' | 'entry'
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [completedHabits, setCompletedHabits] = useState([]);
-  const [customHabits, setCustomHabits] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Load custom habits for this child
-  useEffect(() => {
-    if (open && childId) {
-      loadCustomHabits();
-    }
-  }, [open, childId]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const loadCustomHabits = async () => {
-    try {
-      const habits = await getCustomHabits(childId);
-      setCustomHabits(habits);
-    } catch (error) {
-      console.error('Error loading custom habits:', error);
-      setCustomHabits([]);
-    }
-  };
 
   const handleClose = () => {
     // Reset state when closing
@@ -255,7 +238,7 @@ const DailyHabitsModal = ({ open, onClose, childId, childName, onHabitSaved }) =
         {currentStep === 'select' ? (
           <HabitCategorySelector
             onCategorySelect={handleCategorySelect}
-            customHabits={customHabits}
+            customHabits={[]}
             childName={childName}
           />
         ) : (

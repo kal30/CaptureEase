@@ -2,6 +2,7 @@
 // Modal for creating new conversations with team members
 
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogTitle,
@@ -53,6 +54,7 @@ const UserSelectionItem = ({
   onToggle,
   disabled = false
 }) => {
+  const { t } = useTranslation('terms');
   return (
     <ListItemButton
       onClick={() => !disabled && onToggle(user.id)}
@@ -81,7 +83,7 @@ const UserSelectionItem = ({
         secondary={
           <Box>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-              {user.role || 'Team Member'}
+              {user.role || t('team_member_one')}
             </Typography>
             {user.email && user.email !== user.name && (
               <Typography variant="caption" sx={{ display: 'block', color: 'text.disabled' }}>
@@ -104,12 +106,13 @@ const UserSelectionItem = ({
  * Selected participants chips
  */
 const SelectedParticipants = ({ participants, onRemove, currentUserId }) => {
+  const { t } = useTranslation('terms');
   const selectedUsers = participants.filter(p => p.id !== currentUserId);
 
   if (selectedUsers.length === 0) {
     return (
       <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
-        No participants selected
+        {t('no_participants_selected')}
       </Typography>
     );
   }
@@ -144,6 +147,7 @@ const NewConversationModal = ({
   currentUserId,
   selectedChildId = null
 }) => {
+  const { t } = useTranslation('terms');
   const { currentChildId } = useChildContext();
   
   // State management
@@ -175,7 +179,7 @@ const NewConversationModal = ({
       }
     } catch (error) {
       console.error('Error fetching children:', error);
-      setError('Failed to load children');
+      setError(t('loading_care_team_members'));
     } finally {
       setLoadingChildren(false);
     }
@@ -308,7 +312,7 @@ const NewConversationModal = ({
       
     } catch (error) {
       console.error('Error fetching care team members:', error);
-      setError(`Failed to load team members: ${error.message}`);
+      setError(`${t('loading_care_team_members')} ${error.message}`);
       setAvailableUsers([]);
     } finally {
       setLoadingUsers(false);
@@ -382,7 +386,7 @@ const NewConversationModal = ({
    */
   const generateTitle = () => {
     const child = children?.find(c => c.id === selectedChild);
-    const childName = child?.name || 'Child';
+    const childName = child?.name || t('profile_one');
     
     if (conversationType === 'direct' && selectedParticipants.length === 1) {
       return `${childName} - Direct Message`;
@@ -405,17 +409,17 @@ const NewConversationModal = ({
 
       // Validation
       if (!selectedChild) {
-        setError('Please select a child for this conversation');
+        setError(t('please_select_profile'));
         return;
       }
 
       if (selectedParticipants.length === 0) {
-        setError('Please select at least one participant');
+        setError(t('please_select_participant'));
         return;
       }
 
       if (conversationType === 'direct' && selectedParticipants.length > 1) {
-        setError('Direct conversations can only have one other participant');
+        setError(t('max_one_direct'));
         return;
       }
 
@@ -447,7 +451,6 @@ const NewConversationModal = ({
       });
 
       if (result.success) {
-        console.log('✅ Conversation created:', result.conversationId);
         
         // Create conversation object for immediate UI update
         const newConversation = {
@@ -469,11 +472,11 @@ const NewConversationModal = ({
         handleClose();
       } else {
         console.error('Failed to create conversation:', result.error);
-        setError(result.error || 'Failed to create conversation');
+        setError(result.error || t('creating'));
       }
     } catch (error) {
       console.error('Error creating conversation:', error);
-      setError(error.message || 'Failed to create conversation');
+      setError(error.message || t('creating'));
     } finally {
       setLoading(false);
     }
@@ -508,7 +511,7 @@ const NewConversationModal = ({
     if (!conversationTitle.trim()) {
       // Auto-update title preview
     }
-  }, [selectedParticipants, selectedChild, conversationType]);
+  }, [selectedParticipants, selectedChild, conversationType, conversationTitle]);
 
   const isFormValid = selectedChild && selectedParticipants.length > 0 && 
     (conversationType === 'group' || selectedParticipants.length === 1);
@@ -539,7 +542,7 @@ const NewConversationModal = ({
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Add color="primary" />
           <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            New Conversation
+            {t('create_conversation')}
           </Typography>
         </Box>
         <IconButton onClick={handleClose} disabled={loading}>
@@ -556,20 +559,20 @@ const NewConversationModal = ({
 
         {/* Conversation Type */}
         <FormControl fullWidth sx={{ mb: 2 }}>
-          <InputLabel>Conversation Type</InputLabel>
+          <InputLabel>{t('conversation_type') || 'Conversation Type'}</InputLabel>
           <Select
             value={conversationType}
             onChange={handleTypeChange}
-            label="Conversation Type"
+            label={t('conversation_type') || 'Conversation Type'}
             disabled={loading}
           >
             <MenuItem value="direct">
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Person />
                 <Box>
-                  <Typography>Direct Message</Typography>
+                  <Typography>{t('direct_message') || 'Direct Message'}</Typography>
                   <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                    Private conversation with one person
+                    {t('direct_message_subtitle') || 'Private conversation with one person'}
                   </Typography>
                 </Box>
               </Box>
@@ -578,9 +581,9 @@ const NewConversationModal = ({
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Group />
                 <Box>
-                  <Typography>Group Conversation</Typography>
+                  <Typography>{t('group_conversation') || 'Group Conversation'}</Typography>
                   <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                    Team conversation with multiple people
+                    {t('group_conversation_subtitle') || 'Team conversation with multiple people'}
                   </Typography>
                 </Box>
               </Box>
@@ -590,11 +593,11 @@ const NewConversationModal = ({
 
         {/* Child Selection */}
         <FormControl fullWidth sx={{ mb: 2 }}>
-          <InputLabel>Child</InputLabel>
+          <InputLabel>{t('profile_select_label')}</InputLabel>
           <Select
             value={selectedChild}
             onChange={(e) => setSelectedChild(e.target.value)}
-            label="Child"
+            label={t('profile_select_label')}
             disabled={loading}
           >
             {children?.map((child) => (
@@ -622,7 +625,7 @@ const NewConversationModal = ({
                 {children.find(c => c.id === selectedChild)?.name?.charAt(0)?.toUpperCase()}
               </Avatar>
               <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                Creating conversation for: {children.find(c => c.id === selectedChild)?.name}
+                {t('creating_conversation_for', { name: children.find(c => c.id === selectedChild)?.name })}
               </Typography>
             </Box>
           </Alert>
@@ -631,22 +634,22 @@ const NewConversationModal = ({
         {/* Conversation Title */}
         <TextField
           fullWidth
-          label="Conversation Title (Optional)"
+          label={t('conversation_title_optional')}
           value={conversationTitle}
           onChange={(e) => setConversationTitle(e.target.value)}
           placeholder={generateTitle()}
           disabled={loading}
           sx={{ mb: 2 }}
-          helperText="Leave empty to auto-generate"
+          helperText={t('leave_empty_to_auto_generate')}
         />
 
         {/* Selected Participants */}
         <Box sx={{ mb: 2 }}>
           <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
-            Selected Participants ({selectedParticipants.length})
+            {t('selected_participants', { count: selectedParticipants.length })}
             {conversationType === 'direct' && (
               <Typography component="span" variant="caption" sx={{ color: 'text.secondary', ml: 1 }}>
-                (Max 1 for direct messages)
+                {t('max_one_direct')}
               </Typography>
             )}
           </Typography>
@@ -666,7 +669,7 @@ const NewConversationModal = ({
           icon={<Group />}
         >
           <Typography variant="body2">
-            Only care team members (care partners, caregivers, therapists) can participate in conversations about this child.
+            {t('restriction_profile_notice')}
           </Typography>
         </Alert>
 
@@ -674,7 +677,7 @@ const NewConversationModal = ({
         <TextField
           fullWidth
           size="small"
-          placeholder="Search care team members..."
+          placeholder={t('care_team_members') + '...'}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           disabled={loading}
@@ -689,7 +692,7 @@ const NewConversationModal = ({
         {/* Available Users */}
         <Box sx={{ mb: 2 }}>
           <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
-            Care Team Members
+            {t('care_team_members')}
           </Typography>
           <List sx={{ maxHeight: 200, overflow: 'auto', border: 1, borderColor: 'divider', borderRadius: 1 }}>
             {loadingUsers ? (
@@ -697,31 +700,31 @@ const NewConversationModal = ({
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', py: 2 }}>
                   <CircularProgress size={24} sx={{ mr: 2 }} />
                   <Typography variant="body2" color="text.secondary">
-                    Loading care team members...
+                    {t('loading_care_team_members')}
                   </Typography>
                 </Box>
               </ListItem>
             ) : !selectedChild ? (
               <ListItem>
                 <ListItemText
-                  primary="Select a profile first"
-                  secondary="Choose a profile to see available team members"
+                  primary={t('select_profile_first_title')}
+                  secondary={t('select_profile_first_subtitle')}
                   sx={{ textAlign: 'center' }}
                 />
               </ListItem>
             ) : availableUsers.length === 0 ? (
               <ListItem>
                 <ListItemText
-                  primary="No care team members found"
-                  secondary="Only care team members (care partners, caregivers, therapists) can participate in conversations"
+                  primary={t('no_care_team_members_found')}
+                  secondary={t('restriction_profile_notice')}
                   sx={{ textAlign: 'center' }}
                 />
               </ListItem>
             ) : filteredUsers.length === 0 ? (
               <ListItem>
                 <ListItemText
-                  primary="No members match your search"
-                  secondary="Try a different search term"
+                  primary={t('no_members_match_search')}
+                  secondary={t('try_different_search')}
                   sx={{ textAlign: 'center' }}
                 />
               </ListItem>
@@ -755,7 +758,7 @@ const NewConversationModal = ({
           disabled={!isFormValid || loading}
           startIcon={loading ? <CircularProgress size={16} /> : <Add />}
         >
-          {loading ? 'Creating...' : 'Create Conversation'}
+          {loading ? t('creating') : t('create_conversation')}
         </Button>
       </DialogActions>
     </Dialog>

@@ -75,6 +75,24 @@ export const TIMELINE_TYPES = {
     color: '#673AB7', // Deep Purple (UI should prefer theme)
     entryGroup: 'dailyHabit',
     collection: 'sleepLogs'
+  },
+  DAILY_CARE: {
+    type: 'daily_care',
+    label: 'Daily Care',
+    icon: '📋',
+    color: '#607D8B', // Blue Grey (UI should prefer theme)
+    entryGroup: 'dailyHabit',
+    collection: 'dailyCare',
+    isRootCollection: true // Indicates this is a root collection with childId filter
+  },
+  CHILD_TIMELINE: {
+    type: 'child_timeline',
+    label: 'Timeline Entry',
+    icon: '⏰',
+    color: '#795548', // Brown (UI should prefer theme)  
+    entryGroup: 'dailyHabit',
+    collection: 'timeline',
+    isChildSubCollection: true // Indicates this is a child subcollection
   }
 };
 
@@ -124,6 +142,18 @@ const normalizeTimelineEntry = (doc, type) => {
       title = `Mood: ${data.mood || 'Update'}`;
       content = data.notes || data.description || data.details || '';
       break;
+    case 'daily_care':
+      // Handle daily care entries (mood, sleep, food, safety)
+      const actionType = data.actionType || 'Daily Care';
+      const careData = data.data || {};
+      title = `${actionType.charAt(0).toUpperCase() + actionType.slice(1)}: ${careData.value || careData.mood || careData.rating || 'Update'}`;
+      content = careData.notes || data.notes || careData.description || '';
+      break;
+    case 'child_timeline':
+      // Handle child timeline entries  
+      title = data.title || data.actionType || 'Timeline Entry';
+      content = data.notes || data.content || data.description || '';
+      break;
     default:
       title = 'Entry';
       content = data.content || data.note || data.description || '';
@@ -167,14 +197,20 @@ export const getTimelineEntries = (childId, callback) => {
       let q;
       
       if (typeConfig.isRootCollection) {
-        // Root collection with childId filter (like dailyLogs)
+        // Root collection with childId filter (like dailyCare)
         q = query(
           collection(db, typeConfig.collection),
           where('childId', '==', childId),
           orderBy('timestamp', 'desc')
         );
+      } else if (typeConfig.isChildSubCollection) {
+        // Child subcollection (like children/[childId]/timeline)
+        q = query(
+          collection(db, 'children', childId, typeConfig.collection),
+          orderBy('timestamp', 'desc')
+        );
       } else {
-        // Child-specific collection (traditional structure)
+        // Legacy: Child-specific collection (traditional structure)
         q = query(
           collection(db, 'children', childId, typeConfig.collection),
           orderBy('timestamp', 'desc')

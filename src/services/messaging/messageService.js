@@ -134,7 +134,6 @@ export const sendMessage = async ({
       return messageRef.id;
     });
     
-    console.log('✅ Message sent successfully:', result);
     
     return {
       success: true,
@@ -247,7 +246,6 @@ export const getMessages = async (conversationId, userId, options = {}) => {
     // Sort by createdAt ascending (oldest first) for display
     messages.sort((a, b) => a.createdAt - b.createdAt);
     
-    console.log(`✅ Retrieved ${messages.length} messages for conversation ${conversationId}`);
     
     // 5. Return formatted messages
     return {
@@ -345,7 +343,6 @@ export const deleteMessage = async (messageId, userId) => {
  */
 export const markMessageAsRead = async (messageId, userId) => {
   try {
-    console.log('👁️ Marking message as read:', { messageId, userId });
     
     // Use transaction to ensure consistency between message and conversation updates
     await runTransaction(db, async (transaction) => {
@@ -405,7 +402,6 @@ export const markMessageAsRead = async (messageId, userId) => {
       }
     });
     
-    console.log('✅ Message marked as read successfully');
     
     return {
       success: true,
@@ -486,7 +482,6 @@ export const getUnreadMessages = async (userId, childId = null) => {
  */
 const validateMessagePermissions = async (userId, conversationId) => {
   try {
-    console.log('🔍 Validating message permissions:', { userId, conversationId });
     
     // Get conversation document
     const conversationRef = doc(db, COLLECTIONS.CONVERSATIONS, conversationId);
@@ -511,7 +506,6 @@ const validateMessagePermissions = async (userId, conversationId) => {
       return false;
     }
     
-    console.log('✅ User has message permissions');
     return true;
     
   } catch (error) {

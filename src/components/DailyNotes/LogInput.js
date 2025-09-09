@@ -110,7 +110,12 @@ const LogInput = ({ childId, selectedDate = new Date() }) => {
       entryTimestamp.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
 
       const docData = {
+        // Required fields for Firestore rules
         childId,
+        createdBy: user?.uid,
+        createdAt: serverTimestamp(),
+        
+        // Journal entry data
         text: richTextData.text,
         mediaURL,
         mediaType,
@@ -118,10 +123,25 @@ const LogInput = ({ childId, selectedDate = new Date() }) => {
         tags,
         timestamp: entryTimestamp, // Use selected date with current time
         entryDate: selectedDate.toDateString(), // Store the selected date for filtering
+        
+        // Author info (keeping for UI display)
         authorId: user?.uid,
         authorName: user?.displayName || user?.email?.split('@')[0] || 'User',
         authorEmail: user?.email,
+        
+        // Status for soft delete system
+        status: 'active',
       };
+      
+      // Debug logging to see exactly what's being sent
+      console.log('🔍 LogInput Debug Info:');
+      console.log('  childId:', childId);
+      console.log('  user?.uid:', user?.uid);
+      console.log('  user object:', user);
+      console.log('  docData being sent:', {
+        ...docData,
+        createdAt: '[serverTimestamp()]' // serverTimestamp shows as function, not actual value
+      });
       
       const docRef = await addDoc(collection(db, "dailyLogs"), docData);
 

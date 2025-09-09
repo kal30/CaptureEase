@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -20,11 +20,12 @@ import {
 } from '@mui/icons-material';
 import { alpha, useTheme } from '@mui/material/styles';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth } from '../services/firebase';
-import { assignCaregiver, assignTherapist, assignCarePartner } from '../services/childService';
+import { auth, app } from '../services/firebase';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import { USER_ROLES } from '../constants/roles';
 import { createUserProfile } from '../services/userService';
 import StyledButton from '../components/UI/StyledButton';
+import { storeInvitationContext } from '../services/auth/navigation';
 
 const AcceptInvite = () => {
   const theme = useTheme();
@@ -36,8 +37,18 @@ const AcceptInvite = () => {
   const [accepting, setAccepting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  
+  // Single fire protection for auto-acceptance
+  const hasAutoAccepted = useRef(false);
+
+  // Initialize Cloud Functions
+  const functions = getFunctions(app, 'us-central1');
+  const acceptInvitationCallable = httpsCallable(functions, 'acceptInvitation');
 
   useEffect(() => {
+    // Reset auto-acceptance flag when component mounts or URL changes
+    hasAutoAccepted.current = false;
+    
     const token = searchParams.get('token');
     
     if (!token) {
@@ -63,7 +74,6 @@ const AcceptInvite = () => {
         throw new Error('This invitation has expired. Please request a new one.');
       }
 
-      console.log('Parsed invitation data:', decoded);
       setInviteData(decoded);
     } catch (error) {
       console.error('Error parsing invitation:', error);
@@ -73,72 +83,52 @@ const AcceptInvite = () => {
     }
   }, [searchParams]);
 
+  // Auto-accept invitation when user is authenticated with correct email
+  useEffect(() => {
+    if (user && inviteData && 
+        user.email?.toLowerCase() === inviteData.email?.toLowerCase() && 
+        !success && !accepting && !hasAutoAccepted.current) {
+      hasAutoAccepted.current = true;
+      handleAcceptInvitation();
+    }
+  }, [user, inviteData, success, accepting]);
+
   const handleAcceptInvitation = async () => {
-    console.log('handleAcceptInvitation clicked!');
-    console.log('Current user:', user?.email);
-    console.log('Invite data:', inviteData);
-    
     if (!user || !inviteData) {
-      console.log('Missing user or invite data');
       setError('You must be logged in to accept this invitation.');
       return;
     }
 
-    if (user.email !== inviteData.email) {
-      console.log('Email mismatch:', user.email, 'vs', inviteData.email);
+    if (user.email?.toLowerCase() !== inviteData.email?.toLowerCase()) {
       setError(`This invitation was sent to ${inviteData.email}. Please log in with that email address.`);
       return;
     }
-
-    console.log('All checks passed, starting acceptance...');
     setAccepting(true);
     setError('');
 
     try {
-      console.log('Starting invitation acceptance process...');
-      
-      // Create/update user profile
-      console.log('Creating user profile...');
-      await createUserProfile(user.uid, {
-        email: user.email,
-        displayName: user.displayName,
-        role: inviteData.role,
-        lastActive: new Date()
-      });
-      console.log('User profile created successfully');
-
-      // Assign user to child(ren) based on role
-      const isMultiChild = inviteData.childIds && inviteData.childNames;
-      const childIds = isMultiChild ? inviteData.childIds : [inviteData.childId];
-      const childNames = isMultiChild ? inviteData.childNames : [inviteData.childName];
-      
-      console.log('Assigning user to children with role:', inviteData.role, 'Children:', childIds);
-      
-      for (const childId of childIds) {
-        // CLEAN: Only handle new role types - NO LEGACY
-        switch (inviteData.role) {
-          case USER_ROLES.CARE_PARTNER:
-            console.log('Assigning as care partner to child:', childId);
-            await assignCarePartner(childId, user.uid);
-            break;
-          case USER_ROLES.CAREGIVER:
-            console.log('Assigning as caregiver to child:', childId);
-            await assignCaregiver(childId, user.uid);
-            break;
-          case USER_ROLES.THERAPIST:
-            console.log('Assigning as therapist to child:', childId);
-            await assignTherapist(childId, user.uid);
-            break;
-          default:
-            throw new Error(`Invalid role: ${inviteData.role}`);
-        }
+      // Create/update user profile (non-blocking)
+      try {
+        await createUserProfile(user.uid, {
+          email: user.email,
+          displayName: user.displayName,
+          role: inviteData.role,
+          lastActive: new Date()
+        });
+      } catch (profileError) {
+        console.warn('Profile creation failed, continuing with invitation:', profileError);
+        // Continue with invitation acceptance even if profile creation fails
       }
-      console.log('Assignment completed successfully for all children');
 
-      const successMessage = childNames.length === 1 
-        ? `Welcome to ${childNames[0]}'s care team!`
-        : `Welcome to the care team for ${childNames.join(', ')}!`;
-      setSuccess(successMessage);
+      // Call Cloud Function to handle assignment (bypasses security rules)
+      const token = searchParams.get('token');
+      const result = await acceptInvitationCallable({ token });
+
+      if (!result.data || !result.data.message) {
+        throw new Error('Invalid response from Cloud Function');
+      }
+
+      setSuccess(result.data.message);
       
       // Redirect to dashboard after 2 seconds with forced refresh
       setTimeout(() => {
@@ -148,16 +138,23 @@ const AcceptInvite = () => {
     } catch (error) {
       console.error('Error accepting invitation:', error);
       
-      // More specific error messages
+      // Reset auto-acceptance flag on error so user can retry manually
+      hasAutoAccepted.current = false;
+      
+      // Better error messages for common scenarios
       let errorMessage = 'Failed to join the care team. ';
-      if (error.message.includes('permission')) {
-        errorMessage += 'Permission denied. The invitation may be invalid or expired.';
-      } else if (error.message.includes('not found')) {
-        errorMessage += 'The child or invitation could not be found.';
-      } else if (error.message.includes('already exists')) {
-        errorMessage += 'You are already part of this care team.';
+      if (error.message.includes('expired') || error.message.includes('too old')) {
+        errorMessage = 'This invitation has expired. Please request a new one from the person who invited you.';
+      } else if (error.message.includes('not found') || error.message.includes('invalid')) {
+        errorMessage = 'The invitation could not be found. Please check with the person who invited you for a new link.';
+      } else if (error.message.includes('already exists') || error.message.includes('already member')) {
+        errorMessage = 'You are already part of this care team! Try refreshing the page or going to your dashboard.';
+      } else if (error.message.includes('permission') || error.message.includes('denied')) {
+        errorMessage = 'Permission denied. The invitation may be invalid or you may not have the correct access rights.';
+      } else if (error.message.includes('email') || error.message.includes('user')) {
+        errorMessage = 'There was an issue with your account. Please make sure you\'re signed in with the correct email address.';
       } else {
-        errorMessage += `Error: ${error.message}`;
+        errorMessage += `Please try again or contact support. Error: ${error.message}`;
       }
       
       setError(errorMessage);
@@ -183,8 +180,22 @@ const AcceptInvite = () => {
         badge: 'View Only',
         description: 'You can view progress and provide guidance'
       };
+    } else if (role === 'care_partner') {
+      return {
+        icon: <FamilyIcon />,
+        label: 'Care Partner',
+        color: '#10B981',
+        badge: 'Can Add Data',
+        description: 'You can track daily progress and add entries'
+      };
     }
-    return {};
+    return {
+      icon: <PersonAddIcon />,
+      label: 'Team Member',
+      color: '#64748B',
+      badge: 'Member',
+      description: 'You are part of the care team'
+    };
   };
 
   if (loading) {
@@ -323,7 +334,12 @@ const AcceptInvite = () => {
                   <Button
                     variant="outlined"
                     size="large"
-                    onClick={() => navigate('/login', { state: { returnTo: window.location.pathname + window.location.search } })}
+                    onClick={() => {
+                      // Store invitation context before navigating to login
+                      const currentUrl = window.location.pathname + window.location.search;
+                      storeInvitationContext(currentUrl);
+                      navigate('/login', { state: { returnTo: currentUrl } });
+                    }}
                     sx={{ mb: 1 }}
                   >
                     Sign In
@@ -332,7 +348,7 @@ const AcceptInvite = () => {
                     Make sure to sign in with: {inviteData.email}
                   </Typography>
                 </Box>
-              ) : user.email !== inviteData.email ? (
+              ) : user.email?.toLowerCase() !== inviteData.email?.toLowerCase() ? (
                 <Box sx={{ textAlign: 'center', mb: 3 }}>
                   <Alert severity="warning" sx={{ mb: 2 }}>
                     You're signed in as {user.email}, but this invitation was sent to {inviteData.email}
@@ -346,29 +362,40 @@ const AcceptInvite = () => {
                 </Box>
               ) : (
                 <Box sx={{ textAlign: 'center' }}>
-                  <Typography variant="body1" sx={{ mb: 3 }}>
-                    Ready to join {inviteData.childName}'s care team?
-                  </Typography>
-                  <StyledButton
-                    variant="contained"
-                    size="large"
-                    onClick={handleAcceptInvitation}
-                    disabled={accepting}
-                    startIcon={accepting ? <CircularProgress size={16} /> : <CheckIcon />}
-                    sx={{
-                      py: 1.5,
-                      px: 4,
-                      fontSize: '1.1rem',
-                      fontWeight: 600,
-                      background: `linear-gradient(135deg, ${roleInfo.color} 0%, ${alpha(roleInfo.color, 0.8)} 100%)`,
-                      '&:hover': {
-                        transform: 'translateY(-1px)',
-                        boxShadow: `0 6px 20px ${alpha(roleInfo.color, 0.3)}`
-                      }
-                    }}
-                  >
-                    {accepting ? 'Joining...' : 'Accept Invitation'}
-                  </StyledButton>
+                  {accepting ? (
+                    <Box>
+                      <Typography variant="body1" sx={{ mb: 3 }}>
+                        Joining {inviteData.childName}'s care team...
+                      </Typography>
+                      <CircularProgress size={32} />
+                    </Box>
+                  ) : (
+                    <Box>
+                      <Typography variant="body1" sx={{ mb: 3 }}>
+                        Ready to join {inviteData.childName}'s care team?
+                      </Typography>
+                      <StyledButton
+                        variant="contained"
+                        size="large"
+                        onClick={handleAcceptInvitation}
+                        disabled={accepting}
+                        startIcon={<CheckIcon />}
+                        sx={{
+                          py: 1.5,
+                          px: 4,
+                          fontSize: '1.1rem',
+                          fontWeight: 600,
+                          background: `linear-gradient(135deg, ${roleInfo.color} 0%, ${alpha(roleInfo.color, 0.8)} 100%)`,
+                          '&:hover': {
+                            transform: 'translateY(-1px)',
+                            boxShadow: `0 6px 20px ${alpha(roleInfo.color, 0.3)}`
+                          }
+                        }}
+                      >
+                        Accept Invitation
+                      </StyledButton>
+                    </Box>
+                  )}
                 </Box>
               )}
             </>

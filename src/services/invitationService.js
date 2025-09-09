@@ -2,11 +2,13 @@ import { db } from "./firebase";
 import { collection, doc, getDoc, updateDoc, arrayUnion, query, where, getDocs } from "firebase/firestore";
 import { getAuth, fetchSignInMethodsForEmail } from "firebase/auth";
 import { getFunctions, httpsCallable } from 'firebase/functions';
+import { app } from './firebase';
 import { USER_ROLES } from '../constants/roles';
 import { getUserRoleForChild } from './rolePermissionService';
+import { updateMembersField } from './migrations/usersMembersMigration';
 
 // Initialize Firebase Functions
-const functions = getFunctions(); // Use default region. If you set a specific region for your functions, pass it here: getFunctions(app, 'your-region')
+const functions = getFunctions(app, 'us-central1');
 
 // Get references to the callable Cloud Functions
 const sendInvitationEmailCallable = httpsCallable(functions, 'sendInvitationEmail');
@@ -54,13 +56,18 @@ export const sendInvitation = async (childId, email, role, specialization = null
 
 
     // Enhanced invitation link with role context
-    const invitationLink = `${window.location.origin}/accept-invite?token=${encodeURIComponent(btoa(JSON.stringify({
+    const tokenData = {
         email,
         childId,
         role,
         timestamp: Date.now(),
         childName
-    })))}&childName=${encodeURIComponent(childName)}&role=${role}`;
+    };
+    const encodedToken = encodeURIComponent(btoa(JSON.stringify(tokenData)));
+    const encodedChildName = encodeURIComponent(childName);
+    const encodedRole = encodeURIComponent(role);
+    
+    const invitationLink = `${window.location.origin}/accept-invite?token=${encodedToken}&childName=${encodedChildName}&role=${encodedRole}`;
 
     try {
         // 1. Check if the user already exists in Firebase Auth
@@ -78,21 +85,33 @@ export const sendInvitation = async (childId, email, role, specialization = null
 
                 const childRef = doc(db, "children", childId);
                 
-                // Clean role structure - NO LEGACY CODE
+                // Get current data to update members field
+                const childDoc = await getDoc(childRef);
+                const childData = childDoc.data();
+                const currentUsers = childData.users || {};
+                
+                // Clean role structure - NO LEGACY CODE with users.members optimization
+                let updatedUsers = { ...currentUsers };
                 switch (role) {
                     case USER_ROLES.CARE_PARTNER:
+                        updatedUsers.care_partners = [...(currentUsers.care_partners || []), userId];
                         await updateDoc(childRef, {
                             "users.care_partners": arrayUnion(userId),
+                            "users.members": updateMembersField(updatedUsers)
                         });
                         break;
                     case USER_ROLES.CAREGIVER:
+                        updatedUsers.caregivers = [...(currentUsers.caregivers || []), userId];
                         await updateDoc(childRef, {
                             "users.caregivers": arrayUnion(userId),
+                            "users.members": updateMembersField(updatedUsers)
                         });
                         break;
                     case USER_ROLES.THERAPIST:
+                        updatedUsers.therapists = [...(currentUsers.therapists || []), userId];
                         await updateDoc(childRef, {
                             "users.therapists": arrayUnion(userId),
+                            "users.members": updateMembersField(updatedUsers)
                         });
                         break;
                     default:
@@ -185,16 +204,18 @@ export const sendMultiChildInvitation = async (childIds, email, role, specializa
     }
 
     // Create multi-child invitation token
-    const invitationToken = btoa(JSON.stringify({
+    const tokenData = {
         email,
         childIds: children.map(c => c.id),
         childNames: children.map(c => c.name),
         role,
         timestamp: Date.now(),
         specialization
-    }));
+    };
+    const invitationToken = btoa(JSON.stringify(tokenData));
+    const encodedToken = encodeURIComponent(invitationToken);
 
-    const invitationLink = `${window.location.origin}/accept-invite?token=${encodeURIComponent(invitationToken)}`;
+    const invitationLink = `${window.location.origin}/accept-invite?token=${encodedToken}`;
 
     try {
         // Check if the user already exists

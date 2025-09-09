@@ -1,18 +1,41 @@
 import React, { useState } from "react";
-import { Box, Modal, TextField, Chip, IconButton, Typography, Alert } from "@mui/material";
+import {
+  Box,
+  Modal,
+  TextField,
+  Chip,
+  IconButton,
+  Typography,
+  Alert,
+} from "@mui/material";
 import { Close as CloseIcon } from "@mui/icons-material";
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from "react-i18next";
 import AllergyChip from "../UI/Allergies";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { addDoc, collection } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { db } from "../../services/firebase";
 import ChildPhotoUploader from "./ChildPhotoUploader";
-import { ThemeCard, EnhancedLoadingButton, ThemeSpacing, ThemeText, CustomizableAutocomplete } from "../UI";
+import {
+  ThemeCard,
+  EnhancedLoadingButton,
+  ThemeSpacing,
+  ThemeText,
+  CustomizableAutocomplete,
+} from "../UI";
 import { useAsyncForm } from "../../hooks/useAsyncForm";
+import {
+  CONDITION_OPTIONS,
+  FOOD_ALLERGY_OPTIONS,
+  DIETARY_OPTIONS,
+  SENSORY_OPTIONS,
+  TRIGGER_OPTIONS,
+  SLEEP_OPTIONS,
+  COMMUNICATION_OPTIONS,
+} from "../../constants/childProfileOptions";
 
 const AddChildModal = ({ open, onClose, onSuccess }) => {
-  const { t } = useTranslation(['terms', 'common']);
+  const { t } = useTranslation(["terms", "common"]);
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
   const [photo, setPhoto] = useState(null);
@@ -39,56 +62,18 @@ const AddChildModal = ({ open, onClose, onSuccess }) => {
     },
     validate: ({ name, age }) => {
       if (!name?.trim()) {
-        throw new Error(`Please enter the ${t('terms:profile_name').toLowerCase()}`);
+        throw new Error(
+          `Please enter the ${t("terms:profile_name").toLowerCase()}`
+        );
       }
       if (!age?.trim()) {
-        throw new Error(`Please enter the ${t('terms:profile_age').toLowerCase()}`);
+        throw new Error(
+          `Please enter the ${t("terms:profile_age").toLowerCase()}`
+        );
       }
-    }
+    },
   });
 
-  const CONDITION_OPTIONS = [
-    { code: "ASD", label: "Autism / ASD" },
-    { code: "ADHD", label: "ADHD" },
-    { code: "SPEECH", label: "Speech / Language" },
-    { code: "LEARN", label: "Learning Differences" },
-    { code: "MEDICAL", label: "Medical (e.g., epilepsy, diabetes)" },
-    { code: "BEHAVIOR", label: "Behavioral / Emotional" },
-  ];
-
-  const FOOD_ALLERGY_OPTIONS = [
-    "Dairy/Milk", "Gluten/Wheat", "Nuts", "Eggs", "Soy", "Shellfish", 
-    "Fish", "Sesame", "Food dyes", "Artificial sweeteners", "Citrus", "Chocolate"
-  ];
-
-  const DIETARY_OPTIONS = [
-    "Gluten-free", "Dairy-free", "Sugar-limited", "Low-FODMAP", 
-    "Casein-free", "Dye-free", "Organic only", "Limited processed foods"
-  ];
-
-  const SENSORY_OPTIONS = [
-    "Sound sensitivity", "Light sensitivity", "Touch/texture issues", 
-    "Smell sensitivity", "Taste sensitivity", "Movement sensitivity", 
-    "Clothing/fabric issues", "Temperature sensitivity"
-  ];
-
-  const TRIGGER_OPTIONS = [
-    "Loud noises", "Crowds", "Bright lights", "Transitions/changes", 
-    "Hunger", "Fatigue", "Overstimulation", "Certain foods", 
-    "Screen time limits", "Social situations", "New environments"
-  ];
-
-  const SLEEP_OPTIONS = [
-    "Difficulty falling asleep", "Frequent night waking", "Early morning waking", 
-    "Restless sleep", "Needs specific routine", "Sensory needs for sleep", 
-    "Nightmares/night terrors", "Sleep walking"
-  ];
-
-  const COMMUNICATION_OPTIONS = [
-    "Nonverbal", "Limited verbal", "Uses AAC device", "Sign language", 
-    "Picture cards", "Needs extra processing time", "Echolalia", 
-    "Difficulty with social communication"
-  ];
 
   const normalizeCondition = (item) => {
     if (typeof item === "string") {
@@ -99,7 +84,6 @@ const AddChildModal = ({ open, onClose, onSuccess }) => {
       ? item
       : { code: "OTHER", label: String(item), custom: true };
   };
-
 
   // Handle the form submission
   const handleSubmit = () => {
@@ -116,20 +100,22 @@ const AddChildModal = ({ open, onClose, onSuccess }) => {
 
         const conditionCodes = selectedConditions.map((c) => c.code);
         const currentUserId = getAuth().currentUser.uid;
-        
+
         const newChild = {
           name,
           age,
           photoURL: photoDownloadURL,
-          // CLEAN: New role-based user structure
+          // REQUIRED by rules: members + active
           users: {
-            care_owner: currentUserId,        // User becomes Care Owner
-            care_partners: [],                // Empty array for Care Partners
-            caregivers: [],                   // Empty array for Caregivers
-            therapists: []                    // Empty array for Therapists
+            care_owner: currentUserId, // User becomes Care Owner
+            care_partners: [], // Empty array for Care Partners
+            caregivers: [], // Empty array for Caregivers
+            therapists: [], // Empty array for Therapists
+            members: [currentUserId],
           },
+          status: "active",
           settings: {
-            allow_therapist_family_logs: false  // Default privacy setting
+            allow_therapist_family_logs: false, // Default privacy setting
           },
           // Structured condition fields
           conditions: selectedConditions,
@@ -142,14 +128,14 @@ const AddChildModal = ({ open, onClose, onSuccess }) => {
             behavioralTriggers,
             currentMedications,
             sleepIssues,
-            communicationNeeds
-          }
+            communicationNeeds,
+          },
         };
 
         // Save child to Firestore
         const docRef = await addDoc(collection(db, "children"), newChild);
         console.log("Child added to Firestore with ID:", docRef.id);
-        
+
         return docRef;
       },
       { name, age }
@@ -188,29 +174,50 @@ const AddChildModal = ({ open, onClose, onSuccess }) => {
           left: "50%",
           transform: "translate(-50%, -50%)",
           width: 600,
-          maxHeight: '90vh',
-          overflow: 'auto',
+          maxHeight: "90vh",
+          overflow: "auto",
         }}
       >
-        <ThemeCard variant="modal" elevated sx={{ display: 'flex', flexDirection: 'column' }}>
+        <ThemeCard
+          variant="modal"
+          elevated
+          sx={{ display: "flex", flexDirection: "column" }}
+        >
           {/* Header */}
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 3, pb: 2, borderBottom: 1, borderColor: 'divider' }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              p: 3,
+              pb: 2,
+              borderBottom: 1,
+              borderColor: "divider",
+            }}
+          >
             <Box>
-              <Typography variant="h5" sx={{ fontWeight: 600, color: 'text.primary' }}>
-                {t('common:modal.add_new', { item: t('terms:profile_one') })}
+              <Typography
+                variant="h5"
+                sx={{ fontWeight: 600, color: "text.primary" }}
+              >
+                {t("common:modal.add_new", { item: t("terms:profile_one") })}
               </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                {t('terms:create_profile_description')}
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ mt: 0.5 }}
+              >
+                {t("terms:create_profile_description")}
               </Typography>
             </Box>
             <IconButton
               onClick={handleClose}
               sx={{
-                color: 'text.secondary',
-                '&:hover': {
-                  color: 'text.primary',
-                  backgroundColor: 'action.hover'
-                }
+                color: "text.secondary",
+                "&:hover": {
+                  color: "text.primary",
+                  backgroundColor: "action.hover",
+                },
               }}
             >
               <CloseIcon />
@@ -218,191 +225,197 @@ const AddChildModal = ({ open, onClose, onSuccess }) => {
           </Box>
 
           {/* Content */}
-          <Box sx={{ flex: 1, overflow: 'auto', p: 3 }}>
+          <Box sx={{ flex: 1, overflow: "auto", p: 3 }}>
             {childForm.error && (
-              <Alert 
-                severity="error" 
-                sx={{ mb: 3 }} 
+              <Alert
+                severity="error"
+                sx={{ mb: 3 }}
                 onClose={() => childForm.clearError()}
               >
                 {childForm.error}
               </Alert>
             )}
-          <ThemeSpacing variant="modal-content">
-
-            <ThemeSpacing variant="field">
-              <TextField
-                label={t('terms:profile_name')}
-                variant="outlined"
-                fullWidth
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </ThemeSpacing>
-
-            <ThemeSpacing variant="field">
-              <TextField
-                label={t('terms:profile_age')}
-                variant="outlined"
-                fullWidth
-                value={age}
-                onChange={(e) => setAge(e.target.value)}
-              />
-            </ThemeSpacing>
-
-        <CustomizableAutocomplete
-          options={CONDITION_OPTIONS}
-          getOptionLabel={(option) =>
-            typeof option === "string" ? option : option.label
-          }
-          value={selectedConditions}
-          onChange={(event, newValue) => {
-            const normalized = newValue.map(normalizeCondition);
-            setSelectedConditions(normalized);
-          }}
-          label="Primary Concerns / Diagnoses"
-          addText="Add concern"
-          helperText="Optional — select from list or add custom concerns"
-          renderTags={(value, getTagProps) =>
-            value.map((option, index) =>
-              option.custom ? (
-                <Chip
-                  {...getTagProps({ index })}
-                  label={option.label}
-                  color="default"
+            <ThemeSpacing variant="modal-content">
+              <ThemeSpacing variant="field">
+                <TextField
+                  label={t("terms:profile_name")}
                   variant="outlined"
-                  sx={{ mr: 0.5 }}
+                  fullWidth
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                 />
-              ) : (
-                <Chip
-                  {...getTagProps({ index })}
-                  label={option.label}
-                  color={undefined}
-                  variant="filled"
-                  sx={{
-                    mr: 0.5,
-                    backgroundColor: "#c8e6c9",
-                    color: "#000",
-                    "& .MuiChip-deleteIcon": { color: "#2e7d32" },
-                  }}
+              </ThemeSpacing>
+
+              <ThemeSpacing variant="field">
+                <TextField
+                  label={t("terms:profile_age")}
+                  variant="outlined"
+                  fullWidth
+                  value={age}
+                  onChange={(e) => setAge(e.target.value)}
                 />
-              )
-            )
-          }
-          sx={{ mb: 3 }}
-        />
+              </ThemeSpacing>
 
-        {/* Medical & Behavioral Profile */}
-        <ThemeText variant="section-header">
-          📋 {t('terms:medical_behavioral_profile')}
-        </ThemeText>
-        <ThemeText variant="form-helper">
-          This information helps us identify patterns and correlations in daily tracking
-        </ThemeText>
-
-        <CustomizableAutocomplete
-          options={FOOD_ALLERGY_OPTIONS}
-          value={foodAllergies}
-          onChange={(event, newValue) => setFoodAllergies(newValue)}
-          label="Food Allergies & Intolerances"
-          addText="Add allergy"
-          renderTags={(value, getTagProps) =>
-            value.map((option, index) => (
-              <AllergyChip
-                key={index}
-                allergy={option}
-                variant="compact"
-                inForm={true}
-                {...getTagProps({ index })}
+              <CustomizableAutocomplete
+                options={CONDITION_OPTIONS}
+                getOptionLabel={(option) =>
+                  typeof option === "string" ? option : option.label
+                }
+                value={selectedConditions}
+                onChange={(event, newValue) => {
+                  const normalized = newValue.map(normalizeCondition);
+                  setSelectedConditions(normalized);
+                }}
+                label="Primary Concerns / Diagnoses"
+                addText="Add concern"
+                helperText="Optional — select from list or add custom concerns"
+                renderTags={(value, getTagProps) =>
+                  value.map((option, index) =>
+                    option.custom ? (
+                      <Chip
+                        {...getTagProps({ index })}
+                        label={option.label}
+                        color="default"
+                        variant="outlined"
+                        sx={{ mr: 0.5 }}
+                      />
+                    ) : (
+                      <Chip
+                        {...getTagProps({ index })}
+                        label={option.label}
+                        color={undefined}
+                        variant="filled"
+                        sx={{
+                          mr: 0.5,
+                          backgroundColor: "#c8e6c9",
+                          color: "#000",
+                          "& .MuiChip-deleteIcon": { color: "#2e7d32" },
+                        }}
+                      />
+                    )
+                  )
+                }
+                sx={{ mb: 3 }}
               />
-            ))
-          }
-          sx={{ mb: 3 }}
-        />
 
-        <CustomizableAutocomplete
-          options={DIETARY_OPTIONS}
-          value={dietaryRestrictions}
-          onChange={(event, newValue) => setDietaryRestrictions(newValue)}
-          label="Dietary Restrictions"
-          addText="Add diet"
-          helperText="Special diets or restrictions they follow"
-          sx={{ mb: 3 }}
-        />
+              {/* Medical & Behavioral Profile */}
+              <ThemeText variant="section-header">
+                📋 {t("terms:medical_behavioral_profile")}
+              </ThemeText>
+              <ThemeText variant="form-helper">
+                This information helps us identify patterns and correlations in
+                daily tracking
+              </ThemeText>
 
-        <CustomizableAutocomplete
-          options={SENSORY_OPTIONS}
-          value={sensoryIssues}
-          onChange={(event, newValue) => setSensoryIssues(newValue)}
-          label="Sensory Sensitivities"
-          addText="Add sensitivity"
-          helperText="Things they are sensitive to"
-          sx={{ mb: 3 }}
-        />
+              <CustomizableAutocomplete
+                options={FOOD_ALLERGY_OPTIONS}
+                value={foodAllergies}
+                onChange={(event, newValue) => setFoodAllergies(newValue)}
+                label="Food Allergies & Intolerances"
+                addText="Add allergy"
+                renderTags={(value, getTagProps) =>
+                  value.map((option, index) => (
+                    <AllergyChip
+                      key={index}
+                      allergy={option}
+                      variant="compact"
+                      inForm={true}
+                      {...getTagProps({ index })}
+                    />
+                  ))
+                }
+                sx={{ mb: 3 }}
+              />
 
-        <CustomizableAutocomplete
-          options={TRIGGER_OPTIONS}
-          value={behavioralTriggers}
-          onChange={(event, newValue) => setBehavioralTriggers(newValue)}
-          label="Known Behavioral Triggers"
-          addText="Add trigger"
-          helperText="Situations or things that tend to cause challenges"
-          sx={{ mb: 3 }}
-        />
+              <CustomizableAutocomplete
+                options={DIETARY_OPTIONS}
+                value={dietaryRestrictions}
+                onChange={(event, newValue) => setDietaryRestrictions(newValue)}
+                label="Dietary Restrictions"
+                addText="Add diet"
+                helperText="Special diets or restrictions they follow"
+                sx={{ mb: 3 }}
+              />
 
-        <CustomizableAutocomplete
-          options={[]} 
-          value={currentMedications}
-          onChange={(event, newValue) => setCurrentMedications(newValue)}
-          label="Current Medications"
-          addText="Add medication"
-          helperText="List current medications and dosages"
-          sx={{ mb: 3 }}
-        />
+              <CustomizableAutocomplete
+                options={SENSORY_OPTIONS}
+                value={sensoryIssues}
+                onChange={(event, newValue) => setSensoryIssues(newValue)}
+                label="Sensory Sensitivities"
+                addText="Add sensitivity"
+                helperText="Things they are sensitive to"
+                sx={{ mb: 3 }}
+              />
 
-        <CustomizableAutocomplete
-          options={SLEEP_OPTIONS}
-          value={sleepIssues}
-          onChange={(event, newValue) => setSleepIssues(newValue)}
-          label="Sleep Issues"
-          addText="Add sleep issue"
-          helperText="Any sleep-related challenges"
-          sx={{ mb: 3 }}
-        />
+              <CustomizableAutocomplete
+                options={TRIGGER_OPTIONS}
+                value={behavioralTriggers}
+                onChange={(event, newValue) => setBehavioralTriggers(newValue)}
+                label="Known Behavioral Triggers"
+                addText="Add trigger"
+                helperText="Situations or things that tend to cause challenges"
+                sx={{ mb: 3 }}
+              />
 
-        <CustomizableAutocomplete
-          options={COMMUNICATION_OPTIONS}
-          value={communicationNeeds}
-          onChange={(event, newValue) => setCommunicationNeeds(newValue)}
-          label="Communication Needs"
-          addText="Add communication need"
-          helperText="How they communicate best"
-          sx={{ mb: 3 }}
-        />
+              <CustomizableAutocomplete
+                options={[]}
+                value={currentMedications}
+                onChange={(event, newValue) => setCurrentMedications(newValue)}
+                label="Current Medications"
+                addText="Add medication"
+                helperText="List current medications and dosages"
+                sx={{ mb: 3 }}
+              />
 
-        {/* ChildPhotoUploader component */}
-        <ChildPhotoUploader
-          setPhoto={setPhoto}
-          photoURL={photoURL}
-          setPhotoURL={setPhotoURL}
-        />
+              <CustomizableAutocomplete
+                options={SLEEP_OPTIONS}
+                value={sleepIssues}
+                onChange={(event, newValue) => setSleepIssues(newValue)}
+                label="Sleep Issues"
+                addText="Add sleep issue"
+                helperText="Any sleep-related challenges"
+                sx={{ mb: 3 }}
+              />
 
-          </ThemeSpacing>
+              <CustomizableAutocomplete
+                options={COMMUNICATION_OPTIONS}
+                value={communicationNeeds}
+                onChange={(event, newValue) => setCommunicationNeeds(newValue)}
+                label="Communication Needs"
+                addText="Add communication need"
+                helperText="How they communicate best"
+                sx={{ mb: 3 }}
+              />
+
+              {/* ChildPhotoUploader component */}
+              <ChildPhotoUploader
+                setPhoto={setPhoto}
+                photoURL={photoURL}
+                setPhotoURL={setPhotoURL}
+              />
+            </ThemeSpacing>
           </Box>
 
           {/* Footer */}
-          <Box sx={{ p: 3, borderTop: 1, borderColor: 'divider', bgcolor: 'grey.50' }}>
+          <Box
+            sx={{
+              p: 3,
+              borderTop: 1,
+              borderColor: "divider",
+              bgcolor: "grey.50",
+            }}
+          >
             <EnhancedLoadingButton
               variant="success-gradient"
               loading={childForm.loading}
               loadingStyle="pulse"
-              loadingText={`${t('common:actions.add')}ing ${t('terms:profile_one').toLowerCase()}...`}
+              loadingText={`${t("common:actions.add")}ing ${t("terms:profile_one").toLowerCase()}...`}
               onClick={handleSubmit}
               fullWidth
               elevated
               size="large"
             >
-              {t('common:actions.add')} {t('terms:profile_one')}
+              {t("common:actions.add")} {t("terms:profile_one")}
             </EnhancedLoadingButton>
           </Box>
         </ThemeCard>

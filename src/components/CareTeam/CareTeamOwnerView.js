@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Grid,
@@ -11,27 +12,29 @@ import {
   Menu,
   MenuItem,
   Alert,
-  Button
+  Button,
+  ButtonGroup
 } from '@mui/material';
 import {
   MoreVert as MoreVertIcon,
   PersonAdd as PersonAddIcon,
   AccessTime as AccessTimeIcon,
   Email as EmailIcon,
-  AdminPanelSettings as TransferIcon
+  AdminPanelSettings as TransferIcon,
+  FamilyRestroom as FamilyIcon,
+  Psychology as TherapyIcon
 } from '@mui/icons-material';
 import { USER_ROLES } from '../../constants/roles';
 import GradientButton from '../UI/GradientButton';
-import InviteTeamMemberModal from '../InviteTeamMemberModal';
 
 /**
  * CareTeamOwnerView - Full management view for Care Owners
  * Shows team member cards with management actions
  */
 const CareTeamOwnerView = ({ child, onTeamUpdate }) => {
+  const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedMember, setSelectedMember] = useState(null);
-  const [showInviteModal, setShowInviteModal] = useState(false);
 
   // Get all team members from populated data
   const getAllTeamMembers = () => {
@@ -118,17 +121,40 @@ const CareTeamOwnerView = ({ child, onTeamUpdate }) => {
   return (
     <Box>
       {/* Team Overview */}
-      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h6">
-          Team for {child.name} ({teamMembers.length} members)
-        </Typography>
-        <GradientButton
-          variant="gradient"
-          startIcon={<PersonAddIcon />}
-          onClick={() => setShowInviteModal(true)}
-        >
-          Invite Member
-        </GradientButton>
+      <Box sx={{ mb: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Typography variant="h6">
+            Team for {child.name} ({teamMembers.length} members)
+          </Typography>
+        </Box>
+        
+        {/* Invite Buttons */}
+        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+          <GradientButton
+            variant="gradient"
+            startIcon={<FamilyIcon />}
+            onClick={() => navigate(`/invite/caregiver?childId=${child.id}`)}
+            sx={{ flex: { xs: '1 1 auto', sm: '0 0 auto' } }}
+          >
+            Invite Caregiver
+          </GradientButton>
+          <Button
+            variant="outlined"
+            startIcon={<TherapyIcon />}
+            onClick={() => navigate(`/invite/therapist?childId=${child.id}`)}
+            sx={{ 
+              flex: { xs: '1 1 auto', sm: '0 0 auto' },
+              borderColor: 'secondary.main',
+              color: 'secondary.main',
+              '&:hover': {
+                borderColor: 'secondary.dark',
+                bgcolor: 'secondary.light'
+              }
+            }}
+          >
+            Invite Therapist
+          </Button>
+        </Box>
       </Box>
 
       {/* Team Member Cards */}
@@ -275,17 +301,6 @@ const CareTeamOwnerView = ({ child, onTeamUpdate }) => {
         </MenuItem>
       </Menu>
 
-      {/* Invite Modal */}
-      <InviteTeamMemberModal
-        open={showInviteModal}
-        onClose={() => setShowInviteModal(false)}
-        children={[child]}
-        selectedChildId={child.id}
-        onInviteSuccess={() => {
-          setShowInviteModal(false);
-          onTeamUpdate();
-        }}
-      />
     </Box>
   );
 };

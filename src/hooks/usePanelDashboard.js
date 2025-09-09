@@ -41,9 +41,7 @@ export const usePanelDashboard = () => {
   const [entryType, setEntryType] = useState("micro"); // 'micro' or 'full'
   const [expandedCards, setExpandedCards] = useState({});
   const [expandedCategories, setExpandedCategories] = useState({});
-  const [highlightedActions, setHighlightedActions] = useState({});
-  const [showInviteModal, setShowInviteModal] = useState(false);
-  const [inviteChildId, setInviteChildId] = useState(null);
+  const [highlightedActions] = useState({});
   const [showAddChildModal, setShowAddChildModal] = useState(false);
   const [showEditChildModal, setShowEditChildModal] = useState(false);
   const [selectedChildForEdit, setSelectedChildForEdit] = useState(null);
@@ -202,7 +200,7 @@ export const usePanelDashboard = () => {
     }
   };
 
-  const handleQuickEntryComplete = (data) => {
+  const handleQuickEntryComplete = () => {
     setShowQuickEntry(false);
     setSelectedChild(null);
   };
@@ -219,8 +217,8 @@ export const usePanelDashboard = () => {
   const isCardExpanded = (childId) => expandedCards[childId] || false;
 
   const handleInviteTeamMember = (childId) => {
-    setInviteChildId(childId);
-    setShowInviteModal(true);
+    // Navigate to role selection page with child pre-selected
+    navigate('/invite', { state: { childId } });
   };
 
   const handleEditChild = (child) => {
@@ -228,9 +226,6 @@ export const usePanelDashboard = () => {
     setShowEditChildModal(true);
   };
 
-  const handleInviteSuccess = (result) => {
-    refreshRoles();
-  };
 
   const handleAddChildSuccess = () => {
     setShowAddChildModal(false);
@@ -388,10 +383,6 @@ export const usePanelDashboard = () => {
     return "Just now";
   };
 
-  const handleCloseInviteModal = () => {
-    setShowInviteModal(false);
-    setInviteChildId(null);
-  };
 
 
   const ownChildren = children.filter(child => getUserRoleForChild?.(child.id) === USER_ROLES.CARE_OWNER);
@@ -412,8 +403,6 @@ export const usePanelDashboard = () => {
     expandedCards,
     expandedCategories,
     highlightedActions,
-    showInviteModal,
-    inviteChildId,
     showAddChildModal,
     showEditChildModal,
     selectedChildForEdit,
@@ -439,7 +428,6 @@ export const usePanelDashboard = () => {
     getUserRoleForChild,
     setExpandedCategories,
     setShowAddChildModal,
-    setShowInviteModal,
     handleInviteTeamMember,
     isCardExpanded,
     toggleCard,
@@ -450,8 +438,6 @@ export const usePanelDashboard = () => {
     handleGroupActionClick,
     getTypeConfig,
     formatTimeAgo,
-    handleCloseInviteModal,
-    handleInviteSuccess,
     handleAddChildSuccess,
     setShowEditChildModal,
     setSelectedChildForEdit,

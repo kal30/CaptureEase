@@ -18,8 +18,10 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-
 // Initialize Firebase services
 export const auth = getAuth(app);
 export const db = getFirestore(app);  // Export Firestore instance
 export const storage = getStorage(app);  // Export Storage instance
+
+// Export the app instance for use with Cloud Functions
+export { app };

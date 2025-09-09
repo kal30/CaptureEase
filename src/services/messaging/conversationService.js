@@ -79,7 +79,6 @@ export const createConversation = async ({ participants, childId, type, title, c
     };
     
     const docRef = await addDoc(conversationsRef, firestoreData);
-    console.log('✅ Conversation created with ID:', docRef.id);
     
     return {
       success: true,
@@ -107,7 +106,6 @@ export const createConversation = async ({ participants, childId, type, title, c
 export const getConversations = async (userId, options = {}) => {
   try {
     console.log('📋 Fetching conversations for user:', { userId, options });
-    console.log('🔧 DEBUG: User should now have access with updated Firestore rules');
     
     // 1. Validate user ID
     if (!userId || typeof userId !== 'string') {
@@ -165,7 +163,6 @@ export const getConversations = async (userId, options = {}) => {
       conversations.push(conversation);
     });
     
-    console.log(`✅ Found ${conversations.length} conversations for user ${userId}`);
     
     // 5. Return formatted conversations
     return {
@@ -201,7 +198,6 @@ export const getConversations = async (userId, options = {}) => {
  */
 export const getConversationById = async (conversationId, userId) => {
   try {
-    console.log('🔍 Getting conversation by ID:', { conversationId, userId });
     
     // 1. Validate IDs
     if (!conversationId || !userId) {
@@ -251,7 +247,6 @@ export const getConversationById = async (conversationId, userId) => {
       } : null
     };
     
-    console.log('✅ Found conversation:', conversation.id);
     
     return {
       success: true,
@@ -277,7 +272,6 @@ export const getConversationById = async (conversationId, userId) => {
  */
 export const updateConversation = async (conversationId, updates, userId) => {
   try {
-    console.log('✏️ Updating conversation:', { conversationId, updates, userId });
     
     // 1. Validate permissions - first get the conversation
     const conversationResult = await getConversationById(conversationId, userId);
@@ -312,7 +306,6 @@ export const updateConversation = async (conversationId, updates, userId) => {
     const conversationRef = doc(db, COLLECTIONS.CONVERSATIONS, conversationId);
     await updateDoc(conversationRef, sanitizedUpdates);
     
-    console.log('✅ Conversation updated successfully');
     
     return {
       success: true,
@@ -376,7 +369,6 @@ export const deactivateConversation = async (conversationId, userId) => {
  */
 const validateChildAccess = async (userId, childId) => {
   try {
-    console.log('🔍 Validating child access:', { userId, childId });
     
     // Check the child document directly for user access
     const childDocRef = doc(db, COLLECTIONS.CHILDREN, childId);
@@ -392,25 +384,21 @@ const validateChildAccess = async (userId, childId) => {
     
     // Check if user is care owner
     if (users.care_owner === userId) {
-      console.log('✅ User is care owner');
       return true;
     }
     
     // Check if user is in care_partners array
     if (users.care_partners && users.care_partners.includes(userId)) {
-      console.log('✅ User is care partner');
       return true;
     }
     
     // Check if user is in caregivers array  
     if (users.caregivers && users.caregivers.includes(userId)) {
-      console.log('✅ User is caregiver');
       return true;
     }
     
     // Check if user is in therapists array
     if (users.therapists && users.therapists.includes(userId)) {
-      console.log('✅ User is therapist');
       return true;
     }
     
@@ -432,7 +420,6 @@ const validateChildAccess = async (userId, childId) => {
  */
 const findExistingConversation = async (participants, childId) => {
   try {
-    console.log('🔍 Checking for existing conversation:', { participants, childId });
     
     const conversationsRef = collection(db, COLLECTIONS.CONVERSATIONS);
     
@@ -454,13 +441,11 @@ const findExistingConversation = async (participants, childId) => {
         // Check if participants arrays match (same users, any order)
         if (existingParticipants.length === participants.length &&
             participants.every(p => existingParticipants.includes(p))) {
-          console.log('✅ Found existing direct conversation:', doc.id);
           return doc.id;
         }
       }
     }
     
-    console.log('ℹ️ No existing conversation found');
     return null;
     
   } catch (error) {

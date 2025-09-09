@@ -1,351 +1,30 @@
 // Message Thread Component
 // Displays messages in a conversation with real-time updates
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import {
-  Box,
-  Typography,
-  Avatar,
-  Paper,
-  Divider,
-  IconButton,
-  Chip,
-  CircularProgress,
-  Alert,
-  Fade
-} from '@mui/material';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { Box, Typography, Alert } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@mui/material/styles';
-import {
-  Info,
-  MoreVert,
-  Reply,
-  Check,
-  DoneAll
-} from '@mui/icons-material';
+// Icons handled inside subcomponents
 
 // Services and utils
 import { getMessages, markMessageAsRead } from '../../services/messaging';
-import { formatMessageTime, getDateGroupLabel, needsDateSeparator } from '../../utils/dateUtils';
-import { getMessagingTheme } from '../../assets/theme/messagingTheme';
+import { needsDateSeparator } from '../../utils/dateUtils';
+// (theme used inside subcomponents)
 
 // Components
 import MessageComposer from './MessageComposer';
+import MessageBubble from './MessageBubble';
+import DateSeparator from './DateSeparator';
+import MessageSkeleton from './MessageSkeleton';
+import ThreadHeader from './ThreadHeader';
+import MessageList from './MessageList';
 
-/**
- * Individual message bubble component
- */
-const MessageBubble = ({ 
-  message, 
-  currentUserId, 
-  showAvatar = true,
-  showTimestamp = true,
-  onReply 
-}) => {
-  const theme = useTheme();
-  const messagingTheme = getMessagingTheme(theme);
-  const isOwnMessage = message.senderId === currentUserId;
-  const isRead = message.readBy && Object.keys(message.readBy).length > 1; // More than just sender
+// MessageBubble extracted to separate file
 
-  return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'row',
-        alignItems: 'flex-end',
-        gap: 1,
-        mb: 1,
-        ...(isOwnMessage && {
-          flexDirection: 'row-reverse',
-        }),
-      }}
-    >
-      {/* Avatar (only show for other users' messages) */}
-      {showAvatar && !isOwnMessage && (
-        <Avatar
-          sx={{
-            ...messagingTheme.childContext.avatar,
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-          }}
-        >
-          {message.senderName?.charAt(0)?.toUpperCase() || '?'}
-        </Avatar>
-      )}
+// DateSeparator extracted to separate file
 
-      {/* Message content */}
-      <Box
-        sx={{
-          maxWidth: '70%',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: isOwnMessage ? 'flex-end' : 'flex-start'
-        }}
-      >
-        {/* Sender name (only for other users' messages) */}
-        {!isOwnMessage && showAvatar && (
-          <Typography
-            variant="caption"
-            sx={{
-              color: 'text.secondary',
-              mb: 0.5,
-              ml: 1
-            }}
-          >
-            {message.senderName}
-          </Typography>
-        )}
-
-        {/* Reply indicator */}
-        {message.replyTo && (
-          <Box
-            sx={{
-              maxWidth: '100%',
-              mb: 0.5,
-              opacity: 0.7,
-              borderLeft: 2,
-              borderColor: 'primary.main',
-              pl: 1,
-              ...(isOwnMessage && {
-                borderRight: 2,
-                borderLeft: 0,
-                pr: 1,
-                pl: 0
-              })
-            }}
-          >
-            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-              Replying to message
-            </Typography>
-          </Box>
-        )}
-
-        {/* Message bubble */}
-        <Paper
-          elevation={0}
-          className="message-bubble"
-          sx={{
-            px: 2,
-            py: 1.5,
-            position: 'relative',
-            maxWidth: '100%',
-            wordBreak: 'break-word',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-            transition: messagingTheme.transitions.fast,
-            ...(isOwnMessage 
-              ? {
-                  ...messagingTheme.messageBubble.own,
-                  background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
-                }
-              : {
-                  ...messagingTheme.messageBubble.other,
-                  background: theme.palette.background.paper,
-                  border: `1px solid ${theme.palette.divider}`,
-                }
-            ),
-            '&:hover': {
-              transform: 'translateY(-1px)',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-            }
-          }}
-        >
-          {/* Message text */}
-          <Typography
-            variant="body2"
-            sx={{
-              whiteSpace: 'pre-wrap',
-              lineHeight: 1.4,
-            }}
-          >
-            {message.text}
-          </Typography>
-
-          {/* Message metadata */}
-          {message.metadata && message.metadata.incidentId && (
-            <Chip
-              size="small"
-              label="Important Moment Shared"
-              icon={<Info />}
-              sx={{
-                mt: 1,
-                height: 24,
-                fontSize: '0.7rem',
-                backgroundColor: 'rgba(255,255,255,0.2)',
-                color: 'inherit'
-              }}
-            />
-          )}
-
-          {/* Edited indicator */}
-          {message.isEdited && (
-            <Typography
-              variant="caption"
-              sx={{
-                display: 'block',
-                mt: 0.5,
-                opacity: 0.7,
-                fontStyle: 'italic',
-                fontSize: '0.7rem'
-              }}
-            >
-              edited
-            </Typography>
-          )}
-
-          {/* Message actions */}
-          <Box
-            sx={{
-              position: 'absolute',
-              top: -12,
-              ...(isOwnMessage ? { left: -50 } : { right: -50 }),
-              display: 'flex',
-              gap: 0.5,
-              opacity: 0,
-              transition: messagingTheme.transitions.fast,
-              background: 'rgba(255,255,255,0.9)',
-              backdropFilter: 'blur(10px)',
-              borderRadius: '20px',
-              padding: '4px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-              '.message-bubble:hover &': {
-                opacity: 1
-              }
-            }}
-            className="message-actions"
-          >
-            <IconButton
-              size="small"
-              onClick={() => onReply?.(message)}
-              sx={{
-                width: 28,
-                height: 28,
-                backgroundColor: 'background.paper',
-                border: `1px solid ${theme.palette.divider}`,
-                '&:hover': {
-                  backgroundColor: theme.palette.primary.main,
-                  color: 'white',
-                  transform: 'scale(1.1)',
-                }
-              }}
-            >
-              <Reply sx={{ fontSize: 14 }} />
-            </IconButton>
-          </Box>
-        </Paper>
-
-        {/* Timestamp and read status */}
-        {showTimestamp && (
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 0.5,
-              mt: 0.5,
-              ...(isOwnMessage && {
-                flexDirection: 'row-reverse'
-              })
-            }}
-          >
-            <Typography
-              variant="caption"
-              sx={{
-                color: 'text.disabled',
-                fontSize: '0.7rem'
-              }}
-            >
-              {formatMessageTime(message.createdAt)}
-            </Typography>
-
-            {/* Read status for own messages */}
-            {isOwnMessage && (
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                {isRead ? (
-                  <DoneAll sx={{ fontSize: 14, color: 'primary.main' }} />
-                ) : (
-                  <Check sx={{ fontSize: 14, color: 'text.disabled' }} />
-                )}
-              </Box>
-            )}
-          </Box>
-        )}
-      </Box>
-    </Box>
-  );
-};
-
-/**
- * Date separator component
- */
-const DateSeparator = ({ date }) => (
-  <Box
-    sx={{
-      display: 'flex',
-      alignItems: 'center',
-      my: 2,
-      gap: 2
-    }}
-  >
-    <Divider sx={{ flex: 1 }} />
-    <Typography
-      variant="caption"
-      sx={{
-        color: 'text.secondary',
-        backgroundColor: 'background.paper',
-        px: 2,
-        py: 0.5,
-        borderRadius: 1,
-        fontWeight: 500
-      }}
-    >
-      {getDateGroupLabel(date)}
-    </Typography>
-    <Divider sx={{ flex: 1 }} />
-  </Box>
-);
-
-/**
- * Message loading skeleton
- */
-const MessageSkeleton = ({ isOwnMessage = false }) => (
-  <Box
-    sx={{
-      display: 'flex',
-      flexDirection: isOwnMessage ? 'row-reverse' : 'row',
-      alignItems: 'flex-end',
-      gap: 1,
-      mb: 2,
-    }}
-  >
-    {!isOwnMessage && (
-      <CircularProgress size={32} thickness={2} />
-    )}
-    <Box
-      sx={{
-        maxWidth: '70%',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: isOwnMessage ? 'flex-end' : 'flex-start'
-      }}
-    >
-      <Paper
-        sx={{
-          px: 2,
-          py: 1,
-          borderRadius: 2,
-          backgroundColor: isOwnMessage ? 'primary.main' : 'grey.100',
-          opacity: 0.6,
-          animation: 'pulse 1.5s ease-in-out infinite',
-          '@keyframes pulse': {
-            '0%, 100%': { opacity: 0.6 },
-            '50%': { opacity: 0.8 }
-          }
-        }}
-      >
-        <Typography variant="body2">
-          Loading message...
-        </Typography>
-      </Paper>
-    </Box>
-  </Box>
-);
+// MessageSkeleton extracted to separate file
 
 /**
  * Main MessageThread component
@@ -356,11 +35,13 @@ const MessageThread = ({
   onConversationUpdate,
   isMobile = false
 }) => {
+  const { t } = useTranslation('terms');
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [hasMoreMessages, setHasMoreMessages] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
+  // Pagination state (for future use)
+  // const [hasMoreMessages, setHasMoreMessages] = useState(false);
+  // const [loadingMore, setLoadingMore] = useState(false);
 
   // Refs
   const messagesEndRef = useRef(null);
@@ -370,7 +51,7 @@ const MessageThread = ({
   /**
    * Load messages for the conversation
    */
-  const loadMessages = async (isLoadMore = false) => {
+  const loadMessages = useCallback(async (isLoadMore = false) => {
     if (!conversation?.id || !currentUserId) return;
 
     try {
@@ -398,8 +79,7 @@ const MessageThread = ({
           setMessages(newMessages);
         }
 
-        setHasMoreMessages(result.hasMore || false);
-        console.log(`✅ Loaded ${newMessages.length} messages`);
+        // setHasMoreMessages(result.hasMore || false); // Commented out since pagination is not implemented
 
         // Mark unread messages as read
         await markUnreadMessagesAsRead(newMessages);
@@ -412,9 +92,9 @@ const MessageThread = ({
       setError(error.message);
     } finally {
       setLoading(false);
-      setLoadingMore(false);
+      // setLoadingMore(false); // Commented out since loadingMore is not used
     }
-  };
+  }, [conversation?.id, currentUserId]);
 
   /**
    * Mark unread messages as read
@@ -433,7 +113,6 @@ const MessageThread = ({
       }
 
       if (unreadMessages.length > 0) {
-        console.log(`✅ Marked ${unreadMessages.length} messages as read`);
         // Refresh conversation list to update unread counts
         onConversationUpdate?.();
       }
@@ -527,7 +206,7 @@ const MessageThread = ({
       setMessages([]);
       loadMessages();
     }
-  }, [conversation?.id, currentUserId]);
+  }, [conversation?.id, currentUserId, loadMessages]);
 
   // Auto-scroll to bottom for new messages
   useEffect(() => {
@@ -543,29 +222,7 @@ const MessageThread = ({
   if (loading && messages.length === 0) {
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-        {/* Header */}
-        <Box
-          sx={{
-            p: 2,
-            borderBottom: 1,
-            borderColor: 'divider',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 2
-          }}
-        >
-          <Avatar sx={{ bgcolor: 'primary.main' }}>
-            {conversation?.type === 'group' ? '👥' : '👤'}
-          </Avatar>
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="h6">
-              {conversation?.title || 'Loading...'}
-            </Typography>
-            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-              Loading messages...
-            </Typography>
-          </Box>
-        </Box>
+        <ThreadHeader conversation={conversation} isMobile={isMobile} loading />
 
         {/* Loading messages */}
         <Box sx={{ flex: 1, p: 2, overflow: 'auto' }}>
@@ -591,33 +248,7 @@ const MessageThread = ({
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* Header */}
-      <Box
-        sx={{
-          p: 2,
-          borderBottom: 1,
-          borderColor: 'divider',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 2,
-          backgroundColor: 'background.paper'
-        }}
-      >
-        <Avatar sx={{ bgcolor: 'primary.main' }}>
-          {conversation?.type === 'group' ? '👥' : '👤'}
-        </Avatar>
-        <Box sx={{ flex: 1 }}>
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            {conversation?.title || 'Conversation'}
-          </Typography>
-          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-            {conversation?.participants?.length || 0} participants
-          </Typography>
-        </Box>
-        <IconButton>
-          <MoreVert />
-        </IconButton>
-      </Box>
+      <ThreadHeader conversation={conversation} isMobile={isMobile} />
 
       {/* Messages */}
       <Box
@@ -626,7 +257,7 @@ const MessageThread = ({
           flex: 1,
           overflow: 'auto',
           p: 2,
-          backgroundColor: 'grey.50'
+          backgroundColor: 'grey.50',
         }}
       >
         {groupedMessages.length === 0 ? (
@@ -639,43 +270,24 @@ const MessageThread = ({
               justifyContent: 'center',
               height: '100%',
               gap: 2,
-              color: 'text.secondary'
+              color: 'text.secondary',
             }}
           >
             <Box sx={{ fontSize: '3rem', opacity: 0.3 }}>💬</Box>
             <Typography variant="h6" sx={{ opacity: 0.7 }}>
-              No messages yet
+              {t('no_messages_yet')}
             </Typography>
             <Typography variant="body2" sx={{ opacity: 0.5, textAlign: 'center' }}>
-              Start the conversation by sending a message below.
+              {t('start_conversation_prompt')}
             </Typography>
           </Box>
         ) : (
-          <>
-            {groupedMessages.map((group) => (
-              <Fade key={group.id} in={true}>
-                <div>
-                  {group.type === 'date' ? (
-                    <DateSeparator date={group.date} />
-                  ) : (
-                    <Box className="message-bubble" sx={{ mb: 2 }}>
-                      {group.messages.map((message, index) => (
-                        <MessageBubble
-                          key={message.id}
-                          message={message}
-                          currentUserId={currentUserId}
-                          showAvatar={index === 0}
-                          showTimestamp={index === group.messages.length - 1}
-                          onReply={handleReply}
-                        />
-                      ))}
-                    </Box>
-                  )}
-                </div>
-              </Fade>
-            ))}
-            <div ref={messagesEndRef} />
-          </>
+          <MessageList
+            groupedMessages={groupedMessages}
+            currentUserId={currentUserId}
+            onReply={handleReply}
+            endRef={messagesEndRef}
+          />
         )}
       </Box>
 

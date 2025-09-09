@@ -1,5 +1,5 @@
 import { db } from "../firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
 /**
  * Fetch user details by UID - SIMPLIFIED

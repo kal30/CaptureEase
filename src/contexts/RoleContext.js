@@ -91,7 +91,7 @@ export const RoleProvider = ({ children }) => {
   };
 
   const canAddDataForChild = (childId) => {
-    return hasPermissionForChild(childId, PERMISSIONS.ADD_DAILY_ENTRIES);
+    return hasPermissionForChild(childId, PERMISSIONS.ADD_DAILY_LOGS);
   };
 
   const isReadOnlyForChild = (childId) => {

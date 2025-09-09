@@ -7,7 +7,6 @@ import React from 'react';
 import {
   Box,
   Typography,
-  Chip,
   Avatar,
   Button,
   Divider
@@ -15,6 +14,7 @@ import {
 import { Group, ContactPage, ArrowBack } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import { getMessagingTheme } from '../../assets/theme/messagingTheme';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Child context header with messaging mode selector
@@ -39,6 +39,7 @@ const ChildContextHeader = ({
 }) => {
   const theme = useTheme();
   const messagingTheme = getMessagingTheme(theme);
+  const { t } = useTranslation('terms');
 
   if (!contextChild && messagingMode === 'all_contacts') {
     // Show general messaging header when no child context
@@ -63,10 +64,10 @@ const ChildContextHeader = ({
             fontFamily: '"Lancelot", serif',
           }}
         >
-          💬 Messages
+          💬 {t('messages')}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-          All team members across your children
+          {t('all_team_members_across_profiles')}
         </Typography>
       </Box>
     );
@@ -103,10 +104,8 @@ const ChildContextHeader = ({
             {contextChild.name?.charAt(0) || '?'}
           </Avatar>
           <Box sx={{ flex: 1 }}>
-            <Typography
-              sx={messagingTheme.childContext.text}
-            >
-              Messages about {contextChild.name}
+            <Typography sx={messagingTheme.childContext.text}>
+              {t('messages_about_profile', { name: contextChild.name })}
             </Typography>
             <Typography variant="body2" sx={{ opacity: 0.9 }}>
               Secure team communication
@@ -125,7 +124,7 @@ const ChildContextHeader = ({
         }}
       >
         <Typography variant="body2" color="text.secondary" sx={{ mr: 1 }}>
-          Show contacts:
+          {t('show_contacts')}
         </Typography>
 
         {/* Child's care team button */}
@@ -141,7 +140,7 @@ const ChildContextHeader = ({
               fontSize: '0.875rem'
             }}
           >
-            {contextChild.name}'s Team ({careTeamCount})
+            {contextChild.name}'s {t('care_team')} ({careTeamCount})
           </Button>
         )}
 
@@ -157,7 +156,7 @@ const ChildContextHeader = ({
             fontSize: '0.875rem'
           }}
         >
-          All Contacts ({allContactsCount})
+          {t('all_contacts')} ({allContactsCount})
         </Button>
       </Box>
 

@@ -1,7 +1,7 @@
 // Messages Page
 // Main messaging interface for caregivers, therapists, and parents
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Container,
@@ -11,10 +11,9 @@ import {
   useTheme,
   CircularProgress,
   Fade,
-  IconButton,
-  Drawer
+  IconButton
 } from '@mui/material';
-import { ArrowBack, Menu } from '@mui/icons-material';
+import { ArrowBack } from '@mui/icons-material';
 
 // Hooks and Services
 import { useLocation } from 'react-router-dom';
@@ -51,7 +50,8 @@ const MessagesPage = () => {
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showNewConversation, setShowNewConversation] = useState(false);
-  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  // Mobile drawer state (for future mobile implementation)
+  // const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
 
   // Mobile navigation state
   const [mobileView, setMobileView] = useState('conversations'); // 'conversations' | 'thread'
@@ -64,7 +64,7 @@ const MessagesPage = () => {
   /**
    * Load conversations for current user
    */
-  const loadConversations = async () => {
+  const loadConversations = useCallback(async () => {
     if (!user?.uid) return;
 
     try {
@@ -78,7 +78,6 @@ const MessagesPage = () => {
 
       if (result.success) {
         setConversations(result.conversations || []);
-        console.log(`✅ Loaded ${result.conversations?.length || 0} conversations`);
       } else {
         console.error('Failed to load conversations:', result.error);
         setConversations([]);
@@ -89,12 +88,12 @@ const MessagesPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.uid, selectedChild?.id]);
 
   /**
    * Load available contacts based on messaging mode
    */
-  const loadAvailableContacts = async () => {
+  const loadAvailableContacts = useCallback(async () => {
     if (!user?.uid || !childrenWithAccess) return;
 
     try {
@@ -115,12 +114,11 @@ const MessagesPage = () => {
       const filteredContacts = contacts.filter(contact => contact.userId !== user.uid);
       setAvailableContacts(filteredContacts);
       
-      console.log(`✅ Loaded ${filteredContacts.length} available contacts`);
     } catch (error) {
       console.error('Error loading available contacts:', error);
       setAvailableContacts([]);
     }
-  };
+  }, [user?.uid, childrenWithAccess, messagingMode]);
 
   /**
    * Handle conversation selection
@@ -132,7 +130,7 @@ const MessagesPage = () => {
     // On mobile, switch to thread view
     if (isMobile) {
       setMobileView('thread');
-      setMobileDrawerOpen(false);
+      // setMobileDrawerOpen(false); // Commented out since mobile drawer is not implemented
     }
   };
 

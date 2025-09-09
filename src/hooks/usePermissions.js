@@ -49,13 +49,14 @@ export const usePermissions = (childId) => {
     canManage: canManageChild(childId),
 
     // Specific permissions
-    canAddDailyEntries: hasPermissionForChild(childId, PERMISSIONS.ADD_DAILY_ENTRIES),
-    canAddDetailedEntries: hasPermissionForChild(childId, PERMISSIONS.ADD_DETAILED_ENTRIES),
-    canAddMedicalEntries: hasPermissionForChild(childId, PERMISSIONS.ADD_MEDICAL_ENTRIES),
-    canEditProfile: hasPermissionForChild(childId, PERMISSIONS.EDIT_CHILD_PROFILE),
-    canViewTimeline: hasPermissionForChild(childId, PERMISSIONS.VIEW_TIMELINE),
+    canAddDailyEntries: hasPermissionForChild(childId, PERMISSIONS.ADD_DAILY_LOGS),
+    canAddDailyHabits: hasPermissionForChild(childId, PERMISSIONS.ADD_DAILY_HABITS),
+    canAddDetailedEntries: hasPermissionForChild(childId, PERMISSIONS.ADD_DAILY_LOGS),
+    canAddMedicalEntries: hasPermissionForChild(childId, PERMISSIONS.ADD_DAILY_LOGS),
+    canEditProfile: hasPermissionForChild(childId, PERMISSIONS.EDIT_CHILD),
+    canViewTimeline: hasPermissionForChild(childId, PERMISSIONS.VIEW_ALL_LOGS),
     canViewAnalytics: hasPermissionForChild(childId, PERMISSIONS.VIEW_ANALYTICS),
-    canExportData: hasPermissionForChild(childId, PERMISSIONS.EXPORT_DATA),
+    canExportData: hasPermissionForChild(childId, PERMISSIONS.EXPORT_REPORTS),
 
     // Generic permission checker
     hasPermission: (permission) => hasPermissionForChild(childId, permission),

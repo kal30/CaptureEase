@@ -10,6 +10,7 @@ import {
   updateDoc,
 } from 'firebase/firestore';
 import { db } from '../firebase';
+import { getAuth } from 'firebase/auth';
 // moved to ./repository/create
 import { createIncidentWithSmartFollowUp } from './repository/create';
 // import { writeBatch } from 'firebase/firestore'; // unused
@@ -50,8 +51,20 @@ export const getCustomCategories = async (childId) => {
 
 export const addIncident = async (childId, incidentData) => {
   try {
+    // Get current user for audit metadata
+    const auth = getAuth();
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      throw new Error('User must be authenticated to add incidents');
+    }
+
     const docData = {
+      // Required immutable metadata for security rules
       childId,
+      createdBy: currentUser.uid,
+      createdAt: serverTimestamp(),
+      
+      // Incident data
       type: incidentData.type,
       customIncidentName: incidentData.customIncidentName || '',
       severity: incidentData.severity,
@@ -62,13 +75,20 @@ export const addIncident = async (childId, incidentData) => {
       entryDate: incidentData.incidentDateTime
         ? incidentData.incidentDateTime.toDateString()
         : new Date().toDateString(),
-      authorId: incidentData.authorId,
+      
+      // Legacy author fields (keeping for backwards compatibility)
+      authorId: incidentData.authorId || currentUser.uid,
       authorName: incidentData.authorName,
       authorEmail: incidentData.authorEmail,
+      
+      // Follow-up data
       followUpScheduled: incidentData.followUpScheduled || false,
       followUpTime: incidentData.followUpTime || null,
       effectiveness: null,
       followUpCompleted: false,
+      
+      // Status for soft delete system
+      status: 'active',
     };
     const docRef = await addDoc(collection(db, 'incidents'), docData);
     return docRef.id;
@@ -84,12 +104,22 @@ export const updateIncidentEffectiveness = async (
   followUpNotes = ''
 ) => {
   try {
+    // Get current user for audit metadata
+    const auth = getAuth();
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      throw new Error('User must be authenticated to update incidents');
+    }
+
     const incidentRef = doc(db, 'incidents', incidentId);
     await updateDoc(incidentRef, {
       effectiveness,
       followUpNotes,
       followUpCompleted: true,
       followUpTimestamp: serverTimestamp(),
+      // Required audit fields for security rules
+      updatedBy: currentUser.uid,
+      updatedAt: serverTimestamp(),
     });
   } catch (error) {
     console.error('Error updating incident effectiveness:', error);

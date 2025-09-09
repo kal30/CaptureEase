@@ -1,0 +1,22 @@
+// Children collection - minimal access rules
+match /children/{childId} {
+  // Read: only members of active children (with null guards)
+  allow read: if isAuthenticated() &&
+    resource.data.users != null &&
+    resource.data.users.members != null &&
+    request.auth.uid in resource.data.users.members &&
+    resource.data.status == 'active';
+
+  // Create: caller sets themselves as owner and includes themselves in members (with null guards)
+  allow create: if isAuthenticated() &&
+    request.resource.data.users != null &&
+    request.resource.data.users.members != null &&
+    request.resource.data.users.care_owner == request.auth.uid &&
+    request.auth.uid in request.resource.data.users.members;
+
+  // Update: only the owner may update
+  allow update: if isAuthenticated() &&
+    resource.data.users.care_owner == request.auth.uid;
+
+  // No hard delete allowed (no delete rule)
+}

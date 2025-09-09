@@ -20,6 +20,12 @@ import InvitationPage from "../pages/InvitationPage";
 import AcceptInvite from "../pages/AcceptInvite";
 import DailyLogPage from "../pages/DailyLogPage";
 import MessagesPage from "../pages/MessagesPage";
+import AdminPage from "../pages/AdminPage";
+import InviteCaregiverPage from "../pages/InviteCaregiverPage";
+import InviteCarePartnerPage from "../pages/InviteCarePartnerPage";
+import InviteTherapistPage from "../pages/InviteTherapistPage";
+import InviteRoleSelectionPage from "../pages/InviteRoleSelectionPage";
+import InviteSuccessPage from "../pages/InviteSuccessPage";
 
 //When you update here update breadcrumbscomponent.js
 
@@ -58,8 +64,14 @@ const AppRoutes = () => {
         <Route path="/medical" element={<MedicalLogPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/messages" element={<MessagesPage />} />
+        <Route path="/admin" element={<AdminPage />} />
         <Route path="/invitation/:invitationId" element={<InvitationPage />} />
         <Route path="/accept-invite" element={<AcceptInvite />} />
+        <Route path="/invite" element={<InviteRoleSelectionPage />} />
+        <Route path="/invite/caregiver" element={<InviteCaregiverPage />} />
+        <Route path="/invite/carepartner" element={<InviteCarePartnerPage />} />
+        <Route path="/invite/therapist" element={<InviteTherapistPage />} />
+        <Route path="/invite/success" element={<InviteSuccessPage />} />
       </Routes>
     </>
   );

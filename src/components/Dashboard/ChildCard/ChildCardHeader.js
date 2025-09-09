@@ -6,6 +6,7 @@ import ChildNotificationBadge from '../../UI/ChildNotificationBadge';
 import CareTeamDisplay from '../../UI/CareTeamDisplay';
 import ChildManagementMenu from '../ChildManagementMenu';
 import MedicalInfoDisplay from './MedicalInfoDisplay';
+import DiagnosisChips from '../DiagnosisChips';
 import useChildCardChips from '../../../hooks/useChildCardChips';
 
 /**
@@ -116,8 +117,15 @@ const ChildCardHeader = memo(({
           ))}
         </Box>
 
-        {/* Medical Info Row - Below Age */}
-        {(child.diagnosis || (child.medicalProfile?.foodAllergies && child.medicalProfile.foodAllergies.length > 0)) && (
+        {/* Medical Info Section - Below Age */}
+        {/* Diagnosis and Concerns */}
+        {(child.concerns || child.conditions) && (
+          <DiagnosisChips concerns={child.concerns || child.conditions} />
+        )}
+        
+        {/* Allergies and Medical Details */}
+        {(child.diagnosis || 
+          (child.medicalProfile?.foodAllergies && child.medicalProfile.foodAllergies.length > 0)) && (
           <MedicalInfoDisplay 
             diagnosis={child.diagnosis}
             allergies={child.medicalProfile?.foodAllergies}

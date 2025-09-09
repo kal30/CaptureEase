@@ -10,6 +10,7 @@ import {
 } from "@mui/material";
 import { EnhancedLoadingButton } from "../components/UI";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import { handlePostAuthRedirect } from "../services/auth/navigation";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import GoogleAuth from "../components/AuthProviders/GoogleAuth";
 import PasskeyAuth from "../components/AuthProviders/PasskeyAuth";
@@ -43,8 +44,9 @@ const Login = () => {
     setLoading(true);
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      navigate("/dashboard"); // Redirect to dashboard on successful login
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      // Use shared post-auth redirect utility
+      handlePostAuthRedirect(navigate, location, result.user);
     } catch (err) {
       console.error("Login error:", err);
       if (

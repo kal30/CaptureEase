@@ -17,6 +17,7 @@ import {
 } from "firebase/auth";
 import GoogleAuth from "../components/AuthProviders/GoogleAuth"; // Keep Google Auth
 import ResponsiveLayout from "../components/Layout/ResponsiveLayout";
+import { createUserProfile } from "../services/userService";
 
 const Register = () => {
   const [email, setEmail] = useState("");
@@ -43,7 +44,17 @@ const Register = () => {
       await createUserWithEmailAndPassword(auth, email, password);
       const user = auth.currentUser;
       if (user) {
+        // Update Firebase Auth profile
         await updateProfile(user, { displayName: fullName });
+        
+        // Create Firestore user profile 
+        await createUserProfile(user.uid, {
+          displayName: fullName,
+          name: fullName,
+          email: email,
+          photoURL: user.photoURL
+        });
+        
         await user.sendEmailVerification();
         navigate("/login", {
           state: {

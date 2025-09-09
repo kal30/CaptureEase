@@ -1,0 +1,222 @@
+// Helper functions for messaging permissions and data validation
+
+// PERFORMANCE OPTIMIZED: Single get with guards; prefer members then role arrays
+function hasChildAccess(userId, childId) {
+  return userId != null && childId != null &&
+         // Single read; guard against non-existent doc and null structures
+         (let child = get(/databases/$(database)/documents/children/$(childId)).data; 
+           child != null && child.users != null && (
+             // Prefer fast members array
+             (child.users.members != null && userId in child.users.members) ||
+             // Fallback to role arrays/scalar with null guards
+             (child.users.care_owner == userId) ||
+             (child.users.care_partners != null && userId in child.users.care_partners) ||
+             (child.users.caregivers != null && userId in child.users.caregivers) ||
+             (child.users.therapists != null && userId in child.users.therapists)
+           )
+         );
+}
+
+// Check if user is authenticated
+function isAuthenticated() {
+  return request.auth != null;
+}
+
+// Validate immutable metadata on CREATE
+function hasValidCreateMetadata() {
+  return request.resource.data.createdBy == request.auth.uid &&
+         request.resource.data.createdAt == request.time &&
+         request.resource.data.childId is string &&
+         request.resource.data.childId != null;
+}
+
+// Ensure immutable fields are not changed on UPDATE
+function preservesImmutableMetadata() {
+  return request.resource.data.createdBy == resource.data.createdBy &&
+         request.resource.data.createdAt == resource.data.createdAt &&
+         request.resource.data.childId == resource.data.childId;
+}
+
+// Check if user is the document author
+function isAuthor() {
+  return resource.data.createdBy == request.auth.uid;
+}
+
+// Check if user is child owner
+function isChildOwner(childId) {
+  return childId != null &&
+         exists(/databases/$(database)/documents/children/$(childId)) &&
+         get(/databases/$(database)/documents/children/$(childId)).data.users.care_owner == request.auth.uid;
+}
+
+// Check if user has specific role for child (using resource.data.childId for existing docs)
+function hasChildRoleForResource(role) {
+  return resource.data.childId != null &&
+         // Single read; guard maps/arrays before `in`
+         (let child = get(/databases/$(database)/documents/children/$(resource.data.childId)).data;
+           child != null && child.users != null &&
+           child.users[role] != null &&
+           request.auth != null && request.auth.uid in child.users[role]
+         );
+}
+ 
+// Check if user has specific role for child (using request.resource.data.childId for new docs)
+function hasChildRoleForRequest(role) {
+  return request.resource.data.childId != null &&
+         // Single read; guard maps/arrays before `in`
+         (let child = get(/databases/$(database)/documents/children/$(request.resource.data.childId)).data;
+           child != null && child.users != null &&
+           child.users[role] != null &&
+           request.auth != null && request.auth.uid in child.users[role]
+         );
+}
+
+// STANDARDIZED PERMISSION HELPERS - Easy to modify access levels
+
+// Can user CREATE incidents/logs? (Owner, Care Partners, Caregivers - NOT Therapists)
+function canCreateIncidentLogs() {
+  return isAuthenticated() &&
+         hasValidCreateMetadata() &&
+         hasChildAccess(request.auth.uid, request.resource.data.childId) &&
+         !hasChildRoleForRequest('therapists');
+}
+
+// Can user UPDATE incidents/logs? (Owner can edit all, others edit own - NOT Therapists)
+function canUpdateIncidentLogs() {
+  return isAuthenticated() &&
+         resource.data.childId != null &&
+         hasChildAccess(request.auth.uid, resource.data.childId) &&
+         !hasChildRoleForResource('therapists') &&
+         preservesImmutableMetadata() &&
+         request.resource.data.updatedBy == request.auth.uid &&
+         request.resource.data.updatedAt == request.time &&
+         (isChildOwner(resource.data.childId) || isAuthor());
+}
+
+// Can user CREATE medical data? (Owner, Care Partners ONLY - NOT Caregivers, NOT Therapists)
+function canCreateMedical() {
+  return isAuthenticated() &&
+         hasValidCreateMetadata() &&
+         (isChildOwner(request.resource.data.childId) || hasChildRoleForRequest('care_partners'));
+}
+
+// Can user UPDATE medical data? (Owner ONLY - stricter medical control)
+function canUpdateMedical() {
+  return isAuthenticated() &&
+         resource.data.childId != null &&
+         isChildOwner(resource.data.childId) &&
+         preservesImmutableMetadata() &&
+         request.resource.data.updatedBy == request.auth.uid &&
+         request.resource.data.updatedAt == request.time;
+}
+
+// Can user READ any child data? (All roles with child access)
+function canReadChildData() {
+  return isAuthenticated() &&
+         resource.data.childId != null &&
+         hasChildAccess(request.auth.uid, resource.data.childId);
+}
+
+// Can user SOFT DELETE? (Owner only)
+function canSoftDelete() {
+  return isAuthenticated() &&
+         resource.data.childId != null &&
+         isChildOwner(resource.data.childId) &&
+         preservesImmutableMetadata() &&
+         request.resource.data.updatedBy == request.auth.uid &&
+         request.resource.data.updatedAt == request.time &&
+         request.resource.data.status == 'deleted' &&
+         resource.data.status == 'active';
+}
+
+// Can user ARCHIVE a child? (Owner only - changes status from 'active' to 'archived')
+function canArchiveChild() {
+  return isAuthenticated() &&
+         request.auth.uid == resource.data.users.care_owner &&
+         request.resource.data.users.care_owner == resource.data.users.care_owner &&
+         request.resource.data.updatedBy == request.auth.uid &&
+         request.resource.data.updatedAt == request.time &&
+         request.resource.data.status == 'archived' &&
+         resource.data.status == 'active';
+}
+
+// DATA VALIDATION HELPERS - Prevent bad data from being written
+
+// Validate string field (not null, is string, within length limits)
+function isValidString(field, maxLength) {
+  return field != null && 
+         field is string && 
+         field.size() <= maxLength;
+}
+
+// Validate optional string field (can be null/empty, but if present must be valid string)
+function isValidOptionalString(field, maxLength) {
+  return field == null || 
+         field == '' || 
+         (field is string && field.size() <= maxLength);
+}
+
+// Validate required string field (not null, not empty, is string, within length limits)
+function isValidRequiredString(field, maxLength) {
+  return field != null && 
+         field is string && 
+         field.size() > 0 && 
+         field.size() <= maxLength;
+}
+
+// Validate array field (is array, within size limits)
+function isValidArray(field, maxSize) {
+  return field is list && 
+         field.size() <= maxSize;
+}
+
+// Validate status field (must be one of allowed values)
+function isValidStatus(status) {
+  return status in ['active', 'deleted', 'archived'];
+}
+
+// Validate severity field for incidents
+function isValidSeverity(severity) {
+  return severity in ['low', 'medium', 'high', 'urgent'];
+}
+
+// Validate incident/log common fields
+function hasValidIncidentLogFields() {
+  let data = request.resource.data;
+  return data.keys().hasAll(['createdBy', 'createdAt', 'childId', 'status']) &&
+         data.createdBy is string &&
+         data.createdAt is timestamp &&
+         data.childId is string &&
+         isValidStatus(data.status) &&
+         isValidOptionalString(data.notes, 2000) &&
+         // Ensure updatedBy/updatedAt are present if this is an update
+         (!('updatedBy' in data) || (data.updatedBy is string && data.updatedAt is timestamp));
+}
+
+// Validate medical data fields (stricter validation)
+function hasValidMedicalFields() {
+  let data = request.resource.data;
+  return hasValidIncidentLogFields() &&
+         data.keys().hasAll(['name', 'type']) &&
+         isValidRequiredString(data.name, 200) &&
+         isValidRequiredString(data.type, 100) &&
+         isValidOptionalString(data.dosage, 200) &&
+         isValidOptionalString(data.frequency, 200) &&
+         isValidOptionalString(data.prescribedBy, 200);
+}
+ 
+// Check if user is participant in conversation with null/exists guards
+function isConversationParticipant(conversationId, userId) {
+  return userId != null && conversationId != null &&
+         exists(/databases/$(database)/documents/conversations/$(conversationId)) &&
+         userId in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
+}
+ 
+// Check if conversation is active with null/exists guards
+function isConversationActive(conversationId) {
+  return conversationId != null &&
+         exists(/databases/$(database)/documents/conversations/$(conversationId)) &&
+         (!('isActive' in get(/databases/$(database)/documents/conversations/$(conversationId)).data) || 
+          get(/databases/$(database)/documents/conversations/$(conversationId)).data.isActive == true);
+}
+

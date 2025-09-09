@@ -17,14 +17,12 @@ import {
   IconButton,
   Fab,
   Chip,
-  Divider,
   Skeleton
 } from '@mui/material';
 import {
   Search,
   Add,
   Group,
-  Person,
   FilterList,
   Clear
 } from '@mui/icons-material';

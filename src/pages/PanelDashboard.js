@@ -16,7 +16,6 @@ import { getActionGroups } from "../constants/actionGroups";
 import DashboardHeader from "../components/Dashboard/DashboardHeader";
 import ChildGroup from "../components/Dashboard/ChildGroup";
 import QuickCheckIn from "../components/Mobile/QuickCheckIn";
-import InviteTeamMemberModal from "../components/InviteTeamMemberModal";
 import AddChildModal from "../components/Dashboard/AddChildModal";
 import EditChildModal from "../components/Dashboard/EditChildModal";
 import DailyCareModal from "../components/DailyCare/DailyCareModal";
@@ -145,10 +144,8 @@ const PanelDashboard = () => {
       {/* Notification Permission Prompt */}
       <NotificationPermissionPrompt 
         onPermissionGranted={() => {
-          console.log('🎉 Notification permission granted! Follow-ups will now send reminders.');
         }}
         onDismiss={() => {
-          console.log('ℹ️ Notification permission prompt dismissed');
         }}
       />
 
@@ -193,13 +190,6 @@ const PanelDashboard = () => {
         </Box>
       </Modal>
 
-      <InviteTeamMemberModal
-        open={hook.showInviteModal}
-        onClose={hook.handleCloseInviteModal}
-        children={hook.children}
-        selectedChildId={hook.inviteChildId}
-        onInviteSuccess={hook.handleInviteSuccess}
-      />
 
       <AddChildModal
         open={hook.showAddChildModal}

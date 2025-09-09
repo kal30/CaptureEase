@@ -145,7 +145,6 @@ const OtherIncidentCapture = ({
   };
 
   const handleCategoryCreated = (result) => {
-    console.log('🎉 Category created callback triggered:', result);
     setShowCategoryModal(false);
     setCategorySuggestion(null);
     // Notify parent component that a category was created so it can refresh

@@ -11,21 +11,36 @@ import {
   orderBy,
   limit
 } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
 
 // Save a daily care entry
 export const saveDailyCareEntry = async (entryData) => {
   try {
+    // Get current user for audit metadata
+    const auth = getAuth();
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      throw new Error('User must be authenticated to save daily care entries');
+    }
+
     const { childId, actionType, data, completedBy } = entryData;
     
-    // Create the entry document
+    // Create the entry document with required immutable metadata
     const entry = {
+      // Required immutable metadata for security rules
       childId,
+      createdBy: currentUser.uid,
+      createdAt: serverTimestamp(),
+      
+      // Daily care data
       actionType,
       data,
-      completedBy,
+      completedBy: completedBy || currentUser.uid,
       timestamp: serverTimestamp(),
       date: new Date().toDateString(), // For daily tracking
-      createdAt: serverTimestamp(),
+      
+      // Status for soft delete system
+      status: 'active',
     };
 
     // Save to daily care collection

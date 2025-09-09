@@ -1,18 +1,22 @@
 import React, { useState } from 'react';
-import { Box, IconButton, Collapse } from '@mui/material';
+import { Box, IconButton, Collapse, Chip } from '@mui/material';
 import Typography from '@mui/material/Typography';
 import { Add as AddIcon, Remove as RemoveIcon } from '@mui/icons-material';
+import { alpha, useTheme } from '@mui/material/styles';
 import AllergyChip, { sortAllergiesByPriority } from '../../UI/Allergies';
 
 /**
- * MedicalInfoDisplay - Compact display of diagnosis and allergies with expandable list
- * Shows diagnosis and limited allergies with + button to expand
+ * MedicalInfoDisplay - Compact display of diagnosis and medical info with expandable list
+ * Shows diagnosis and allergies
  * 
  * @param {Object} props
  * @param {string} props.diagnosis - Child's diagnosis
  * @param {Array} props.allergies - Array of food allergies
  */
-const MedicalInfoDisplay = ({ diagnosis, allergies = [] }) => {
+const MedicalInfoDisplay = ({ 
+  diagnosis, 
+  allergies = []
+}) => {
   const [showAllAllergies, setShowAllAllergies] = useState(false);
   
   // Sort allergies by priority (life-threatening first)
@@ -21,7 +25,7 @@ const MedicalInfoDisplay = ({ diagnosis, allergies = [] }) => {
   const maxVisible = 2;
   const hasMoreAllergies = sortedAllergies.length > maxVisible;
   const visibleAllergies = sortedAllergies.slice(0, maxVisible);
-  const remainingCount = sortedAllergies.length - maxVisible;
+  const allergyRemainingCount = sortedAllergies.length - maxVisible;
 
   return (
     <Box sx={{ mb: 1 }}>
@@ -95,9 +99,10 @@ const MedicalInfoDisplay = ({ diagnosis, allergies = [] }) => {
               fontWeight: 500
             }}
           >
-            +{remainingCount} more
+            +{allergyRemainingCount} more
           </Typography>
         )}
+        
       </Box>
 
       {/* Additional allergies when expanded */}
@@ -107,7 +112,7 @@ const MedicalInfoDisplay = ({ diagnosis, allergies = [] }) => {
           gap: 0.5, 
           flexWrap: 'wrap', 
           mt: 0.5,
-          pl: 2 // Indent additional allergies
+          pl: 2
         }}>
           {sortedAllergies.slice(maxVisible).map((allergy, index) => (
             <AllergyChip

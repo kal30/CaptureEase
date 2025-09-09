@@ -1,5 +1,5 @@
 import { db } from "../firebase";
-import { doc, getDoc, collection, getDocs } from "firebase/firestore";
+import { doc, getDoc, collection, getDocs, query, where, or } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { USER_ROLES } from '../../constants/roles';
 
@@ -69,7 +69,7 @@ export const isReadOnlyUser = async (userId, childId) => {
 
 /**
  * Get all children current user has access to with their roles
- * KISS: Simplified role detection with new structure
+ * OPTIMIZED: Uses users.members field for efficient single-field query with OR fallback
  */
 export const getChildrenWithRoles = async () => {
   const auth = getAuth();
@@ -80,22 +80,36 @@ export const getChildrenWithRoles = async () => {
   }
   
   try {
-    const childrenSnapshot = await getDocs(collection(db, "children"));
+    
+    // Query only active children where current user is a member
+    const childrenQuery = query(
+      collection(db, "children"),
+      where("users.members", "array-contains", user.uid),
+      where("status", "==", "active")
+    );
+    
+    const childrenSnapshot = await getDocs(childrenQuery);
+    console.log(`📊 Members query found: ${childrenSnapshot.docs.length} children`)
+    
     const childrenWithRoles = [];
     
     for (const childDoc of childrenSnapshot.docs) {
       const childData = childDoc.data();
       const childId = childDoc.id;
       
-      // Get user's role for this child
+      // Get user's role for this child (we know they have access since we queried for it)
       const userRole = await getUserRoleForChild(user.uid, childId);
       
       if (userRole) {
+        // Get permissions for this role
+        const { getRolePermissions } = await import('../../constants/roles');
+        const permissions = getRolePermissions(userRole);
+        
         childrenWithRoles.push({
           id: childId,
           ...childData,
           userRole,
-          permissions: [] // Will be populated by permissionService
+          permissions
         });
       }
     }
@@ -106,3 +120,5 @@ export const getChildrenWithRoles = async () => {
     return [];
   }
 };
+
+// Removed legacy fallback: always query via users.members + status

@@ -116,7 +116,6 @@ const TimelineWidget = ({
   // Test function to check if any data exists at all
   const testDataExists = async () => {
     try {
-      console.log('🔍 Testing if ANY data exists in collections...');
       
       // Import Firebase functions locally for testing
       const { collection, getDocs, query, limit, orderBy, where } = await import('firebase/firestore');
@@ -162,7 +161,6 @@ const TimelineWidget = ({
               }))
             });
           } catch (recentErr) {
-            console.log(`⚠️  No recent data for '${collectionName}' or index missing:`, recentErr.message);
           }
           
           // Test 3: For current child specifically
@@ -183,7 +181,6 @@ const TimelineWidget = ({
                 }))
               });
             } catch (childErr) {
-              console.log(`⚠️  Error querying '${collectionName}' for child:`, childErr.message);
             }
           }
           
@@ -214,7 +211,6 @@ const TimelineWidget = ({
           try {
             const snapshot = await getDocs(query(collection(db, 'children', child.id, name), limit(3)));
             if (snapshot.size > 0) {
-              console.log(`✅ Found journal subcollection: 'children/${child.id}/${name}' (${snapshot.size} docs)`);
               snapshot.docs.forEach((doc, i) => {
                 console.log(`  Journal ${i + 1}:`, doc.data());
               });
@@ -233,7 +229,6 @@ const TimelineWidget = ({
           try {
             const snapshot = await getDocs(query(collection(db, 'children', child.id, name), limit(3)));
             if (snapshot.size > 0) {
-              console.log(`✅ Found daily log subcollection: 'children/${child.id}/${name}' (${snapshot.size} docs)`);
               snapshot.docs.forEach((doc, i) => {
                 console.log(`  Daily Log ${i + 1}:`, doc.data());
               });

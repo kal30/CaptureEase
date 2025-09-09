@@ -69,7 +69,7 @@ const DailyCareModal = ({ open, onClose, child, actionType, onComplete }) => {
     setCurrentStep(0);
     setFormData({});
     careForm.reset();
-  }, [actionType, open, careForm]);
+  }, [actionType, open]); // Remove careForm from dependencies to prevent infinite loop
 
   // Define handleClose first to avoid circular dependency
   const handleClose = () => {

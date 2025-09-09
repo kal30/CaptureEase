@@ -12,6 +12,7 @@ import {
   Alert,
 } from "@mui/material";
 import { getFunctions, httpsCallable } from "firebase/functions";
+import { app } from "../services/firebase";
 
 const InvitationPage = () => {
   const { invitationId } = useParams();
@@ -37,7 +38,9 @@ const InvitationPage = () => {
 
         if (invitationSnap.exists()) {
           const invitationData = invitationSnap.data();
-          if (invitationData.therapistEmail === currentUser.email) {
+          // Support both old therapistEmail and new generic email field
+          const invitedEmail = invitationData.email || invitationData.therapistEmail;
+          if (invitedEmail === currentUser.email) {
             setInvitation(invitationData);
           } else {
             setError("This invitation is not intended for you.");
@@ -59,17 +62,32 @@ const InvitationPage = () => {
   const handleAccept = async () => {
     setLoading(true);
     try {
-      // 1. Update the child document
+      // 1. Update the child document based on role
       const childRef = doc(db, "children", invitation.childId);
       const childSnap = await getDoc(childRef);
       if (childSnap.exists()) {
         const childData = childSnap.data();
-        const updatedTherapists = [
-          ...(childData.users?.therapists || []),
-          currentUser.uid,
-        ];
+        const role = invitation.role || 'therapist'; // Default to therapist for backward compatibility
+        
+        let updateField;
+        switch (role) {
+          case 'care_partner':
+            updateField = "users.care_partners";
+            break;
+          case 'caregiver':
+            updateField = "users.caregivers";
+            break;
+          case 'therapist':
+          default:
+            updateField = "users.therapists";
+            break;
+        }
+        
+        const currentUsers = childData.users?.[role === 'care_partner' ? 'care_partners' : role === 'caregiver' ? 'caregivers' : 'therapists'] || [];
+        const updatedUsers = [...currentUsers, currentUser.uid];
+        
         await updateDoc(childRef, {
-          "users.therapists": updatedTherapists,
+          [updateField]: updatedUsers,
         });
       }
 
@@ -84,15 +102,16 @@ const InvitationPage = () => {
       // 3. Redirect to the dashboard
       navigate("/dashboard");
 
-      const functions = getFunctions();
+      const functions = getFunctions(app, 'us-central1');
       const sendInvitationEmail = httpsCallable(
         functions,
         "sendInvitationEmail"
       );
 
       try {
+        const invitedEmail = invitation.email || invitation.therapistEmail;
         await sendInvitationEmail({
-          to: invitation.therapistEmail,
+          to: invitedEmail,
           subject: "Invitation Accepted",
           message: `You have been added to the care team for child ${invitation.childId}.`,
         });

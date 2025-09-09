@@ -1,5 +1,6 @@
 import { collection, addDoc, updateDoc, serverTimestamp, doc } from 'firebase/firestore';
 import { db } from '../../firebase';
+import { getAuth } from 'firebase/auth';
 import { calculateFollowUpTimes } from '../followUpScheduler';
 import { uploadIncidentMedia } from '../../../components/Dashboard/Incidents/Media/mediaUploadService';
 
@@ -36,8 +37,20 @@ export const createIncidentWithSmartFollowUp = async (
       };
     }
 
+    // Get current user for audit metadata
+    const auth = getAuth();
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      throw new Error('User must be authenticated to create incidents');
+    }
+
     const docData = {
+      // Required immutable metadata for security rules
       childId,
+      createdBy: currentUser.uid,
+      createdAt: serverTimestamp(),
+      
+      // Incident data
       type: incidentData.type,
       customIncidentName: incidentData.customIncidentName || '',
       severity: incidentData.severity,
@@ -48,16 +61,24 @@ export const createIncidentWithSmartFollowUp = async (
       entryDate: incidentData.incidentDateTime
         ? incidentData.incidentDateTime.toDateString()
         : new Date().toDateString(),
-      authorId: incidentData.authorId,
+      
+      // Legacy author fields (keeping for backwards compatibility)
+      authorId: incidentData.authorId || currentUser.uid,
       authorName: incidentData.authorName,
       authorEmail: incidentData.authorEmail,
+      
+      // Follow-up data
       ...followUpData,
       effectiveness: null,
       followUpCompleted: false,
       followUpResponses: [],
       mediaUrls: [],
       hasMedia: !!(incidentData.mediaFile || incidentData.audioBlob),
+      
+      // Status for soft delete system
+      status: 'active',
     };
+
 
     const docRef = await addDoc(collection(db, 'incidents'), docData);
 

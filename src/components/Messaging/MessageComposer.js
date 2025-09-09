@@ -24,11 +24,13 @@ import {
   Share,
   PriorityHigh
 } from '@mui/icons-material';
+import { useAuthState } from 'react-firebase-hooks/auth';
 
 // Services
 import { sendMessage } from '../../services/messaging';
 import { MessageTypes, MessagePriority } from '../../models/messaging';
 import { getMessagingTheme } from '../../assets/theme/messagingTheme';
+import { auth } from '../../services/firebase';
 
 /**
  * Message priority selector
@@ -121,6 +123,7 @@ const MessageComposer = ({
 }) => {
   const theme = useTheme();
   const messagingTheme = getMessagingTheme(theme);
+  const [user] = useAuthState(auth);
   
   // State management
   const [messageText, setMessageText] = useState('');
@@ -176,7 +179,7 @@ const MessageComposer = ({
       const messageData = {
         conversationId,
         senderId: currentUserId,
-        senderName: 'Current User', // TODO: Get from user context
+        senderName: user?.displayName || user?.email || 'Unknown User',
         text: trimmedText,
         type: MessageTypes.TEXT,
         priority,
@@ -187,7 +190,6 @@ const MessageComposer = ({
       const result = await sendMessage(messageData);
 
       if (result.success) {
-        console.log('✅ Message sent successfully:', result.messageId);
         
         // Clear composer
         setMessageText('');
