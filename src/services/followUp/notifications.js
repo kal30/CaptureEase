@@ -82,9 +82,8 @@ const showRegularNotification = (title, body, icon, data) => {
 
   notification.onclick = () => {
     window.focus();
-    if (data.onClick) {
-      data.onClick();
-    }
+    // Log notification click with available data
+    console.log(`Follow-up notification clicked for incident ${data.incidentId || 'unknown'}, stage ${(data.followUpIndex || 0) + 1}`);
     notification.close();
   };
 

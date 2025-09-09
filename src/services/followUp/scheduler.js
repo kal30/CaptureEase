@@ -56,11 +56,6 @@ export const scheduleFollowUpNotification = (incident, childName, followUpIndex 
         incidentId: incident.id,
         childName,
         followUpIndex,
-        onClick: () => {
-          console.log(
-            `Opening follow-up for incident ${incident.id}, stage ${followUpIndex + 1}`
-          );
-        },
       },
       actions
     );
