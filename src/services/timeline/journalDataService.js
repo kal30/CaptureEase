@@ -23,6 +23,7 @@ export const getJournalEntries = async (childId, selectedDate) => {
       const dailyLogQuery = query(
         collection(db, 'dailyLogs'),
         where('childId', '==', childId),
+        where('status', '==', 'active'),
         where('timestamp', '>=', start),
         where('timestamp', '<=', end)
       );
@@ -45,7 +46,8 @@ export const getJournalEntries = async (childId, selectedDate) => {
         // Fallback: get all journals for child and filter by date
         const fallbackQuery = query(
           collection(db, 'dailyLogs'),
-          where('childId', '==', childId)
+          where('childId', '==', childId),
+          where('status', '==', 'active')
         );
         
         const snapshot = await getDocs(fallbackQuery);
@@ -80,8 +82,8 @@ export const getDailyLogEntries = async (childId, selectedDate) => {
   try {
     const { start, end } = getDayDateRange(selectedDate);
     
-    // Try multiple collections that might contain daily log data
-    const collections = ['dailyLogs', 'progressNotes'];
+    // Fetch only from dailyLogs collection (progressNotes is legacy/unused)
+    const collections = ['dailyLogs'];
     const allEntries = [];
     
     for (const collectionName of collections) {

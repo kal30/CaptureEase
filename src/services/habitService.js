@@ -142,16 +142,19 @@ export const getHabitEntries = async (childId, startDate, endDate, categories = 
     
     querySnapshot.forEach((doc) => {
       const data = doc.data();
-      // Only include entries that came from habits and match category filter
-      if (data.data?.source === 'habits') {
+      
+      // Check if this is from habits system - be more flexible with filtering
+      const isFromHabits = data.data?.source === 'habits' || data.actionType;
+      
+      if (isFromHabits) {
         if (categories.length === 0 || categories.includes(data.data?.categoryId)) {
           entries.push({
             id: doc.id,
             childId: data.childId,
-            categoryId: data.data?.categoryId,
-            categoryLabel: data.data?.categoryLabel,
+            categoryId: data.data?.categoryId || data.actionType,
+            categoryLabel: data.data?.categoryLabel || data.actionType,
             level: data.data?.level,
-            notes: data.data?.notes,
+            notes: data.data?.notes || data.notes,
             customHabit: data.data?.customHabit,
             ...data
           });

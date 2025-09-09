@@ -7,9 +7,8 @@ import {
   where,
   doc,
   updateDoc,
-  deleteDoc,
 } from "firebase/firestore";
-import { db } from "../../services/firebase";
+import { db, auth } from "../../services/firebase";
 import LogEntry from "./LogEntry";
 import { Box, Typography, CircularProgress, Divider, Paper } from "@mui/material";
 import dayjs from "dayjs";
@@ -31,9 +30,10 @@ const DailyLogFeed = ({ childId, selectedDate = new Date(), searchQuery = "", on
     
     const q = query(
       collection(db, "dailyLogs"),
-      where("childId", "==", childId)
+      where("childId", "==", childId),
+      where("status", "==", "active")
       // Temporarily removed orderBy to avoid index requirement
-      // Add back after creating composite index: childId + timestamp
+      // Add back after creating composite index: childId + status + timestamp
     );
 
     const unsubscribe = onSnapshot(
@@ -110,7 +110,11 @@ const DailyLogFeed = ({ childId, selectedDate = new Date(), searchQuery = "", on
   const handleDeleteEntry = async (entryId) => {
     try {
       const entryRef = doc(db, "dailyLogs", entryId);
-      await deleteDoc(entryRef);
+      await updateDoc(entryRef, {
+        status: 'deleted',
+        deletedAt: new Date(),
+        deletedBy: auth.currentUser?.uid
+      });
       console.log('Entry deleted successfully');
     } catch (error) {
       console.error('Error deleting entry:', error);

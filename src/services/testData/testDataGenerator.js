@@ -430,6 +430,45 @@ export const createTestActivityData = async () => {
         await addDoc(collection(db, 'incidents'), incidentData);
         results.push(`Created ${template.type} incident for ${child.name}`);
       }
+      
+      // Create daily habit entries (5 per child)
+      const habitCategories = ['mood', 'sleep', 'nutrition', 'progress', 'other'];
+      for (let i = 0; i < 5; i++) {
+        const randomDate = new Date(thirtyDaysAgo.getTime() + Math.random() * (today.getTime() - thirtyDaysAgo.getTime()));
+        const categoryId = habitCategories[Math.floor(Math.random() * habitCategories.length)];
+        const level = Math.floor(Math.random() * 10) + 1; // 1-10 scale
+        
+        // Map habit categories to dailyCare action types (matching habitService.js)
+        const actionTypeMap = {
+          mood: 'mood',
+          sleep: 'sleep', 
+          nutrition: 'food_health',
+          progress: 'energy',
+          other: 'mood'
+        };
+        
+        const habitData = {
+          childId: child.id,
+          createdBy: currentUser.uid,
+          createdAt: randomDate,
+          actionType: actionTypeMap[categoryId] || 'mood',
+          data: { 
+            level, 
+            source: 'habits',
+            categoryId,
+            categoryLabel: categoryId.charAt(0).toUpperCase() + categoryId.slice(1),
+            notes: `Test ${categoryId} entry for ${child.name}`
+          },
+          completedBy: currentUser.uid,
+          timestamp: randomDate,
+          date: randomDate.toDateString(),
+          status: 'active',
+          testData: true
+        };
+        
+        await addDoc(collection(db, 'dailyCare'), habitData);
+        results.push(`Created ${categoryId} habit for ${child.name} (level ${level})`);
+      }
     }
     
     return {

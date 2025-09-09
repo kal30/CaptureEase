@@ -2,6 +2,13 @@ import React from 'react';
 import { Box, Typography } from '@mui/material';
 
 const JournalDetails = ({ entry }) => {
+  // Don't render if entry has no meaningful content
+  const hasContent = entry.text || (entry.tags && entry.tags.length > 0) || entry.mediaURL || entry.voiceMemoURL;
+  
+  if (!hasContent) {
+    return null;
+  }
+
   return (
     <Box>
       {entry.text && (

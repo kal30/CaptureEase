@@ -20,12 +20,7 @@ export const getEntryTypes = () => {
       icon: dailyHabitsDisplay.emoji,
       paletteKey: 'timeline.entries.dailyHabit',
     },
-    dailyNote: {
-      key: 'dailyNote',
-      label: 'Daily Notes',
-      icon: '📝',
-      paletteKey: 'timeline.entries.dailyNote',
-    },
+    // dailyNote removed - was only used for legacy progressNotes
     journal: {
       key: 'journal',
       label: journalDisplay.label,
@@ -42,7 +37,6 @@ export const ENTRY_TYPES = getEntryTypes();
 export const ENTRY_TYPE = {
   INCIDENT: 'incident',
   DAILY_HABIT: 'dailyHabit',
-  DAILY_NOTE: 'dailyNote',
   JOURNAL: 'journal',
 };
 
@@ -70,7 +64,7 @@ export const mapLegacyType = (type) => {
   if (type === 'followUp') return 'incident'; // Follow-ups should display as incidents
   if (type === 'journal') return 'journal'; // dailyLogs collection = journal entries
   if (type === 'dailyHabit') return 'dailyHabit'; // dailyCare collection = daily habits
-  if (type === 'progressNote') return 'dailyNote';
+  // Removed legacy progressNote mapping - no longer used
   if (LEGACY_TO_ENTRY.has(type)) return 'dailyHabit';
   return type; // fallback
 };
@@ -78,7 +72,7 @@ export const mapLegacyType = (type) => {
 export const getEntryTypeMeta = (type) => {
   const normalized = mapLegacyType(type);
   const entryTypes = getEntryTypes();
-  return entryTypes[normalized] || entryTypes.dailyNote;
+  return entryTypes[normalized] || entryTypes.journal; // Default to journal instead of removed dailyNote
 };
 
 // Time-of-day periods for grouping entries

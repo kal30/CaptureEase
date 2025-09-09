@@ -42,7 +42,12 @@ const RichTextInput = ({ onDataChange, clearData, templateText, placeholder }) =
     }
   }, [clearData]);
 
-  // templateText is now used as placeholder, not as actual content
+  // Handle template text insertion
+  useEffect(() => {
+    if (templateText && templateText.trim()) {
+      setText(templateText);
+    }
+  }, [templateText]);
 
   const handleFileChange = (event, type) => {
     const file = event.target.files[0];
@@ -158,7 +163,7 @@ const RichTextInput = ({ onDataChange, clearData, templateText, placeholder }) =
         multiline
         rows={4}
         variant="outlined"
-        placeholder={templateText || placeholder || "What's on your mind today? #tags"}
+        placeholder={placeholder || "What's on your mind today? #tags"}
         value={text}
         onChange={(e) => setText(e.target.value)}
         sx={{ pr: '48px' }} // Add padding to the right to make space for the icons

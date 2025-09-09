@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   Box,
   Typography,
@@ -12,10 +12,12 @@ import { useTheme } from "@mui/material/styles";
 
 import TimelineFilters from "./TimelineFilters";
 import { useUnifiedTimelineData } from "../../hooks/useUnifiedTimelineData";
+import { useRole } from "../../contexts/RoleContext";
+import { USER_ROLES } from "../../constants/roles";
 import IncidentDetails from "./parts/IncidentDetails";
 import GroupedIncidentDetails from "./parts/GroupedIncidentDetails";
 import DailyHabitDetails from "./parts/DailyHabitDetails";
-import DailyNoteDetails from "./parts/DailyNoteDetails";
+// DailyNoteDetails removed - no longer used (legacy progressNotes)
 import JournalDetails from "./parts/JournalDetails";
 import EntryHeader from "./parts/EntryHeader";
 import TimelineItem from "./parts/TimelineItem";
@@ -41,8 +43,11 @@ const UnifiedTimeline = ({
 }) => {
   // Get centralized display info
   const incidentDisplay = getIncidentDisplayInfo();
-  
+  const { getUserRoleForChild } = useRole();
   const theme = useTheme();
+
+  // Get user role for this child
+  const userRole = getUserRoleForChild(child?.id);
 
   // Fetch unified timeline data
   const { entries, loading, error, summary } = useUnifiedTimelineData(
@@ -103,13 +108,33 @@ const UnifiedTimeline = ({
               day: 'numeric' 
             })}
           </Typography>
+          
+          {/* Basic Summary */}
           <Typography variant="body2" color="text.secondary">
             {summary.totalEntries} total activities
             {summary.incidentCount > 0 && ` • ${summary.incidentCount} ${incidentDisplay.pluralLabelLowercase}`}
             {summary.journalCount > 0 && ` • ${summary.journalCount} journal entries`}
-            {summary.dailyLogCount > 0 && ` • ${summary.dailyLogCount} daily habits`}
+            {summary.dailyHabitCount > 0 && ` • ${summary.dailyHabitCount} daily habits`}
             {summary.lastActivityTime && ` • Last activity at ${summary.lastActivityTime}`}
           </Typography>
+
+          {/* Care Owner Enhanced Summary */}
+          {userRole === USER_ROLES.CARE_OWNER && summary.roleBreakdown && (
+            <Box sx={{ mt: 1.5, pt: 1.5, borderTop: "1px solid", borderColor: "divider" }}>
+              <Typography variant="body2" sx={{ fontWeight: 500, mb: 0.5 }} color="primary">
+                👑 Team Contributions Today
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {summary.roleBreakdown.totalContributors} contributor{summary.roleBreakdown.totalContributors !== 1 ? 's' : ''}
+                {summary.roleBreakdown.byRole[USER_ROLES.CARE_PARTNER] && 
+                  ` • ${summary.roleBreakdown.byRole[USER_ROLES.CARE_PARTNER]} from Care Partners`}
+                {summary.roleBreakdown.byRole[USER_ROLES.CAREGIVER] && 
+                  ` • ${summary.roleBreakdown.byRole[USER_ROLES.CAREGIVER]} from Caregivers`}
+                {summary.roleBreakdown.byRole[USER_ROLES.THERAPIST] && 
+                  ` • ${summary.roleBreakdown.byRole[USER_ROLES.THERAPIST]} from Therapists`}
+              </Typography>
+            </Box>
+          )}
         </Box>
       )}
 
@@ -190,7 +215,7 @@ const UnifiedTimeline = ({
                           : <IncidentDetails entry={entry} />
                       )}
                       {entryType === ENTRY_TYPE.DAILY_HABIT && (<DailyHabitDetails entry={entry} />)}
-                      {entryType === ENTRY_TYPE.DAILY_NOTE && (<DailyNoteDetails entry={entry} />)}
+                      {/* DAILY_NOTE removed - was only used for legacy progressNotes */}
                       {entryType === ENTRY_TYPE.JOURNAL && (<JournalDetails entry={entry} />)}
 
                 </TimelineItem>

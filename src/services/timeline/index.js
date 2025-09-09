@@ -17,24 +17,24 @@ import { getDailyHabits } from './habitDataService';
 export const getTimelineData = async (childId, selectedDate) => {
   try {
     // Fetch grouped incidents and other data sources in parallel
+    // Note: getJournalEntries and getDailyLogEntries both fetch from dailyLogs collection
+    // so we only call getJournalEntries to avoid duplicates
     const [
       groupedIncidents,
       journalEntries,
-      dailyLogEntries,
       dailyHabits
     ] = await Promise.all([
       getGroupedIncidents(childId, selectedDate),
       getJournalEntries(childId, selectedDate),
-      getDailyLogEntries(childId, selectedDate),
       getDailyHabits(childId, selectedDate)
     ]);
 
     return {
       incidents: groupedIncidents, // Now contains grouped incidents with follow-ups
       journalEntries,
-      dailyLogEntries,
+      dailyLogEntries: [], // Empty to avoid duplicates - journalEntries contains the dailyLogs data
       dailyHabits,
-      totalEntries: groupedIncidents.length + journalEntries.length + dailyLogEntries.length + dailyHabits.length
+      totalEntries: groupedIncidents.length + journalEntries.length + dailyHabits.length
     };
   } catch (error) {
     console.error('Error fetching timeline data:', error);
@@ -63,8 +63,8 @@ export const getCombinedTimelineEntries = async (childId, selectedDate) => {
     // Combine all entries - incidents now contain their follow-ups
     const allEntries = [
       ...data.incidents, // These are now grouped incidents with follow-ups
-      ...data.journalEntries,
-      ...data.dailyLogEntries,
+      ...data.journalEntries, // Contains dailyLogs data
+      // ...data.dailyLogEntries, // Skip to avoid duplicates
       ...data.dailyHabits
     ];
     

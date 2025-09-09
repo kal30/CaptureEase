@@ -10,7 +10,7 @@ import LandingPage from "../pages/LandingPage";
 import HealthInfoPage from "../pages/HealthInforPage";
 import DailyActivitiesPage from "../pages/DailyActivitiesPage";
 
-import ProgressNotesPage from "../pages/ProgressNotesPage";
+// ProgressNotesPage removed - feature deprecated
 import SensoryPage from "../pages/SensoryPage";
 import CareTeamPage from "../pages/CareTeamPage";
 import TemplateLibraryPage from "../pages/TemplateLibraryPage";
@@ -57,7 +57,7 @@ const AppRoutes = () => {
         <Route path="/care-team" element={<CareTeamPage />} />
         <Route path="/daily-activities" element={<DailyActivitiesPage />} />
         <Route path="/health-info" element={<HealthInfoPage />} />
-        <Route path="/progress-notes" element={<ProgressNotesPage />} />
+        {/* /progress-notes route removed - feature deprecated */}
         <Route path="/sensory" element={<SensoryPage />} />
         <Route path="/log" element={<DailyLogPage />} />
         <Route path="/templates" element={<TemplateLibraryPage />} />

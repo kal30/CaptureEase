@@ -1,5 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
 import { getTimelineData } from '../services/timeline';
+import { 
+  withTimelinePermissions,
+  getCareOwnerTimelineView 
+} from '../services/timeline/timelinePermissionService';
+import { useRole } from '../contexts/RoleContext';
+import { USER_ROLES } from '../constants/roles';
 
 /**
  * useUnifiedTimelineData - Hook to fetch and combine all timeline data for a specific day
@@ -11,21 +17,21 @@ import { getTimelineData } from '../services/timeline';
  * @returns {Object} - { entries, loading, error, summary }
  */
 export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
+  const { getUserRoleForChild } = useRole();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [rawEntries, setRawEntries] = useState({
     incidents: [],
     journals: [],
-    dailyLogs: [],
     dailyHabits: []
   });
 
+  // Get current user's role for this child
+  const userRole = getUserRoleForChild(childId);
+
   // Fetch all data when childId or selectedDate changes
   useEffect(() => {
-    console.log('useUnifiedTimelineData called with:', { childId, selectedDate: selectedDate?.toDateString(), filters });
-    
     if (!childId || !selectedDate) {
-      console.log('Missing childId or selectedDate, stopping fetch');
       setLoading(false);
       return;
     }
@@ -41,7 +47,6 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
         setRawEntries({
           incidents: timelineData.incidents || [],
           journals: timelineData.journalEntries || [],
-          dailyLogs: timelineData.dailyLogEntries || [],
           dailyHabits: timelineData.dailyHabits || []
         });
         
@@ -58,6 +63,11 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
 
   // Process and filter entries
   const processedData = useMemo(() => {
+    // Don't process if we don't have a user role yet
+    if (!userRole) {
+      return { entries: [], summary: {} };
+    }
+
     // Filter raw entries to ensure they belong to the current child
     const childFilteredEntries = {
       incidents: rawEntries.incidents.filter(entry => 
@@ -66,20 +76,11 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
       journals: rawEntries.journals.filter(entry => 
         entry.childId === childId || entry.child?.id === childId
       ),
-      dailyLogs: rawEntries.dailyLogs.filter(entry => 
-        entry.childId === childId || entry.child?.id === childId
-      ),
       dailyHabits: rawEntries.dailyHabits.filter(entry => 
         entry.childId === childId || entry.child?.id === childId
       )
     };
 
-    console.log('Child-filtered entries:', {
-      incidents: childFilteredEntries.incidents.length,
-      journals: childFilteredEntries.journals.length,
-      dailyLogs: childFilteredEntries.dailyLogs.length,
-      dailyHabits: childFilteredEntries.dailyHabits.length
-    });
     
 
     // Transform raw data into unified entry format
@@ -118,7 +119,7 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
         userId: incident.loggedBy?.id
       })),
       
-      // Transform journal entries (all dailyLogs are journal entries)
+      // Transform journal entries (from dailyLogs - avoid duplicates by using journals data only)
       ...childFilteredEntries.journals.map(journal => ({
         id: journal.id,
         type: 'journal',
@@ -133,22 +134,6 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
         loggedByUser: journal.loggedBy?.name,
         userRole: journal.loggedBy?.role,
         userId: journal.loggedBy?.id
-      })),
-      
-      // Transform daily logs
-      ...childFilteredEntries.dailyLogs.map(log => ({
-        id: log.id,
-        type: 'dailyLog',
-        timestamp: log.timestamp,
-        activityType: log.activityType,
-        mood: log.mood,
-        notes: log.notes,
-        description: log.description,
-        duration: log.duration,
-        quantity: log.quantity,
-        loggedByUser: log.loggedBy?.name,
-        userRole: log.loggedBy?.role,
-        userId: log.loggedBy?.id
       })),
       
       // Transform daily habits (from dailyCare collection)
@@ -166,20 +151,6 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
         userRole: habit.loggedBy?.role,
         userId: habit.loggedBy?.id
       })),
-      
-      // Transform daily logs with text (Journal entries from DailyLogFeed)
-      ...childFilteredEntries.dailyLogs
-        .filter(log => log.text && log.text.trim().length > 0) // Only entries with meaningful text content
-        .map(log => ({
-          id: log.id,
-          type: 'dailyLog',
-          timestamp: log.timestamp?.toDate ? log.timestamp.toDate() : new Date(log.timestamp),
-          text: log.text,
-          tags: log.tags,
-          loggedByUser: log.loggedBy?.name,
-          userRole: log.loggedBy?.role,
-          userId: log.loggedBy?.id
-        })),
       
     ];
 
@@ -230,7 +201,7 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
       totalEntries: filteredEntries.length,
       incidentCount: filteredEntries.filter(e => e.type === 'incident').length,
       journalCount: filteredEntries.filter(e => e.type === 'journal').length,
-      dailyLogCount: filteredEntries.filter(e => e.type === 'dailyLog').length,
+      dailyHabitCount: filteredEntries.filter(e => e.type === 'dailyHabit').length,
       lastActivityTime: filteredEntries.length > 0 
         ? new Date(filteredEntries[0].timestamp).toLocaleTimeString([], { 
             hour: '2-digit', 
@@ -253,11 +224,22 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
       }
     };
 
-    return {
-      entries: filteredEntries,
-      summary
-    };
-  }, [rawEntries, filters, childId]);
+    // Apply role-based permissions and filtering
+    if (userRole === USER_ROLES.CARE_OWNER) {
+      // Care Owner gets the full timeline view with enhanced insights
+      return getCareOwnerTimelineView(filteredEntries, summary, filters);
+    } else {
+      // For other roles, apply permission-based filtering
+      const permissionManager = withTimelinePermissions(userRole, null, childId);
+      const roleFilteredEntries = permissionManager.filterEntries(filteredEntries, filters);
+      const enhancedSummary = permissionManager.enhanceSummary(roleFilteredEntries, summary);
+
+      return {
+        entries: roleFilteredEntries,
+        summary: enhancedSummary
+      };
+    }
+  }, [rawEntries, filters, childId, userRole]);
 
   return {
     entries: processedData.entries,

@@ -3,23 +3,8 @@ import { db } from './firebase';
 
 // Timeline entry types with their display configurations
 export const TIMELINE_TYPES = {
-  DAILY_NOTE: {
-    type: 'daily_note',
-    label: 'Daily Note', 
-    icon: '📝',
-    color: '#2196F3', // Blue (UI should prefer theme)
-    entryGroup: 'dailyNote',
-    collection: 'dailyLogs',
-    isRootCollection: true // Indicates this is a root collection with childId filter
-  },
-  PROGRESS_NOTE: {
-    type: 'progress_note', 
-    label: 'Progress Note',
-    icon: '📈',
-    color: '#4CAF50', // Green (UI should prefer theme)
-    entryGroup: 'dailyNote',
-    collection: 'progressNotes'
-  },
+  // DAILY_NOTE removed - was only used for legacy progressNotes mapping
+  // PROGRESS_NOTE removed - legacy collection no longer used
   SENSORY_LOG: {
     type: 'sensory_log',
     label: 'Sensory Log', 

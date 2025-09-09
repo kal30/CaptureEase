@@ -60,13 +60,6 @@ const CustomCalendar = ({
 
   const dayPropGetter = (date) => {
     const today = new Date();
-    const hasProgressNote = events.some(
-      (event) =>
-        event.type === "progressNote" &&
-        event.start.getDate() === date.getDate() &&
-        event.start.getMonth() === date.getMonth() &&
-        event.start.getFullYear() === date.getFullYear()
-    );
     const hasSensoryLog = events.some(
       (event) =>
         event.type === "sensoryLog" &&
@@ -90,9 +83,6 @@ const CustomCalendar = ({
       };
     }
 
-    if (hasProgressNote) {
-      classNames.push("has-progress-note");
-    }
     if (hasSensoryLog) {
       classNames.push("has-sensory-log");
     }

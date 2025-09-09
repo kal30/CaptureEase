@@ -2,6 +2,13 @@ import React from 'react';
 import { Box, Typography } from '@mui/material';
 
 const DailyNoteDetails = ({ entry }) => {
+  // Don't render if entry has no meaningful content
+  const hasContent = entry.title || entry.content || entry.mood || (entry.tags && entry.tags.length > 0);
+  
+  if (!hasContent) {
+    return null;
+  }
+
   return (
     <Box>
       {entry.title && (

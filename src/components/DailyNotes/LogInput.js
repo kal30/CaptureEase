@@ -3,8 +3,6 @@ import {
   Box,
   Button,
   CircularProgress,
-  Paper,
-  ButtonGroup,
   Chip,
   Typography,
 } from "@mui/material";
@@ -22,6 +20,7 @@ const LogInput = ({ childId, selectedDate = new Date() }) => {
   const [loading, setLoading] = useState(false);
   const [clearInput, setClearInput] = useState(false);
   const [templateText, setTemplateText] = useState("");
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [user] = useAuthState(auth);
 
   const extractTags = (inputText) => {
@@ -30,42 +29,55 @@ const LogInput = ({ childId, selectedDate = new Date() }) => {
     return matches.map((match) => match[1]);
   };
 
-  // Entry templates
+  // Entry templates with category and tags
   const templates = [
     { 
       emoji: "🍽️", 
       name: "Meal Time",
-      text: "Had [meal] at [time]. Ate [food items]. #mealtime"
+      text: "Had [meal] at [time]. Ate [food items].",
+      category: "mealtime",
+      tags: ["mealtime", "food"]
     },
     { 
       emoji: "😊", 
       name: "Good Day",
-      text: "Great day today! Was happy and engaged. Had fun [activity]. #goodday #mood"
+      text: "Great day today! Was happy and engaged. Had fun [activity].",
+      category: "mood",
+      tags: ["goodday", "mood", "positive"]
     },
     { 
       emoji: "😴", 
       name: "Nap Time",
-      text: "Took a nap from [start time] to [end time]. Slept well. #nap #sleep"
+      text: "Took a nap from [start time] to [end time]. Slept well.",
+      category: "sleep",
+      tags: ["nap", "sleep", "rest"]
     },
     { 
       emoji: "🎉", 
       name: "Milestone",
-      text: "🎉 Did something amazing today! [achievement]. So proud! #milestone #development"
+      text: "🎉 Did something amazing today! [achievement]. So proud!",
+      category: "milestone",
+      tags: ["milestone", "development", "achievement"]
     },
     { 
       emoji: "😤", 
       name: "Challenge",
-      text: "Had some challenges today. Struggled with [issue]. We worked through it by [solution]. #challenges"
+      text: "Had some challenges today. Struggled with [issue]. We worked through it by [solution].",
+      category: "challenge",
+      tags: ["challenges", "behavior", "coping"]
     },
     { 
       emoji: "🏥", 
       name: "Medical",
-      text: "Medical update: [medical information]. #medical #health"
+      text: "Medical update: [medical information].",
+      category: "medical_note",
+      tags: ["medical", "health", "notes"]
     }
   ];
 
   const applyTemplate = (template) => {
     setTemplateText(template.text);
+    setSelectedTemplate(template);
     // Reset template text after a brief moment to allow for multiple uses
     setTimeout(() => setTemplateText(""), 100);
   };
@@ -81,7 +93,11 @@ const LogInput = ({ childId, selectedDate = new Date() }) => {
     let mediaURL = "";
     let voiceMemoURL = "";
     let mediaType = "";
-    const tags = extractTags(richTextData.text);
+    
+    // Combine template tags with extracted hashtags
+    const hashtagTags = extractTags(richTextData.text);
+    const templateTags = selectedTemplate?.tags || [];
+    const allTags = [...new Set([...templateTags, ...hashtagTags])]; // Remove duplicates
 
     try {
       if (richTextData.mediaFile) {
@@ -114,13 +130,19 @@ const LogInput = ({ childId, selectedDate = new Date() }) => {
         childId,
         createdBy: user?.uid,
         createdAt: serverTimestamp(),
-        
-        // Journal entry data
         text: richTextData.text,
-        mediaURL,
-        mediaType,
-        voiceMemoURL,
-        tags,
+        status: 'active',
+        
+        // Optional structured fields
+        ...(selectedTemplate?.category && { category: selectedTemplate.category }),
+        ...(allTags.length > 0 && { tags: allTags }),
+        
+        // Media fields (optional)
+        ...(mediaURL && { mediaURL }),
+        ...(mediaType && { mediaType }),
+        ...(voiceMemoURL && { voiceMemoURL }),
+        
+        // Timestamp fields for UI
         timestamp: entryTimestamp, // Use selected date with current time
         entryDate: selectedDate.toDateString(), // Store the selected date for filtering
         
@@ -128,9 +150,6 @@ const LogInput = ({ childId, selectedDate = new Date() }) => {
         authorId: user?.uid,
         authorName: user?.displayName || user?.email?.split('@')[0] || 'User',
         authorEmail: user?.email,
-        
-        // Status for soft delete system
-        status: 'active',
       };
       
       // Debug logging to see exactly what's being sent
@@ -143,12 +162,13 @@ const LogInput = ({ childId, selectedDate = new Date() }) => {
         createdAt: '[serverTimestamp()]' // serverTimestamp shows as function, not actual value
       });
       
-      const docRef = await addDoc(collection(db, "dailyLogs"), docData);
+      await addDoc(collection(db, "dailyLogs"), docData);
 
       // Clear the input after successful submission
       setClearInput(true);
       setTimeout(() => setClearInput(false), 100); // Reset clear flag
       setRichTextData(null);
+      setSelectedTemplate(null); // Clear selected template
     } catch (error) {
       console.error("Error adding daily log:", error);
       console.error("Full error details:", error.code, error.message);

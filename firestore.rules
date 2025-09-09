@@ -397,16 +397,57 @@ service cloud.firestore {
          (request.resource.data.status == 'deleted' && (isChildOwner(resource.data.childId) || request.auth.uid == resource.data.createdBy)));
     }
     
-    match /daily_logs/{logId} {
-      // CREATE: Owner, Care Partners, Caregivers (NOT Therapists)
-      allow create: if canCreateIncidentLogs() &&
-        request.resource.data.keys().hasAll(['createdBy', 'createdAt', 'childId']);
+    match /dailyLogs/{logId} {
+      // JOURNAL ENTRIES COLLECTION - Free-form notes about the child (non-medical)
       
-      // READ: All roles with child access
-      allow read: if canReadChildData();
+      // CREATE: Owner, Care Partners, Caregivers (NOT Therapists) + Data validation
+      allow create: if isAuthenticated() && 
+        request.resource.data.childId != null && 
+        hasChildAccess(request.auth.uid, request.resource.data.childId) &&
+        !(hasChildRoleForRequest('therapists')) &&
+        request.resource.data.keys().hasAll(['createdBy', 'createdAt', 'childId', 'text']) &&
+        request.resource.data.text is string &&
+        request.resource.data.text.size() > 0 &&
+        request.resource.data.text.size() <= 10000 && // Max 10k chars for long text
+        request.resource.data.createdBy == request.auth.uid &&
+        request.resource.data.status == 'active' &&
+        // Optional fields validation
+        (!('tags' in request.resource.data) || request.resource.data.tags is list) &&
+        (!('category' in request.resource.data) || request.resource.data.category in ['mealtime','mood','sleep','milestone','challenge','medical_note']);
       
-      // UPDATE: Owner can edit all, others edit own (NOT Therapists) + SOFT DELETE
-      allow update: if canUpdateIncidentLogs() || canSoftDelete();
+      // READ: All roles with child access (child must be active)
+      allow read: if isAuthenticated() && 
+        resource.data.childId != null && 
+        hasChildAccess(request.auth.uid, resource.data.childId) &&
+        exists(/databases/(default)/documents/children/$(resource.data.childId)) &&
+        get(/databases/(default)/documents/children/$(resource.data.childId)).data.status == 'active';
+      
+      // UPDATE: Owner can edit any; others edit only their own (NOT Therapists) + SOFT DELETE
+      allow update: if isAuthenticated() && 
+        resource.data.childId != null && 
+        hasChildAccess(request.auth.uid, resource.data.childId) && 
+        // Immutable fields check
+        request.resource.data.createdBy == resource.data.createdBy &&
+        request.resource.data.createdAt == resource.data.createdAt &&
+        request.resource.data.childId == resource.data.childId &&
+        // Update permissions
+        (
+          // Owner can edit any entry
+          isChildOwner(resource.data.childId) ||
+          // Author can edit own (non-therapists only)
+          (request.auth.uid == resource.data.createdBy && !hasChildRoleForResource('therapists')) ||
+          // Soft delete: owner or author can set status to deleted
+          (request.resource.data.status == 'deleted' && 
+           (isChildOwner(resource.data.childId) || request.auth.uid == resource.data.createdBy))
+        ) &&
+        // Text length validation for updates
+        (!('text' in request.resource.data) || 
+         (request.resource.data.text is string && 
+          request.resource.data.text.size() > 0 && 
+          request.resource.data.text.size() <= 10000)) &&
+        // Optional fields validation for updates
+        (!('tags' in request.resource.data) || request.resource.data.tags is list) &&
+        (!('category' in request.resource.data) || request.resource.data.category in ['mealtime','mood','sleep','milestone','challenge','medical_note']);
     }
     
     match /journal_entries/{entryId} {
