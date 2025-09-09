@@ -17,7 +17,6 @@ export const getCurrentUser = () => {
  * Create a conversation with real care team members
  */
 export const createCareTeamConversation = async (child, teamMemberEmails = []) => {
-  console.log('🏥 Creating care team conversation for:', child.name);
   
   const currentUser = getCurrentUser();
   if (!currentUser) {
@@ -41,7 +40,6 @@ export const createCareTeamConversation = async (child, teamMemberEmails = []) =
   
   try {
     const result = await createConversation(conversationData);
-    console.log('✅ Care team conversation created:', result);
     return result;
   } catch (error) {
     console.error('❌ Failed to create care team conversation:', error);
@@ -59,11 +57,9 @@ export const getUserConversations = async (limit = 10) => {
     return { success: false, error: 'User not authenticated' };
   }
 
-  console.log('📋 Getting conversations for user:', currentUser.email);
   
   try {
     const result = await getConversations(currentUser.uid, { limit });
-    console.log('✅ Found conversations:', result.conversations?.length || 0);
     return result;
   } catch (error) {
     console.error('❌ Get conversations failed:', error);
@@ -80,11 +76,9 @@ export const getConversationDetails = async (conversationId) => {
     return { success: false, error: 'User not authenticated' };
   }
 
-  console.log('📖 Getting conversation:', conversationId);
   
   try {
     const result = await getConversationById(conversationId, currentUser.uid);
-    console.log('✅ Conversation details:', result.conversation?.title);
     return result;
   } catch (error) {
     console.error('❌ Get conversation by ID failed:', error);
@@ -113,7 +107,6 @@ export const sendRealMessage = async (conversationId, messageText) => {
   
   try {
     const result = await sendMessage(messageData);
-    console.log('✅ Message sent:', result.messageId);
     return result;
   } catch (error) {
     console.error('❌ Send message failed:', error);
@@ -130,11 +123,9 @@ export const getConversationMessages = async (conversationId, limit = 20) => {
     return { success: false, error: 'User not authenticated' };
   }
 
-  console.log('📄 Getting messages for conversation:', conversationId);
   
   try {
     const result = await getMessages(conversationId, currentUser.uid, { limit });
-    console.log('✅ Found messages:', result.messages?.length || 0);
     return result;
   } catch (error) {
     console.error('❌ Get messages failed:', error);
@@ -151,11 +142,9 @@ export const markMessageRead = async (messageId) => {
     return { success: false, error: 'User not authenticated' };
   }
 
-  console.log('✅ Marking message as read:', messageId);
   
   try {
     const result = await markMessageAsRead(messageId, currentUser.uid);
-    console.log('✅ Message marked as read');
     return result;
   } catch (error) {
     console.error('❌ Mark message as read failed:', error);
@@ -172,11 +161,9 @@ export const getUserUnreadMessages = async () => {
     return { success: false, error: 'User not authenticated' };
   }
 
-  console.log('📬 Getting unread messages for user:', currentUser.email);
   
   try {
     const result = await getUnreadMessages(currentUser.uid);
-    console.log('✅ Unread messages found:', result.totalCount || 0);
     return result;
   } catch (error) {
     console.error('❌ Get unread messages failed:', error);
@@ -188,7 +175,6 @@ export const getUserUnreadMessages = async () => {
  * Initialize messaging for a child with their care team
  */
 export const initializeMessagingForChild = async (child) => {
-  console.log('🚀 Initializing real messaging for:', child.name);
   
   const currentUser = getCurrentUser();
   if (!currentUser) {
@@ -197,16 +183,12 @@ export const initializeMessagingForChild = async (child) => {
   }
 
   try {
-    console.log('👤 Current user:', currentUser.email);
-    console.log('👶 Child:', child.name);
-    console.log('🏥 Care team members found:');
     
     // List all care team members
     const careTeam = [];
     if (child.users?.care_partners) {
       child.users.care_partners.forEach(partner => {
         careTeam.push({ ...partner, role: 'Care Partner' });
-        console.log(`  - ${partner.name || partner.email} (Care Partner)`);
       });
     }
     if (child.users?.caregivers) {
@@ -223,7 +205,6 @@ export const initializeMessagingForChild = async (child) => {
     }
 
     if (careTeam.length === 0) {
-      console.log('⚠️ No care team members found. You can invite team members first.');
       return {
         success: true,
         message: 'No care team members to create conversations with yet',
@@ -243,9 +224,6 @@ export const initializeMessagingForChild = async (child) => {
         `Welcome to the care team discussion for ${child.name}! 👋 Let's work together to support ${child.name}'s care and development.`
       );
 
-      console.log('🎉 Messaging initialized successfully!');
-      console.log(`📝 Conversation ID: ${conversationResult.conversationId}`);
-      console.log(`💬 Welcome message sent: ${welcomeResult.success}`);
       
       return {
         success: true,
@@ -285,10 +263,8 @@ export const attachMessagingFunctionsToWindow = () => {
       initializeMessagingWithCareTeam: initializeMessagingForChild // Alias for backward compatibility
     };
     
-    console.log('💬 Real messaging functions attached to window.messaging');
     console.log('Available functions:', Object.keys(window.messaging));
     console.log('');
-    console.log('🚀 Quick Start:');
     console.log('1. Get your children: const children = await getChildren()');  
     console.log('2. Initialize messaging: await window.messaging.initializeMessagingForChild(children[0])');
     console.log('3. Get conversations: await window.messaging.getUserConversations()');
@@ -314,18 +290,14 @@ export const quickStartMessaging = async () => {
     const children = await getChildren();
     
     if (!children || children.length === 0) {
-      console.log('⚠️ No profiles found. Please create a profile first.');
       return { success: false, error: 'No profiles found' };
     }
 
-    console.log(`👶 Found ${children.length} profile(s)`);
     
     // Initialize messaging for first child
     const result = await initializeMessagingForChild(children[0]);
     
     if (result.success) {
-      console.log('🎉 Messaging is ready to use!');
-      console.log(`💬 Use: window.messaging.sendRealMessage("${result.conversationId}", "Hello team!")`);
     }
     
     return result;
