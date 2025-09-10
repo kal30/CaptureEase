@@ -23,6 +23,9 @@ const RichTextInput = ({ onDataChange, clearData, templateText, placeholder }) =
   const canvasRef = useRef(null);
   const [showCamera, setShowCamera] = useState(false);
   const streamRef = useRef(null);
+  const idSuffixRef = useRef(Math.random().toString(36).slice(2, 8));
+  const imageInputId = `icon-button-file-image-${idSuffixRef.current}`;
+  const videoInputId = `icon-button-file-video-${idSuffixRef.current}`;
 
   useEffect(() => {
     onDataChange({ text, mediaFile, audioBlob });
@@ -69,12 +72,24 @@ const RichTextInput = ({ onDataChange, clearData, templateText, placeholder }) =
     } else {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
+          video: { facingMode: { ideal: 'environment' } },
         });
         streamRef.current = stream;
         setShowCamera(true);
         if (videoRef.current) {
-          videoRef.current.srcObject = stream;
+          const video = videoRef.current;
+          video.srcObject = stream;
+          // Ensure iOS allows autoplay inline
+          video.muted = true;
+          const tryPlay = () => {
+            // Some browsers require an explicit play call
+            video.play?.().catch(() => {});
+          };
+          if (video.readyState >= 2) {
+            tryPlay();
+          } else {
+            video.onloadedmetadata = tryPlay;
+          }
         }
       } catch (error) {
         console.error("Error accessing camera:", error);
@@ -179,12 +194,13 @@ const RichTextInput = ({ onDataChange, clearData, templateText, placeholder }) =
       >
         <input
           accept="image/*"
-          id="icon-button-file-image"
+          id={imageInputId}
           type="file"
+          capture="environment"
           style={{ display: "none" }}
           onChange={(e) => handleFileChange(e, "image")}
         />
-        <label htmlFor="icon-button-file-image">
+        <label htmlFor={imageInputId}>
           <IconButton color="primary" component="span" size="small">
             <AddPhotoAlternateIcon />
           </IconButton>
@@ -196,12 +212,13 @@ const RichTextInput = ({ onDataChange, clearData, templateText, placeholder }) =
 
         <input
           accept="video/*"
-          id="icon-button-file-video"
+          id={videoInputId}
           type="file"
+          capture="environment"
           style={{ display: "none" }}
           onChange={(e) => handleFileChange(e, "video")}
         />
-        <label htmlFor="icon-button-file-video">
+        <label htmlFor={videoInputId}>
           <IconButton color="primary" component="span" size="small">
             <VideocamIcon />
           </IconButton>
@@ -228,6 +245,7 @@ const RichTextInput = ({ onDataChange, clearData, templateText, placeholder }) =
             ref={videoRef}
             autoPlay
             playsInline
+            muted
             style={{
               width: "100%",
               maxWidth: "400px",

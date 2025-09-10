@@ -22,7 +22,9 @@ import {
   EmojiEmotions,
   Close,
   Share,
-  PriorityHigh
+  PriorityHigh,
+  PhotoCamera,
+  Videocam
 } from '@mui/icons-material';
 import { useAuthState } from 'react-firebase-hooks/auth';
 
@@ -31,6 +33,8 @@ import { sendMessage } from '../../services/messaging';
 import { MessageTypes, MessagePriority } from '../../models/messaging';
 import { getMessagingTheme } from '../../assets/theme/messagingTheme';
 import { auth } from '../../services/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { storage } from '../../services/firebase';
 
 /**
  * Message priority selector
@@ -135,6 +139,8 @@ const MessageComposer = ({
   // Refs
   const textFieldRef = useRef(null);
   const fileInputRef = useRef(null);
+  const photoInputRef = useRef(null);
+  const videoInputRef = useRef(null);
 
   /**
    * Handle message text change
@@ -268,6 +274,81 @@ const MessageComposer = ({
     setPriority(newPriority);
   };
 
+  const handleCapturePhotoClick = () => {
+    photoInputRef.current?.click();
+  };
+
+  const handleCaptureVideoClick = () => {
+    videoInputRef.current?.click();
+  };
+
+  /**
+   * Upload a file to Firebase Storage and send a media message
+   */
+  const uploadAndSendMedia = async (file) => {
+    if (!file || !conversationId || !currentUserId) return;
+
+    try {
+      setSending(true);
+
+      const isImage = file.type?.startsWith('image/');
+      const isVideo = file.type?.startsWith('video/');
+      const folder = isImage ? 'images' : (isVideo ? 'videos' : 'files');
+      const path = `messages/${conversationId}/${folder}/${Date.now()}_${file.name}`;
+
+      const fileRef = ref(storage, path);
+      await uploadBytes(fileRef, file);
+      const url = await getDownloadURL(fileRef);
+
+      const attachment = {
+        id: `att_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+        type: isImage ? 'image' : 'file',
+        url,
+        filename: file.name,
+        size: file.size,
+        mimeType: file.type,
+        metadata: {}
+      };
+
+      // For conversation preview, put a simple text
+      const previewText = isImage ? 'Photo' : (isVideo ? 'Video' : 'File');
+
+      const messageData = {
+        conversationId,
+        senderId: currentUserId,
+        senderName: user?.displayName || user?.email || 'Unknown User',
+        text: previewText,
+        type: MessageTypes.IMAGE,
+        priority,
+        replyTo: null,
+        attachments: [attachment],
+        metadata: {}
+      };
+
+      const result = await sendMessage(messageData);
+      if (result.success) {
+        const sentMessage = {
+          id: result.messageId,
+          ...messageData,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          readBy: { [currentUserId]: new Date() },
+          isEdited: false,
+          isDeleted: false
+        };
+        onMessageSent?.(sentMessage);
+      } else {
+        console.error('Failed to send media message:', result.error);
+        setError(result.error || 'Failed to send media');
+      }
+    } catch (err) {
+      console.error('Error uploading/sending media:', err);
+      setError(err.message || 'Failed to send media');
+    } finally {
+      setSending(false);
+    }
+  };
+
   // Focus input on mount
   useEffect(() => {
     if (!isMobile) {
@@ -340,6 +421,32 @@ const MessageComposer = ({
               <AttachFile />
             </IconButton>
           </Tooltip>
+
+          {/* Quick camera capture on mobile */}
+          {isMobile && (
+            <>
+              <Tooltip title="Take photo">
+                <IconButton
+                  size="small"
+                  onClick={handleCapturePhotoClick}
+                  disabled={sending}
+                  sx={{ color: 'text.secondary' }}
+                >
+                  <PhotoCamera />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Record video">
+                <IconButton
+                  size="small"
+                  onClick={handleCaptureVideoClick}
+                  disabled={sending}
+                  sx={{ color: 'text.secondary' }}
+                >
+                  <Videocam />
+                </IconButton>
+              </Tooltip>
+            </>
+          )}
 
           {!isMobile && (
             <Tooltip title="Share content">
@@ -476,15 +583,51 @@ const MessageComposer = ({
         onClose={handlePriorityClose}
       />
 
-      {/* Hidden File Input */}
+      {/* Hidden File Input (documents/library) */}
       <input
         ref={fileInputRef}
         type="file"
         multiple
         accept="image/*,video/*,.pdf,.doc,.docx"
-        onChange={(e) => {
-          console.log('Selected files:', e.target.files);
-          // TODO: Handle file selection
+        onChange={async (e) => {
+          const files = Array.from(e.target.files || []);
+          for (const f of files) {
+            await uploadAndSendMedia(f);
+          }
+          // Allow re-selecting the same file(s)
+          e.target.value = '';
+        }}
+        style={{ display: 'none' }}
+      />
+
+      {/* Hidden Photo Capture Input */}
+      <input
+        ref={photoInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        onChange={async (e) => {
+          const file = e.target.files?.[0];
+          if (file) {
+            await uploadAndSendMedia(file);
+          }
+          e.target.value = '';
+        }}
+        style={{ display: 'none' }}
+      />
+
+      {/* Hidden Video Capture Input */}
+      <input
+        ref={videoInputRef}
+        type="file"
+        accept="video/*"
+        capture="environment"
+        onChange={async (e) => {
+          const file = e.target.files?.[0];
+          if (file) {
+            await uploadAndSendMedia(file);
+          }
+          e.target.value = '';
         }}
         style={{ display: 'none' }}
       />

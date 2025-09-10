@@ -22,6 +22,7 @@ import {
 import { alpha, useTheme } from '@mui/material/styles';
 import StyledButton from '../components/UI/StyledButton';
 import { USER_ROLES, ROLE_DISPLAY } from '../constants/roles';
+import { getRoleColor } from '../assets/theme/roleColors';
 
 const InviteRoleSelectionPage = () => {
   const theme = useTheme();
@@ -36,7 +37,7 @@ const InviteRoleSelectionPage = () => {
     {
       role: USER_ROLES.CARE_PARTNER,
       icon: FamilyIcon,
-      color: theme.palette.success.main,
+      color: getRoleColor('carePartner', 'primary'), // Violet #8B5CF6
       route: '/invite/carepartner',
       title: 'Care Partner',
       subtitle: 'Family member or close friend',
@@ -52,7 +53,7 @@ const InviteRoleSelectionPage = () => {
     {
       role: USER_ROLES.CAREGIVER,
       icon: CaregiverIcon,
-      color: theme.palette.primary.main,
+      color: getRoleColor('caregiver', 'primary'), // Emerald Green #059669
       route: '/invite/caregiver',
       title: 'Caregiver',
       subtitle: 'Professional helper or aide',
@@ -68,7 +69,7 @@ const InviteRoleSelectionPage = () => {
     {
       role: USER_ROLES.THERAPIST,
       icon: TherapyIcon,
-      color: theme.palette.secondary.main,
+      color: getRoleColor('therapist', 'primary'), // Teal #0891B2
       route: '/invite/therapist',
       title: 'Therapist',
       subtitle: 'Professional advisor or specialist',

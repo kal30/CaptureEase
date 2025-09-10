@@ -19,6 +19,7 @@ import GroupedIncidentDetails from "./parts/GroupedIncidentDetails";
 import DailyHabitDetails from "./parts/DailyHabitDetails";
 // DailyNoteDetails removed - no longer used (legacy progressNotes)
 import JournalDetails from "./parts/JournalDetails";
+import TherapyNoteDetails from "./parts/TherapyNoteDetails";
 import EntryHeader from "./parts/EntryHeader";
 import TimelineItem from "./parts/TimelineItem";
 import { getIncidentDisplayInfo } from '../../constants/uiDisplayConstants';
@@ -115,6 +116,7 @@ const UnifiedTimeline = ({
             {summary.incidentCount > 0 && ` • ${summary.incidentCount} ${incidentDisplay.pluralLabelLowercase}`}
             {summary.journalCount > 0 && ` • ${summary.journalCount} journal entries`}
             {summary.dailyHabitCount > 0 && ` • ${summary.dailyHabitCount} daily habits`}
+            {summary.therapyNoteCount > 0 && ` • ${summary.therapyNoteCount} therapy notes`}
             {summary.lastActivityTime && ` • Last activity at ${summary.lastActivityTime}`}
           </Typography>
 
@@ -186,6 +188,8 @@ const UnifiedTimeline = ({
                 typeForTimeline = 'dailyHabit';
               } else if (entry.collection === 'dailyLogs') {
                 typeForTimeline = 'journal';
+              } else if (entry.collection === 'therapyNotes') {
+                typeForTimeline = 'therapyNote';
               } else {
                 // Fallback to existing logic for backward compatibility
                 typeForTimeline = entry.timelineType || entry.type;
@@ -217,6 +221,7 @@ const UnifiedTimeline = ({
                       {entryType === ENTRY_TYPE.DAILY_HABIT && (<DailyHabitDetails entry={entry} />)}
                       {/* DAILY_NOTE removed - was only used for legacy progressNotes */}
                       {entryType === ENTRY_TYPE.JOURNAL && (<JournalDetails entry={entry} />)}
+                      {entryType === ENTRY_TYPE.THERAPY_NOTE && (<TherapyNoteDetails entry={entry} />)}
 
                 </TimelineItem>
               );

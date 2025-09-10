@@ -1,12 +1,13 @@
 import { alpha } from "@mui/material/styles";
+import { getRoleColor } from "./roleColors";
 
-// CLEAN: Role hex mapping with new role names
+// Role hex mapping using centralized role color system
 const roleHex = {
-  care_owner: "#4F7ABB",      // brand ink - main responsible person
-  care_partner: "#97CADB",    // light blue - family/friends
-  caregiver: "#0097A7",       // teal-blue - professional helpers
-  therapist: "#F7EA8C",       // yellow - professional advisors
-  default: "#c8d9e6",         // brand tint (fallback)
+  care_owner: getRoleColor("careOwner", "primary"),     // Royal Blue - leadership, trust
+  care_partner: getRoleColor("carePartner", "primary"), // Violet - supportive, collaborative  
+  caregiver: getRoleColor("caregiver", "primary"),      // Emerald Green - helping, professional
+  therapist: getRoleColor("therapist", "primary"),      // Teal - medical, clinical
+  default: "#c8d9e6",                                   // brand tint (fallback)
 };
 
 // Build a soft gradient from a hex color

@@ -27,6 +27,12 @@ export const getEntryTypes = () => {
       icon: journalDisplay.emoji,
       paletteKey: 'timeline.entries.journal',
     },
+    therapyNote: {
+      key: 'therapyNote',
+      label: 'Therapy Notes',
+      icon: '🩺',
+      paletteKey: 'timeline.entries.therapyNote',
+    },
   };
 };
 
@@ -38,6 +44,7 @@ export const ENTRY_TYPE = {
   INCIDENT: 'incident',
   DAILY_HABIT: 'dailyHabit',
   JOURNAL: 'journal',
+  THERAPY_NOTE: 'therapyNote',
 };
 
 const LEGACY_TO_ENTRY = new Set([
@@ -59,11 +66,13 @@ export const mapLegacyType = (type) => {
   // - incidents collection → 'incident' type
   // - dailyCare collection → 'dailyHabit' type  
   // - dailyLogs collection → 'journal' type
+  // - therapyNotes collection → 'therapyNote' type
   
   if (type === 'incident') return 'incident';
   if (type === 'followUp') return 'incident'; // Follow-ups should display as incidents
   if (type === 'journal') return 'journal'; // dailyLogs collection = journal entries
   if (type === 'dailyHabit') return 'dailyHabit'; // dailyCare collection = daily habits
+  if (type === 'therapyNote') return 'therapyNote'; // therapyNotes collection = therapy notes
   // Removed legacy progressNote mapping - no longer used
   if (LEGACY_TO_ENTRY.has(type)) return 'dailyHabit';
   return type; // fallback

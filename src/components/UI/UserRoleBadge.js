@@ -1,7 +1,8 @@
 import React from 'react';
 import { Chip } from '@mui/material';
-import { alpha, useTheme } from '@mui/material/styles';
+import { useTheme } from '@mui/material/styles';
 import { USER_ROLES, getRoleDisplay } from '../../constants/roles';
+import { getRoleColorAlpha } from '../../assets/theme/roleColors';
 
 /**
  * Reusable User Role Badge Component
@@ -15,13 +16,24 @@ const UserRoleBadge = ({
 }) => {
   const theme = useTheme();
   
-  // Get role styling from centralized constants - KISS approach
+  // Get role styling from centralized constants - now using role-based colors
   const roleDisplay = getRoleDisplay(role);
   const getRoleStyle = () => ({
-    bgcolor: alpha(roleDisplay.color, 0.1),
-    color: roleDisplay.color,
+    bgcolor: getRoleColorAlpha(getRoleKey(role), 'primary', 0.1),
+    color: roleDisplay.color, // This now uses the new role colors from constants
     icon: roleDisplay.icon
   });
+
+  // Map user roles to role color keys
+  const getRoleKey = (userRole) => {
+    const roleMap = {
+      [USER_ROLES.CARE_OWNER]: 'careOwner',
+      [USER_ROLES.CARE_PARTNER]: 'carePartner', 
+      [USER_ROLES.CAREGIVER]: 'caregiver',
+      [USER_ROLES.THERAPIST]: 'therapist'
+    };
+    return roleMap[userRole] || 'careOwner';
+  };
 
   const roleStyle = getRoleStyle();
   const displayIcon = icon || roleStyle.icon;

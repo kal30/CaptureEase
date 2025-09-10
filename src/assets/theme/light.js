@@ -1,4 +1,5 @@
 import { createTheme } from "@mui/material/styles";
+import { themeRoles, getRoleColor } from "./roleColors";
 import { alpha } from "@mui/material/styles";
 import brand from "./brand";
 import getMuiButtonTheme from "./components/buttonTheme";
@@ -77,6 +78,7 @@ const theme = createTheme({
         incident: "#DC2626",
         dailyHabit: "#059669",
         journal: "#8B5CF6",
+        therapyNote: getRoleColor("therapist", "primary"),
       },
       periods: {
         morning: "#0284C7", // info-like
@@ -104,54 +106,8 @@ const theme = createTheme({
       allergyBorder: "rgba(255, 152, 0, 0.3)",
       medicationBorder: "rgba(76, 175, 80, 0.3)",
     },
-    /* roles: {
-      therapist: {
-        primary: "#1976D2",
-        dark: "#0D47A1",
-        light: "#E3F2FD",
-        background: "#FAFCFF",
-        gradient: "linear-gradient(90deg, #E3F2FD 0%, #BBDEFB 100%)",
-        border: "#E3F2FD",
-        icon: "🩺",
-      },
-      caregiver: {
-        primary: "#C06C84",
-        dark: "#6C567B",
-        light: "#FDEDEC",
-        background: "#FFF9FB",
-        gradient: "linear-gradient(90deg, #FDEDEC 0%, #FADADD 100%)",
-        border: "#FDEDEC",
-        icon: "🤗",
-      },
-      care_owner: {
-        primary: "#388E3C",
-        dark: "#1B5E20",
-        light: "#E8F5E8",
-        background: "#FAFFFE",
-        gradient: "linear-gradient(90deg, #E8F5E8 0%, #C8E6C9 100%)",
-        border: "#E8F5E8",
-        icon: "👑",
-      },
-      care_partner: {
-        primary: "#E99787",
-        dark: "#d48a7a",
-        light: "rgba(233, 151, 135, 0.15)",
-        background: "rgba(233, 151, 135, 0.03)",
-        gradient:
-          "linear-gradient(90deg, rgba(233, 151, 135, 0.12) 0%, rgba(233, 151, 135, 0.06) 100%)",
-        border: "rgba(233, 151, 135, 0.4)",
-        icon: "👨‍👩‍👧‍👦",
-      },
-      unknown: {
-        primary: "#666",
-        dark: "#424242",
-        light: "#f5f5f5",
-        background: "#fafafa",
-        gradient: "linear-gradient(90deg, #f5f5f5 0%, #eeeeee 100%)",
-        border: "#f0f0f0",
-        icon: "👤",
-      },
-    }, */
+    // Role-based colors for care team members
+    roles: themeRoles,
     text: {
       primary: "#333333",
       secondary: "#666666",

@@ -3,6 +3,8 @@
  * KISS Architecture - Single source of truth for all role-related constants
  */
 
+import { getRoleColor } from '../assets/theme/roleColors';
+
 // =============================================================================
 // ROLE DEFINITIONS
 // =============================================================================
@@ -14,37 +16,37 @@ export const USER_ROLES = {
   THERAPIST: 'therapist'           // Professional advisors (speech, OT, behavioral)
 };
 
-// Role display information
+// Role display information - now uses centralized role colors
 export const ROLE_DISPLAY = {
   [USER_ROLES.CARE_OWNER]: {
     label: '👑 Care Owner',
     description: 'Main responsible person - Full control over everything',
     badge: 'Full Control',
-    color: '#8B5CF6',
+    color: getRoleColor('careOwner', 'primary'), // Royal Blue #2C74D4
     priority: 1, // Highest priority
     icon: '👑'
   },
   [USER_ROLES.CARE_PARTNER]: {
-    label: '👨‍👩‍👧‍👦 Care Partner',
+    label: '👥 Care Partner',
     description: 'Family member/friend - Can add logs and view all progress',
     badge: 'Full Access',
-    color: '#10B981',
+    color: getRoleColor('carePartner', 'primary'), // Violet #8B5CF6
     priority: 2,
-    icon: '👨‍👩‍👧‍👦'
+    icon: '👥'
   },
   [USER_ROLES.CAREGIVER]: {
-    label: '👤 Caregiver',
+    label: '🤝 Caregiver',
     description: 'Professional helper - Limited access to shared information',
     badge: 'Restricted Access',
-    color: '#F59E0B',
+    color: getRoleColor('caregiver', 'primary'), // Emerald Green #059669
     priority: 3,
-    icon: '👤'
+    icon: '🤝'
   },
   [USER_ROLES.THERAPIST]: {
     label: '🩺 Therapist',
     description: 'Professional advisor - View all + add professional notes',
     badge: 'Professional View',
-    color: '#64748B',
+    color: getRoleColor('therapist', 'primary'), // Teal #0891B2
     priority: 4,
     icon: '🩺'
   }
@@ -102,25 +104,25 @@ export const VISIBILITY_DISPLAY = {
     label: '👥 Everyone',
     description: 'All team members can see this log',
     icon: '👥',
-    color: '#10B981'
+    color: getRoleColor('caregiver', 'primary') // Green for shared/open
   },
   [LOG_VISIBILITY.FAMILY_ONLY]: {
-    label: '👨‍👩‍👧‍👦 Family Only', 
+    label: '👥 Family Only', 
     description: 'Only family members can see this log',
-    icon: '👨‍👩‍👧‍👦',
-    color: '#F59E0B'
+    icon: '👥',
+    color: getRoleColor('carePartner', 'primary') // Purple for family
   },
   [LOG_VISIBILITY.OWNER_ONLY]: {
     label: '👑 Owner Only',
     description: 'Only the care owner can see this log',
     icon: '👑', 
-    color: '#8B5CF6'
+    color: getRoleColor('careOwner', 'primary') // Blue for owner
   },
   [LOG_VISIBILITY.THERAPIST_NOTES]: {
     label: '🩺 Therapist Notes',
     description: 'Professional notes from therapists',
     icon: '🩺',
-    color: '#64748B'
+    color: getRoleColor('therapist', 'primary') // Teal for therapist
   }
 };
 

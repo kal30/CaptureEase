@@ -101,19 +101,26 @@ const ChildCardHeader = memo(({
           
           {/* Role Chips */}
           {allChips.map((chip, index) => (
-            <Chip
-              key={index}
-              label={chip.label}
-              size="small"
-              variant={chip.variant || 'outlined'}
-              color={chip.color || 'default'}
-              sx={{
-                height: 22,
-                fontSize: '0.75rem',
-                fontWeight: chip.sx?.fontWeight || 400,
-                ...chip.sx
-              }}
-            />
+              <Chip
+                key={index}
+                label={chip.label}
+                size="small"
+                variant={chip.variant || 'outlined'}
+                color={chip.sx ? undefined : (chip.color || 'default')}
+                sx={{
+                  height: 24, // Slightly taller for better visibility
+                  fontSize: '0.75rem',
+                  fontWeight: chip.sx?.fontWeight || 600,
+                  minWidth: '80px', // Ensure minimum width
+                  ...chip.sx, // Apply the role colors
+                  // Ensure the colors are applied with higher specificity
+                  '&.MuiChip-root': {
+                    backgroundColor: chip.sx?.backgroundColor,
+                    color: chip.sx?.color,
+                    border: chip.sx?.border,
+                  }
+                }}
+              />
           ))}
         </Box>
 

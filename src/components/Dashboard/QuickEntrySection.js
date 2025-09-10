@@ -4,6 +4,7 @@ import {
   Typography,
   IconButton,
   Tooltip,
+  Button,
 } from '@mui/material';
 import {
   Assessment as AssessmentIcon,
@@ -12,6 +13,7 @@ import {
 import { useTheme } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
 import { useChildContext } from '../../contexts/ChildContext';
+import { therapyTheme } from '../../assets/theme/therapyTheme';
 import { getIncidentDisplayInfo, getJournalDisplayInfo, getDailyHabitsDisplayInfo } from '../../constants/uiDisplayConstants';
 
 /**
@@ -104,19 +106,19 @@ const QuickEntrySection = ({
     onDailyReport?.(child);
   };
 
-  // Don't show for therapists (they have read-only view)
+  // Therapist-specific view with therapy notes access
   if (userRole === 'therapist') {
     return (
       <Box
         sx={{
           display: "flex",
           alignItems: "center",
-          gap: 1,
+          gap: 2,
           py: 1,
           px: 2,
           borderRadius: 2,
-          bgcolor: theme.palette.grey[50],
-          border: `1px solid ${theme.palette.divider}`,
+          bgcolor: therapyTheme.background.subtle,
+          border: `1px solid ${therapyTheme.border.light}`,
         }}
       >
         <Typography
@@ -124,19 +126,21 @@ const QuickEntrySection = ({
           sx={{
             fontSize: "0.875rem",
             fontWeight: 600,
-            color: theme.palette.text.secondary,
+            color: therapyTheme.text.primary,
           }}
         >
-          Today's Status:
+          🩺 Professional View:
         </Typography>
+        
+        {/* Status indicators (read-only) */}
         <Box sx={{ display: "flex", gap: 0.5 }}>
           {quickActions.map((action) => (
             <Box
               key={action.key}
               sx={{
-                width: 24,
-                height: 24,
-                borderRadius: "50%", // All circles now
+                width: 20,
+                height: 20,
+                borderRadius: "50%",
                 border: `1px solid ${status[action.key] 
                   ? action.color 
                   : theme.palette.divider}`,
@@ -149,12 +153,39 @@ const QuickEntrySection = ({
               }}
               title={`${action.label}: ${action.description}`}
             >
-              <Typography sx={{ fontSize: "0.75rem" }}>
+              <Typography sx={{ fontSize: "0.65rem" }}>
                 {status[action.key] && action.key === 'journal' ? "📅" : status[action.key] ? "✓" : action.emoji}
               </Typography>
             </Box>
           ))}
         </Box>
+
+        {/* Therapy Notes Button */}
+        <Button
+          size="small"
+          variant="contained"
+          startIcon="🩺"
+          onClick={() => {
+            // Set the current child ID before navigating
+            setCurrentChildId(child.id);
+            navigate('/therapy-notes');
+          }}
+          sx={{
+            backgroundColor: therapyTheme.primary,
+            color: "#FFFFFF",
+            fontWeight: 600,
+            fontSize: "0.75rem",
+            minHeight: "28px",
+            px: 1.5,
+            "&:hover": {
+              backgroundColor: therapyTheme.dark,
+              transform: "scale(1.05)",
+            },
+            boxShadow: `0 2px 4px ${therapyTheme.primary}30`,
+          }}
+        >
+          Notes
+        </Button>
       </Box>
     );
   }

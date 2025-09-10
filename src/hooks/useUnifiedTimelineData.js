@@ -23,7 +23,8 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
   const [rawEntries, setRawEntries] = useState({
     incidents: [],
     journals: [],
-    dailyHabits: []
+    dailyHabits: [],
+    therapyNotes: [] // NEW: 4th timeline entry type
   });
 
   // Get current user's role for this child
@@ -47,7 +48,8 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
         setRawEntries({
           incidents: timelineData.incidents || [],
           journals: timelineData.journalEntries || [],
-          dailyHabits: timelineData.dailyHabits || []
+          dailyHabits: timelineData.dailyHabits || [],
+          therapyNotes: timelineData.therapyNotes || [] // NEW: Include therapy notes
         });
         
       } catch (err) {
@@ -78,7 +80,10 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
       ),
       dailyHabits: rawEntries.dailyHabits.filter(entry => 
         entry.childId === childId || entry.child?.id === childId
-      )
+      ),
+      therapyNotes: rawEntries.therapyNotes.filter(entry => 
+        entry.childId === childId || entry.child?.id === childId
+      ) // NEW: Filter therapy notes
     };
 
     
@@ -151,6 +156,26 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
         userRole: habit.loggedBy?.role,
         userId: habit.loggedBy?.id
       })),
+
+      // Transform therapy notes (Professional entries from therapyNotes collection)
+      ...childFilteredEntries.therapyNotes.map(note => ({
+        id: note.id,
+        type: 'therapyNote',
+        collection: 'therapyNotes',
+        timestamp: note.timestamp?.toDate ? note.timestamp.toDate() : new Date(note.timestamp),
+        title: note.title || 'Therapy Note',
+        content: note.content,
+        noteType: note.noteType,
+        sessionType: note.sessionType,
+        clinicalArea: note.clinicalArea,
+        tags: note.tags || [],
+        category: note.category,
+        replies: note.replies || [],
+        professionalNote: true,
+        userRole: note.userRole || 'therapist',
+        userId: note.createdBy,
+        loggedByUser: 'Therapist' // TODO: Get actual therapist name
+      })),
       
     ];
 
@@ -202,6 +227,7 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
       incidentCount: filteredEntries.filter(e => e.type === 'incident').length,
       journalCount: filteredEntries.filter(e => e.type === 'journal').length,
       dailyHabitCount: filteredEntries.filter(e => e.type === 'dailyHabit').length,
+      therapyNoteCount: filteredEntries.filter(e => e.type === 'therapyNote').length,
       lastActivityTime: filteredEntries.length > 0 
         ? new Date(filteredEntries[0].timestamp).toLocaleTimeString([], { 
             hour: '2-digit', 

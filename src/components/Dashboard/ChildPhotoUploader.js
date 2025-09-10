@@ -20,7 +20,7 @@ const ChildPhotoUploader = ({ setPhoto, photoURL, setPhotoURL }) => {
     <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
       <IconButton component="label">
         <PhotoCamera />
-        <input type="file" hidden accept="image/*" onChange={handleFileChange} />
+        <input type="file" hidden accept="image/*" capture="environment" onChange={handleFileChange} />
       </IconButton>
       {photoURL && (
         <img

@@ -19,6 +19,7 @@ import ProfilePage from "../pages/ProfilePage";
 import InvitationPage from "../pages/InvitationPage";
 import AcceptInvite from "../pages/AcceptInvite";
 import DailyLogPage from "../pages/DailyLogPage";
+import TherapyNotesPage from "../pages/TherapyNotesPage";
 import MessagesPage from "../pages/MessagesPage";
 import AdminPage from "../pages/AdminPage";
 import InviteCaregiverPage from "../pages/InviteCaregiverPage";
@@ -60,6 +61,7 @@ const AppRoutes = () => {
         {/* /progress-notes route removed - feature deprecated */}
         <Route path="/sensory" element={<SensoryPage />} />
         <Route path="/log" element={<DailyLogPage />} />
+        <Route path="/therapy-notes" element={<TherapyNotesPage />} />
         <Route path="/templates" element={<TemplateLibraryPage />} />
         <Route path="/medical" element={<MedicalLogPage />} />
         <Route path="/profile" element={<ProfilePage />} />
