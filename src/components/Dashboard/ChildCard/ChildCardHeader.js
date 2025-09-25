@@ -8,6 +8,7 @@ import ChildManagementMenu from '../ChildManagementMenu';
 import MedicalInfoDisplay from './MedicalInfoDisplay';
 import DiagnosisChips from '../DiagnosisChips';
 import useChildCardChips from '../../../hooks/useChildCardChips';
+import { getChildAge, formatAge } from '../../../utils/dateUtils';
 
 /**
  * ChildCardHeader - Header section of child card with avatar, basic info, and actions
@@ -38,6 +39,10 @@ const ChildCardHeader = memo(({
   sx = {}
 }) => {
   const allChips = useChildCardChips(userRole, completedToday);
+
+  // Calculate display age - prioritizes birthDate calculation, falls back to stored age
+  const displayAge = getChildAge(child);
+  const ageText = formatAge(displayAge);
 
   return (
     <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, ...sx }}>
@@ -96,7 +101,7 @@ const ChildCardHeader = memo(({
             color="text.secondary"
             sx={{ fontSize: '1.2rem' }}
           >
-            Age {child.age}
+            Age {ageText}
           </Typography>
           
           {/* Role Chips */}

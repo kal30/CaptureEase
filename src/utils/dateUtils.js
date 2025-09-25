@@ -159,6 +159,74 @@ export const getDateGroupLabel = (timestamp) => {
 export const needsDateSeparator = (currentTimestamp, previousTimestamp) => {
   if (!currentTimestamp) return false;
   if (!previousTimestamp) return true;
-  
+
   return !isSameDay(currentTimestamp, previousTimestamp);
+};
+
+/**
+ * Calculate age from birth date
+ * @param {string|Date} birthDate - Birth date as string (YYYY-MM-DD) or Date object
+ * @returns {number|null} Age in years, or null if birthDate is invalid
+ */
+export const calculateAge = (birthDate) => {
+  if (!birthDate) return null;
+
+  try {
+    const birth = new Date(birthDate);
+    const today = new Date();
+
+    // Check if birth date is valid
+    if (isNaN(birth.getTime())) return null;
+
+    // Calculate age
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+
+    // Adjust age if birthday hasn't occurred this year
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+
+    return age >= 0 ? age : null;
+  } catch (error) {
+    console.warn('Error calculating age:', error);
+    return null;
+  }
+};
+
+/**
+ * Get display age for a child
+ * Prioritizes calculated age from birthDate, falls back to stored age
+ * @param {Object} child - Child object with age and/or birthDate
+ * @returns {number|null} Age to display, or null if no valid age found
+ */
+export const getChildAge = (child) => {
+  // First try to calculate from birthDate
+  if (child.birthDate) {
+    const calculatedAge = calculateAge(child.birthDate);
+    if (calculatedAge !== null) {
+      return calculatedAge;
+    }
+  }
+
+  // Fall back to stored age field
+  if (child.age !== undefined && child.age !== null) {
+    const numericAge = typeof child.age === 'string' ? parseInt(child.age, 10) : child.age;
+    return !isNaN(numericAge) && numericAge >= 0 ? numericAge : null;
+  }
+
+  return null;
+};
+
+/**
+ * Format age for display
+ * @param {number|null} age - Age in years
+ * @returns {string} Formatted age string
+ */
+export const formatAge = (age) => {
+  if (age === null || age === undefined) {
+    return 'Unknown';
+  }
+
+  return `${age}`;
 };

@@ -14,6 +14,7 @@ import { getActionGroups } from "../constants/actionGroups";
 
 // Components
 import DashboardHeader from "../components/Dashboard/DashboardHeader";
+// MessagingSetupBanner removed - using per-child SMS toggles instead
 import ChildGroup from "../components/Dashboard/ChildGroup";
 import QuickCheckIn from "../components/Mobile/QuickCheckIn";
 import AddChildModal from "../components/Dashboard/AddChildModal";
@@ -140,6 +141,8 @@ const PanelDashboard = () => {
         onInviteClick={() => hook.setShowInviteModal(true)}
         onAddChildClick={() => hook.setShowAddChildModal(true)}
       />
+
+      {/* Global messaging banner removed - SMS logging now per-child */}
 
       {/* Notification Permission Prompt */}
       <NotificationPermissionPrompt 
