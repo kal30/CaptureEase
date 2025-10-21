@@ -74,6 +74,7 @@ const ChildCard = ({
             onQuickEntry={onQuickEntry}
             onDailyReport={onDailyReport}
             onMessages={onMessages}
+            onSettingsUpdate={undefined} // SMS toggle handles its own updates via Cloud Function
             hoveredQuickAction={hoveredQuickAction}
             onHoverAction={handleQuickActionHover}
             onLeaveAction={handleQuickActionLeave}

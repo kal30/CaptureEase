@@ -12,9 +12,7 @@ import { Close as CloseIcon } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import AllergyChip from "../UI/Allergies";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { addDoc, collection } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
-import { db } from "../../services/firebase";
+import { addChild } from "../../services/childService";
 import ChildPhotoUploader from "./ChildPhotoUploader";
 import {
   ThemeCard,
@@ -99,24 +97,11 @@ const AddChildModal = ({ open, onClose, onSuccess }) => {
         }
 
         const conditionCodes = selectedConditions.map((c) => c.code);
-        const currentUserId = getAuth().currentUser.uid;
 
-        const newChild = {
+        const childData = {
           name,
           age,
           photoURL: photoDownloadURL,
-          // REQUIRED by rules: members + active
-          users: {
-            care_owner: currentUserId, // User becomes Care Owner
-            care_partners: [], // Empty array for Care Partners
-            caregivers: [], // Empty array for Caregivers
-            therapists: [], // Empty array for Therapists
-            members: [currentUserId],
-          },
-          status: "active",
-          settings: {
-            allow_therapist_family_logs: false, // Default privacy setting
-          },
           // Structured condition fields
           conditions: selectedConditions,
           conditionCodes,
@@ -132,11 +117,11 @@ const AddChildModal = ({ open, onClose, onSuccess }) => {
           },
         };
 
-        // Save child to Firestore
-        const docRef = await addDoc(collection(db, "children"), newChild);
-        console.log("Child added to Firestore with ID:", docRef.id);
+        // Use centralized addChild service
+        const childId = await addChild(childData);
+        console.log("Child added to Firestore with ID:", childId);
 
-        return docRef;
+        return { id: childId };
       },
       { name, age }
     );

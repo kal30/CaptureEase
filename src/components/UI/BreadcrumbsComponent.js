@@ -48,6 +48,8 @@ const BreadcrumbsComponent = () => {
     "health-info": "Health Info",
     "progress-notes": "Progress Notes",
     profile: "Profile",
+    settings: "Settings",
+    messaging: "Phone & Messaging",
   };
 
   // Build the breadcrumbs items

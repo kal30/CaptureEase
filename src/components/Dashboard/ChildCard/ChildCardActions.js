@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Box, Button, IconButton, Tooltip } from '@mui/material';
 import { useRole } from '../../../contexts/RoleContext';
 import { getMessagesDisplayInfo } from '../../../constants/uiDisplayConstants';
 import QuickEntrySection from '../QuickEntrySection';
+import QuickNoteLog, { QuickNoteIcon } from '../QuickNoteLog';
 
 /**
  * ChildCardActions - Action buttons and quick entry section
@@ -36,6 +37,7 @@ const ChildCardActions = ({
 }) => {
   const { USER_ROLES } = useRole();
   const messagesDisplay = getMessagesDisplayInfo();
+  const [showQuickNote, setShowQuickNote] = useState(false);
 
   const handleQuickActionHover = (actionType) => {
     if (onHoverAction) {
@@ -72,6 +74,7 @@ const ChildCardActions = ({
         externalHoveredAction={hoveredQuickAction}
       />
 
+
       {/* Role-Specific Action Buttons */}
       <Box
         sx={{
@@ -95,6 +98,13 @@ const ChildCardActions = ({
             width: { xs: '100%', md: 'auto' }
           }}
         >
+          {/* Quick Note Icon Button - Available for all roles */}
+          <QuickNoteIcon
+            childId={child.id}
+            childName={child.name}
+            onClick={() => setShowQuickNote(true)}
+          />
+
           {/* Messages Icon Button - Available for all roles */}
           <Tooltip title={`${messagesDisplay.label}: ${messagesDisplay.description}`} arrow>
             <IconButton
@@ -153,6 +163,14 @@ const ChildCardActions = ({
           )}
         </Box>
       </Box>
+
+      {/* Quick Note Dialog */}
+      <QuickNoteLog
+        childId={child.id}
+        childName={child.name}
+        open={showQuickNote}
+        onClose={() => setShowQuickNote(false)}
+      />
     </Box>
   );
 };

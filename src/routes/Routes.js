@@ -27,6 +27,7 @@ import InviteCarePartnerPage from "../pages/InviteCarePartnerPage";
 import InviteTherapistPage from "../pages/InviteTherapistPage";
 import InviteRoleSelectionPage from "../pages/InviteRoleSelectionPage";
 import InviteSuccessPage from "../pages/InviteSuccessPage";
+import SettingsMessaging from "../pages/SettingsMessaging";
 
 //When you update here update breadcrumbscomponent.js
 
@@ -74,6 +75,7 @@ const AppRoutes = () => {
         <Route path="/invite/carepartner" element={<InviteCarePartnerPage />} />
         <Route path="/invite/therapist" element={<InviteTherapistPage />} />
         <Route path="/invite/success" element={<InviteSuccessPage />} />
+        <Route path="/settings/messaging" element={<SettingsMessaging />} />
       </Routes>
     </>
   );

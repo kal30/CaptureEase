@@ -632,6 +632,50 @@ service cloud.firestore {
       allow read, write: if isAuthenticated();
     }
     
+    // Logs collection - Unified timeline for each child
+    match /logs/{logId} {
+      // READ: All roles with child access
+      allow read: if canReadChildData();
+      
+      // CREATE: Owner, Care Partners, Caregivers (NOT Therapists) + Required field validation
+      allow create: if canCreateIncidentLogs() &&
+        // Required fields validation
+        request.resource.data.keys().hasAll(['childId', 'createdBy', 'type', 'note', 'timeStart']) &&
+        // Field type and constraint validation
+        request.resource.data.childId is string &&
+        request.resource.data.createdBy == request.auth.uid &&
+        request.resource.data.type is string && request.resource.data.type.size() > 0 &&
+        request.resource.data.note is string && request.resource.data.note.size() <= 10000 &&
+        request.resource.data.timeStart is timestamp &&
+        // Disallow client setting server timestamps
+        !('createdAt' in request.resource.data) &&
+        !('updatedAt' in request.resource.data) &&
+        // Only allow known fields
+        request.resource.data.keys().hasOnly(['childId', 'type', 'subType', 'note', 'timeStart', 'timeEnd', 'tags', 'severity', 'attachments', 'source', 'createdBy', 'status', 'classified', 'originalType', 'classifiedAt', 'fromPhone', 'sourceMessageId', 'originalNote', 'sourceEdited', 'sourceEditedAt', 'correctionOf', 'audit']);
+      
+      // UPDATE: Owner can edit all, others edit own (NOT Therapists) + Immutable field protection
+      allow update: if canUpdateIncidentLogs() &&
+        // Protect immutable fields
+        request.resource.data.childId == resource.data.childId &&
+        request.resource.data.createdBy == resource.data.createdBy &&
+        request.resource.data.createdAt == resource.data.createdAt &&
+        (('source' in resource.data && request.resource.data.source == resource.data.source) || !('source' in resource.data)) &&
+        // Disallow client setting server timestamps
+        !('createdAt' in request.resource.data.diff(resource.data).affectedKeys()) &&
+        !('updatedAt' in request.resource.data.diff(resource.data).affectedKeys()) &&
+        // Validate note length if being updated
+        (!('note' in request.resource.data) || 
+         (request.resource.data.note is string && request.resource.data.note.size() <= 10000)) &&
+        // Validate timeStart/timeEnd if being updated
+        (!('timeStart' in request.resource.data) || request.resource.data.timeStart is timestamp) &&
+        (!('timeEnd' in request.resource.data) || request.resource.data.timeEnd is timestamp) &&
+        // Only allow known fields
+        request.resource.data.keys().hasOnly(['childId', 'type', 'subType', 'note', 'timeStart', 'timeEnd', 'tags', 'severity', 'attachments', 'source', 'createdBy', 'createdAt', 'updatedAt', 'status', 'classified', 'originalType', 'classifiedAt', 'fromPhone', 'sourceMessageId', 'originalNote', 'sourceEdited', 'sourceEditedAt', 'correctionOf', 'audit']);
+      
+      // DELETE: Only soft delete allowed (status == "deleted")
+      allow delete: if canSoftDelete();
+    }
+    
     // Catch-all removed for security - all collections now have explicit rules
     
   }

@@ -60,6 +60,7 @@ cypress/videos/
 .env.test.local
 .env.production.local
 cypress.env.json
+auth-config.json
 
 # Logs
 npm-debug.log*

@@ -7,6 +7,7 @@ import {
 } from "@mui/material";
 import { useTheme, alpha } from "@mui/material/styles";
 import ChildCard from "./ChildCard";
+import SmsEnablementTip from "./SmsEnablementTip";
 
 const groupConfig = {
     own: {
@@ -97,6 +98,9 @@ const ChildGroup = ({
           }}
         />
       </Box>
+      {/* Show SMS enablement tip only for 'own' group */}
+      {groupType === 'own' && <SmsEnablementTip children={childItems} />}
+      
       <Stack spacing={3}>
         {childItems.map((child) => (
           <ChildCard

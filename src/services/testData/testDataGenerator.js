@@ -1,6 +1,7 @@
 import { db } from '../firebase';
 import { collection, addDoc, doc, setDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
+import { addChild } from '../childService';
 
 /**
  * Test Data Generator for CaptureEase
@@ -274,59 +275,32 @@ export const createTestChildren = async () => {
         name: 'Emma Johnson',
         age: 8,
         birthDate: '2015-03-15',
-        description: 'Energetic 8-year-old who loves art and music',
-        users: {
-          care_owner: currentUser.uid,
-          care_partners: [], // Empty for now since we can't create other users
-          caregivers: [],
-          therapists: [],
-          members: [currentUser.uid] // Only current user
-        },
-        settings: {
-          allow_therapist_family_logs: false
-        }
+        description: 'Energetic 8-year-old who loves art and music'
       },
       {
-        name: 'Liam Smith', 
+        name: 'Liam Smith',
         age: 12,
         birthDate: '2011-07-22',
-        description: 'Active preteen interested in sports and science',
-        users: {
-          care_owner: currentUser.uid,
-          care_partners: [],
-          caregivers: [],
-          therapists: [],
-          members: [currentUser.uid]
-        },
-        settings: {
-          allow_therapist_family_logs: true
-        }
+        description: 'Active preteen interested in sports and science'
       },
       {
         name: 'Sofia Davis',
         age: 6,
-        birthDate: '2017-11-08', 
-        description: 'Creative 6-year-old who enjoys drawing and storytelling',
-        users: {
-          care_owner: currentUser.uid,
-          care_partners: [],
-          caregivers: [],
-          therapists: [],
-          members: [currentUser.uid]
-        },
-        settings: {
-          allow_therapist_family_logs: false
-        }
+        birthDate: '2017-11-08',
+        description: 'Creative 6-year-old who enjoys drawing and storytelling'
       }
     ];
     
     for (const child of testChildrenForCurrentUser) {
-      const childRef = await addDoc(collection(db, 'children'), {
+      // Use centralized addChild service and add testData flag
+      const childData = {
         ...child,
-        createdAt: new Date(),
-        updatedAt: new Date(),
         testData: true
-      });
+      };
+      delete childData.users; // Remove users since addChild handles this
+      delete childData.settings; // Remove settings since addChild handles this
+
+      const childId = await addChild(childData);
       results.push(`Created child: ${child.name} (Care Owner: ${currentUser.displayName || currentUser.email})`);
     }
     

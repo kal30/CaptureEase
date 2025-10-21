@@ -3,6 +3,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";  // Import Firestore
 import { getStorage } from "firebase/storage";  // Import Firebase Storage
+import { getFunctions } from "firebase/functions";
 
 
 const firebaseConfig = {
@@ -22,6 +23,7 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);  // Export Firestore instance
 export const storage = getStorage(app);  // Export Storage instance
+export const functions = getFunctions(app, 'us-central1');  // Export Functions instance
 
 // Export the app instance for use with Cloud Functions
 export { app };

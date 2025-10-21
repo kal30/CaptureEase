@@ -140,7 +140,10 @@ export const addChild = async (childData) => {
     updatedBy: user.uid,
     updatedAt: serverTimestamp(),
     settings: {
-      allow_therapist_family_logs: false  // Default privacy setting
+      allow_therapist_family_logs: false,  // Default privacy setting
+      notifications: {
+        smsEnabled: true  // Enable SMS notifications by default for new children
+      }
     }
   });
   return docRef.id;
@@ -351,7 +354,6 @@ export const getActiveChildren = async () => {
   }
 
   try {
-    
     // Use members array for fast lookup + filter for active status
     const childrenQuery = query(
       collection(db, "children"),
@@ -364,12 +366,6 @@ export const getActiveChildren = async () => {
     
     snapshot.forEach((doc) => {
       const data = doc.data();
-      console.log(`📄 Found active child:`, {
-        id: doc.id,
-        name: data.name,
-        status: data.status,
-        userRole: getUserRole(data.users, user.uid)
-      });
       children.push({
         id: doc.id,
         ...data,
