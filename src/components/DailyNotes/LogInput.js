@@ -181,9 +181,22 @@ const LogInput = ({ childId, selectedDate = new Date() }) => {
     <Box>
       {/* Template Buttons */}
       <Box sx={{ mb: 3 }}>
-        <Typography variant="subtitle2" sx={{ mb: 1, color: 'text.secondary', fontSize: '0.8rem' }}>
-          Quick Templates:
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+          <Typography variant="subtitle2" sx={{ color: 'text.secondary', fontSize: '0.8rem' }}>
+            Quick Templates:
+          </Typography>
+          <Chip
+            label="✨ Auto-classified"
+            size="small"
+            sx={{
+              bgcolor: '#F0FDF4',
+              color: '#065F46',
+              fontWeight: 600,
+              fontSize: '0.7rem',
+              height: 20,
+            }}
+          />
+        </Box>
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
           {templates.map((template) => (
             <Chip

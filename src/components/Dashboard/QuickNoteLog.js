@@ -42,10 +42,10 @@ const QuickNoteLog = ({ childId, childName, open, onClose }) => {
       });
 
       console.log('Log created successfully:', result.data);
-      
-      setMessage({ 
-        type: 'success', 
-        text: `Note logged successfully! It will be automatically categorized.` 
+
+      setMessage({
+        type: 'success',
+        text: `Note logged successfully! The system will automatically classify it as a Daily Log or Important Moment.`
       });
       
       setNote('');
@@ -146,7 +146,11 @@ const QuickNoteLog = ({ childId, childName, open, onClose }) => {
         />
         
         <Box sx={{ mt: 1, fontSize: '0.75rem', color: 'text.secondary' }}>
-          💡 Tip: Notes are automatically categorized (feeding, sleep, incidents, etc.)
+          💡 <strong>Auto-Classification:</strong> Your note will be automatically sorted as:
+          <br />
+          • <strong>Daily Log</strong> - Routine activities (meals, naps, play)
+          <br />
+          • <strong>Important Moment</strong> - Significant events (milestones, incidents, health concerns)
           <br />
           Press Ctrl+Enter to submit quickly
         </Box>

@@ -193,6 +193,40 @@ const DailyLogPage = () => {
 
       {/* Timeline View - Input and Feed Together */}
       <Box sx={{ display: "flex", flexDirection: "column", gap: 3, minHeight: "60vh" }}>
+        {/* Auto-Classification Info Banner */}
+        <Paper
+          elevation={0}
+          sx={{
+            p: 2,
+            bgcolor: '#EEF2FF',
+            border: '2px solid #C7D2FE',
+            borderRadius: 2,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
+          }}
+        >
+          <Box
+            sx={{
+              fontSize: '2rem',
+              minWidth: 48,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            ✨
+          </Box>
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#4338CA', mb: 0.5 }}>
+              Smart Auto-Classification Enabled
+            </Typography>
+            <Typography variant="body2" sx={{ color: '#4338CA' }}>
+              Your entries are automatically sorted as <strong>Daily Log</strong> (routine activities) or <strong>Important Moments</strong> (significant events) based on content. Just write naturally!
+            </Typography>
+          </Box>
+        </Paper>
+
         {/* Add New Entry */}
         <Box sx={{ mb: 3 }}>
           <LogInput childId={currentChildId} selectedDate={selectedDate} />

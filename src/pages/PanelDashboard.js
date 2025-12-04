@@ -145,7 +145,7 @@ const PanelDashboard = () => {
       {/* Global messaging banner removed - SMS logging now per-child */}
 
       {/* Notification Permission Prompt */}
-      <NotificationPermissionPrompt 
+      <NotificationPermissionPrompt
         onPermissionGranted={() => {
         }}
         onDismiss={() => {
@@ -153,6 +153,8 @@ const PanelDashboard = () => {
       />
 
       <Box sx={{ maxWidth: 800, mx: "auto" }}>
+        {/* Quick Notes Widget removed - Quick Notes available via 📝 icon on each child card */}
+
         <ChildGroup
           title="In Your Full Care"
           groupType="own"

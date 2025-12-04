@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Card,
@@ -308,7 +308,7 @@ const SettingsMessaging = () => {
     } catch (error) {
       console.error('Error verifying code:', error);
       let message = 'Invalid verification code';
-      
+
       if (error.code === 'auth/invalid-verification-code') {
         message = 'Invalid verification code. Please try again.';
       } else if (error.code === 'auth/code-expired') {
@@ -318,13 +318,30 @@ const SettingsMessaging = () => {
       } else if (error.code === 'auth/account-exists-with-different-credential') {
         message = 'This phone number is already associated with a different account. Please use a different phone number.';
       } else if (error.code === 'auth/provider-already-linked') {
-        message = 'A phone number is already linked to your account.';
+        // Phone already linked - treat as success and update Firestore
+        console.log('Phone already linked to account, updating Firestore...');
+        try {
+          await updateDoc(doc(db, 'users', auth.currentUser.uid), {
+            phone: phoneNumber,
+            phoneVerified: true,
+            phoneVerifiedAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+          });
+          console.log('✅ Updated user document with phone verification');
+          showSnackbar('Phone number already verified!', 'success');
+          loadAccessibleChildren();
+          setPhoneLoading(false);
+          return; // Exit early - this is success
+        } catch (firestoreError) {
+          console.error('❌ Failed to update user document:', firestoreError);
+          message = 'Phone already linked but failed to update settings. Please refresh the page.';
+        }
       } else if (error.code === 'auth/network-request-failed' || error.message?.includes('timeout')) {
         message = 'Network timeout. Please check your connection and try again.';
       } else if (error.message?.includes('Network Error') || error.message?.includes('Failed to fetch')) {
         message = 'Network error. Please check your internet connection.';
       }
-      
+
       showSnackbar(message, 'error');
     } finally {
       setPhoneLoading(false);

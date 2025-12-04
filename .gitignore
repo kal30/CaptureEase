@@ -75,3 +75,15 @@ ignore.md
 
 # Temporary or unused source
 src/crap/firebasedetails
+
+# Testing and setup scripts
+check-setup.js
+setup-*.js
+delete-*.js
+finish-*.js
+MANUAL-SETUP.md
+setup-*.md
+
+# Firebase cache and debug
+.firebase/
+firestore-debug.log

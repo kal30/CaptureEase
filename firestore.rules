@@ -651,7 +651,7 @@ service cloud.firestore {
         !('createdAt' in request.resource.data) &&
         !('updatedAt' in request.resource.data) &&
         // Only allow known fields
-        request.resource.data.keys().hasOnly(['childId', 'type', 'subType', 'note', 'timeStart', 'timeEnd', 'tags', 'severity', 'attachments', 'source', 'createdBy', 'status', 'classified', 'originalType', 'classifiedAt', 'fromPhone', 'sourceMessageId', 'originalNote', 'sourceEdited', 'sourceEditedAt', 'correctionOf', 'audit']);
+        request.resource.data.keys().hasOnly(['childId', 'type', 'subType', 'noteType', 'note', 'timeStart', 'timeEnd', 'tags', 'severity', 'attachments', 'source', 'createdBy', 'status', 'classified', 'originalType', 'classifiedAt', 'fromPhone', 'sourceMessageId', 'originalNote', 'sourceEdited', 'sourceEditedAt', 'correctionOf', 'audit']);
       
       // UPDATE: Owner can edit all, others edit own (NOT Therapists) + Immutable field protection
       allow update: if canUpdateIncidentLogs() &&
@@ -670,7 +670,7 @@ service cloud.firestore {
         (!('timeStart' in request.resource.data) || request.resource.data.timeStart is timestamp) &&
         (!('timeEnd' in request.resource.data) || request.resource.data.timeEnd is timestamp) &&
         // Only allow known fields
-        request.resource.data.keys().hasOnly(['childId', 'type', 'subType', 'note', 'timeStart', 'timeEnd', 'tags', 'severity', 'attachments', 'source', 'createdBy', 'createdAt', 'updatedAt', 'status', 'classified', 'originalType', 'classifiedAt', 'fromPhone', 'sourceMessageId', 'originalNote', 'sourceEdited', 'sourceEditedAt', 'correctionOf', 'audit']);
+        request.resource.data.keys().hasOnly(['childId', 'type', 'subType', 'noteType', 'note', 'timeStart', 'timeEnd', 'tags', 'severity', 'attachments', 'source', 'createdBy', 'createdAt', 'updatedAt', 'status', 'classified', 'originalType', 'classifiedAt', 'fromPhone', 'sourceMessageId', 'originalNote', 'sourceEdited', 'sourceEditedAt', 'correctionOf', 'audit']);
       
       // DELETE: Only soft delete allowed (status == "deleted")
       allow delete: if canSoftDelete();

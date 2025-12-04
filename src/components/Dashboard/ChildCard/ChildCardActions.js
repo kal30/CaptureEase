@@ -80,7 +80,7 @@ const ChildCardActions = ({
         sx={{
           display: 'flex',
           alignItems: 'center',
-          gap: 2,
+          gap: 1.5,
           alignSelf: 'stretch',
           pt: { xs: 0, md: 0.5 },
           width: { xs: '100%', md: 'auto' },
@@ -88,80 +88,68 @@ const ChildCardActions = ({
           order: { xs: 2, md: 0 }
         }}
       >
-        {/* Action Buttons */}
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 1,
-            alignItems: 'center',
-            width: { xs: '100%', md: 'auto' }
-          }}
-        >
-          {/* Quick Note Icon Button - Available for all roles */}
-          <QuickNoteIcon
-            childId={child.id}
-            childName={child.name}
-            onClick={() => setShowQuickNote(true)}
-          />
+        {/* Quick Note Icon Button - Available for all roles */}
+        <QuickNoteIcon
+          childId={child.id}
+          childName={child.name}
+          onClick={() => setShowQuickNote(true)}
+        />
 
-          {/* Messages Icon Button - Available for all roles */}
-          <Tooltip title={`${messagesDisplay.label}: ${messagesDisplay.description}`} arrow>
-            <IconButton
-              onClick={(e) => {
-                e.stopPropagation(); // Prevent card expansion
-                if (onMessages) {
-                  onMessages(child);
-                }
-              }}
-              sx={{
-                width: 40,
-                height: 40,
-                backgroundColor: '#6366F1', // Indigo for messages
-                color: 'white',
-                fontSize: '1.1rem',
-                border: '2px solid #E0E7FF',
-                mb: userRole === USER_ROLES.THERAPIST ? 1 : 0,
-                '&:hover': {
-                  backgroundColor: '#4F46E5',
-                  transform: 'scale(1.05)',
-                },
-                transition: 'all 0.2s ease-in-out',
-              }}
-            >
-              {messagesDisplay.emoji}
-            </IconButton>
-          </Tooltip>
+        {/* Messages Icon Button - Available for all roles */}
+        <Tooltip title={`${messagesDisplay.label}: ${messagesDisplay.description}`} arrow>
+          <IconButton
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent card expansion
+              if (onMessages) {
+                onMessages(child);
+              }
+            }}
+            sx={{
+              width: 40,
+              height: 40,
+              backgroundColor: '#6366F1', // Indigo for messages
+              color: 'white',
+              fontSize: '1.1rem',
+              border: '2px solid #E0E7FF',
+              '&:hover': {
+                backgroundColor: '#4F46E5',
+                transform: 'scale(1.05)',
+              },
+              transition: 'all 0.2s ease-in-out',
+            }}
+          >
+            {messagesDisplay.emoji}
+          </IconButton>
+        </Tooltip>
 
-          {userRole === USER_ROLES.THERAPIST && (
-            // Professional tools for therapists
-            <Button
-              variant="contained"
-              size="small"
-              onClick={(e) => {
-                e.stopPropagation(); // Prevent card expansion
-                // TODO: Navigate to analytics/insights page
-                console.log('View Analytics for child:', child.id);
-              }}
-              sx={{
-                py: 0.5,
-                px: 1.5,
-                fontSize: '0.875rem',
-                minWidth: 'auto',
-                borderRadius: 1,
+        {userRole === USER_ROLES.THERAPIST && (
+          // Professional tools for therapists
+          <Button
+            variant="contained"
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent card expansion
+              // TODO: Navigate to analytics/insights page
+              console.log('View Analytics for child:', child.id);
+            }}
+            sx={{
+              py: 0.5,
+              px: 1.5,
+              fontSize: '0.875rem',
+              minWidth: 'auto',
+              borderRadius: 1,
+              background:
+                'linear-gradient(135deg, #94A3B8 0%, #64748B 100%)',
+              color: 'white',
+              '&:hover': {
                 background:
-                  'linear-gradient(135deg, #94A3B8 0%, #64748B 100%)',
-                color: 'white',
-                '&:hover': {
-                  background:
-                    'linear-gradient(135deg, #64748B 0%, #475569 100%)',
-                },
-              }}
-            >
-              📊 Analytics
-            </Button>
-          )}
-        </Box>
+                  'linear-gradient(135deg, #64748B 0%, #475569 100%)',
+              },
+            }}
+          >
+            📊 Analytics
+          </Button>
+        )}
       </Box>
 
       {/* Quick Note Dialog */}

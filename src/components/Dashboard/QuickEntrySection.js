@@ -14,7 +14,7 @@ import { useTheme } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
 import { useChildContext } from '../../contexts/ChildContext';
 import { therapyTheme } from '../../assets/theme/therapyTheme';
-import { getIncidentDisplayInfo, getJournalDisplayInfo, getDailyHabitsDisplayInfo } from '../../constants/uiDisplayConstants';
+import { getIncidentDisplayInfo, getDailyHabitsDisplayInfo } from '../../constants/uiDisplayConstants';
 
 /**
  * QuickEntrySection - Integrated Quick Entry circles with Daily Report
@@ -38,10 +38,11 @@ const QuickEntrySection = ({
 
   // Get centralized display info
   const incidentDisplay = getIncidentDisplayInfo();
-  const journalDisplay = getJournalDisplayInfo();
+  // journalDisplay removed - journaling action no longer used
   const dailyHabitsDisplay = getDailyHabitsDisplayInfo();
 
   // Quick action items with theme-driven colors and distinct styling
+  // Note: "journaling" (Daily Log) action removed - users now use Quick Notes widget instead
   const quickActions = [
     {
       key: 'journal',
@@ -53,27 +54,28 @@ const QuickEntrySection = ({
       type: 'input', // Indicates this opens an input
       shape: 'circle' // Circle shape like incident
     },
-    { 
-      key: 'incident', 
-      emoji: incidentDisplay.emoji, 
-      label: incidentDisplay.label, 
+    {
+      key: 'incident',
+      emoji: incidentDisplay.emoji,
+      label: incidentDisplay.label,
       description: incidentDisplay.description,
       color: '#DC2626', // Red for urgent/incidents
       bgColor: '#FEF2F2',
       type: 'input', // Indicates this opens an input form
       shape: 'circle' // Back to circle shape
     },
-    {
-      key: 'journaling',
-      emoji: journalDisplay.emoji,
-      label: journalDisplay.label,
-      description: journalDisplay.description,
-      color: '#795548', // Brown for journaling
-      bgColor: '#f3e5ab',
-      type: 'navigation', // Indicates this navigates to a page
-      shape: 'circle',
-      navigationPath: '/log'
-    },
+    // Journaling/Daily Log action removed - now handled by Quick Notes widget
+    // {
+    //   key: 'journaling',
+    //   emoji: journalDisplay.emoji,
+    //   label: journalDisplay.label,
+    //   description: journalDisplay.description,
+    //   color: '#795548', // Brown for journaling
+    //   bgColor: '#f3e5ab',
+    //   type: 'navigation', // Indicates this navigates to a page
+    //   shape: 'circle',
+    //   navigationPath: '/log'
+    // },
   ];
 
   const handleQuickEntryClick = (action, e) => {
