@@ -4,6 +4,7 @@ import { useRole } from '../../../contexts/RoleContext';
 import { getMessagesDisplayInfo } from '../../../constants/uiDisplayConstants';
 import QuickEntrySection from '../QuickEntrySection';
 import QuickNoteLog, { QuickNoteIcon } from '../QuickNoteLog';
+import SmsToggle from './SmsToggle';
 
 /**
  * ChildCardActions - Action buttons and quick entry section
@@ -88,6 +89,9 @@ const ChildCardActions = ({
           order: { xs: 2, md: 0 }
         }}
       >
+        {/* SMS Toggle - Available for all roles */}
+        <SmsToggle child={child} />
+
         {/* Quick Note Icon Button - Available for all roles */}
         <QuickNoteIcon
           childId={child.id}
