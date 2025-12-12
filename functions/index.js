@@ -1,28 +1,77 @@
+/**
+ * index.js
+ *
+ * Main entry point for Firebase Cloud Functions.
+ * Acts as a central registry that imports and exports all deployed functions.
+ */
+
+// Initialize Firebase Admin once
 const admin = require("firebase-admin");
+admin.initializeApp();
 
-// Initialize Firebase Admin (for server-side operations)
-if (!admin.apps.length) {
-  admin.initializeApp();
-}
+/**
+ * Invitations / Email
+ */
+const { sendInvitationEmail } = require("./email");
+const { acceptInvitation } = require("./invitations");
 
-// Import and export functions from modular files
-const { sendInvitationEmail } = require("./email/invitation");
-const { acceptInvitation } = require("./invitations/accept");
+/**
+ * Messaging Settings & Phone Linking
+ */
+const {
+  updateChildSmsSettings,
+  updateChildSmsSettingsHttp,
+} = require("./messaging/settings");
+const {
+  linkPhoneAndDefaultChild,
+  delinkPhone,
+} = require("./messaging/phone-link");
+
+/**
+ * Ingestion (SMS / WhatsApp / Web)
+ */
+const { smsWebhook } = require("./ingestion/smsWebhook");
+
+/**
+ * Classification
+ */
+const {
+  classifyEvent,
+  classifyUnprocessed,
+  createWebEvent,
+} = require("./classifier");
+
+/**
+ * Logs / Events
+ */
 const { createLog } = require("./logs/create");
 const { classifyNoteLog } = require("./logs/classify");
-const { updateChildSmsSettings, updateChildSmsSettingsHttp } = require("./messaging/settings");
-const { linkPhoneAndDefaultChild, delinkPhone } = require("./messaging/phone-link");
-const { ingestMessage } = require("./messaging/ingest");
-const { migrateExistingChildren } = require("./migrations/migrateExistingChildren");
 
-// Export all Cloud Functions
+/**
+ * Migrations (admin-only)
+ */
+const {
+  migrateExistingChildren,
+} = require("./migrations/migrateExistingChildren");
+
+/**
+ * Exports
+ */
 exports.sendInvitationEmail = sendInvitationEmail;
 exports.acceptInvitation = acceptInvitation;
-exports.createLog = createLog;
-exports.classifyNoteLog = classifyNoteLog;
+
 exports.updateChildSmsSettings = updateChildSmsSettings;
 exports.updateChildSmsSettingsHttp = updateChildSmsSettingsHttp;
 exports.linkPhoneAndDefaultChild = linkPhoneAndDefaultChild;
 exports.delinkPhone = delinkPhone;
-exports.ingestMessage = ingestMessage;
+
+exports.smsWebhook = smsWebhook;
+
+exports.createWebEvent = createWebEvent;
+exports.classifyEvent = classifyEvent;
+exports.classifyUnprocessed = classifyUnprocessed;
+
+exports.createLog = createLog;
+exports.classifyNoteLog = classifyNoteLog;
+
 exports.migrateExistingChildren = migrateExistingChildren;
