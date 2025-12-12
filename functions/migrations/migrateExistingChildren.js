@@ -10,6 +10,7 @@ const migrateExistingChildren = onCall(
   {
     region: "us-central1",
     enforceAppCheck: false,
+    cors: true,
   },
   async (request) => {
     try {
@@ -50,11 +51,11 @@ const migrateExistingChildren = onCall(
           return;
         }
 
-        // Update child with SMS enabled
+        // Update child with SMS enabled (handle undefined settings)
         const updatedSettings = {
-          ...childData.settings,
+          ...(childData.settings || {}),
           notifications: {
-            ...childData.settings?.notifications,
+            ...(childData.settings?.notifications || {}),
             smsEnabled: true
           }
         };

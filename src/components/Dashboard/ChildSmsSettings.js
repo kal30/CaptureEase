@@ -15,16 +15,9 @@ import {
   Message as MessageIcon,
   Phone as PhoneIcon,
 } from "@mui/icons-material";
-import { getFunctions, httpsCallable } from "firebase/functions";
 import { useNavigate } from "react-router-dom";
-import { app } from "../../services/firebase";
 import { usePhoneStatus } from "../../hooks/usePhoneStatus";
-
-const functions = getFunctions(app, "us-central1");
-const updateChildSmsSettingsCallable = httpsCallable(
-  functions,
-  "updateChildSmsSettings"
-);
+import { updateChildSmsSettings } from "../../services/messaging/updateChildSmsSettings";
 
 /**
  * Child-specific SMS notification settings component
@@ -56,13 +49,10 @@ const ChildSmsSettings = ({ childDoc, onSettingsUpdate = () => {} }) => {
 
     setLoading(true);
     try {
-      const result = await updateChildSmsSettingsCallable({
-        childId: childDoc.id,
-        smsEnabled: newSmsEnabled,
-      });
+      const result = await updateChildSmsSettings(childDoc.id, newSmsEnabled);
 
-      console.log("SMS settings updated:", result.data);
-      showSnackbar(result.data.message, "success");
+      console.log("SMS settings updated:", result);
+      showSnackbar(result.message, "success");
 
       // Notify parent component of the change
       onSettingsUpdate({
@@ -79,9 +69,9 @@ const ChildSmsSettings = ({ childDoc, onSettingsUpdate = () => {} }) => {
       console.error("Error updating SMS settings:", error);
       let message = "Failed to update SMS settings";
 
-      if (error.code === "functions/permission-denied") {
+      if (error.code === "permission-denied" || error.code === "functions/permission-denied") {
         message = "You don't have permission to modify this child's settings";
-      } else if (error.code === "functions/not-found") {
+      } else if (error.code === "not-found" || error.code === "functions/not-found") {
         message = "Child not found";
       } else if (error.message) {
         message = error.message;
