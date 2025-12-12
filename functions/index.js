@@ -9,7 +9,8 @@
 
 const { sendInvitationEmail } = require('./email');
 const { acceptInvitation } = require('./invitations');
-const { smsWebhook, whatsappWebhook, createWebEvent, classifyEvent, classifyUnprocessed } = require('./classifier');
+const { whatsappWebhook, createWebEvent, classifyEvent, classifyUnprocessed } = require('./classifier');
+const { smsWebhook } = require('./ingestion/smsWebhook');
 
 exports.sendInvitationEmail = sendInvitationEmail;
 exports.acceptInvitation = acceptInvitation;
