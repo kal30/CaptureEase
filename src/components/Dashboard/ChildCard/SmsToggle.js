@@ -1,84 +1,93 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Switch,
   Tooltip,
   Snackbar,
   Alert,
-  IconButton
-} from '@mui/material';
-import { 
+  Chip,
+  Typography,
+} from "@mui/material";
+import {
   Sms as SmsIcon,
-  SmsOutlined as SmsOutlinedIcon
-} from '@mui/icons-material';
-import { httpsCallable } from 'firebase/functions';
-import { getAuth } from 'firebase/auth';
-import { useNavigate } from 'react-router-dom';
-import { functions } from '../../../services/firebase';
-import { usePhoneStatus } from '../../../hooks/usePhoneStatus';
+  SmsOutlined as SmsOutlinedIcon,
+  VerifiedUser as VerifiedIcon,
+} from "@mui/icons-material";
+import { getAuth } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
+import { usePhoneStatus } from "../../../hooks/usePhoneStatus";
+import { updateChildSmsSettings } from "../../../services/messaging/updateChildSmsSettings";
 
 /**
  * SMS Toggle Component for ChildCard
- * Clean, simple SMS logging toggle that integrates with ChildCard design
+ * Shows SMS logging status with clear visual indicator and easy toggle
  */
 const SmsToggle = ({ child, onSettingsUpdate }) => {
   const auth = getAuth();
   const navigate = useNavigate();
-  
-  // Use centralized functions instance
-  const updateChildSmsSettingsCallable = httpsCallable(functions, 'updateChildSmsSettings');
+
   const [loading, setLoading] = useState(false);
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
-  
-  // Get phone status for the user and this specific child  
-  const { verified: phoneVerified, loading: phoneLoading } = usePhoneStatus(null, child);
-  
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+
+  // Get phone status for the user and this specific child
+  const { verified: phoneVerified, loading: phoneLoading } = usePhoneStatus(
+    null,
+    child
+  );
+
   // Get current SMS enabled status
   const smsEnabled = child?.settings?.notifications?.smsEnabled || false;
 
+  const [localSmsEnabled, setLocalSmsEnabled] = useState(smsEnabled);
+
+  useEffect(() => {
+    setLocalSmsEnabled(smsEnabled);
+  }, [smsEnabled]);
+
   const handleToggle = async (event) => {
     event.stopPropagation(); // Prevent card expansion
-    
+
     // Check if user is authenticated
     if (!auth.currentUser) {
-      showSnackbar('Please log in to manage SMS settings', 'error');
+      showSnackbar("Please log in to manage SMS settings", "error");
       return;
     }
-    
+
     // Check if phone is verified first
     if (!phoneVerified) {
-      showSnackbar('Verify your phone number in Phone & Messaging Settings to enable SMS logging.', 'warning');
+      showSnackbar("Please verify your phone number first", "warning");
+      navigate("/settings/messaging");
       return;
     }
 
     const newSmsEnabled = event.target.checked;
-    
+    setLocalSmsEnabled(newSmsEnabled);
+
     if (!child?.id) {
-      showSnackbar('Child ID not available', 'error');
+      showSnackbar("Child ID not available", "error");
       return;
     }
 
     setLoading(true);
     try {
-      console.log('Calling updateChildSmsSettings with:', { childId: child.id, smsEnabled: newSmsEnabled });
-      console.log('Current user:', auth.currentUser?.uid);
-      console.log('Auth token exists:', !!await auth.currentUser?.getIdToken());
-      
-      // Ensure we have a fresh auth token
-      if (auth.currentUser) {
-        await auth.currentUser.getIdToken(true);
-      }
-      
-      const result = await updateChildSmsSettingsCallable({
+      console.log("Updating SMS settings:", {
         childId: child.id,
-        smsEnabled: newSmsEnabled
+        smsEnabled: newSmsEnabled,
       });
 
-      console.log('SMS settings updated:', result.data);
-      showSnackbar(result.data.message || `SMS logging ${newSmsEnabled ? 'enabled' : 'disabled'} for ${child.name}`, 'success');
-      
+      const result = await updateChildSmsSettings(child.id, newSmsEnabled);
+
+      console.log("SMS settings updated:", result);
+      showSnackbar(
+        `SMS logging ${newSmsEnabled ? "enabled" : "disabled"} for ${child.name}`,
+        "success"
+      );
+
       // Update parent component if callback provided
-      // Note: The usePhoneStatus hook will automatically refresh and show the new state
       if (onSettingsUpdate) {
         onSettingsUpdate({
           ...child,
@@ -86,42 +95,62 @@ const SmsToggle = ({ child, onSettingsUpdate }) => {
             ...child.settings,
             notifications: {
               ...child.settings?.notifications,
-              smsEnabled: newSmsEnabled
-            }
-          }
+              smsEnabled: newSmsEnabled,
+            },
+          },
         });
       }
-
     } catch (error) {
-      console.error('Error updating SMS settings:', error);
-      console.error('Error code:', error.code);
-      console.error('Error message:', error.message);
-      console.error('Full error:', error);
-      
-      let message = 'Failed to update SMS settings';
-      
-      if (error.code === 'functions/permission-denied' || error.code === 'functions/unauthenticated') {
-        message = 'Authentication error. Please refresh and try again.';
-      } else if (error.code === 'functions/not-found') {
-        message = 'Child not found';
-      } else if (error.code === 'functions/internal') {
-        message = 'Internal error. Please try again.';
+      console.error("❌ ERROR updating SMS settings:", {
+        errorCode: error.code,
+        errorMessage: error.message,
+        fullError: error,
+        childId: child.id,
+        childName: child.name,
+        smsEnabled: newSmsEnabled,
+      });
+
+      let message = "Failed to update SMS settings";
+
+      if (
+        error.code === "permission-denied" ||
+        error.code === "functions/permission-denied"
+      ) {
+        message = "You don't have permission to modify this child's settings";
+      } else if (
+        error.code === "unauthenticated" ||
+        error.code === "functions/unauthenticated"
+      ) {
+        message = "Please log in again";
+      } else if (
+        error.code === "not-found" ||
+        error.code === "functions/not-found"
+      ) {
+        message = "Child not found";
+      } else if (
+        error.code === "internal" ||
+        error.code === "functions/internal"
+      ) {
+        message = error.message || "Internal error. Please try again.";
       } else if (error.message) {
         message = error.message;
       }
-      
-      showSnackbar(message, 'error');
+
+      console.error("📢 Showing error to user:", message);
+      showSnackbar(message, "error");
     } finally {
       setLoading(false);
     }
   };
 
-  const handlePhoneVerificationClick = (event) => {
+  const handleChipClick = (event) => {
     event.stopPropagation(); // Prevent card expansion
-    navigate('/settings/messaging');
+    if (!phoneVerified) {
+      navigate("/settings/messaging");
+    }
   };
 
-  const showSnackbar = (message, severity = 'success') => {
+  const showSnackbar = (message, severity = "success") => {
     setSnackbar({ open: true, message, severity });
   };
 
@@ -134,82 +163,133 @@ const SmsToggle = ({ child, onSettingsUpdate }) => {
     return null;
   }
 
-  // Simple, clean design that fits with the card actions
+  // Phone not verified - show setup chip
+  if (!phoneVerified) {
+    return (
+      <>
+        <Tooltip
+          title="Click to verify your phone number and enable SMS logging"
+          arrow
+        >
+          <Chip
+            icon={<SmsOutlinedIcon />}
+            label="Setup SMS"
+            size="small"
+            onClick={handleChipClick}
+            sx={{
+              backgroundColor: "#FEF3C7",
+              color: "#92400E",
+              border: "1px solid #FDE68A",
+              fontWeight: 600,
+              cursor: "pointer",
+              "&:hover": {
+                backgroundColor: "#FDE68A",
+              },
+            }}
+          />
+        </Tooltip>
+
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={3000}
+          onClose={closeSnackbar}
+          anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        >
+          <Alert
+            onClose={closeSnackbar}
+            severity={snackbar.severity}
+            variant="filled"
+            sx={{ width: "100%" }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
+      </>
+    );
+  }
+
+  // Phone verified - show status chip with toggle
   return (
     <>
-      <Tooltip 
+      <Tooltip
         title={
-          !phoneVerified 
-            ? `Verify your phone to enable SMS logging for ${child.name}`
-            : `SMS logging for ${child.name} is ${smsEnabled ? 'enabled' : 'disabled'}`
+          <Box sx={{ textAlign: "center" }}>
+            <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+              SMS Logging for {child.name}
+            </Typography>
+            <Typography variant="caption">
+              {localSmsEnabled
+                ? `Text messages will be logged automatically. Use #${child.name?.toLowerCase()} to route messages.`
+                : "Click to enable SMS logging for this child"}
+            </Typography>
+          </Box>
         }
         arrow
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          {!phoneVerified ? (
-            // Phone not verified - show setup button
-            <IconButton
-              size="small"
-              onClick={handlePhoneVerificationClick}
-              aria-label={`Set up SMS logging for ${child.name}`}
-              sx={{
-                color: 'text.secondary',
-                '&:hover': {
-                  backgroundColor: 'action.hover',
-                  color: 'primary.main'
-                }
-              }}
-            >
-              <SmsOutlinedIcon fontSize="small" />
-            </IconButton>
-          ) : (
-            // Phone verified - show toggle
-            <>
-              <IconButton
-                size="small"
-                aria-label={`SMS logging for ${child.name}`}
-                sx={{
-                  color: smsEnabled ? 'success.main' : 'text.secondary',
-                  cursor: 'default',
-                  '&:hover': {
-                    backgroundColor: 'transparent'
-                  }
-                }}
-              >
-                {smsEnabled ? <SmsIcon fontSize="small" /> : <SmsOutlinedIcon fontSize="small" />}
-              </IconButton>
-              
-              <Switch
-                checked={smsEnabled}
-                onChange={handleToggle}
-                disabled={loading}
-                size="small"
-                inputProps={{
-                  'aria-label': `${smsEnabled ? 'Disable' : 'Enable'} SMS logging for ${child.name}`
-                }}
-                sx={{
-                  ml: -0.5, // Tighter spacing
-                  '& .MuiSwitch-track': {
-                    backgroundColor: smsEnabled ? 'success.light' : 'grey.300'
-                  }
-                }}
-              />
-            </>
-          )}
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 0.5,
+            cursor: "pointer",
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Chip
+            icon={localSmsEnabled ? <SmsIcon /> : <SmsOutlinedIcon />}
+            label={
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                <Typography variant="caption" sx={{ fontWeight: 600 }}>
+                  SMS
+                </Typography>
+                {localSmsEnabled && <VerifiedIcon sx={{ fontSize: 14 }} />}
+              </Box>
+            }
+            size="small"
+            sx={{
+              backgroundColor: localSmsEnabled ? "#D1FAE5" : "#F3F4F6",
+              color: localSmsEnabled ? "#065F46" : "#6B7280",
+              border: localSmsEnabled
+                ? "1px solid #A7F3D0"
+                : "1px solid #E5E7EB",
+              fontWeight: 600,
+              "& .MuiChip-icon": {
+                color: localSmsEnabled ? "#065F46" : "#6B7280",
+              },
+            }}
+          />
+
+          <Switch
+            checked={localSmsEnabled}
+            onChange={handleToggle}
+            disabled={loading}
+            size="small"
+            inputProps={{
+              "aria-label": `${localSmsEnabled ? "Disable" : "Enable"} SMS logging for ${child.name}`,
+            }}
+            sx={{
+              "& .MuiSwitch-switchBase.Mui-checked": {
+                color: "#10B981",
+              },
+              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                backgroundColor: "#10B981",
+              },
+            }}
+          />
         </Box>
       </Tooltip>
-      
+
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={3000}
+        autoHideDuration={4000}
         onClose={closeSnackbar}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
-        <Alert 
-          onClose={closeSnackbar} 
+        <Alert
+          onClose={closeSnackbar}
           severity={snackbar.severity}
           variant="filled"
-          sx={{ width: '100%' }}
+          sx={{ width: "100%" }}
         >
           {snackbar.message}
         </Alert>

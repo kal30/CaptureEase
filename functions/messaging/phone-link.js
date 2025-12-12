@@ -9,6 +9,8 @@ const { validateE164Phone } = require("../utils/validation");
 const linkPhoneAndDefaultChild = onCall(
   {
     enforceAppCheck: false,
+    cors: true,
+    region: "us-central1",
   },
   async (request) => {
     try {
@@ -130,6 +132,8 @@ const linkPhoneAndDefaultChild = onCall(
 const delinkPhone = onCall(
   {
     enforceAppCheck: false,
+    cors: true,
+    region: "us-central1",
   },
   async (request) => {
     try {

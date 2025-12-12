@@ -15,6 +15,8 @@ const SENDER_NAME = defineSecret("SENDER_NAME");
 const sendInvitationEmail = onCall(
   {
     secrets: [SENDGRID_API_KEY, FROM_EMAIL, SENDER_NAME],
+    cors: true,
+    region: "us-central1",
   },
   async (request) => {
     try {

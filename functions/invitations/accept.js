@@ -10,6 +10,8 @@ const { validateRole } = require("../utils/validation");
 const acceptInvitation = onCall(
   {
     enforceAppCheck: false,
+    cors: true,
+    region: "us-central1",
   },
   async (request) => {
     try {

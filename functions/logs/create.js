@@ -9,6 +9,8 @@ const { validateLogType, validateLogSource, validateSeverity } = require("../uti
 const createLog = onCall(
   {
     enforceAppCheck: false,
+    cors: true,
+    region: "us-central1",
   },
   async (request) => {
     try {
