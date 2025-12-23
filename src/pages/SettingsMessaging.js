@@ -69,26 +69,17 @@ const SettingsMessaging = () => {
   }, [phone]);
 
   useEffect(() => {
-    // Load children when auth is ready
-    const initializeComponent = () => {
-      if (auth.currentUser !== undefined) {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
         loadAccessibleChildren();
+      } else {
+        setChildren([]);
       }
-    };
+    });
 
-    // Check if auth is already loaded
-    if (auth.currentUser !== undefined) {
-      initializeComponent();
-    } else {
-      // Wait for auth state to be determined
-      const unsubscribe = auth.onAuthStateChanged((user) => {
-        initializeComponent();
-        unsubscribe(); // Only need to call this once
-      });
-    }
-
-    // Cleanup function
     return () => {
+      unsubscribe();
+
       if (recaptchaVerifier) {
         try {
           recaptchaVerifier.clear();
@@ -98,7 +89,6 @@ const SettingsMessaging = () => {
         setRecaptchaVerifier(null);
       }
       
-      // Clear countdown interval
       if (countdownInterval) {
         clearInterval(countdownInterval);
       }
@@ -473,6 +463,9 @@ const SettingsMessaging = () => {
         <Message color="primary" />
         Phone & Messaging Settings
       </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+        Log entries from WhatsApp/SMS. Messages are saved as logs, not team chat.
+      </Typography>
 
       {/* Section 1: Phone Verification - only show if not verified */}
       {!phoneVerified && (
@@ -597,7 +590,7 @@ const SettingsMessaging = () => {
               <>
                 <Alert severity="success" sx={{ mt: 2 }}>
                   <Typography variant="body2">
-                    <strong>Ready to go!</strong> Send messages to your linked phone number and they'll be automatically logged to your child's care record.
+                    <strong>Ready to go!</strong> Use "Name: message" or an alias (like "arj:"). If you leave the name out, we use your Default Child.
                   </Typography>
                 </Alert>
                 <Box sx={{ mt: 2 }}>
@@ -623,6 +616,10 @@ const SettingsMessaging = () => {
           <Typography variant="h6" gutterBottom>
             Default Child for Messages
           </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            This is only used when a message does not include a child name or alias.
+            You can still log for any child by starting with their name or alias.
+          </Typography>
           
           {childrenLoading ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
@@ -631,7 +628,7 @@ const SettingsMessaging = () => {
           ) : (
             <>
               <FormControl>
-                <FormLabel>Select which child SMS/WhatsApp messages should be logged for:</FormLabel>
+                <FormLabel>Select the fallback child for messages without a child name:</FormLabel>
                 <RadioGroup
                   value={defaultChildId}
                   onChange={(e) => setDefaultChildId(e.target.value)}
@@ -646,6 +643,9 @@ const SettingsMessaging = () => {
                   ))}
                 </RadioGroup>
               </FormControl>
+              <Alert severity="info" sx={{ mt: 2 }}>
+                Examples: "Arjun: had lunch" logs for Arjun. "Had lunch" logs to your Default Child.
+              </Alert>
             </>
           )}
           
@@ -667,7 +667,7 @@ const SettingsMessaging = () => {
             </Typography>
             
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Connect your verified phone number to route incoming SMS/WhatsApp messages to your selected child's log.
+              Connect your verified phone number. Messages with no child name will go to your Default Child, and named messages can log for any authorized child.
             </Typography>
             
             <Button
@@ -683,7 +683,7 @@ const SettingsMessaging = () => {
             
             {(!phoneVerified || !defaultChildId) && (
               <Alert severity="warning">
-                Please verify your phone number and select a default child before linking.
+                Please verify your phone number and pick a Default Child to finish linking. This default is only a fallback.
               </Alert>
             )}
           </CardContent>

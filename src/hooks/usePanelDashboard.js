@@ -9,6 +9,7 @@ import { useRole } from "../contexts/RoleContext";
 import { useDailyCareStatus } from "./useDailyCareStatus";
 import { listenForFollowUps, initializeNotificationsForPendingFollowUps, processQuickResponses, startQuickResponseListener } from "../services/followUpService";
 import { analyzeOtherIncidentPatterns, getIncidents } from "../services/incidentService";
+import { archiveChild } from "../services/childService";
 
 export const usePanelDashboard = () => {
   const theme = useTheme();
@@ -226,6 +227,25 @@ export const usePanelDashboard = () => {
     setShowEditChildModal(true);
   };
 
+  const handleDeleteChild = async (child) => {
+    if (!child?.id) return;
+
+    const confirmed = window.confirm(
+      `Delete ${child.name}? This will archive the child and remove them from active lists.`
+    );
+    if (!confirmed) return;
+
+    try {
+      await archiveChild(child.id);
+      if (currentChildId === child.id) {
+        setCurrentChildId(null);
+      }
+      refreshRoles();
+    } catch (error) {
+      console.error("Error archiving child:", error);
+      window.alert("Unable to delete child. Please try again.");
+    }
+  };
 
   const handleAddChildSuccess = () => {
     setShowAddChildModal(false);
@@ -433,6 +453,7 @@ export const usePanelDashboard = () => {
     toggleCard,
     handleQuickDataEntry,
     handleEditChild,
+    handleDeleteChild,
     handleDailyReport,
     handleMessages,
     handleGroupActionClick,

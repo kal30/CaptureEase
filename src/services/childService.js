@@ -1,4 +1,4 @@
-import { db } from "./firebase"; // Import initialized Firestore
+import { db, functions } from "./firebase"; // Import initialized Firestore
 import {
   collection,
   getDocs,
@@ -13,6 +13,7 @@ import {
   or,
   serverTimestamp,
 } from "firebase/firestore";
+import { httpsCallable } from "firebase/functions";
 import { getAuth } from "firebase/auth";
 import { USER_ROLES } from '../constants/roles';
 import { updateMembersField } from './migrations/usersMembersMigration';
@@ -146,6 +147,14 @@ export const addChild = async (childData) => {
       }
     }
   });
+
+  try {
+    const syncPhoneLinksForUser = httpsCallable(functions, "syncPhoneLinksForUser");
+    await syncPhoneLinksForUser();
+  } catch (error) {
+    console.warn("Failed to sync phone links for new child:", error);
+  }
+
   return docRef.id;
 };
 
@@ -416,4 +425,3 @@ export const getArchivedChildren = async () => {
     return [];
   }
 };
-

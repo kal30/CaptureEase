@@ -2,76 +2,61 @@
  * index.js
  *
  * Main entry point for Firebase Cloud Functions.
- * Acts as a central registry that imports and exports all deployed functions.
+ * This file acts ONLY as a registry that wires together
+ * individual function modules. No business logic should live here.
  */
 
-// Initialize Firebase Admin once
 const admin = require("firebase-admin");
 admin.initializeApp();
 
 /**
- * Invitations / Email
+ * Messaging – Settings & Phone Linking
  */
-const { sendInvitationEmail } = require("./email");
-const { acceptInvitation } = require("./invitations");
+exports.updateChildSmsSettings =
+  require("./messaging/settings").updateChildSmsSettings;
+exports.updateChildSmsSettingsHttp =
+  require("./messaging/settings").updateChildSmsSettingsHttp;
+
+exports.linkPhoneAndDefaultChild =
+  require("./messaging/phone-link").linkPhoneAndDefaultChild;
+exports.delinkPhone =
+  require("./messaging/phone-link").delinkPhone;
+exports.syncPhoneLinksForUser =
+  require("./messaging/phone-link").syncPhoneLinksForUser;
 
 /**
- * Messaging Settings & Phone Linking
+ * Messaging – Send Messages (WhatsApp/SMS)
  */
-const {
-  updateChildSmsSettings,
-  updateChildSmsSettingsHttp,
-} = require("./messaging/settings");
-const {
-  linkPhoneAndDefaultChild,
-  delinkPhone,
-} = require("./messaging/phone-link");
+exports.sendMessage =
+  require("./messaging/sendMessage").sendMessage;
+exports.sendMessageHttp =
+  require("./messaging/sendMessage").sendMessageHttp;
 
 /**
- * Ingestion (SMS / WhatsApp / Web)
+ * Ingestion – SMS / WhatsApp
  */
-const { smsWebhook } = require("./ingestion/smsWebhook");
+exports.smsWebhook =
+  require("./ingestion/smsWebhook").smsWebhook;
 
 /**
- * Classification
+ * Classification (delegated to classifier module)
  */
-const {
-  classifyEvent,
-  classifyUnprocessed,
-  createWebEvent,
-} = require("./classifier");
+exports.classifyEvent =
+  require("./classifier").classifyEvent;
+exports.classifyUnprocessed =
+  require("./classifier").classifyUnprocessed;
 
 /**
  * Logs / Events
  */
-const { createLog } = require("./logs/create");
-const { classifyNoteLog } = require("./logs/classify");
+exports.createLog =
+  require("./logs/create").createLog;
+exports.classifyNoteLog =
+  require("./logs/classify").classifyNoteLog;
 
 /**
- * Migrations (admin-only)
+ * Admin Migrations (admin-only)
  */
-const {
-  migrateExistingChildren,
-} = require("./migrations/migrateExistingChildren");
-
-/**
- * Exports
- */
-exports.sendInvitationEmail = sendInvitationEmail;
-exports.acceptInvitation = acceptInvitation;
-
-exports.updateChildSmsSettings = updateChildSmsSettings;
-exports.updateChildSmsSettingsHttp = updateChildSmsSettingsHttp;
-exports.linkPhoneAndDefaultChild = linkPhoneAndDefaultChild;
-exports.delinkPhone = delinkPhone;
-
-exports.smsWebhook = smsWebhook;
-
-exports.createWebEvent = createWebEvent;
-exports.classifyEvent = classifyEvent;
-exports.classifyUnprocessed = classifyUnprocessed;
-
-exports.createLog = createLog;
-exports.classifyNoteLog = classifyNoteLog;
-
-exports.migrateExistingChildren = migrateExistingChildren;
+exports.migrateExistingChildren =
+  require("./migrations/migrateExistingChildren")
+    .migrateExistingChildren;

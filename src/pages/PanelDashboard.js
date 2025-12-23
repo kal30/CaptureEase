@@ -38,6 +38,7 @@ const PanelDashboard = () => {
     onToggleExpanded: hook.toggleCard,
     onQuickEntry: hook.handleQuickDataEntry,
     onEditChild: hook.handleEditChild,
+    onDeleteChild: hook.handleDeleteChild,
     onInviteTeamMember: hook.handleInviteTeamMember,
     onDailyReport: hook.handleDailyReport,
     onMessages: hook.handleMessages,
