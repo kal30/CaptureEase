@@ -16,9 +16,12 @@ import {
   CircularProgress,
   Chip,
   Divider,
-  Link
+  Link,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails
 } from '@mui/material';
-import { Check, Phone, Message, Link as LinkIcon, LinkOff } from '@mui/icons-material';
+import { Check, Phone, Message, Link as LinkIcon, LinkOff, ExpandMore } from '@mui/icons-material';
 import { getAuth, RecaptchaVerifier, signInWithPhoneNumber, PhoneAuthProvider, linkWithCredential } from 'firebase/auth';
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
@@ -60,6 +63,8 @@ const SettingsMessaging = () => {
 
   // Sync local state with hook state
   const { verified: phoneVerified, phone, linked: phoneLinked } = phoneStatus;
+  const hasDefaultChild = Boolean(defaultChildId);
+  const childrenCount = children.length;
 
   // Sync phone number from hook to local state
   useEffect(() => {
@@ -467,13 +472,47 @@ const SettingsMessaging = () => {
         Log entries from WhatsApp/SMS. Messages are saved as logs, not team chat.
       </Typography>
 
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <Typography variant="h6" gutterBottom>
+            Setup Progress
+          </Typography>
+          <Box sx={{ display: 'grid', gap: 1.5 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Typography variant="body2">Step 1: Verify phone</Typography>
+              <Chip
+                label={phoneVerified ? 'Verified' : 'Not verified'}
+                color={phoneVerified ? 'success' : 'default'}
+                size="small"
+              />
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Typography variant="body2">Step 2: Choose default child</Typography>
+              <Chip
+                label={hasDefaultChild ? 'Selected' : 'Select one'}
+                color={hasDefaultChild ? 'success' : 'default'}
+                size="small"
+              />
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Typography variant="body2">Step 3: Link phone</Typography>
+              <Chip
+                label={phoneLinked ? 'Linked' : 'Not linked'}
+                color={phoneLinked ? 'success' : 'default'}
+                size="small"
+              />
+            </Box>
+          </Box>
+        </CardContent>
+      </Card>
+
       {/* Section 1: Phone Verification - only show if not verified */}
       {!phoneVerified && (
         <Card sx={{ mb: 3 }}>
           <CardContent>
           <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Phone />
-            Phone Verification
+            Step 1: Verify Phone
             {phoneVerified && <Chip icon={<Check />} label="Verified" color="success" size="small" />}
           </Typography>
           
@@ -614,7 +653,7 @@ const SettingsMessaging = () => {
       <Card sx={{ mb: 3 }}>
         <CardContent>
           <Typography variant="h6" gutterBottom>
-            Default Child for Messages
+            Step 2: Default Child for Messages
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             This is only used when a message does not include a child name or alias.
@@ -628,7 +667,9 @@ const SettingsMessaging = () => {
           ) : (
             <>
               <FormControl>
-                <FormLabel>Select the fallback child for messages without a child name:</FormLabel>
+                <FormLabel>
+                  Select the fallback child for messages without a child name ({childrenCount} available):
+                </FormLabel>
                 <RadioGroup
                   value={defaultChildId}
                   onChange={(e) => setDefaultChildId(e.target.value)}
@@ -663,7 +704,7 @@ const SettingsMessaging = () => {
           <CardContent>
             <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <LinkIcon />
-              Link Phone to Account
+              Step 3: Link Phone to Account
             </Typography>
             
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -691,12 +732,11 @@ const SettingsMessaging = () => {
       )}
 
       {/* Section 4: WhatsApp Sandbox Info */}
-      <Card>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>
-            WhatsApp Sandbox Testing
-          </Typography>
-          
+      <Accordion sx={{ mt: 2 }}>
+        <AccordionSummary expandIcon={<ExpandMore />}>
+          <Typography variant="h6">Advanced: WhatsApp Sandbox Testing</Typography>
+        </AccordionSummary>
+        <AccordionDetails>
           <Typography variant="body2" color="text.secondary" paragraph>
             For testing WhatsApp integration, use Twilio's sandbox:
           </Typography>
@@ -715,7 +755,7 @@ const SettingsMessaging = () => {
           
           <Alert severity="info">
             <Typography variant="body2">
-              After linking your phone, send a WhatsApp message to the sandbox number like: 
+              After linking your phone, send a WhatsApp message to the sandbox number like:
               <br />
               <strong>"Had lunch with applesauce #childname"</strong>
               <br />
@@ -728,8 +768,8 @@ const SettingsMessaging = () => {
               <strong>Tip:</strong> To log for a specific child, include a tag like #Emma or the child's id (e.g., #tfVn2r0S...). If no tag is provided, we'll use your Default Child.
             </Typography>
           </Alert>
-        </CardContent>
-      </Card>
+        </AccordionDetails>
+      </Accordion>
 
       {/* Snackbar for notifications */}
       <Snackbar

@@ -13,13 +13,9 @@
   },
   "main": "index.js",
   "dependencies": {
-    "@sendgrid/mail": "^8.1.5",
-<<<<<<< HEAD
+    "@sendgrid/mail": "^8.1.6",
     "cors": "^2.8.5",
-    "firebase-admin": "^12.6.0",
-=======
     "firebase-admin": "^13.5.0",
->>>>>>> agent/ingestion
     "firebase-functions": "^6.4.0",
     "resend": "^4.7.0",
     "twilio": "^5.8.0"
