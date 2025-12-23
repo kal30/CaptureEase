@@ -128,24 +128,6 @@ const linkPhoneAndDefaultChild = onCall(
       }
       batch.set(phoneLinksRef, phoneLinksData, { merge: true });
 
-      // Ensure the linking user can log for all allowed children
-      allowedChildIds.forEach((childId) => {
-        const memberRef = db
-          .collection("childAuth")
-          .doc(childId)
-          .collection("members")
-          .doc(uid);
-        batch.set(
-          memberRef,
-          {
-            canLog: true,
-            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-            updatedBy: uid
-          },
-          { merge: true }
-        );
-      });
-
       // Update user document with default child
       const userRef = db.collection("users").doc(uid);
       batch.update(userRef, {
@@ -342,27 +324,7 @@ const syncPhoneLinksForUser = onCall(
         phoneLinksData.createdAt = admin.firestore.FieldValue.serverTimestamp();
       }
 
-      const batch = db.batch();
-      batch.set(phoneLinksRef, phoneLinksData, { merge: true });
-
-      allowedChildIds.forEach((childId) => {
-        const memberRef = db
-          .collection("childAuth")
-          .doc(childId)
-          .collection("members")
-          .doc(uid);
-        batch.set(
-          memberRef,
-          {
-            canLog: true,
-            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-            updatedBy: uid
-          },
-          { merge: true }
-        );
-      });
-
-      await batch.commit();
+      await phoneLinksRef.set(phoneLinksData, { merge: true });
 
       return {
         success: true,

@@ -2,22 +2,10 @@ const { admin, logger } = require("../../init");
 const { levenshteinDistance } = require("../utils");
 
 /**
- * Check log permission
+ * Check log permission using child membership.
  */
 async function checkLogPermission(userId, childId) {
   try {
-    const doc = await admin.firestore()
-      .collection("childAuth")
-      .doc(childId)
-      .collection("members")
-      .doc(userId)
-      .get();
-
-    if (doc.exists) {
-      const data = doc.data();
-      return data.canLog === true;
-    }
-
     const childDoc = await admin.firestore()
       .collection("children")
       .doc(childId)
