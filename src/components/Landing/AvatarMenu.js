@@ -6,15 +6,27 @@ import { getAuth, signOut } from "firebase/auth"; // Import Firebase signOut
 
 const AvatarMenu = ({ user }) => {
   const [anchorEl, setAnchorEl] = useState(null);
+  const [settingsAnchorEl, setSettingsAnchorEl] = useState(null);
   const navigate = useNavigate();
   const auth = getAuth(); // Firebase auth instance
   const theme = useTheme();
 
   const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
-  const handleMenuClose = () => setAnchorEl(null);
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+    setSettingsAnchorEl(null);
+  };
+
+  const handleSettingsOpen = (event) => setSettingsAnchorEl(event.currentTarget);
+  const handleSettingsClose = () => setSettingsAnchorEl(null);
 
   const handleGoToProfile = () => {
     navigate("/profile");
+    handleMenuClose();
+  };
+
+  const handleGoToMessagingSettings = () => {
+    navigate("/settings/messaging");
     handleMenuClose();
   };
 
@@ -46,8 +58,18 @@ const AvatarMenu = ({ user }) => {
         open={Boolean(anchorEl)}
         onClose={handleMenuClose}
       >
-        <MenuItem onClick={handleGoToProfile}>Profile</MenuItem>
+        <MenuItem onClick={handleSettingsOpen}>Settings</MenuItem>
         <MenuItem onClick={handleLogout}>Logout</MenuItem>
+      </Menu>
+      <Menu
+        anchorEl={settingsAnchorEl}
+        open={Boolean(settingsAnchorEl)}
+        onClose={handleSettingsClose}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        transformOrigin={{ vertical: "top", horizontal: "left" }}
+      >
+        <MenuItem onClick={handleGoToProfile}>Profile</MenuItem>
+        <MenuItem onClick={handleGoToMessagingSettings}>Phone & Messaging</MenuItem>
       </Menu>
     </>
   );

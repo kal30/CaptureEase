@@ -37,18 +37,18 @@ function parseChildSegments(text) {
   const segments = [];
 
   // Split by semicolon for multi-child messages
-  const parts = text.split(';');
+  const parts = text.split(/[;；]/);
 
   for (let part of parts) {
     part = part.trim();
     if (!part) continue;
 
     // Look for pattern "ChildToken: message"
-    const colonIndex = part.indexOf(':');
-    if (colonIndex === -1) continue;
+    const match = part.match(/^([^:：]+)[:：](.+)$/);
+    if (!match) continue;
 
-    const childToken = part.substring(0, colonIndex).trim();
-    const message = part.substring(colonIndex + 1).trim();
+    const childToken = match[1].trim();
+    const message = match[2].trim();
 
     if (childToken && message) {
       segments.push({
@@ -59,6 +59,44 @@ function parseChildSegments(text) {
   }
 
   return segments;
+}
+
+/**
+ * Parse implicit child prefix without a colon.
+ * Matches known child tokens at the start of the message.
+ */
+function parseImplicitChildFromTokens(text, tokens) {
+  if (!text || typeof text !== 'string') return null;
+  if (!Array.isArray(tokens) || tokens.length === 0) return null;
+
+  const normalized = text.trim();
+  const lower = normalized.toLowerCase();
+
+  const sortedTokens = tokens
+    .filter(Boolean)
+    .map((token) => String(token))
+    .sort((a, b) => b.length - a.length);
+
+  for (const token of sortedTokens) {
+    const tokenLower = token.toLowerCase();
+    if (!lower.startsWith(tokenLower)) continue;
+
+    const nextChar = normalized[token.length] || '';
+    if (nextChar && !/[:：\-\s]/.test(nextChar)) continue;
+
+    let message = normalized.slice(token.length).trim();
+    if (!message) return null;
+
+    message = message.replace(/^[:：\-]\s*/, '').trim();
+    if (!message) return null;
+
+    return {
+      childToken: token,
+      text: message
+    };
+  }
+
+  return null;
 }
 
 /**
@@ -209,6 +247,7 @@ function isSpecialCommand(text) {
 module.exports = {
   normalizeE164,
   parseChildSegments,
+  parseImplicitChildFromTokens,
   levenshteinDistance,
   isValidE164,
   sanitizeText,

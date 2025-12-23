@@ -44,6 +44,7 @@ const ChildGroup = ({
   onToggleExpanded,
   onQuickEntry,
   onEditChild,
+  onDeleteChild,
   onInviteTeamMember,
   onDailyReport,
   onMessages,
@@ -114,6 +115,7 @@ const ChildGroup = ({
             onToggleExpanded={() => onToggleExpanded(child.id)}
             onQuickEntry={onQuickEntry}
             onEditChild={onEditChild}
+            onDeleteChild={onDeleteChild}
             onInviteTeamMember={onInviteTeamMember}
             onDailyReport={onDailyReport}
             onMessages={onMessages}

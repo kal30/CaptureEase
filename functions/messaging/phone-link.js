@@ -73,6 +73,35 @@ const linkPhoneAndDefaultChild = onCall(
         // Phone is already linked to this user, just update default child if needed
       }
 
+      const phoneLinksRef = db.collection("phoneLinks").doc(phoneE164);
+      const phoneLinksDoc = await phoneLinksRef.get();
+      if (phoneLinksDoc.exists) {
+        const existingLink = phoneLinksDoc.data();
+        if (existingLink.ownerUserId && existingLink.ownerUserId !== uid) {
+          throw new Error("This phone number is already linked to another account");
+        }
+      }
+
+      const childrenSnapshot = await db
+        .collection("children")
+        .where("users.members", "array-contains", uid)
+        .where("status", "==", "active")
+        .get();
+
+      const allowedChildIds = [];
+      const existingAliasCodes = phoneLinksDoc.exists ? (phoneLinksDoc.data().aliasCodes || {}) : {};
+      const mergedAliasCodes = { ...existingAliasCodes };
+
+      childrenSnapshot.forEach((doc) => {
+        const data = doc.data();
+        allowedChildIds.push(doc.id);
+
+        if (!mergedAliasCodes[doc.id]) {
+          const base = (data.name || doc.id).slice(0, 3).toLowerCase();
+          mergedAliasCodes[doc.id] = base;
+        }
+      });
+
       // Use a batch write to ensure atomicity
       const batch = db.batch();
 
@@ -85,6 +114,37 @@ const linkPhoneAndDefaultChild = onCall(
         linkedAt: admin.firestore.FieldValue.serverTimestamp(),
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
+
+      const phoneLinksData = {
+        phoneE164: phoneE164,
+        ownerUserId: uid,
+        verified: true,
+        allowedChildIds,
+        aliasCodes: mergedAliasCodes,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      };
+      if (!phoneLinksDoc.exists) {
+        phoneLinksData.createdAt = admin.firestore.FieldValue.serverTimestamp();
+      }
+      batch.set(phoneLinksRef, phoneLinksData, { merge: true });
+
+      // Ensure the linking user can log for all allowed children
+      allowedChildIds.forEach((childId) => {
+        const memberRef = db
+          .collection("childAuth")
+          .doc(childId)
+          .collection("members")
+          .doc(uid);
+        batch.set(
+          memberRef,
+          {
+            canLog: true,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            updatedBy: uid
+          },
+          { merge: true }
+        );
+      });
 
       // Update user document with default child
       const userRef = db.collection("users").doc(uid);
@@ -169,6 +229,10 @@ const delinkPhone = onCall(
       const phoneIndexRef = db.collection("phone_index").doc(phoneE164);
       batch.delete(phoneIndexRef);
 
+      // Remove phoneLinks entry (WhatsApp ingestion)
+      const phoneLinksRef = db.collection("phoneLinks").doc(phoneE164);
+      batch.delete(phoneLinksRef);
+
       // Update user document to remove linking info
       const userRef = db.collection("users").doc(uid);
       batch.update(userRef, {
@@ -204,7 +268,123 @@ const delinkPhone = onCall(
   }
 );
 
+/**
+ * Sync phoneLinks for the current user.
+ * Ensures all active children are included in allowedChildIds.
+ */
+const syncPhoneLinksForUser = onCall(
+  {
+    enforceAppCheck: false,
+    cors: true,
+    region: "us-central1",
+  },
+  async (request) => {
+    try {
+      if (!request.auth || !request.auth.uid) {
+        throw new Error("User must be authenticated to sync phone links");
+      }
+
+      const db = admin.firestore();
+      const uid = request.auth.uid;
+
+      const userDoc = await db.collection("users").doc(uid).get();
+      if (!userDoc.exists) {
+        throw new Error("User document not found");
+      }
+
+      const userData = userDoc.data();
+      const phoneE164 = userData.phone;
+      if (!phoneE164) {
+        return {
+          success: false,
+          message: "No phone number on file",
+        };
+      }
+
+      const phoneLinksRef = db.collection("phoneLinks").doc(phoneE164);
+      const phoneLinksDoc = await phoneLinksRef.get();
+      if (phoneLinksDoc.exists) {
+        const existingLink = phoneLinksDoc.data();
+        if (existingLink.ownerUserId && existingLink.ownerUserId !== uid) {
+          throw new Error("This phone number is already linked to another account");
+        }
+      }
+
+      const childrenSnapshot = await db
+        .collection("children")
+        .where("users.members", "array-contains", uid)
+        .where("status", "==", "active")
+        .get();
+
+      const allowedChildIds = [];
+      const existingAliasCodes = phoneLinksDoc.exists ? (phoneLinksDoc.data().aliasCodes || {}) : {};
+      const mergedAliasCodes = { ...existingAliasCodes };
+
+      childrenSnapshot.forEach((doc) => {
+        const data = doc.data();
+        allowedChildIds.push(doc.id);
+
+        if (!mergedAliasCodes[doc.id]) {
+          const base = (data.name || doc.id).slice(0, 3).toLowerCase();
+          mergedAliasCodes[doc.id] = base;
+        }
+      });
+
+      const phoneLinksData = {
+        phoneE164,
+        ownerUserId: uid,
+        verified: userData.phoneVerified === true,
+        allowedChildIds,
+        aliasCodes: mergedAliasCodes,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      };
+      if (!phoneLinksDoc.exists) {
+        phoneLinksData.createdAt = admin.firestore.FieldValue.serverTimestamp();
+      }
+
+      const batch = db.batch();
+      batch.set(phoneLinksRef, phoneLinksData, { merge: true });
+
+      allowedChildIds.forEach((childId) => {
+        const memberRef = db
+          .collection("childAuth")
+          .doc(childId)
+          .collection("members")
+          .doc(uid);
+        batch.set(
+          memberRef,
+          {
+            canLog: true,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            updatedBy: uid
+          },
+          { merge: true }
+        );
+      });
+
+      await batch.commit();
+
+      return {
+        success: true,
+        message: "Phone links synced",
+        phoneE164,
+        verified: phoneLinksData.verified,
+        allowedChildIdsCount: allowedChildIds.length,
+      };
+    } catch (error) {
+      logger.error("Phone link sync failed", {
+        error: error.message,
+        stack: error.stack,
+        userId: request.auth?.uid,
+      });
+
+      throw new Error(error.message);
+    }
+  }
+);
+
 module.exports = {
   linkPhoneAndDefaultChild,
-  delinkPhone
+  delinkPhone,
+  syncPhoneLinksForUser
 };

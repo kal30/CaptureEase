@@ -6,6 +6,7 @@ const twilio = require("twilio");
 const { getAppConfig } = require("../utils/config");
 const { uploadMediaToStorage } = require("../utils/storage");
 const { hasChildAccess } = require("../utils/auth");
+const { replyText } = require("../utils/replyText");
 const {
   resolveChildForMessage,
   parseMessageTags,
@@ -266,7 +267,7 @@ const ingestMessage = onRequest(
         logger.error("Child not found", { childId, uid });
         res.status(200).type("text/xml").send(`
           <Response>
-            <Message>Child not found. Please contact support.</Message>
+            <Message>${replyText.childNotFound}</Message>
           </Response>
         `);
         return;
@@ -307,7 +308,7 @@ const ingestMessage = onRequest(
         });
         res.status(200).type("text/xml").send(`
           <Response>
-            <Message>SMS is disabled for ${childData.name}. Enable it in Settings.</Message>
+            <Message>${replyText.smsDisabled(childData.name)}</Message>
           </Response>
         `);
         return;
@@ -333,7 +334,7 @@ const ingestMessage = onRequest(
 
         res.status(200).type("text/xml").send(`
           <Response>
-            <Message>You don't have access to ${childData.name}. Ask the care owner.</Message>
+            <Message>${replyText.noAccess(childData.name)}</Message>
           </Response>
         `);
         return;
@@ -414,7 +415,7 @@ const ingestMessage = onRequest(
       // Send success response with child name
       res.status(200).type("text/xml").send(`
         <Response>
-          <Message>Logged for ${childData.name}. Thanks!</Message>
+          <Message>${replyText.loggedFor(childData.name)}</Message>
         </Response>
       `);
     } catch (error) {
@@ -425,7 +426,7 @@ const ingestMessage = onRequest(
 
       res.status(200).type("text/xml").send(`
         <Response>
-          <Message>Error processing message. Please try again.</Message>
+          <Message>${replyText.errorProcessing}</Message>
         </Response>
       `);
     }
