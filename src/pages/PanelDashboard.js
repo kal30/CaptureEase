@@ -25,6 +25,7 @@ import { IncidentLoggingModal, IncidentFollowUpModal } from "../components/Dashb
 import PatternSuggestionModal from "../components/Dashboard/PatternSuggestionModal";
 import DailyHabitsModal from "../components/Dashboard/DailyHabitsModal";
 import { NotificationPermissionPrompt } from "../components/UI";
+import AskQuestionModal from "../components/Dashboard/AskQuestionModal";
 
 const PanelDashboard = () => {
   const hook = usePanelDashboard();
@@ -42,6 +43,7 @@ const PanelDashboard = () => {
     onInviteTeamMember: hook.handleInviteTeamMember,
     onDailyReport: hook.handleDailyReport,
     onMessages: hook.handleMessages,
+    onAskQuestion: hook.handleAskQuestion,
     getActionGroups: actionGroups,
     handleGroupActionClick: hook.handleGroupActionClick,
     highlightedActions: hook.highlightedActions,
@@ -257,6 +259,12 @@ const PanelDashboard = () => {
         childId={hook.dailyHabitsChild?.id}
         childName={hook.dailyHabitsChild?.name}
         onHabitSaved={hook.refreshDailyCareStatus}
+      />
+
+      <AskQuestionModal
+        open={hook.showAskQuestionModal}
+        onClose={hook.handleCloseAskQuestionModal}
+        child={hook.askQuestionChild}
       />
     </Container>
   );

@@ -17,6 +17,18 @@ import { getDayDateRange, isWithinDateRange } from './dateUtils';
 export const getJournalEntries = async (childId, selectedDate) => {
   try {
     const { start, end } = getDayDateRange(selectedDate);
+    const mapLogDoc = (doc) => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        timestamp: data.createdAt?.toDate?.() || new Date(data.createdAt),
+        type: 'journal',
+        collection: 'logs',
+        text: data.note || data.text || '',
+        tags: data.tags || data.ai?.tags || []
+      };
+    };
     
     // Try the full query first, fallback if index missing
     try {
@@ -29,7 +41,7 @@ export const getJournalEntries = async (childId, selectedDate) => {
       );
       
       const snapshot = await getDocs(dailyLogQuery);
-      return snapshot.docs
+      const dailyEntries = snapshot.docs
         .map(doc => ({
           id: doc.id,
           ...doc.data(),
@@ -38,6 +50,34 @@ export const getJournalEntries = async (childId, selectedDate) => {
           collection: 'dailyLogs'
         }))
         .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+      let logEntries = [];
+      try {
+        const logQuery = query(
+          collection(db, 'logs'),
+          where('childId', '==', childId),
+          where('createdAt', '>=', start),
+          where('createdAt', '<=', end),
+          orderBy('createdAt', 'desc')
+        );
+        const logSnapshot = await getDocs(logQuery);
+        logEntries = logSnapshot.docs.map(mapLogDoc);
+      } catch (logIndexError) {
+        if (logIndexError.message.includes('index')) {
+          const fallbackLogQuery = query(
+            collection(db, 'logs'),
+            where('childId', '==', childId)
+          );
+          const logSnapshot = await getDocs(fallbackLogQuery);
+          logEntries = logSnapshot.docs
+            .map(mapLogDoc)
+            .filter(entry => isWithinDateRange(entry.timestamp, start, end));
+        } else {
+          throw logIndexError;
+        }
+      }
+
+      return [...dailyEntries, ...logEntries].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
       
     } catch (indexError) {
       if (indexError.message.includes('index')) {
@@ -51,7 +91,7 @@ export const getJournalEntries = async (childId, selectedDate) => {
         );
         
         const snapshot = await getDocs(fallbackQuery);
-        return snapshot.docs
+        const dailyEntries = snapshot.docs
           .map(doc => ({
             id: doc.id,
             ...doc.data(),
@@ -61,6 +101,22 @@ export const getJournalEntries = async (childId, selectedDate) => {
           }))
           .filter(entry => isWithinDateRange(entry.timestamp, start, end))
           .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+        let logEntries = [];
+        try {
+          const fallbackLogQuery = query(
+            collection(db, 'logs'),
+            where('childId', '==', childId)
+          );
+          const logSnapshot = await getDocs(fallbackLogQuery);
+          logEntries = logSnapshot.docs
+            .map(mapLogDoc)
+            .filter(entry => isWithinDateRange(entry.timestamp, start, end));
+        } catch (logError) {
+          console.error('Error fetching log entries:', logError);
+        }
+
+        return [...dailyEntries, ...logEntries].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
       } else {
         throw indexError;
       }

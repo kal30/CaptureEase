@@ -264,10 +264,22 @@ export const filterTimelineEntries = (entries, filters = {}) => {
   // Filter by search text
   if (filters.searchText) {
     const searchLower = filters.searchText.toLowerCase();
-    filtered = filtered.filter(entry => 
-      entry.title.toLowerCase().includes(searchLower) ||
-      entry.content.toLowerCase().includes(searchLower)
-    );
+    filtered = filtered.filter(entry => {
+      const aiTags = entry.originalData?.ai?.tags || [];
+      const matchesTag = (tag) => {
+        const normalized = String(tag).toLowerCase();
+        if (!normalized) return false;
+        if (normalized.includes(searchLower)) return true;
+        if (normalized.length >= 3 && searchLower.startsWith(normalized)) return true;
+        if (searchLower.length >= 3 && normalized.startsWith(searchLower)) return true;
+        return false;
+      };
+      return (
+        entry.title.toLowerCase().includes(searchLower) ||
+        entry.content.toLowerCase().includes(searchLower) ||
+        aiTags.some(matchesTag)
+      );
+    });
   }
 
   // Filter by author

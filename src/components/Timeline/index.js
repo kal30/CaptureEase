@@ -2,7 +2,6 @@
 // Clean, focused components for better maintainability and reusability
 
 // Main timeline components
-export { default as RefactoredTimelineWidget } from './RefactoredTimelineWidget';
 export { default as UnifiedTimeline } from './UnifiedTimeline';
 
 // Individual timeline components

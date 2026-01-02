@@ -23,6 +23,8 @@ import TimelineProgressRing from './TimelineProgressRing';
 import MiniCalendar from './MiniCalendar';
 import { UnifiedTimeline, TimelineFullModal, TimelineFilters } from '../Timeline';
 import { useTimelineProgress } from '../../hooks/useTimelineProgress';
+import { useNavigate } from 'react-router-dom';
+import { useChildContext } from '../../contexts/ChildContext';
 
 /**
  * TimelineWidget - Self-contained timeline component with progress visualization and unified daily log
@@ -47,6 +49,8 @@ const TimelineWidget = ({
   const [expanded, setExpanded] = useState(defaultExpanded);
   const [showTimelineModal, setShowTimelineModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const navigate = useNavigate();
+  const { setCurrentChildId } = useChildContext();
   
   // Debug: Log current state
   console.log('TimelineWidget state:', {
@@ -111,140 +115,6 @@ const TimelineWidget = ({
 
   const handleViewFullTimeline = () => {
     setShowTimelineModal(true);
-  };
-
-  // Test function to check if any data exists at all
-  const testDataExists = async () => {
-    try {
-      
-      // Import Firebase functions locally for testing
-      const { collection, getDocs, query, limit, orderBy, where } = await import('firebase/firestore');
-      const { db } = await import('../../services/firebase');
-      
-      // Test each collection with a simple limit query - check multiple possible names
-      const collections = [
-        'incidents', 
-        'journalEntries', 'journal_entries', 'journals',
-        'dailyLogs', 'daily_logs', 'dailyLog', 'daily-logs',
-        'followUpResponses', 'follow_up_responses', 'followUps'
-      ];
-      
-      for (const collectionName of collections) {
-        try {
-          // Test 1: Any data at all
-          const testQuery = query(collection(db, collectionName), limit(5));
-          const snapshot = await getDocs(testQuery);
-          console.log(`📊 Collection '${collectionName}':`, {
-            exists: snapshot.size > 0,
-            count: snapshot.size
-          });
-          
-          // Test 2: Recent data (last 24 hours)
-          const yesterday = new Date();
-          yesterday.setDate(yesterday.getDate() - 1);
-          
-          try {
-            const recentQuery = query(
-              collection(db, collectionName),
-              where('timestamp', '>=', yesterday),
-              orderBy('timestamp', 'desc'),
-              limit(5)
-            );
-            const recentSnapshot = await getDocs(recentQuery);
-            console.log(`📅 Recent '${collectionName}' (last 24h):`, {
-              count: recentSnapshot.size,
-              docs: recentSnapshot.docs.map(doc => ({
-                id: doc.id,
-                timestamp: doc.data().timestamp?.toDate(),
-                childId: doc.data().childId,
-                ...doc.data()
-              }))
-            });
-          } catch (recentErr) {
-          }
-          
-          // Test 3: For current child specifically
-          if (child?.id) {
-            try {
-              const childQuery = query(
-                collection(db, collectionName),
-                where('childId', '==', child.id),
-                limit(5)
-              );
-              const childSnapshot = await getDocs(childQuery);
-              console.log(`👶 '${collectionName}' for child ${child.id}:`, {
-                count: childSnapshot.size,
-                docs: childSnapshot.docs.map(doc => ({
-                  id: doc.id,
-                  timestamp: doc.data().timestamp?.toDate(),
-                  ...doc.data()
-                }))
-              });
-            } catch (childErr) {
-            }
-          }
-          
-        } catch (err) {
-          console.error(`❌ Error testing collection '${collectionName}':`, err);
-        }
-      }
-    } catch (error) {
-      console.error('❌ Error in testDataExists:', error);
-    }
-  };
-
-  // Specific test for journal/daily log collections
-  const testJournalCollections = async () => {
-    try {
-      console.log('📔 Testing specific journal/daily log collections...');
-      
-      const { collection, getDocs, query, limit, where } = await import('firebase/firestore');
-      const { db } = await import('../../services/firebase');
-      
-      // Test subcollections under children/{childId}/
-      const journalSubcollections = ['journals', 'journal_entries', 'journal'];
-      const dailyLogSubcollections = ['moodLogs', 'dailyLogs', 'daily_logs', 'logs'];
-      
-      if (child?.id) {
-        console.log(`Testing journal subcollections for child ${child.id}:`);
-        for (const name of journalSubcollections) {
-          try {
-            const snapshot = await getDocs(query(collection(db, 'children', child.id, name), limit(3)));
-            if (snapshot.size > 0) {
-              snapshot.docs.forEach((doc, i) => {
-                console.log(`  Journal ${i + 1}:`, doc.data());
-              });
-            } else {
-              console.log(`📭 Empty subcollection: 'children/${child.id}/${name}'`);
-            }
-          } catch (err) {
-            console.log(`❌ Subcollection 'children/${child.id}/${name}' doesn't exist or error:`, err.message);
-          }
-        }
-      }
-      
-      if (child?.id) {
-        console.log(`Testing daily log subcollections for child ${child.id}:`);
-        for (const name of dailyLogSubcollections) {
-          try {
-            const snapshot = await getDocs(query(collection(db, 'children', child.id, name), limit(3)));
-            if (snapshot.size > 0) {
-              snapshot.docs.forEach((doc, i) => {
-                console.log(`  Daily Log ${i + 1}:`, doc.data());
-              });
-            } else {
-              console.log(`📭 Empty subcollection: 'children/${child.id}/${name}'`);
-            }
-          } catch (err) {
-            console.log(`❌ Subcollection 'children/${child.id}/${name}' doesn't exist or error:`, err.message);
-          }
-        }
-      }
-      
-      
-    } catch (error) {
-      console.error('❌ Error in testJournalCollections:', error);
-    }
   };
 
   const handleDayClick = (day, dayEntries, date) => {
@@ -446,7 +316,7 @@ const TimelineWidget = ({
                       fontSize: { xs: '0.9rem', md: '1rem' }
                     }}
                   >
-                    Daily Progress & Timeline
+                    Logs
                   </Typography>
                   <Typography 
                     variant="caption" 
@@ -456,20 +326,26 @@ const TimelineWidget = ({
                       display: 'block',
                       lineHeight: 1.2
                     }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const yesterday = new Date();
-                      yesterday.setDate(yesterday.getDate() - 1);
-                      setSelectedDate(yesterday);
-                      console.log('Switched to yesterday:', yesterday.toDateString());
-                    }}
-                    style={{ cursor: 'pointer' }}
                   >
                     {timeline.hasActivity ? 
                       `${timeline.metrics?.totalCount || 0} total entries` : 
                       'No activity yet'
-                    } | <span onClick={(e) => {e.stopPropagation(); testDataExists();}}>🔍 Test DB</span> | <span onClick={(e) => {e.stopPropagation(); setSelectedDate(new Date(selectedDate));}}>🔄 Refresh</span> | <span onClick={(e) => {e.stopPropagation(); testJournalCollections();}}>📔 Test Journal</span>
+                    }
                   </Typography>
+                  {expanded && (
+                    <Button
+                      size="small"
+                      variant="text"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCurrentChildId(child?.id);
+                        navigate('/log');
+                      }}
+                      sx={{ px: 0, textTransform: 'none' }}
+                    >
+                      Detailed log
+                    </Button>
+                  )}
                 </Box>
                 
                 {/* Timeline Filters */}

@@ -163,13 +163,24 @@ const DailyLogFeed = ({ childId, selectedDate = new Date(), searchQuery = "", on
     const query = searchQuery.toLowerCase().trim();
     const text = (entry.text || '').toLowerCase();
     const tags = entry.tags || [];
+    const aiTags = entry.ai?.tags || [];
     
     // Search in text content
     if (text.includes(query)) return true;
     
     // Search in tags (support both #tag and tag format)
     const searchTerm = query.startsWith('#') ? query.slice(1) : query;
-    if (tags.some(tag => tag.toLowerCase().includes(searchTerm))) return true;
+    const matchesTag = (tag) => {
+      const normalized = String(tag).toLowerCase();
+      if (!normalized) return false;
+      if (normalized.includes(searchTerm)) return true;
+      if (normalized.length >= 3 && searchTerm.startsWith(normalized)) return true;
+      if (searchTerm.length >= 3 && normalized.startsWith(searchTerm)) return true;
+      return false;
+    };
+
+    if (tags.some(matchesTag)) return true;
+    if (aiTags.some(matchesTag)) return true;
     
     return false;
   });

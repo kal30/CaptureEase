@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import {
   Box,
-  ToggleButton,
-  ToggleButtonGroup,
   FormControl,
   InputLabel,
   Select,
@@ -23,7 +21,6 @@ import {
   CalendarToday as CalendarIcon
 } from '@mui/icons-material';
 import MiniCalendar from '../UI/MiniCalendar';
-import { getIncidentDisplayInfo, getJournalDisplayInfo, getDailyHabitsDisplayInfo } from '../../constants/uiDisplayConstants';
 
 /**
  * TimelineFilters - Filter controls for unified timeline
@@ -49,13 +46,6 @@ const TimelineFilters = ({
 }) => {
   const [datePickerAnchor, setDatePickerAnchor] = useState(null);
   const [searchText, setSearchText] = useState(filters.searchText || '');
-
-  const handleEntryTypeFilter = (event, newTypes) => {
-    onFiltersChange({
-      ...filters,
-      entryTypes: newTypes
-    });
-  };
 
   const handleUserRoleFilter = (event) => {
     const value = event.target.value;
@@ -98,36 +88,6 @@ const TimelineFilters = ({
     setDatePickerAnchor(null);
   };
 
-  // Get centralized display info
-  const incidentDisplay = getIncidentDisplayInfo();
-  const journalDisplay = getJournalDisplayInfo();
-  const dailyHabitsDisplay = getDailyHabitsDisplayInfo();
-
-  // Entry type options with icons and counts (matching dashboard quick entries)
-  const entryTypeOptions = [
-    { 
-      value: 'incident', 
-      label: incidentDisplay.pluralLabel, 
-      icon: incidentDisplay.emoji,
-      count: summary.incidentCount || 0,
-      color: 'error'
-    },
-    {
-      value: 'journal',
-      label: journalDisplay.label,
-      icon: journalDisplay.emoji,
-      count: summary.journalCount || 0,
-      color: 'secondary'
-    },
-    {
-      value: 'dailyHabit',
-      label: dailyHabitsDisplay.label,
-      icon: dailyHabitsDisplay.emoji,
-      count: summary.dailyLogCount || 0,
-      color: 'primary'
-    }
-  ];
-
   // User role options - CLEAN VERSION
   const userRoleOptions = [
     { value: 'care_owner', label: '👑 Care Owner' },
@@ -136,7 +96,7 @@ const TimelineFilters = ({
     { value: 'therapist', label: '🩺 Therapist' }
   ];
 
-  const activeFiltersCount = Object.keys(filters).filter(key => 
+  const activeFiltersCount = Object.keys(filters).filter(key =>
     key !== 'selectedDate' && filters[key]?.length > 0
   ).length;
 
@@ -196,30 +156,6 @@ const TimelineFilters = ({
           </Box>
         </Popover>
 
-        {/* Entry Type Chips */}
-        {entryTypeOptions.map((option) => {
-          const isActive = filters.entryTypes?.includes(option.value);
-          return (
-            <Chip
-              key={option.value}
-              label={`${option.icon} ${option.label}`}
-              size="small"
-              variant={isActive ? 'filled' : 'outlined'}
-              color={isActive ? option.color : 'default'}
-              onClick={() => {
-                const newTypes = isActive 
-                  ? (filters.entryTypes || []).filter(type => type !== option.value)
-                  : [...(filters.entryTypes || []), option.value];
-                onFiltersChange({
-                  ...filters,
-                  entryTypes: newTypes.length > 0 ? newTypes : undefined
-                });
-              }}
-              sx={{ fontSize: '0.7rem', height: 24 }}
-            />
-          );
-        })}
-
         {/* Clear All Filters */}
         {(Object.keys(filters).length > 0 || searchText) && (
           <IconButton
@@ -240,61 +176,11 @@ const TimelineFilters = ({
     <Paper variant="outlined" sx={{ p: 2, mb: 2, ...sx }}>
       <Box sx={{ mb: 2 }}>
         <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
-          Timeline Filters
+          Timeline Search
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Filter timeline entries by type, who logged them, or jump to a specific date
+          Search entries or jump to a specific date
         </Typography>
-      </Box>
-
-      {/* Entry Type Filters */}
-      <Box sx={{ mb: 2 }}>
-        <Typography variant="caption" sx={{ fontWeight: 600, mb: 1, display: 'block' }}>
-          ENTRY TYPES
-        </Typography>
-        <ToggleButtonGroup
-          value={filters.entryTypes || []}
-          onChange={handleEntryTypeFilter}
-          size="small"
-          sx={{ flexWrap: 'wrap', gap: 0.5 }}
-        >
-          {entryTypeOptions.map((option) => (
-            <ToggleButton
-              key={option.value}
-              value={option.value}
-              disabled={option.count === 0}
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 0.5,
-                px: 1.5,
-                py: 0.5,
-                fontSize: '0.75rem',
-                textTransform: 'none',
-                border: '1px solid',
-                borderColor: 'divider',
-                '&.Mui-selected': {
-                  bgcolor: `${option.color}.50`,
-                  borderColor: `${option.color}.main`,
-                  color: `${option.color}.main`
-                }
-              }}
-            >
-              {option.icon}
-              {option.label}
-              <Chip 
-                label={option.count} 
-                size="small" 
-                sx={{ 
-                  height: 16, 
-                  fontSize: '0.6rem',
-                  ml: 0.5,
-                  bgcolor: option.count > 0 ? `${option.color}.100` : 'action.disabled'
-                }} 
-              />
-            </ToggleButton>
-          ))}
-        </ToggleButtonGroup>
       </Box>
 
       {/* User Role Filter */}

@@ -2,55 +2,30 @@ import React, { useState } from 'react';
 import { Box, Button, IconButton, Tooltip } from '@mui/material';
 import { useRole } from '../../../contexts/RoleContext';
 import { getMessagesDisplayInfo } from '../../../constants/uiDisplayConstants';
-import QuickEntrySection from '../QuickEntrySection';
 import QuickNoteLog, { QuickNoteIcon } from '../QuickNoteLog';
 import SmsToggle from './SmsToggle';
+import { Search } from '@mui/icons-material';
 
 /**
- * ChildCardActions - Action buttons and quick entry section
- * Contains quick entry buttons, daily report, and role-specific actions
+ * ChildCardActions - Action buttons for quick log/search/messaging
  * 
  * @param {Object} props
  * @param {Object} props.child - Child object
- * @param {Object} props.status - Daily care status
  * @param {string} props.userRole - User's role for this child
- * @param {boolean} props.completedToday - Whether daily care is completed
- * @param {function} props.onQuickEntry - Handler for quick entry actions
- * @param {function} props.onDailyReport - Handler for daily report
- * @param {string} props.hoveredQuickAction - Currently hovered quick action
- * @param {function} props.onHoverAction - Handler for action hover
- * @param {function} props.onLeaveAction - Handler for action leave
  * @param {function} props.onMessages - Handler for Messages button click
+ * @param {function} props.onAskQuestion - Handler for Ask Question button click
  * @param {Object} props.sx - Additional styling
  */
 const ChildCardActions = ({
   child,
-  status,
   userRole,
-  completedToday,
-  onQuickEntry,
-  onDailyReport,
-  hoveredQuickAction,
-  onHoverAction,
-  onLeaveAction,
   onMessages,
+  onAskQuestion,
   sx = {}
 }) => {
   const { USER_ROLES } = useRole();
   const messagesDisplay = getMessagesDisplayInfo();
   const [showQuickNote, setShowQuickNote] = useState(false);
-
-  const handleQuickActionHover = (actionType) => {
-    if (onHoverAction) {
-      onHoverAction(actionType);
-    }
-  };
-
-  const handleQuickActionLeave = () => {
-    if (onLeaveAction) {
-      onLeaveAction();
-    }
-  };
 
   return (
     <Box 
@@ -62,20 +37,6 @@ const ChildCardActions = ({
         ...sx 
       }}
     >
-      {/* Quick Entry Section with Daily Report */}
-      <QuickEntrySection
-        child={child}
-        status={status}
-        userRole={userRole}
-        completedToday={completedToday}
-        onQuickEntry={onQuickEntry}
-        onDailyReport={onDailyReport}
-        onHoverAction={handleQuickActionHover}
-        onLeaveAction={handleQuickActionLeave}
-        externalHoveredAction={hoveredQuickAction}
-      />
-
-
       {/* Role-Specific Action Buttons */}
       <Box
         sx={{
@@ -98,6 +59,33 @@ const ChildCardActions = ({
           childName={child.name}
           onClick={() => setShowQuickNote(true)}
         />
+
+        {/* Ask Question Button */}
+        <Tooltip title="Ask a question about logs" arrow>
+          <IconButton
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onAskQuestion) {
+                onAskQuestion(child);
+              }
+            }}
+            sx={{
+              width: 40,
+              height: 40,
+              backgroundColor: '#0EA5E9',
+              color: 'white',
+              fontSize: '1.1rem',
+              border: '2px solid #E0F2FE',
+              '&:hover': {
+                backgroundColor: '#0284C7',
+                transform: 'scale(1.05)',
+              },
+              transition: 'all 0.2s ease-in-out',
+            }}
+          >
+            <Search fontSize="small" />
+          </IconButton>
+        </Tooltip>
 
         {/* Messages Icon Button - Available for all roles */}
         <Tooltip title={`${messagesDisplay.label}: ${messagesDisplay.description}`} arrow>

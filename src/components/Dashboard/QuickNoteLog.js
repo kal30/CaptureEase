@@ -15,6 +15,8 @@ import {
 import { Close, NoteAdd } from '@mui/icons-material';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { app } from '../../services/firebase';
+import { useNavigate } from 'react-router-dom';
+import { useChildContext } from '../../contexts/ChildContext';
 
 const functions = getFunctions(app, 'us-central1');
 const createLogCallable = httpsCallable(functions, 'createLog');
@@ -23,6 +25,8 @@ const QuickNoteLog = ({ childId, childName, open, onClose }) => {
   const [note, setNote] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const navigate = useNavigate();
+  const { setCurrentChildId } = useChildContext();
 
   const handleSubmit = async () => {
     if (!note.trim()) {
@@ -45,7 +49,7 @@ const QuickNoteLog = ({ childId, childName, open, onClose }) => {
 
       setMessage({
         type: 'success',
-        text: `Note logged successfully! The system will automatically classify it as a Daily Log or Important Moment.`
+        text: 'Note logged successfully!'
       });
       
       setNote('');
@@ -145,14 +149,22 @@ const QuickNoteLog = ({ childId, childName, open, onClose }) => {
           }}
         />
         
-        <Box sx={{ mt: 1, fontSize: '0.75rem', color: 'text.secondary' }}>
-          💡 <strong>Auto-Classification:</strong> Your note will be automatically sorted as:
-          <br />
-          • <strong>Daily Log</strong> - Routine activities (meals, naps, play)
-          <br />
-          • <strong>Important Moment</strong> - Significant events (milestones, incidents, health concerns)
-          <br />
-          Press Ctrl+Enter to submit quickly
+        <Box sx={{ mt: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box sx={{ fontSize: '0.75rem', color: 'text.secondary' }}>
+            Press Ctrl+Enter to submit quickly
+          </Box>
+          <Button
+            size="small"
+            variant="text"
+            onClick={() => {
+              setCurrentChildId(childId);
+              navigate('/log');
+              handleClose();
+            }}
+            sx={{ textTransform: 'none' }}
+          >
+            Detailed log
+          </Button>
         </Box>
       </DialogContent>
 

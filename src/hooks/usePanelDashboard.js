@@ -60,6 +60,8 @@ export const usePanelDashboard = () => {
   const [suggestionsChildId, setSuggestionsChildId] = useState(null);
   const [showDailyHabitsModal, setShowDailyHabitsModal] = useState(false);
   const [dailyHabitsChild, setDailyHabitsChild] = useState(null);
+  const [showAskQuestionModal, setShowAskQuestionModal] = useState(false);
+  const [askQuestionChild, setAskQuestionChild] = useState(null);
 
   useEffect(() => {
     // Start SW quick response listener once on mount
@@ -343,6 +345,16 @@ export const usePanelDashboard = () => {
     navigate("/messages", { state: { selectedChildId: child.id } });
   };
 
+  const handleAskQuestion = (child) => {
+    setAskQuestionChild(child);
+    setShowAskQuestionModal(true);
+  };
+
+  const handleCloseAskQuestionModal = () => {
+    setShowAskQuestionModal(false);
+    setAskQuestionChild(null);
+  };
+
   const handleGroupActionClick = (action, child) => {
     setCurrentChildId(child.id);
 
@@ -440,6 +452,8 @@ export const usePanelDashboard = () => {
     suggestionsChildId,
     showDailyHabitsModal,
     dailyHabitsChild,
+    showAskQuestionModal,
+    askQuestionChild,
     showQuickEntry,
     selectedChild,
     entryType,
@@ -456,6 +470,7 @@ export const usePanelDashboard = () => {
     handleDeleteChild,
     handleDailyReport,
     handleMessages,
+    handleAskQuestion,
     handleGroupActionClick,
     getTypeConfig,
     formatTimeAgo,
@@ -472,6 +487,7 @@ export const usePanelDashboard = () => {
     handleClosePatternSuggestionModal,
     handleCreateCustomCategories,
     handleCloseDailyHabitsModal,
+    handleCloseAskQuestionModal,
     checkForPatterns,
     handleQuickEntryComplete,
     handleQuickEntrySkip,

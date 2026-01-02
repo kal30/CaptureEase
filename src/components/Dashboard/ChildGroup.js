@@ -48,6 +48,7 @@ const ChildGroup = ({
   onInviteTeamMember,
   onDailyReport,
   onMessages,
+  onAskQuestion,
   getActionGroups,
   handleGroupActionClick,
   highlightedActions,
@@ -119,6 +120,7 @@ const ChildGroup = ({
             onInviteTeamMember={onInviteTeamMember}
             onDailyReport={onDailyReport}
             onMessages={onMessages}
+            onAskQuestion={onAskQuestion}
             getActionGroups={getActionGroups}
             handleGroupActionClick={handleGroupActionClick}
             highlightedActions={highlightedActions}

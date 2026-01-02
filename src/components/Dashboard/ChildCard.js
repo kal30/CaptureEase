@@ -22,6 +22,7 @@ const ChildCard = ({
   onInviteTeamMember,
   onDailyReport,
   onMessages,
+  onAskQuestion,
 }) => {
   // Business logic hook
   const {
@@ -68,16 +69,9 @@ const ChildCard = ({
           {/* Actions Section */}
           <ChildCardActions
             child={child}
-            status={status}
             userRole={userRole}
-            completedToday={completedToday}
-            onQuickEntry={onQuickEntry}
-            onDailyReport={onDailyReport}
             onMessages={onMessages}
-            onSettingsUpdate={undefined} // SMS toggle handles its own updates via Cloud Function
-            hoveredQuickAction={hoveredQuickAction}
-            onHoverAction={handleQuickActionHover}
-            onLeaveAction={handleQuickActionLeave}
+            onAskQuestion={onAskQuestion}
             sx={{
               alignSelf: 'stretch',
               justifyContent: { xs: 'center', md: 'flex-end' },

@@ -39,6 +39,12 @@ exports.smsWebhook =
   require("./ingestion/smsWebhook").smsWebhook;
 
 /**
+ * LLM – Ask a question about logs
+ */
+exports.askQuestion =
+  require("./llm/askQuestion").askQuestion;
+
+/**
  * Classification (delegated to classifier module)
  */
 exports.classifyEvent =
@@ -53,6 +59,8 @@ exports.createLog =
   require("./logs/create").createLog;
 exports.classifyNoteLog =
   require("./logs/classify").classifyNoteLog;
+exports.tagLogOnCreate =
+  require("./logs/tagLogOnCreate").tagLogOnCreate;
 
 /**
  * Admin Migrations (admin-only)
