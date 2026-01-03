@@ -11,9 +11,11 @@ This document describes the Cloud Functions for the CaptureEase application, inc
 2. [Classification Functions](#classification-functions)
    - [classifyEvent](#classifyevent) - Classify a single event
    - [classifyUnprocessed](#classifyunprocessed) - Batch classify events
-3. [Settings & Phone Linking](#settings--phone-linking)
-4. [Deployment](#deployment)
-5. [Testing](#testing)
+3. [LLM Functions](#llm-functions)
+   - [askQuestion](#askquestion) - Ask a question about logs
+4. [Settings & Phone Linking](#settings--phone-linking)
+5. [Deployment](#deployment)
+6. [Testing](#testing)
 
 ---
 
@@ -242,6 +244,28 @@ More specific classifications like `happy`, `sad`, `meltdown`, `fever`, `new_ski
 - 0.8-1.0: High confidence
 - 0.5-0.79: Medium confidence
 - 0.0-0.49: Low confidence
+
+## LLM Functions
+
+### askQuestion
+
+Ask a question about a child’s logs using an LLM.
+
+**Type:** Callable Cloud Function
+
+**Authentication:** Required
+
+**Parameters:**
+- `childId` (required): Child document ID
+- `question` (required): User question
+- `startDate` (optional): ISO string
+- `endDate` (optional): ISO string
+- `limit` (optional): Max logs to include
+
+**Setup Required:**
+```bash
+firebase functions:secrets:set ANTHROPIC_API_KEY
+```
 
 ## Deployment
 

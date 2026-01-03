@@ -13,8 +13,8 @@ export const UI_LABELS = {
   // Future: could add other UI sections here
   JOURNAL_SECTION: {
     emoji: "📒",
-    label: "Journaling",
-    description: "Rich daily journal with photos, videos & templates",
+    label: "Logs",
+    description: "Daily logs with photos, videos & templates",
   },
 
   DAILY_HABITS_SECTION: {

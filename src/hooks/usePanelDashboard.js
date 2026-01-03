@@ -109,13 +109,16 @@ export const usePanelDashboard = () => {
       const timelineUnsubscribe = getTimelineEntries(child.id, (entries) => {
         const recentTimelineEntries = entries
           .filter((entry) => {
-            const entryDate = new Date(entry.timestamp);
+            const entryDate = entry.timestamp?.toDate?.() || new Date(entry.timestamp);
             const weekAgo = new Date();
             weekAgo.setDate(weekAgo.getDate() - 7);
             return entryDate >= weekAgo;
           })
-          .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-          .slice(0, 5);
+          .sort((a, b) => {
+            const bDate = b.timestamp?.toDate?.() || new Date(b.timestamp);
+            const aDate = a.timestamp?.toDate?.() || new Date(a.timestamp);
+            return bDate - aDate;
+          });
 
         entriesByChild[child.id] = recentTimelineEntries;
         setRecentEntries({ ...entriesByChild });

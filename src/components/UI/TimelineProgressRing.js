@@ -10,6 +10,7 @@ import { Box, Typography, useTheme } from '@mui/material';
  * @param {number} props.completionRate - Overall completion percentage (0-100)
  * @param {string} props.size - Size variant: 'small', 'medium', 'large'
  * @param {boolean} props.showPercentage - Show percentage text in center
+ * @param {string} props.label - Center label text
  * @param {function} props.onClick - Click handler for the ring
  */
 const TimelineProgressRing = ({
@@ -17,6 +18,7 @@ const TimelineProgressRing = ({
   completionRate = 0,
   size = 'medium',
   showPercentage = true,
+  label = 'Complete',
   onClick,
   className = ''
 }) => {
@@ -159,7 +161,7 @@ const TimelineProgressRing = ({
               textAlign: 'center'
             }}
           >
-            Complete
+            {label}
           </Typography>
         </Box>
       )}

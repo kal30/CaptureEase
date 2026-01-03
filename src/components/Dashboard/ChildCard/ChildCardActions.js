@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Box, Button, IconButton, Tooltip } from '@mui/material';
 import { useRole } from '../../../contexts/RoleContext';
 import { getMessagesDisplayInfo } from '../../../constants/uiDisplayConstants';
-import QuickNoteLog, { QuickNoteIcon } from '../QuickNoteLog';
+import QuickNoteLog from '../QuickNoteLog';
+import QuickNoteIcon from '../QuickNoteLog/QuickNoteIcon';
 import SmsToggle from './SmsToggle';
 import { Search } from '@mui/icons-material';
 
@@ -54,11 +55,7 @@ const ChildCardActions = ({
         <SmsToggle child={child} />
 
         {/* Quick Note Icon Button - Available for all roles */}
-        <QuickNoteIcon
-          childId={child.id}
-          childName={child.name}
-          onClick={() => setShowQuickNote(true)}
-        />
+        <QuickNoteIcon onClick={() => setShowQuickNote(true)} />
 
         {/* Ask Question Button */}
         <Tooltip title="Ask a question about logs" arrow>

@@ -108,6 +108,7 @@ await sendMessage({
 
 ## Data Model Notes
 
+- `logs` is the single source of truth for log entries (app + WhatsApp).
 - `phone_index` stores verified phone info in the app.
 - `phoneLinks` is used for inbound SMS/WhatsApp routing.
 - Access is based on `children.users.members`.

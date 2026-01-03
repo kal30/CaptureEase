@@ -264,6 +264,8 @@ const SmsToggle = ({ child, onSettingsUpdate }) => {
             onChange={handleToggle}
             disabled={loading}
             size="small"
+            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
             inputProps={{
               "aria-label": `${localSmsEnabled ? "Disable" : "Enable"} SMS logging for ${child.name}`,
             }}

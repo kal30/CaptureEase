@@ -5,6 +5,17 @@ import { db } from './firebase';
 export const TIMELINE_TYPES = {
   // DAILY_NOTE removed - was only used for legacy progressNotes mapping
   // PROGRESS_NOTE removed - legacy collection no longer used
+  JOURNAL: {
+    type: 'journal',
+    label: 'Daily Log',
+    icon: '📝',
+    color: '#7E57C2', // Deep Purple (UI should prefer theme)
+    entryGroup: 'journal',
+    collection: 'dailyLogs',
+    isRootCollection: true,
+    statusField: 'status',
+    statusValue: 'active'
+  },
   SENSORY_LOG: {
     type: 'sensory_log',
     label: 'Sensory Log', 
@@ -97,6 +108,19 @@ const normalizeTimelineEntry = (doc, type) => {
   let timestamp = data.timestamp || data.createdAt || data.date;
   
   switch (type) {
+    case 'journal': {
+      const noteText = data.text || data.note || data.content || data.description || '';
+      if (data.tags && data.tags.length > 0) {
+        title = `Log: #${data.tags[0]}`;
+      } else if (noteText) {
+        const firstLine = noteText.split('\n')[0].trim();
+        title = firstLine.length > 50 ? `${firstLine.substring(0, 47)}...` : firstLine || 'Daily Log';
+      } else {
+        title = 'Daily Log';
+      }
+      content = noteText;
+      break;
+    }
     case 'daily_note':
       // Daily notes from dailyLogs collection use 'text' field
       const noteText = data.text || data.note || data.content || data.description || '';
@@ -158,82 +182,52 @@ const normalizeTimelineEntry = (doc, type) => {
 
 // Fetch timeline entries for a specific child
 export const getTimelineEntries = (childId, callback) => {
-  const unsubscribeFunctions = [];
-  let allEntries = [];
-  let loadedCollections = 0;
-  const totalCollections = Object.keys(TIMELINE_TYPES).length;
-
-  const updateCallback = () => {
-    loadedCollections += 1;
-    if (loadedCollections === totalCollections) {
-      // Sort all entries by timestamp (newest first)
-      const sortedEntries = allEntries.sort((a, b) => {
-        const aTime = a.timestamp?.toDate?.() || new Date(a.timestamp) || new Date(0);
-        const bTime = b.timestamp?.toDate?.() || new Date(b.timestamp) || new Date(0);
-        return bTime - aTime;
-      });
-      callback(sortedEntries);
+  const mapLogEntry = (doc) => {
+    const data = doc.data();
+    const noteText = data.note || data.text || data.content || data.description || '';
+    let title = 'Daily Log';
+    if (data.tags && data.tags.length > 0) {
+      title = `Log: #${data.tags[0]}`;
+    } else if (noteText) {
+      const firstLine = noteText.split('\n')[0].trim();
+      title = firstLine.length > 50 ? `${firstLine.substring(0, 47)}...` : firstLine || 'Daily Log';
     }
+
+    return {
+      id: doc.id,
+      type: 'journal',
+      collection: 'logs',
+      title,
+      content: noteText,
+      timestamp: data.createdAt?.toDate?.() || new Date(data.createdAt),
+      childId: data.childId,
+      author: data.author || data.createdBy || data.userId || 'Unknown',
+      originalData: data
+    };
   };
 
-  // Subscribe to each collection
-  Object.values(TIMELINE_TYPES).forEach(typeConfig => {
-    try {
-      let q;
-      
-      if (typeConfig.isRootCollection) {
-        // Root collection with childId filter (like dailyCare)
-        q = query(
-          collection(db, typeConfig.collection),
-          where('childId', '==', childId),
-          orderBy('timestamp', 'desc')
-        );
-      } else if (typeConfig.isChildSubCollection) {
-        // Child subcollection (like children/[childId]/timeline)
-        q = query(
-          collection(db, 'children', childId, typeConfig.collection),
-          orderBy('timestamp', 'desc')
-        );
-      } else {
-        // Legacy: Child-specific collection (traditional structure)
-        q = query(
-          collection(db, 'children', childId, typeConfig.collection),
-          orderBy('timestamp', 'desc')
-        );
-      }
+  const q = query(
+    collection(db, 'logs'),
+    where('childId', '==', childId),
+    orderBy('createdAt', 'desc')
+  );
 
-      const unsubscribe = onSnapshot(q, (snapshot) => {
-        // Remove existing entries of this type
-        allEntries = allEntries.filter(entry => entry.type !== typeConfig.type);
-        
-        // Add new entries of this type
-        const newEntries = snapshot.docs.map(doc => 
-          normalizeTimelineEntry(doc, typeConfig.type)
-        );
-        allEntries = [...allEntries, ...newEntries];
-        
-        updateCallback();
-      }, (error) => {
-        console.error(`Error fetching ${typeConfig.collection}:`, error);
-        updateCallback(); // Continue even if one collection fails
-      });
-
-      unsubscribeFunctions.push(unsubscribe);
-    } catch (error) {
-      console.error(`Error setting up listener for ${typeConfig.collection}:`, error);
-      updateCallback(); // Continue even if setup fails
-    }
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    const entries = snapshot.docs
+      .map(mapLogEntry)
+      .filter((entry) => entry.timestamp && !Number.isNaN(entry.timestamp.getTime()));
+    callback(entries);
+  }, (error) => {
+    console.error('Error fetching logs:', error);
+    callback([]);
   });
 
-  // Return cleanup function
   return () => {
-    unsubscribeFunctions.forEach(unsubscribe => {
-      try {
-        unsubscribe();
-      } catch (error) {
-        console.error('Error unsubscribing:', error);
-      }
-    });
+    try {
+      unsubscribe();
+    } catch (error) {
+      console.error('Error unsubscribing:', error);
+    }
   };
 };
 

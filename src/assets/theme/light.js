@@ -56,6 +56,13 @@ const theme = createTheme({
       hoverIcon: "#EB684A", // terracotta
       deleteHover: "#F4B860", // mustard
     },
+    quickNote: {
+      importantBg: "#F3E8FF",
+      importantBgActive: "#E9D5FF",
+      importantText: "#5B21B6",
+      importantIcon: "#7C3AED",
+      importantSwitch: "#6D28D9",
+    },
     behavior: {
       primary: "#FF9800", // Orange (matches timeline service)
       light: "#FFB74D",
