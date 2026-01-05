@@ -201,6 +201,7 @@ export const getTimelineEntries = (childId, callback) => {
       content: noteText,
       timestamp: data.createdAt?.toDate?.() || new Date(data.createdAt),
       childId: data.childId,
+      meta: data.meta,
       author: data.author || data.createdBy || data.userId || 'Unknown',
       originalData: data
     };
@@ -215,7 +216,8 @@ export const getTimelineEntries = (childId, callback) => {
   const unsubscribe = onSnapshot(q, (snapshot) => {
     const entries = snapshot.docs
       .map(mapLogEntry)
-      .filter((entry) => entry.timestamp && !Number.isNaN(entry.timestamp.getTime()));
+      .filter((entry) => entry && entry.timestamp && !Number.isNaN(entry.timestamp.getTime()))
+      .filter((entry) => entry.originalData?.status !== 'archived');
     callback(entries);
   }, (error) => {
     console.error('Error fetching logs:', error);

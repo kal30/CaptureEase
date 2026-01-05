@@ -12,6 +12,8 @@ const TimelineWidgetHeader = ({
   loggedToday,
   lastEntry,
   daysLoggedThisWeek,
+  importantCountThisWeek,
+  patternSummary,
   expanded,
   showUnifiedLog,
   selectedDate,
@@ -123,12 +125,20 @@ const TimelineWidgetHeader = ({
             <Typography variant="caption" color="text.secondary">
               {lastEntry ? `Last log ${formatTimeAgo(lastEntry.timestamp)}` : 'No logs yet'}
             </Typography>
-            <Chip
-              label={`${daysLoggedThisWeek} day${daysLoggedThisWeek === 1 ? '' : 's'} logged this week`}
-              size="small"
-              variant="outlined"
-            />
+            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
+              <Chip
+                label={`${daysLoggedThisWeek} day${daysLoggedThisWeek === 1 ? '' : 's'} logged this week`}
+                size="small"
+                variant="outlined"
+              />
+              <Chip
+                label={`Important this week: ${importantCountThisWeek}`}
+                size="small"
+                variant="outlined"
+              />
+            </Box>
           </Box>
+
 
           {showUnifiedLog && expanded && (
             <Box

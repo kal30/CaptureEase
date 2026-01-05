@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Button, Chip, List, ListItem, ListItemAvatar, ListItemText, Avatar, Typography } from '@mui/material';
-import { Timeline as TimelineIcon, CalendarMonth as CalendarIcon } from '@mui/icons-material';
+import { Timeline as TimelineIcon, CalendarMonth as CalendarIcon, Share as ShareIcon } from '@mui/icons-material';
 import { UnifiedTimeline } from '../../Timeline';
 
 const TimelineWidgetContent = ({
@@ -13,7 +13,9 @@ const TimelineWidgetContent = ({
   timelineFilters,
   onFiltersChange,
   onViewFullTimeline,
-  renderMiniCalendar
+  onShareRecap,
+  renderMiniCalendar,
+  patternSummary
 }) => {
   const renderRecentEntries = () => {
     if (!timeline.recentEntries.length) {
@@ -74,12 +76,23 @@ const TimelineWidgetContent = ({
 
   const renderMetrics = () => (
     <Box className="timeline-widget__metrics" sx={{ mb: 2 }}>
-      <Box sx={{ display: 'flex', gap: 1, mb: 1, flexWrap: 'wrap' }}>
+      <Box sx={{ display: 'flex', gap: 1, mb: 1, flexWrap: 'wrap', alignItems: 'center' }}>
         <Chip
           label={`${daysLoggedThisWeek} day${daysLoggedThisWeek === 1 ? '' : 's'} logged this week`}
           size="small"
           variant="outlined"
         />
+        {patternSummary && (
+          <Chip
+            label={patternSummary}
+            size="small"
+            variant="filled"
+            sx={{
+              bgcolor: 'timeline.background',
+              color: 'text.secondary'
+            }}
+          />
+        )}
       </Box>
     </Box>
   );
@@ -124,7 +137,7 @@ const TimelineWidgetContent = ({
         <Box
           sx={{
             display: 'flex',
-            gap: { xs: 2, sm: 2, md: 3 },
+            gap: { xs: 1.5, sm: 2, md: 3 },
             flexDirection: { xs: 'column', md: 'row' },
             alignItems: { xs: 'stretch', md: 'flex-start' }
           }}
@@ -134,7 +147,9 @@ const TimelineWidgetContent = ({
               flexShrink: 0,
               width: { xs: '100%', md: 'auto' },
               display: 'flex',
-              justifyContent: { xs: 'center', md: 'flex-start' }
+              justifyContent: { xs: 'center', md: 'flex-start' },
+              transform: { xs: 'scale(0.95)', sm: 'none' },
+              transformOrigin: { xs: 'top left', sm: 'center' }
             }}
           >
             {renderMiniCalendar({})}
@@ -144,7 +159,8 @@ const TimelineWidgetContent = ({
             sx={{
               flex: { xs: 'none', md: 1 },
               minWidth: 0,
-              width: { xs: '100%', md: 'auto' }
+              width: { xs: '100%', md: 'auto' },
+              mt: { xs: -0.5, sm: 0 }
             }}
           >
             <UnifiedTimeline
@@ -161,7 +177,7 @@ const TimelineWidgetContent = ({
       )}
 
       {timeline.hasActivity && (
-        <Box sx={{ display: 'flex', gap: 1, mt: 2, justifyContent: 'center' }}>
+        <Box sx={{ display: 'flex', gap: 1, mt: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
           <Button
             size="small"
             variant="outlined"
@@ -171,8 +187,18 @@ const TimelineWidgetContent = ({
           >
             View Full Timeline
           </Button>
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<ShareIcon />}
+            onClick={onShareRecap}
+            sx={{ fontSize: '0.75rem' }}
+          >
+            Share Recap
+          </Button>
         </Box>
       )}
+
     </>
   );
 };

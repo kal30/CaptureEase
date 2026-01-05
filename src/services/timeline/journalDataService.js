@@ -19,6 +19,9 @@ export const getJournalEntries = async (childId, selectedDate) => {
     const { start, end } = getDayDateRange(selectedDate);
     const mapLogDoc = (doc) => {
       const data = doc.data();
+      if (data?.status === 'archived') {
+        return null;
+      }
       return {
         id: doc.id,
         ...data,
@@ -61,7 +64,7 @@ export const getJournalEntries = async (childId, selectedDate) => {
           orderBy('createdAt', 'desc')
         );
         const logSnapshot = await getDocs(logQuery);
-        logEntries = logSnapshot.docs.map(mapLogDoc);
+        logEntries = logSnapshot.docs.map(mapLogDoc).filter(Boolean);
       } catch (logIndexError) {
         if (logIndexError.message.includes('index')) {
           const fallbackLogQuery = query(
@@ -71,6 +74,7 @@ export const getJournalEntries = async (childId, selectedDate) => {
           const logSnapshot = await getDocs(fallbackLogQuery);
           logEntries = logSnapshot.docs
             .map(mapLogDoc)
+            .filter(Boolean)
             .filter(entry => isWithinDateRange(entry.timestamp, start, end));
         } else {
           throw logIndexError;
@@ -111,6 +115,7 @@ export const getJournalEntries = async (childId, selectedDate) => {
           const logSnapshot = await getDocs(fallbackLogQuery);
           logEntries = logSnapshot.docs
             .map(mapLogDoc)
+            .filter(Boolean)
             .filter(entry => isWithinDateRange(entry.timestamp, start, end));
         } catch (logError) {
           console.error('Error fetching log entries:', logError);

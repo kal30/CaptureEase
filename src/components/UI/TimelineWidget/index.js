@@ -8,6 +8,8 @@ import QuickNoteLog from '../../Dashboard/QuickNoteLog';
 import TimelineWidgetHeader from './TimelineWidgetHeader';
 import TimelineWidgetContent from './TimelineWidgetContent';
 import useTimelineWidgetSummary from './useTimelineWidgetSummary';
+import ShareLogsDialog from '../../Common/ShareLogsDialog';
+import brandLogo from '../../../assets/image/logo/blueBackgroundLogo.png';
 
 /**
  * TimelineWidget - Self-contained timeline component with progress visualization and unified daily log
@@ -32,6 +34,7 @@ const TimelineWidget = ({
   const [expanded, setExpanded] = useState(defaultExpanded);
   const [showTimelineModal, setShowTimelineModal] = useState(false);
   const [showQuickNote, setShowQuickNote] = useState(false);
+  const [showShareRecap, setShowShareRecap] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [timelineFilters, setTimelineFilters] = useState({});
   const { setCurrentChildId } = useChildContext();
@@ -97,6 +100,8 @@ const TimelineWidget = ({
             loggedToday={summary.loggedToday}
             lastEntry={summary.lastEntry}
             daysLoggedThisWeek={summary.daysLoggedThisWeek}
+            importantCountThisWeek={summary.importantCountThisWeek}
+            patternSummary={summary.patternSummary}
             expanded={expanded}
             showUnifiedLog={showUnifiedLog}
             selectedDate={selectedDate}
@@ -124,6 +129,8 @@ const TimelineWidget = ({
               timelineFilters={timelineFilters}
               onFiltersChange={setTimelineFilters}
               onViewFullTimeline={handleViewFullTimeline}
+              onShareRecap={() => setShowShareRecap(true)}
+              patternSummary={summary.patternSummary}
               renderMiniCalendar={(props) => (
                 <MiniCalendar
                   entries={childSpecificEntries}
@@ -155,6 +162,14 @@ const TimelineWidget = ({
           setSelectedDate(new Date());
           setExpanded(true);
         }}
+      />
+
+      <ShareLogsDialog
+        open={showShareRecap}
+        onClose={() => setShowShareRecap(false)}
+        childName={child?.name}
+        entries={childSpecificEntries}
+        brandLogoUrl={brandLogo}
       />
     </>
   );

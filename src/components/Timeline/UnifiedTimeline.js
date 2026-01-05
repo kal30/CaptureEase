@@ -9,6 +9,7 @@ import {
 import { Timeline as TimelineIcon } from "@mui/icons-material";
 import { getEntryTypeMeta, mapLegacyType, ENTRY_TYPE } from "../../constants/timeline";
 import { useTheme } from "@mui/material/styles";
+import { getAuth } from "firebase/auth";
 
 import TimelineFilters from "./TimelineFilters";
 import { useUnifiedTimelineData } from "../../hooks/useUnifiedTimelineData";
@@ -23,6 +24,7 @@ import TherapyNoteDetails from "./parts/TherapyNoteDetails";
 import EntryHeader from "./parts/EntryHeader";
 import TimelineItem from "./parts/TimelineItem";
 import { getIncidentDisplayInfo } from '../../constants/uiDisplayConstants';
+import LogEntryActions from "./parts/LogEntryActions";
 
 /**
  * UnifiedTimeline - Main unified timeline component
@@ -56,6 +58,37 @@ const UnifiedTimeline = ({
     selectedDate,
     filters
   );
+  const currentUserId = getAuth().currentUser?.uid;
+  const [localEntries, setLocalEntries] = React.useState([]);
+
+  React.useEffect(() => {
+    setLocalEntries(entries);
+  }, [entries]);
+
+  const handleLogUpdated = React.useCallback((entryId, updates) => {
+    setLocalEntries((prev) =>
+      prev.map((entry) => {
+        if (entry.id !== entryId || entry.collection !== 'logs') {
+          return entry;
+        }
+        const nextEntry = {
+          ...entry,
+          text: updates.note ?? entry.text,
+          tags: updates.tags ?? entry.tags,
+          meta: updates.meta ?? entry.meta
+        };
+        if (entry.originalData) {
+          nextEntry.originalData = {
+            ...entry.originalData,
+            note: updates.note ?? entry.originalData.note,
+            tags: updates.tags ?? entry.originalData.tags,
+            meta: updates.meta ?? entry.originalData.meta
+          };
+        }
+        return nextEntry;
+      })
+    );
+  }, []);
 
   // Note: entries are already pre-filtered; grouping by period is optional and not used here.
 
@@ -91,7 +124,7 @@ const UnifiedTimeline = ({
       )}
 
       {/* Day Summary Header */}
-      {summary && entries.length > 0 && (
+      {summary && localEntries.length > 0 && (
         <Box
           sx={{
             mb: 2,
@@ -141,7 +174,7 @@ const UnifiedTimeline = ({
       )}
 
       {/* Timeline Content */}
-      {entries.length === 0 ? (
+      {localEntries.length === 0 ? (
         // Empty state
         <Box sx={{ textAlign: "center", py: 6 }}>
           <TimelineIcon sx={{ fontSize: 64, color: "text.disabled", mb: 2 }} />
@@ -172,7 +205,7 @@ const UnifiedTimeline = ({
 
           {/* Timeline Entries */}
           <Stack spacing={0} role="list">
-            {entries.map((entry, entryIndex) => {
+          {localEntries.map((entry, entryIndex) => {
 
               const timestamp = new Date(entry.timestamp);
               const timeString = timestamp.toLocaleTimeString([], {
@@ -198,6 +231,10 @@ const UnifiedTimeline = ({
               const meta = getEntryTypeMeta(typeForTimeline);
               const entryLabel = meta.label.replace(/s$/, '');
               const entryColor = theme.palette.timeline.entries[meta.key] || theme.palette.primary.main;
+              const isTeamLog = entry.collection === 'logs' && currentUserId && entry.createdBy && entry.createdBy !== currentUserId;
+              const entryActions = entry.collection === 'logs' ? (
+                <LogEntryActions entry={entry} onUpdated={(updates) => handleLogUpdated(entry.id, updates)} />
+              ) : null;
 
               return (
                 <TimelineItem
@@ -211,6 +248,8 @@ const UnifiedTimeline = ({
                     timeString={timeString}
                     entryColor={entryColor}
                     loggedByUser={entry.loggedByUser}
+                    actions={entryActions}
+                    badgeLabel={isTeamLog ? 'Team log' : null}
                   />
 
                       {entryType === ENTRY_TYPE.INCIDENT && (

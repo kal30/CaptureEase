@@ -2,7 +2,22 @@ import React from 'react';
 import { Box } from '@mui/material';
 
 const TimelineItem = ({ color, icon, children, ariaLabel }) => (
-  <Box sx={{ position: 'relative', pb: 3 }} role="listitem" aria-label={ariaLabel}>
+  <Box
+    sx={{
+      position: 'relative',
+      pb: 0.5,
+      '&:hover .timeline-entry-actions': {
+        opacity: 1,
+        pointerEvents: 'auto'
+      },
+      '&:focus-within .timeline-entry-actions': {
+        opacity: 1,
+        pointerEvents: 'auto'
+      }
+    }}
+    role="listitem"
+    aria-label={ariaLabel}
+  >
     <Box
       sx={{
         position: 'absolute',
@@ -27,9 +42,13 @@ const TimelineItem = ({ color, icon, children, ariaLabel }) => (
     <Box
       sx={{
         ml: 6,
-        p: 2,
+        px: 1.25,
+        pt: 1,
+        pb: 0.75,
         bgcolor: 'background.paper',
-        borderRadius: 2,
+        borderRadius: 0,
+        borderBottom: '1px solid',
+        borderColor: 'divider',
       }}
     >
       {children}

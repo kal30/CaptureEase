@@ -16,6 +16,8 @@ const EntryHeader = ({
   timeFormatter, // (date: Date) => string
   locale, // e.g., 'en-US'
   timeOptions, // Intl.DateTimeFormatOptions
+  actions,
+  badgeLabel,
 }) => {
   const safeLocale = locale || (typeof navigator !== 'undefined' ? navigator.language : 'en-US');
 
@@ -31,15 +33,48 @@ const EntryHeader = ({
   }, [timeString, time, timeFormatter, safeLocale, timeOptions]);
 
   return (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-      <Typography variant="body2" sx={{ fontWeight: 600, color: entryColor }}>
+    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5, mb: 0.5 }}>
+      <Typography
+        variant="body2"
+        sx={{ fontWeight: 600, color: entryColor, lineHeight: 1.2 }}
+      >
         {entryLabel}
         {computedTime ? ` @ ${computedTime}` : ''}
       </Typography>
-      {loggedByUser && (
-        <Typography variant="caption" sx={{ color: 'text.secondary', ml: 'auto' }}>
-          by {loggedByUser}
-        </Typography>
+      {(loggedByUser || actions || badgeLabel) && (
+        <Box
+          sx={{
+            ml: 'auto',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 0.75,
+            mt: -0.25
+          }}
+        >
+          {badgeLabel && (
+            <Box
+              sx={{
+                px: 0.75,
+                py: 0.1,
+                borderRadius: 999,
+                bgcolor: 'grey.100',
+                color: 'text.secondary',
+                fontSize: '0.65rem',
+                fontWeight: 600,
+                letterSpacing: '0.04em',
+                textTransform: 'uppercase'
+              }}
+            >
+              {badgeLabel}
+            </Box>
+          )}
+          {loggedByUser && (
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+              by {loggedByUser}
+            </Typography>
+          )}
+          {actions}
+        </Box>
       )}
     </Box>
   );
