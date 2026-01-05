@@ -43,7 +43,9 @@ rules_version = '2';
 
 service cloud.firestore {
 
-  // ==== Helpers (inlined; Firestore includes are not supported) ====
+  // ============================================================
+  // HELPERS (inline; Firestore rules do not support includes)
+  // ============================================================
   function isAuthenticated() {
     return request.auth != null;
   }
@@ -108,7 +110,9 @@ service cloud.firestore {
     return isAuthenticated() && resource.data.childId != null && hasChildAccess(request.auth.uid, resource.data.childId) && request.resource.data.status == 'deleted' && (isChildOwner(resource.data.childId) || request.auth.uid == resource.data.createdBy);
   }
 
+  // -----------------------
   // Medical helpers
+  // -----------------------
   function canCreateMedical() {
     return isAuthenticated() && request.resource.data.childId != null && (isChildOwner(request.resource.data.childId) || hasChildRoleForRequest('care_partners'));
   }
@@ -127,7 +131,9 @@ service cloud.firestore {
             hasChildRoleForResource('therapists'));
   }
 
+  // -----------------------
   // Messaging helpers
+  // -----------------------
   function isConversationParticipant(conversationId, uid) {
     return conversationId != null &&
            exists(/databases/(default)/documents/conversations/$(conversationId)) &&
@@ -141,7 +147,9 @@ service cloud.firestore {
            !(get(/databases/(default)/documents/conversations/$(conversationId)).data.status != null && get(/databases/(default)/documents/conversations/$(conversationId)).data.status == 'archived');
   }
 
-  // Simple validators used by incident create
+  // -----------------------
+  // Validators
+  // -----------------------
   function isValidRequiredString(val, maxLen) {
     return val is string && val.size() > 0 && val.size() <= maxLen;
   }
@@ -154,7 +162,9 @@ service cloud.firestore {
     return sev == null || sev in ['low','medium','high'];
   }
 
-  // Validation functions for data integrity
+  // -----------------------
+  // Validation helpers
+  // -----------------------
   function hasValidIncidentLogFields() {
     return request.resource.data.keys().hasAll(['createdBy', 'createdAt', 'childId']);
   }
@@ -163,13 +173,15 @@ service cloud.firestore {
     return request.resource.data.keys().hasAll(['createdBy', 'createdAt', 'childId']);
   }
 
-  // Main collection rules
+  // ============================================================
+  // MAIN COLLECTION RULES
+  // ============================================================
   match /databases/{database}/documents {
     
     
-    // Existing collections (keeping current rules)
-    // TODO: Review and update existing rules as needed
-    
+    // ============================================================
+    // USERS / CHILDREN
+    // ============================================================
     // Users collection - basic user profile access
     match /users/{userId} {
       // Allow users to read any authenticated user's profile (for care team display)
@@ -199,8 +211,9 @@ service cloud.firestore {
 
       // Hard delete not allowed (soft delete handled elsewhere if needed)
       
-      // === CHILD SUBCOLLECTIONS ===
-      // Timeline and incident-related subcollections for legacy data
+      // ------------------------------------------------------------
+      // CHILD SUBCOLLECTIONS (legacy)
+      // ------------------------------------------------------------
       
       // Progress notes subcollection
       match /progressNotes/{noteId} {
@@ -247,9 +260,9 @@ service cloud.firestore {
       }
     }
 
-    // Child access is now handled through the children collection directly
-    
-    // === NEW MESSAGING COLLECTIONS ===
+    // ============================================================
+    // MESSAGING
+    // ============================================================
     
     // Conversations collection with auth/exists/null guards
     match /conversations/{conversationId} {
@@ -373,8 +386,9 @@ service cloud.firestore {
         );
     }
     
-    // Existing collections - incident, daily_logs, etc.
-    // TODO: Add/update rules for existing collections as needed
+    // ============================================================
+    // CORE LOGGING / INCIDENTS
+    // ============================================================
     match /incidents/{incidentId} {
       // CREATE: Owner, Care Partners, Caregivers (NOT Therapists) + Data validation
       allow create: if isAuthenticated() && 
@@ -486,14 +500,16 @@ service cloud.firestore {
       allow update: if canUpdateIncidentLogs() || canSoftDelete();
     }
     
-    // User preferences
+    // ============================================================
+    // USER PREFERENCES
+    // ============================================================
     match /user_preferences/{userId} {
       allow read, write: if isAuthenticated() && request.auth.uid == userId;
     }
     
-    // === MISSING TOP-LEVEL COLLECTIONS ===
-    
-    // Daily care entries
+    // ============================================================
+    // DAILY CARE / HABITS
+    // ============================================================
     match /dailyCare/{careId} {
       // CREATE: Owner, Care Partners, Caregivers (NOT Therapists) - RESTORED with fixed syntax
       allow create: if canCreateIncidentLogs() &&
@@ -621,6 +637,9 @@ service cloud.firestore {
       allow update: if canUpdateIncidentLogs() || canSoftDelete();
     }
     
+    // ============================================================
+    // GLOBAL REFERENCE DATA
+    // ============================================================
     // Habits (global - no child access needed)
     match /habits/{habitId} {
       allow read: if isAuthenticated();
@@ -632,6 +651,9 @@ service cloud.firestore {
       allow read, write: if isAuthenticated();
     }
     
+    // ============================================================
+    // LOGS / EVENTS
+    // ============================================================
     // Logs collection - Unified timeline for each child
     match /logs/{logId} {
       // READ: All roles with child access
@@ -651,7 +673,7 @@ service cloud.firestore {
         !('createdAt' in request.resource.data) &&
         !('updatedAt' in request.resource.data) &&
         // Only allow known fields
-        request.resource.data.keys().hasOnly(['childId', 'type', 'subType', 'noteType', 'note', 'timeStart', 'timeEnd', 'tags', 'severity', 'attachments', 'source', 'createdBy', 'status', 'classified', 'originalType', 'classifiedAt', 'fromPhone', 'sourceMessageId', 'originalNote', 'sourceEdited', 'sourceEditedAt', 'correctionOf', 'audit']);
+        request.resource.data.keys().hasOnly(['childId', 'type', 'subType', 'noteType', 'note', 'timeStart', 'timeEnd', 'tags', 'severity', 'attachments', 'source', 'createdBy', 'status', 'classified', 'originalType', 'classifiedAt', 'fromPhone', 'sourceMessageId', 'originalNote', 'sourceEdited', 'sourceEditedAt', 'correctionOf', 'audit', 'meta']);
       
       // UPDATE: Owner can edit all, others edit own (NOT Therapists) + Immutable field protection
       allow update: if canUpdateIncidentLogs() &&
@@ -660,9 +682,13 @@ service cloud.firestore {
         request.resource.data.createdBy == resource.data.createdBy &&
         request.resource.data.createdAt == resource.data.createdAt &&
         (('source' in resource.data && request.resource.data.source == resource.data.source) || !('source' in resource.data)) &&
-        // Disallow client setting server timestamps
+        // Disallow client setting createdAt
         !('createdAt' in request.resource.data.diff(resource.data).affectedKeys()) &&
-        !('updatedAt' in request.resource.data.diff(resource.data).affectedKeys()) &&
+        // Validate updatedAt if being updated
+        (!('updatedAt' in request.resource.data) || request.resource.data.updatedAt is timestamp) &&
+        // Validate archive metadata if being updated
+        (!('archivedAt' in request.resource.data) || request.resource.data.archivedAt is timestamp) &&
+        (!('archivedBy' in request.resource.data) || request.resource.data.archivedBy is string) &&
         // Validate note length if being updated
         (!('note' in request.resource.data) || 
          (request.resource.data.note is string && request.resource.data.note.size() <= 10000)) &&
@@ -670,10 +696,39 @@ service cloud.firestore {
         (!('timeStart' in request.resource.data) || request.resource.data.timeStart is timestamp) &&
         (!('timeEnd' in request.resource.data) || request.resource.data.timeEnd is timestamp) &&
         // Only allow known fields
-        request.resource.data.keys().hasOnly(['childId', 'type', 'subType', 'noteType', 'note', 'timeStart', 'timeEnd', 'tags', 'severity', 'attachments', 'source', 'createdBy', 'createdAt', 'updatedAt', 'status', 'classified', 'originalType', 'classifiedAt', 'fromPhone', 'sourceMessageId', 'originalNote', 'sourceEdited', 'sourceEditedAt', 'correctionOf', 'audit']);
+        request.resource.data.keys().hasOnly(['childId', 'type', 'subType', 'noteType', 'note', 'timeStart', 'timeEnd', 'tags', 'severity', 'attachments', 'source', 'createdBy', 'createdAt', 'updatedAt', 'status', 'classified', 'originalType', 'classifiedAt', 'fromPhone', 'sourceMessageId', 'originalNote', 'sourceEdited', 'sourceEditedAt', 'correctionOf', 'audit', 'meta', 'archivedAt', 'archivedBy']);
       
       // DELETE: Only soft delete allowed (status == "deleted")
       allow delete: if canSoftDelete();
+    }
+
+    // Events collection - Unified ingestion for logs (web + WhatsApp)
+    match /events/{eventId} {
+      // READ: All roles with child access
+      allow read: if canReadChildData();
+
+      // CREATE: Owner, Care Partners, Caregivers (NOT Therapists)
+      allow create: if isAuthenticated() &&
+        request.resource.data.childId != null &&
+        hasChildAccess(request.auth.uid, request.resource.data.childId) &&
+        !(hasChildRoleForRequest('therapists')) &&
+        request.resource.data.keys().hasAll(['childId', 'text', 'source', 'createdBy', 'createdAt', 'status']) &&
+        request.resource.data.childId is string &&
+        request.resource.data.text is string &&
+        request.resource.data.text.size() > 0 &&
+        request.resource.data.text.size() <= 10000 &&
+        request.resource.data.source is string &&
+        request.resource.data.createdBy == request.auth.uid &&
+        request.resource.data.createdAt is timestamp &&
+        request.resource.data.status is string &&
+        // Allow known fields only
+        request.resource.data.keys().hasOnly([
+          'raw', 'text', 'source', 'childId', 'createdBy', 'createdAt', 'media',
+          'status', 'updatedAt', 'updatedBy', 'classification', 'ingest', 'from', 'fromE164'
+        ]);
+
+      // UPDATE/DELETE: No client updates (server-only)
+      allow update, delete: if false;
     }
     
     // Catch-all removed for security - all collections now have explicit rules
