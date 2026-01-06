@@ -32,7 +32,15 @@ const cors = require("cors")({ origin: true });
  * Shared business logic for updating a child's SMS settings.
  * Keeps the auth/checks in one place so both callable and HTTP handlers stay in sync.
  */
-const updateChildSmsSettingsCore = async ({ uid, childId, smsEnabled }) => {
+const updateChildSmsSettingsCore = async ({
+  uid,
+  childId,
+  smsEnabled,
+  dailyLogReminderEnabled,
+  dailyLogReminderTime,
+  dailyLogReminderTimezone,
+  dailyLogReminderChannel
+}) => {
   const db = admin.firestore();
 
   // Check if user has access to the specified child
@@ -64,6 +72,12 @@ const updateChildSmsSettingsCore = async ({ uid, childId, smsEnabled }) => {
     notifications: {
       ...(currentData.settings?.notifications || {}),
       smsEnabled: smsEnabled,
+      ...(typeof dailyLogReminderEnabled === "boolean"
+        ? { dailyLogReminderEnabled }
+        : {}),
+      ...(dailyLogReminderTime ? { dailyLogReminderTime } : {}),
+      ...(dailyLogReminderTimezone ? { dailyLogReminderTimezone } : {}),
+      ...(dailyLogReminderChannel ? { dailyLogReminderChannel } : {}),
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       updatedBy: uid,
     },
@@ -117,7 +131,14 @@ const updateChildSmsSettings = onCall(
         );
       }
 
-      const { childId, smsEnabled } = request.data;
+      const {
+        childId,
+        smsEnabled,
+        dailyLogReminderEnabled,
+        dailyLogReminderTime,
+        dailyLogReminderTimezone,
+        dailyLogReminderChannel
+      } = request.data;
 
       if (!childId || typeof smsEnabled !== "boolean") {
         throw new HttpsError(
@@ -128,7 +149,15 @@ const updateChildSmsSettings = onCall(
 
       const uid = request.auth.uid;
 
-      return await updateChildSmsSettingsCore({ uid, childId, smsEnabled });
+      return await updateChildSmsSettingsCore({
+        uid,
+        childId,
+        smsEnabled,
+        dailyLogReminderEnabled,
+        dailyLogReminderTime,
+        dailyLogReminderTimezone,
+        dailyLogReminderChannel
+      });
     } catch (error) {
       logger.error("Child SMS settings update failed", {
         error: error.message,
@@ -169,7 +198,14 @@ const updateChildSmsSettingsHttp = onRequest(async (req, res) => {
 
       const decoded = await admin.auth().verifyIdToken(token);
 
-      const { childId, smsEnabled } = req.body || {};
+      const {
+        childId,
+        smsEnabled,
+        dailyLogReminderEnabled,
+        dailyLogReminderTime,
+        dailyLogReminderTimezone,
+        dailyLogReminderChannel
+      } = req.body || {};
       if (!childId || typeof smsEnabled !== "boolean") {
         throw new HttpsError(
           "invalid-argument",
@@ -181,6 +217,10 @@ const updateChildSmsSettingsHttp = onRequest(async (req, res) => {
         uid: decoded.uid,
         childId,
         smsEnabled,
+        dailyLogReminderEnabled,
+        dailyLogReminderTime,
+        dailyLogReminderTimezone,
+        dailyLogReminderChannel
       });
 
       return res.status(200).json(result);

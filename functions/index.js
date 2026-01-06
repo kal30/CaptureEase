@@ -33,6 +33,26 @@ exports.sendMessageHttp =
   require("./messaging/sendMessage").sendMessageHttp;
 
 /**
+ * Messaging – Ingest (legacy webhook)
+ */
+exports.ingestMessage =
+  require("./messaging/ingest").ingestMessage;
+
+/**
+ * Invitations
+ */
+exports.acceptInvitation =
+  require("./invitations").acceptInvitation;
+exports.sendInvitationEmail =
+  require("./email/invitation").sendInvitationEmail;
+
+/**
+ * Notifications – Daily Log Reminders
+ */
+exports.dailyLogReminders =
+  require("./notifications/dailyLogReminders").dailyLogReminders;
+
+/**
  * Ingestion – SMS / WhatsApp
  */
 exports.smsWebhook =
@@ -60,6 +80,8 @@ exports.createLog =
 exports.classifyNoteLog =
   require("./logs/classify").classifyNoteLog;
 exports.tagLogOnCreate =
+  require("./logs/tagLogOnCreate").tagLogOnCreate;
+exports.onLogCreate =
   require("./logs/tagLogOnCreate").tagLogOnCreate;
 
 /**
