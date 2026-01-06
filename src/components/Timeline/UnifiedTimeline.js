@@ -60,6 +60,7 @@ const UnifiedTimeline = ({
   );
   const currentUserId = getAuth().currentUser?.uid;
   const [localEntries, setLocalEntries] = React.useState([]);
+  const [editRequest, setEditRequest] = React.useState({ id: null, focus: null });
 
   React.useEffect(() => {
     setLocalEntries(entries);
@@ -88,6 +89,11 @@ const UnifiedTimeline = ({
         return nextEntry;
       })
     );
+  }, []);
+
+  const handleEditTags = React.useCallback((entry) => {
+    if (!entry?.id) return;
+    setEditRequest({ id: entry.id, focus: 'tags' });
   }, []);
 
   // Note: entries are already pre-filtered; grouping by period is optional and not used here.
@@ -233,7 +239,13 @@ const UnifiedTimeline = ({
               const entryColor = theme.palette.timeline.entries[meta.key] || theme.palette.primary.main;
               const isTeamLog = entry.collection === 'logs' && currentUserId && entry.createdBy && entry.createdBy !== currentUserId;
               const entryActions = entry.collection === 'logs' ? (
-                <LogEntryActions entry={entry} onUpdated={(updates) => handleLogUpdated(entry.id, updates)} />
+                <LogEntryActions
+                  entry={entry}
+                  onUpdated={(updates) => handleLogUpdated(entry.id, updates)}
+                  forceOpen={editRequest.id === entry.id}
+                  focusField={editRequest.focus || 'note'}
+                  onForceOpenHandled={() => setEditRequest({ id: null, focus: null })}
+                />
               ) : null;
 
               return (
@@ -259,7 +271,12 @@ const UnifiedTimeline = ({
                       )}
                       {entryType === ENTRY_TYPE.DAILY_HABIT && (<DailyHabitDetails entry={entry} />)}
                       {/* DAILY_NOTE removed - was only used for legacy progressNotes */}
-                      {entryType === ENTRY_TYPE.JOURNAL && (<JournalDetails entry={entry} />)}
+                      {entryType === ENTRY_TYPE.JOURNAL && (
+                        <JournalDetails
+                          entry={entry}
+                          onEditTags={entry.collection === 'logs' ? handleEditTags : null}
+                        />
+                      )}
                       {entryType === ENTRY_TYPE.THERAPY_NOTE && (<TherapyNoteDetails entry={entry} />)}
 
                 </TimelineItem>

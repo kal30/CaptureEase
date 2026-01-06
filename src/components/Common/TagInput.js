@@ -21,6 +21,7 @@ const TagInput = ({
   suggestions = [],
   label = 'Tags',
   placeholder = 'Add tags',
+  autoFocus = false,
   disabled = false,
   onClick,
   onMouseDown
@@ -72,6 +73,7 @@ const TagInput = ({
           {...params}
           label={label}
           placeholder={placeholder}
+          autoFocus={autoFocus}
           onKeyDown={handleKeyDown}
           onBlur={handleBlur}
         />

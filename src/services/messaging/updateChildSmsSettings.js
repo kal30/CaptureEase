@@ -7,7 +7,7 @@ const ENDPOINT =
  * Call the HTTP function with explicit CORS + auth token.
  * This sidesteps browser preflight/CORS blocks seen with the callable path.
  */
-export const updateChildSmsSettings = async (childId, smsEnabled) => {
+export const updateChildSmsSettings = async (childId, smsEnabled, reminderSettings = {}) => {
   const auth = getAuth();
   const user = auth.currentUser;
 
@@ -23,7 +23,7 @@ export const updateChildSmsSettings = async (childId, smsEnabled) => {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ childId, smsEnabled }),
+    body: JSON.stringify({ childId, smsEnabled, ...reminderSettings }),
   });
 
   const data = await response.json().catch(() => ({}));

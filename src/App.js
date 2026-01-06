@@ -10,6 +10,7 @@ import { ChildProvider } from "./contexts/ChildContext";
 import { RoleProvider } from "./contexts/RoleContext";
 import { ErrorBoundary } from "./contexts/ErrorContext";
 import "./services/messaging/setupTests";
+import AddToHomeScreenPrompt from "./components/Common/AddToHomeScreenPrompt";
 
 const App = () => {
   useEffect(() => {
@@ -30,6 +31,7 @@ const App = () => {
           <Router>
             <ErrorBoundary>
               <Navbar />
+              <AddToHomeScreenPrompt />
               <AppRoutes />
             </ErrorBoundary>
           </Router>

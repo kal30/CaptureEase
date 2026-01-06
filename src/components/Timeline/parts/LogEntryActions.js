@@ -4,7 +4,13 @@ import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { archiveLog, updateLog } from '../../../services/logsService';
 import LogEditDialog from './LogEditDialog';
 
-const LogEntryActions = ({ entry, onUpdated }) => {
+const LogEntryActions = ({
+  entry,
+  onUpdated,
+  forceOpen = false,
+  focusField = 'note',
+  onForceOpenHandled
+}) => {
   const [editOpen, setEditOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -40,6 +46,12 @@ const LogEntryActions = ({ entry, onUpdated }) => {
       setBusy(false);
     }
   };
+
+  React.useEffect(() => {
+    if (!forceOpen) return;
+    setEditOpen(true);
+    onForceOpenHandled?.();
+  }, [forceOpen, onForceOpenHandled]);
 
   return (
     <>
@@ -91,6 +103,7 @@ const LogEntryActions = ({ entry, onUpdated }) => {
         onClose={() => setEditOpen(false)}
         entry={entry}
         onSave={handleSave}
+        focusField={focusField}
       />
 
       <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>

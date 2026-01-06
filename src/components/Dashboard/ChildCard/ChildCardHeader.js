@@ -9,6 +9,7 @@ import MedicalInfoDisplay from './MedicalInfoDisplay';
 import DiagnosisChips from '../DiagnosisChips';
 import useChildCardChips from '../../../hooks/useChildCardChips';
 import { getChildAge, formatAge } from '../../../utils/dateUtils';
+import useIsMobile from '../../../hooks/useIsMobile';
 
 /**
  * ChildCardHeader - Header section of child card with avatar, basic info, and actions
@@ -39,30 +40,31 @@ const ChildCardHeader = memo(({
   sx = {}
 }) => {
   const allChips = useChildCardChips(userRole, completedToday);
+  const isMobile = useIsMobile();
 
   // Calculate display age - prioritizes birthDate calculation, falls back to stored age
   const displayAge = getChildAge(child);
   const ageText = formatAge(displayAge);
 
   return (
-    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, ...sx }}>
+    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: isMobile ? 1.5 : 2, ...sx }}>
       {/* Avatar */}
       <ChildAvatar
         child={child}
         userRole={userRole}
-        size="large"
+        size={isMobile ? 'medium' : 'large'}
         showRole={false} // Don't show role indicator on avatar since we have chip
       />
 
       {/* Child Info and Management Menu Row */}
       <Box sx={{ flex: 1, minWidth: 0 }}>
         {/* Name, Settings, and Notification Row */}
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.25, mb: 0.5 }}>
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.25, mb: isMobile ? 0.25 : 0.5 }}>
           <Typography
             variant="h5"
             sx={{ 
               fontWeight: 700, 
-              fontSize: '1.4rem',
+              fontSize: isMobile ? '1.1rem' : '1.4rem',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
@@ -95,11 +97,11 @@ const ChildCardHeader = memo(({
         </Box>
 
         {/* Age and Role Chip Row */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5, flexWrap: 'wrap' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: isMobile ? 0.25 : 0.5, flexWrap: 'wrap' }}>
           <Typography
             variant="body2"
             color="text.secondary"
-            sx={{ fontSize: '1.2rem' }}
+            sx={{ fontSize: isMobile ? '0.95rem' : '1.2rem' }}
           >
             Age {ageText}
           </Typography>

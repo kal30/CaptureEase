@@ -182,6 +182,7 @@ const ChildSmsSettings = ({ childDoc, onSettingsUpdate = () => {} }) => {
             </Typography>
           </Alert>
         )}
+
       </CardContent>
 
       {/* Snackbar for notifications */}

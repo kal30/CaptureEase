@@ -10,6 +10,7 @@ import TimelineWidgetContent from './TimelineWidgetContent';
 import useTimelineWidgetSummary from './useTimelineWidgetSummary';
 import ShareLogsDialog from '../../Common/ShareLogsDialog';
 import brandLogo from '../../../assets/image/logo/blueBackgroundLogo.png';
+import useIsMobile from '../../../hooks/useIsMobile';
 
 /**
  * TimelineWidget - Self-contained timeline component with progress visualization and unified daily log
@@ -38,6 +39,7 @@ const TimelineWidget = ({
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [timelineFilters, setTimelineFilters] = useState({});
   const { setCurrentChildId } = useChildContext();
+  const isMobile = useIsMobile();
 
   const childSpecificEntries = entries.filter(
     (entry) => entry.childId === child?.id || entry.child?.id === child?.id
@@ -58,14 +60,14 @@ const TimelineWidget = ({
   };
 
   const headerStyles = {
-    p: { xs: 1.5, md: 2 },
+    p: { xs: isMobile ? 1 : 1.5, md: 2 },
     bgcolor: 'timeline.background',
     borderBottom: expanded ? '1px solid' : 'none',
     borderBottomColor: 'timeline.border'
   };
 
   const contentStyles = {
-    p: { xs: 1.5, md: 2 }
+    p: { xs: isMobile ? 1 : 1.5, md: 2 }
   };
 
   const handleViewFullTimeline = () => {
@@ -130,6 +132,10 @@ const TimelineWidget = ({
               onFiltersChange={setTimelineFilters}
               onViewFullTimeline={handleViewFullTimeline}
               onShareRecap={() => setShowShareRecap(true)}
+              onAddLog={() => {
+                setCurrentChildId(child?.id);
+                setShowQuickNote(true);
+              }}
               patternSummary={summary.patternSummary}
               renderMiniCalendar={(props) => (
                 <MiniCalendar

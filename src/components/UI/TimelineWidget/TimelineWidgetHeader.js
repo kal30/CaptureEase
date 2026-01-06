@@ -7,6 +7,7 @@ import {
 } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
 import { TimelineFilters } from '../../Timeline';
+import useIsMobile from '../../../hooks/useIsMobile';
 
 const TimelineWidgetHeader = ({
   loggedToday,
@@ -26,6 +27,7 @@ const TimelineWidgetHeader = ({
 }) => {
   const theme = useTheme();
   const statusColor = loggedToday ? theme.palette.success.main : theme.palette.warning.main;
+  const isMobile = useIsMobile();
 
   return (
     <Box
@@ -56,7 +58,8 @@ const TimelineWidgetHeader = ({
               alignItems: { xs: 'flex-start', sm: 'center' },
               justifyContent: 'space-between',
               gap: 2,
-              flexWrap: 'wrap'
+              flexWrap: 'wrap',
+              flexDirection: isMobile ? 'column' : 'row'
             }}
           >
             <Box>
@@ -96,21 +99,25 @@ const TimelineWidgetHeader = ({
                 </Box>
               </Box>
             </Box>
-            <Button
-              size="small"
-              variant="contained"
-              onClick={(event) => {
-                event.stopPropagation();
-                onAddLog();
-              }}
-              sx={{
-                textTransform: 'none',
-                alignSelf: { xs: 'stretch', sm: 'center' },
-                px: 2
-              }}
-            >
-              {loggedToday ? 'Add another log' : 'Add today\'s log'}
-            </Button>
+            {!expanded && (
+              <Button
+                size="small"
+                variant="contained"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onAddLog();
+                }}
+                sx={{
+                  textTransform: 'none',
+                  alignSelf: { xs: 'stretch', sm: 'center' },
+                  px: 2,
+                  minHeight: isMobile ? 36 : 40,
+                  fontSize: isMobile ? '0.85rem' : '0.9rem'
+                }}
+              >
+                {loggedToday ? 'Add another log' : 'Add today\'s log'}
+              </Button>
+            )}
           </Box>
 
           <Box
@@ -119,7 +126,8 @@ const TimelineWidgetHeader = ({
               alignItems: { xs: 'flex-start', sm: 'center' },
               justifyContent: 'space-between',
               gap: 1.5,
-              flexWrap: 'wrap'
+              flexWrap: 'wrap',
+              flexDirection: isMobile ? 'column' : 'row'
             }}
           >
             <Typography variant="caption" color="text.secondary">
@@ -130,14 +138,33 @@ const TimelineWidgetHeader = ({
                 label={`${daysLoggedThisWeek} day${daysLoggedThisWeek === 1 ? '' : 's'} logged this week`}
                 size="small"
                 variant="outlined"
+                sx={{ fontSize: '0.7rem' }}
               />
               <Chip
                 label={`Important this week: ${importantCountThisWeek}`}
                 size="small"
                 variant="outlined"
+                sx={{ fontSize: '0.7rem' }}
               />
             </Box>
           </Box>
+          {patternSummary && (
+            <Box
+              sx={{
+                mt: 0.75,
+                px: 1,
+                py: 0.6,
+                borderRadius: 0.75,
+                bgcolor: 'timeline.background',
+                borderLeft: '3px solid',
+                borderLeftColor: 'primary.light'
+              }}
+            >
+              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                {patternSummary}
+              </Typography>
+            </Box>
+          )}
 
 
           {showUnifiedLog && expanded && (

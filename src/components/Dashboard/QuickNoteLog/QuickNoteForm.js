@@ -4,6 +4,7 @@ import { Star } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import TagInput from '../../Common/TagInput';
 import useTagSuggestions from '../../../hooks/useTagSuggestions';
+import useIsMobile from '../../../hooks/useIsMobile';
 
 const QuickNoteForm = ({
   note,
@@ -18,6 +19,7 @@ const QuickNoteForm = ({
   stopPropagation
 }) => {
   const theme = useTheme();
+  const isMobile = useIsMobile();
   const suggestions = useTagSuggestions(childId);
 
   return (
@@ -26,7 +28,7 @@ const QuickNoteForm = ({
         autoFocus
         placeholder="What happened? (e.g., 'Had lunch with applesauce', 'Took a 2-hour nap', 'Fell at playground but okay')"
         multiline
-        rows={4}
+        rows={isMobile ? 3 : 4}
         fullWidth
         variant="outlined"
         value={note}
@@ -78,21 +80,21 @@ const QuickNoteForm = ({
           </Box>
         }
         sx={{
-          mt: 1.25,
-          px: 1.25,
-          py: 0.5,
+          mt: isMobile ? 1 : 1.25,
+          px: isMobile ? 1 : 1.25,
+          py: isMobile ? 0.35 : 0.5,
           borderRadius: 1.5,
           bgcolor: isImportant
             ? theme.palette.quickNote.importantBgActive
             : theme.palette.quickNote.importantBg,
           color: theme.palette.quickNote.importantText,
           '& .MuiFormControlLabel-label': {
-            fontSize: '0.85rem'
+            fontSize: isMobile ? '0.8rem' : '0.85rem'
           }
         }}
       />
 
-      <Box sx={{ mt: 1.5 }}>
+      <Box sx={{ mt: isMobile ? 1.25 : 1.5 }}>
         <TagInput
           value={tags}
           onChange={onTagsChange}

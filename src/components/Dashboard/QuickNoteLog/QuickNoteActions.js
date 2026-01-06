@@ -2,18 +2,25 @@ import React from 'react';
 import { Box, Button, CircularProgress } from '@mui/material';
 import { NoteAdd } from '@mui/icons-material';
 
-const QuickNoteActions = ({ onDetailedLog, onCancel, onSubmit, loading, canSubmit }) => (
+const QuickNoteActions = ({ onDetailedLog, onCancel, onSubmit, loading, canSubmit, stacked = false }) => (
   <>
     <Button
       size="small"
       variant="text"
       onClick={onDetailedLog}
-      sx={{ textTransform: 'none' }}
+      sx={{ textTransform: 'none', alignSelf: stacked ? 'flex-start' : 'center' }}
     >
       Detailed log →
     </Button>
-    <Box sx={{ display: 'flex', gap: 1 }}>
-      <Button onClick={onCancel} disabled={loading} color="secondary">
+    <Box
+      sx={{
+        display: 'flex',
+        gap: 1,
+        flexDirection: stacked ? 'column-reverse' : 'row',
+        width: stacked ? '100%' : 'auto'
+      }}
+    >
+      <Button onClick={onCancel} disabled={loading} color="secondary" sx={{ width: stacked ? '100%' : 'auto' }}>
         Cancel
       </Button>
       <Button
@@ -25,7 +32,8 @@ const QuickNoteActions = ({ onDetailedLog, onCancel, onSubmit, loading, canSubmi
           backgroundColor: '#6366F1',
           '&:hover': {
             backgroundColor: '#4F46E5'
-          }
+          },
+          width: stacked ? '100%' : 'auto'
         }}
       >
         {loading ? 'Saving...' : 'Log Note'}

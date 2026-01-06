@@ -6,6 +6,7 @@ import QuickNoteLog from '../QuickNoteLog';
 import QuickNoteIcon from '../QuickNoteLog/QuickNoteIcon';
 import SmsToggle from './SmsToggle';
 import { Search } from '@mui/icons-material';
+import useIsMobile from '../../../hooks/useIsMobile';
 
 /**
  * ChildCardActions - Action buttons for quick log/search/messaging
@@ -27,13 +28,16 @@ const ChildCardActions = ({
   const { USER_ROLES } = useRole();
   const messagesDisplay = getMessagesDisplayInfo();
   const [showQuickNote, setShowQuickNote] = useState(false);
+  const isMobile = useIsMobile();
+  const actionSize = isMobile ? 34 : 40;
+  const actionFontSize = isMobile ? '0.95rem' : '1.1rem';
 
   return (
     <Box 
       sx={{ 
         display: 'flex',
         alignItems: 'center',
-        gap: 2,
+        gap: isMobile ? 1 : 2,
         flexWrap: { xs: 'wrap', md: 'nowrap' },
         ...sx 
       }}
@@ -43,7 +47,7 @@ const ChildCardActions = ({
         sx={{
           display: 'flex',
           alignItems: 'center',
-          gap: 1.5,
+          gap: isMobile ? 0.75 : 1.5,
           alignSelf: 'stretch',
           pt: { xs: 0, md: 0.5 },
           width: { xs: '100%', md: 'auto' },
@@ -55,7 +59,7 @@ const ChildCardActions = ({
         <SmsToggle child={child} />
 
         {/* Quick Note Icon Button - Available for all roles */}
-        <QuickNoteIcon onClick={() => setShowQuickNote(true)} />
+        <QuickNoteIcon onClick={() => setShowQuickNote(true)} size={actionSize} fontSize={actionFontSize} />
 
         {/* Ask Question Button */}
         <Tooltip title="Ask a question about logs" arrow>
@@ -67,11 +71,11 @@ const ChildCardActions = ({
               }
             }}
             sx={{
-              width: 40,
-              height: 40,
+              width: actionSize,
+              height: actionSize,
               backgroundColor: '#0EA5E9',
               color: 'white',
-              fontSize: '1.1rem',
+              fontSize: actionFontSize,
               border: '2px solid #E0F2FE',
               '&:hover': {
                 backgroundColor: '#0284C7',
@@ -94,11 +98,11 @@ const ChildCardActions = ({
               }
             }}
             sx={{
-              width: 40,
-              height: 40,
+              width: actionSize,
+              height: actionSize,
               backgroundColor: '#6366F1', // Indigo for messages
               color: 'white',
-              fontSize: '1.1rem',
+              fontSize: actionFontSize,
               border: '2px solid #E0E7FF',
               '&:hover': {
                 backgroundColor: '#4F46E5',

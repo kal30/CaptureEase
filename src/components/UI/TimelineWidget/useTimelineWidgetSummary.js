@@ -71,8 +71,8 @@ const useTimelineWidgetSummary = (entries = []) =>
       const topPeriod = Array.from(periodCounts.entries())
         .sort((a, b) => b[1] - a[1])[0]?.[0];
       patternSummary = topPeriod
-        ? `Pattern: #${topTag} mostly ${topPeriod}`
-        : `Pattern: #${topTag} most common`;
+        ? `Most #${topTag} logs happen in the ${topPeriod}`
+        : `#${topTag} shows up most often this week`;
     }
 
     return {

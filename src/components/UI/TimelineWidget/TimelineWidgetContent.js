@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Box, Button, Chip, List, ListItem, ListItemAvatar, ListItemText, Avatar, Typography } from '@mui/material';
 import { Timeline as TimelineIcon, CalendarMonth as CalendarIcon, Share as ShareIcon } from '@mui/icons-material';
 import { UnifiedTimeline } from '../../Timeline';
+import useIsMobile from '../../../hooks/useIsMobile';
 
 const TimelineWidgetContent = ({
   variant,
@@ -15,8 +16,15 @@ const TimelineWidgetContent = ({
   onViewFullTimeline,
   onShareRecap,
   renderMiniCalendar,
+  onAddLog,
   patternSummary
 }) => {
+  const isMobile = useIsMobile();
+  const [showCalendar, setShowCalendar] = useState(!isMobile);
+
+  useEffect(() => {
+    setShowCalendar(!isMobile);
+  }, [isMobile]);
   const renderRecentEntries = () => {
     if (!timeline.recentEntries.length) {
       return (
@@ -76,20 +84,25 @@ const TimelineWidgetContent = ({
 
   const renderMetrics = () => (
     <Box className="timeline-widget__metrics" sx={{ mb: 2 }}>
-      <Box sx={{ display: 'flex', gap: 1, mb: 1, flexWrap: 'wrap', alignItems: 'center' }}>
-        <Chip
-          label={`${daysLoggedThisWeek} day${daysLoggedThisWeek === 1 ? '' : 's'} logged this week`}
-          size="small"
-          variant="outlined"
-        />
-        {patternSummary && (
+      <Box
+        sx={{
+          display: 'flex',
+          gap: 1,
+          mb: 1,
+          flexWrap: 'wrap',
+          flexDirection: isMobile ? 'column' : 'row',
+          alignItems: isMobile ? 'flex-start' : 'center'
+        }}
+      >
+        {!isMobile && patternSummary && (
           <Chip
             label={patternSummary}
             size="small"
             variant="filled"
             sx={{
               bgcolor: 'timeline.background',
-              color: 'text.secondary'
+              color: 'text.secondary',
+              fontSize: '0.7rem'
             }}
           />
         )}
@@ -147,12 +160,46 @@ const TimelineWidgetContent = ({
               flexShrink: 0,
               width: { xs: '100%', md: 'auto' },
               display: 'flex',
-              justifyContent: { xs: 'center', md: 'flex-start' },
-              transform: { xs: 'scale(0.95)', sm: 'none' },
-              transformOrigin: { xs: 'top left', sm: 'center' }
+              flexDirection: 'column',
+              alignItems: { xs: 'stretch', md: 'flex-start' }
             }}
           >
-            {renderMiniCalendar({})}
+            {!isMobile && (
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 0.75 }}>
+                <Button
+                  size="small"
+                  variant="text"
+                  onClick={onAddLog}
+                  sx={{ textTransform: 'none', fontSize: '0.75rem' }}
+                >
+                  Add log
+                </Button>
+              </Box>
+            )}
+            {isMobile && (
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 0.75 }}>
+                <Button
+                  size="small"
+                  variant="text"
+                  onClick={() => setShowCalendar((prev) => !prev)}
+                  sx={{ textTransform: 'none', fontSize: '0.75rem' }}
+                >
+                  {showCalendar ? 'Hide calendar' : 'Show calendar'}
+                </Button>
+              </Box>
+            )}
+            {(!isMobile || showCalendar) && (
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: { xs: 'center', md: 'flex-start' },
+                  transform: { xs: 'scale(0.92)', sm: 'none' },
+                  transformOrigin: { xs: 'top left', sm: 'center' }
+                }}
+              >
+                {renderMiniCalendar({})}
+              </Box>
+            )}
           </Box>
 
           <Box
@@ -177,13 +224,35 @@ const TimelineWidgetContent = ({
       )}
 
       {timeline.hasActivity && (
-        <Box sx={{ display: 'flex', gap: 1, mt: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            gap: 1,
+            mt: 2,
+            justifyContent: 'center',
+            flexWrap: 'wrap',
+            flexDirection: isMobile ? 'column' : 'row',
+            ...(isMobile
+              ? {
+                  position: 'sticky',
+                  bottom: 0,
+                  pb: 1.5,
+                  pt: 1,
+                  px: 1,
+                  bgcolor: 'background.paper',
+                  borderTop: '1px solid',
+                  borderColor: 'divider',
+                  zIndex: 2
+                }
+              : {})
+          }}
+        >
           <Button
             size="small"
             variant="outlined"
             startIcon={<CalendarIcon />}
             onClick={onViewFullTimeline}
-            sx={{ fontSize: '0.75rem' }}
+            sx={{ fontSize: '0.75rem', width: isMobile ? '100%' : 'auto' }}
           >
             View Full Timeline
           </Button>
@@ -192,7 +261,7 @@ const TimelineWidgetContent = ({
             variant="outlined"
             startIcon={<ShareIcon />}
             onClick={onShareRecap}
-            sx={{ fontSize: '0.75rem' }}
+            sx={{ fontSize: '0.75rem', width: isMobile ? '100%' : 'auto' }}
           >
             Share Recap
           </Button>

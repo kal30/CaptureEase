@@ -12,7 +12,7 @@ import {
 } from '@mui/material';
 import TagInput from '../../Common/TagInput';
 
-const LogEditDialog = ({ open, onClose, entry, onSave }) => {
+const LogEditDialog = ({ open, onClose, entry, onSave, focusField = 'note' }) => {
   const [note, setNote] = useState('');
   const [tags, setTags] = useState([]);
   const [isImportant, setIsImportant] = useState(false);
@@ -38,6 +38,7 @@ const LogEditDialog = ({ open, onClose, entry, onSave }) => {
       <DialogContent>
         <TextField
           label="Note"
+          autoFocus={focusField === 'note'}
           value={note}
           onChange={(event) => setNote(event.target.value)}
           fullWidth
@@ -51,6 +52,7 @@ const LogEditDialog = ({ open, onClose, entry, onSave }) => {
             onChange={setTags}
             label="Tags"
             placeholder="Add tags"
+            autoFocus={focusField === 'tags'}
           />
         </Box>
         <FormControlLabel

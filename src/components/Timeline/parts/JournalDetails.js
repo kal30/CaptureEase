@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Chip, Typography } from '@mui/material';
 
-const JournalDetails = ({ entry }) => {
+const JournalDetails = ({ entry, onEditTags }) => {
   // Don't render if entry has no meaningful content
   const hasContent = entry.text || (entry.tags && entry.tags.length > 0) || entry.mediaURL || entry.voiceMemoURL;
   
@@ -17,7 +17,11 @@ const JournalDetails = ({ entry }) => {
         </Typography>
       )}
       {entry.tags && entry.tags.length > 0 && (
-        <Box sx={{ mt: 0.5, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+        <Box
+          sx={{ mt: 0.5, display: 'flex', flexWrap: 'wrap', gap: 0.5, cursor: onEditTags ? 'pointer' : 'default' }}
+          onClick={() => onEditTags?.(entry)}
+          title={onEditTags ? 'Edit tags' : undefined}
+        >
           {entry.tags.map((tag) => (
             <Chip
               key={tag}
