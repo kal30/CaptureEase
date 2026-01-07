@@ -1,6 +1,5 @@
-import React, { memo } from 'react';
-import { Box, Chip } from '@mui/material';
-import Typography from '@mui/material/Typography';
+import React, { memo, useState } from 'react';
+import { Box, Chip, Typography } from '@mui/material';
 import ChildAvatar from '../../UI/ChildAvatar';
 import ChildNotificationBadge from '../../UI/ChildNotificationBadge';
 import CareTeamDisplay from '../../UI/CareTeamDisplay';
@@ -41,10 +40,18 @@ const ChildCardHeader = memo(({
 }) => {
   const allChips = useChildCardChips(userRole, completedToday);
   const isMobile = useIsMobile();
+  const [showHealthDetails, setShowHealthDetails] = useState(false);
 
   // Calculate display age - prioritizes birthDate calculation, falls back to stored age
   const displayAge = getChildAge(child);
   const ageText = formatAge(displayAge);
+  const concerns = child.concerns || child.conditions || [];
+  const allergies = child.medicalProfile?.foodAllergies || [];
+  const primaryConcern = concerns[0];
+  const primaryAllergy = allergies[0];
+  const remainingCount =
+    Math.max(concerns.length - 1, 0) + Math.max(allergies.length - 1, 0);
+  const hasHealthSummary = concerns.length > 0 || allergies.length > 0;
 
   return (
     <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: isMobile ? 1.5 : 2, ...sx }}>
@@ -131,19 +138,51 @@ const ChildCardHeader = memo(({
           ))}
         </Box>
 
-        {/* Medical Info Section - Below Age */}
-        {/* Diagnosis and Concerns */}
-        {(child.concerns || child.conditions) && (
-          <DiagnosisChips concerns={child.concerns || child.conditions} />
+        {/* Medical Info Summary */}
+        {hasHealthSummary && (
+          <Box sx={{ mt: 0.5, display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+            <Typography
+              variant="caption"
+              sx={{
+                fontSize: isMobile ? '0.75rem' : '0.8rem',
+                color: 'text.secondary'
+              }}
+            >
+              {primaryConcern && `Issues: ${primaryConcern.label || primaryConcern}`}
+              {primaryConcern && primaryAllergy && ' | '}
+              {primaryAllergy && `Allergies: ${primaryAllergy}`}
+            </Typography>
+            {remainingCount > 0 && (
+              <Typography
+                variant="caption"
+                onClick={() => setShowHealthDetails((prev) => !prev)}
+                sx={{
+                  fontSize: isMobile ? '0.75rem' : '0.8rem',
+                  color: 'primary.main',
+                  cursor: 'pointer',
+                  fontWeight: 600
+                }}
+              >
+                +{remainingCount} more
+              </Typography>
+            )}
+          </Box>
         )}
-        
-        {/* Allergies and Medical Details */}
-        {(child.diagnosis || 
-          (child.medicalProfile?.foodAllergies && child.medicalProfile.foodAllergies.length > 0)) && (
-          <MedicalInfoDisplay 
-            diagnosis={child.diagnosis}
-            allergies={child.medicalProfile?.foodAllergies}
-          />
+
+        {showHealthDetails && (
+          <>
+            {(child.concerns || child.conditions) && (
+              <DiagnosisChips concerns={child.concerns || child.conditions} />
+            )}
+            {(child.diagnosis ||
+              (child.medicalProfile?.foodAllergies &&
+                child.medicalProfile.foodAllergies.length > 0)) && (
+              <MedicalInfoDisplay
+                diagnosis={child.diagnosis}
+                allergies={child.medicalProfile?.foodAllergies}
+              />
+            )}
+          </>
         )}
 
         {/* Care Team */}

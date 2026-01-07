@@ -31,6 +31,8 @@ const ChildCardActions = ({
   const isMobile = useIsMobile();
   const actionSize = isMobile ? 34 : 40;
   const actionFontSize = isMobile ? '0.95rem' : '1.1rem';
+  const quickNoteSize = actionSize;
+  const quickNoteFontSize = actionFontSize;
 
   return (
     <Box 
@@ -59,7 +61,12 @@ const ChildCardActions = ({
         <SmsToggle child={child} />
 
         {/* Quick Note Icon Button - Available for all roles */}
-        <QuickNoteIcon onClick={() => setShowQuickNote(true)} size={actionSize} fontSize={actionFontSize} />
+        <QuickNoteIcon
+          onClick={() => setShowQuickNote(true)}
+          size={quickNoteSize}
+          fontSize={quickNoteFontSize}
+          showLabel={false}
+        />
 
         {/* Ask Question Button */}
         <Tooltip title="Ask a question about logs" arrow>
