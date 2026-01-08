@@ -57,6 +57,7 @@ const ChildCard = ({
             userRole={userRole}
             canAddData={canAddData}
             completedToday={completedToday}
+            isExpanded={isExpanded}
             onEditChild={onEditChild}
             onDeleteChild={onDeleteChild}
             onInviteTeamMember={onInviteTeamMember}

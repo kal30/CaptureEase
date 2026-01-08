@@ -31,6 +31,7 @@ const ChildCardHeader = memo(({
   userRole,
   canAddData,
   completedToday,
+  isExpanded,
   onEditChild,
   onDeleteChild,
   onInviteTeamMember,
@@ -40,6 +41,7 @@ const ChildCardHeader = memo(({
 }) => {
   const allChips = useChildCardChips(userRole, completedToday);
   const isMobile = useIsMobile();
+  const showDetails = !isMobile || isExpanded;
   const [showHealthDetails, setShowHealthDetails] = useState(false);
 
   // Calculate display age - prioritizes birthDate calculation, falls back to stored age
@@ -169,7 +171,7 @@ const ChildCardHeader = memo(({
           </Box>
         )}
 
-        {showHealthDetails && (
+        {showDetails && showHealthDetails && (
           <>
             {(child.concerns || child.conditions) && (
               <DiagnosisChips concerns={child.concerns || child.conditions} />
@@ -186,14 +188,18 @@ const ChildCardHeader = memo(({
         )}
 
         {/* Care Team */}
-        {child.users && (child.users.care_partners?.length > 0 || child.users.caregivers?.length > 0 || child.users.therapists?.length > 0) && (
-          <CareTeamDisplay
-            child={child}
-            userRole={userRole}
-            onInviteTeamMember={onInviteTeamMember}
-            maxVisible={4}
-          />
-        )}
+        {showDetails &&
+          child.users &&
+          (child.users.care_partners?.length > 0 ||
+            child.users.caregivers?.length > 0 ||
+            child.users.therapists?.length > 0) && (
+            <CareTeamDisplay
+              child={child}
+              userRole={userRole}
+              onInviteTeamMember={onInviteTeamMember}
+              maxVisible={4}
+            />
+          )}
       </Box>
 
     </Box>
