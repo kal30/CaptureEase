@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Box } from '@mui/material';
 import { childCardHeaderStyles } from '../../assets/theme/childCardTheme';
 import GroupStyledCard from '../UI/GroupStyledCard';
@@ -37,6 +37,28 @@ const ChildCard = ({
     handleFollowUpModalClose
   } = useChildCardLogic(child, recentEntries, incidents);
 
+  const [optimisticEntries, setOptimisticEntries] = useState([]);
+
+  useEffect(() => {
+    if (!optimisticEntries.length) return;
+    const existingIds = new Set((recentEntries || []).map((entry) => entry.id));
+    setOptimisticEntries((prev) => prev.filter((entry) => !existingIds.has(entry.id)));
+  }, [recentEntries]);
+
+  const mergedEntries = useMemo(() => {
+    const combined = [...optimisticEntries, ...(recentEntries || [])];
+    return combined.sort((a, b) => {
+      const bDate = b.timestamp?.toDate?.() || new Date(b.timestamp);
+      const aDate = a.timestamp?.toDate?.() || new Date(a.timestamp);
+      return bDate - aDate;
+    });
+  }, [optimisticEntries, recentEntries]);
+
+  const handleLogCreated = (entry) => {
+    if (!entry?.id) return;
+    setOptimisticEntries((prev) => [entry, ...prev.filter((item) => item.id !== entry.id)]);
+  };
+
   return (
     <>
       <GroupStyledCard
@@ -73,6 +95,7 @@ const ChildCard = ({
             userRole={userRole}
             onMessages={onMessages}
             onAskQuestion={onAskQuestion}
+            onLogCreated={handleLogCreated}
             sx={{
               alignSelf: 'stretch',
               justifyContent: { xs: 'center', md: 'flex-end' },
@@ -86,9 +109,10 @@ const ChildCard = ({
           child={child}
           groupType={groupType}
           isExpanded={isExpanded}
-          recentEntries={recentEntries}
+          recentEntries={mergedEntries}
           incidents={incidents}
           status={status}
+          onLogCreated={handleLogCreated}
         />
       </GroupStyledCard>
 

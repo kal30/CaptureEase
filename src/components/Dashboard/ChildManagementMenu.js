@@ -11,9 +11,13 @@ import {
   Edit as EditIcon,
   Settings as SettingsIcon,
   Delete as DeleteIcon,
+  Medication as MedicationIcon,
 } from '@mui/icons-material';
 import { alpha, useTheme } from '@mui/material/styles';
 import { USER_ROLES } from '../../constants/roles';
+import MedicationManagementDialog from './Medication/MedicationManagementDialog';
+import MedicationDrawer from './Medication/MedicationDrawer';
+import useIsMobile from '../../hooks/useIsMobile';
 
 /**
  * ChildManagementMenu - Extracted settings menu component for child management
@@ -27,7 +31,9 @@ const ChildManagementMenu = ({
   userRole,
 }) => {
   const [menuAnchor, setMenuAnchor] = useState(null);
+  const [medicationDialogOpen, setMedicationDialogOpen] = useState(false);
   const theme = useTheme();
+  const isMobile = useIsMobile();
 
   // IRON-CLAD: Only Care Owner can manage children
   const canManage = userRole === USER_ROLES.CARE_OWNER;
@@ -59,6 +65,12 @@ const ChildManagementMenu = ({
   const handleDeleteChild = (e) => {
     e.stopPropagation();
     onDeleteChild?.(child);
+    handleMenuClose();
+  };
+
+  const handleManageMedications = (e) => {
+    e.stopPropagation();
+    setMedicationDialogOpen(true);
     handleMenuClose();
   };
 
@@ -113,7 +125,14 @@ const ChildManagementMenu = ({
           </ListItemIcon>
           <ListItemText>Edit Child Info</ListItemText>
         </MenuItem>
-        
+
+        <MenuItem onClick={handleManageMedications}>
+          <ListItemIcon>
+            <MedicationIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Manage Medications</ListItemText>
+        </MenuItem>
+
         {canInvite && (
           <MenuItem onClick={handleInviteTeamMember}>
             <ListItemIcon>
@@ -122,8 +141,8 @@ const ChildManagementMenu = ({
             <ListItemText>Add Care Team</ListItemText>
           </MenuItem>
         )}
-        
-        <MenuItem 
+
+        <MenuItem
           onClick={handleDeleteChild}
           sx={{ color: 'error.main' }}
         >
@@ -133,6 +152,21 @@ const ChildManagementMenu = ({
           <ListItemText>Delete Child</ListItemText>
         </MenuItem>
       </Menu>
+
+      {/* Medication Management - Drawer on mobile, Dialog on desktop */}
+      {isMobile ? (
+        <MedicationDrawer
+          open={medicationDialogOpen}
+          onClose={() => setMedicationDialogOpen(false)}
+          child={child}
+        />
+      ) : (
+        <MedicationManagementDialog
+          open={medicationDialogOpen}
+          onClose={() => setMedicationDialogOpen(false)}
+          child={child}
+        />
+      )}
     </>
   );
 };

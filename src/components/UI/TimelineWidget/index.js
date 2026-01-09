@@ -30,7 +30,8 @@ const TimelineWidget = ({
   dailyCareStatus = {},
   defaultExpanded = false,
   variant = 'full',
-  showUnifiedLog = true
+  showUnifiedLog = true,
+  onLogCreated
 }) => {
   const [expanded, setExpanded] = useState(defaultExpanded);
   const [showTimelineModal, setShowTimelineModal] = useState(false);
@@ -164,9 +165,10 @@ const TimelineWidget = ({
         childName={child?.name}
         open={showQuickNote}
         onClose={() => setShowQuickNote(false)}
-        onLogged={() => {
+        onLogged={(entry) => {
           setSelectedDate(new Date());
           setExpanded(true);
+          onLogCreated?.(entry);
         }}
       />
 

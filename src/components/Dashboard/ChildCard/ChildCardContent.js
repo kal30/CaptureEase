@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Collapse, Typography, FormControlLabel, Switch, TextField, Alert, CircularProgress } from '@mui/material';
+import { Box, Collapse, Typography, FormControlLabel, Switch, TextField, Alert, CircularProgress, IconButton } from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { alpha, useTheme } from '@mui/material/styles';
 import { TimelineWidget } from '../../UI';
 import useIsMobile from '../../../hooks/useIsMobile';
 import { usePhoneStatus } from '../../../hooks/usePhoneStatus';
 import { updateChildSmsSettings } from '../../../services/messaging/updateChildSmsSettings';
+import TodaysMedications from '../Medication/TodaysMedications';
 
 /**
  * ChildCardContent - Expandable content section of child card
@@ -26,6 +28,7 @@ const ChildCardContent = ({
   recentEntries = [],
   incidents = [],
   status = {},
+  onLogCreated,
   sx = {}
 }) => {
   const theme = useTheme();
@@ -39,6 +42,7 @@ const ChildCardContent = ({
     reminderSettings.dailyLogReminderTime || "19:00"
   );
   const [reminderLoading, setReminderLoading] = useState(false);
+  const [showReminderDetails, setShowReminderDetails] = useState(false);
 
   useEffect(() => {
     setDailyReminderEnabled(reminderSettings.dailyLogReminderEnabled === true);
@@ -89,6 +93,9 @@ const ChildCardContent = ({
             borderTop: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
           }}
         >
+          {/* Today's Medications - Quick action to mark medications as taken */}
+          <TodaysMedications child={child} onLogCreated={onLogCreated} />
+
           {/* Timeline Widget - Enhanced Recent Activity with Progress Visualization */}
           <TimelineWidget
             child={child}
@@ -98,6 +105,7 @@ const ChildCardContent = ({
             defaultExpanded={false}
             variant="full"
             showUnifiedLog={true}
+            onLogCreated={onLogCreated}
           />
 
           <Box
@@ -107,7 +115,7 @@ const ChildCardContent = ({
               borderRadius: 1,
               border: '1px solid',
               borderColor: 'divider',
-              bgcolor: 'background.paper'
+              bgcolor: 'action.hover'
             }}
             onClick={(event) => event.stopPropagation()}
             onMouseDown={(event) => event.stopPropagation()}
@@ -122,13 +130,25 @@ const ChildCardContent = ({
                 flexWrap: 'wrap'
               }}
             >
-              <Box sx={{ minWidth: 180 }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                  Daily reminder
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  SMS + email if no log in 24 hours.
-                </Typography>
+              <Box sx={{ minWidth: 180, display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                <IconButton
+                  size="small"
+                  onClick={() => setShowReminderDetails((prev) => !prev)}
+                  sx={{
+                    transform: showReminderDetails ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.2s ease'
+                  }}
+                >
+                  <ExpandMoreIcon fontSize="small" />
+                </IconButton>
+                <Box>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                    Daily reminder
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    SMS + email if no log in 24 hours.
+                  </Typography>
+                </Box>
               </Box>
               <FormControlLabel
                 control={
@@ -161,25 +181,27 @@ const ChildCardContent = ({
               />
             </Box>
 
-            {!phoneVerified && (
-              <Alert severity="info" sx={{ mt: 1.25 }}>
-                Verify your phone in Settings to enable reminders.
-              </Alert>
-            )}
-            {phoneVerified && !childSmsEnabled && (
-              <Alert
-                severity="info"
-                sx={{
-                  mt: 1.25,
-                  bgcolor: 'transparent',
-                  color: 'warning.main',
-                  '& .MuiAlert-icon': { color: 'warning.main' },
-                  '& .MuiAlert-message': { color: 'warning.main' }
-                }}
-              >
-                Enable SMS logging for this child to turn on reminders.
-              </Alert>
-            )}
+            <Collapse in={showReminderDetails}>
+              {!phoneVerified && (
+                <Alert severity="info" sx={{ mt: 1.25 }}>
+                  Verify your phone in Settings to enable reminders.
+                </Alert>
+              )}
+              {phoneVerified && !childSmsEnabled && (
+                <Alert
+                  severity="info"
+                  sx={{
+                    mt: 1.25,
+                    bgcolor: 'transparent',
+                    color: 'warning.main',
+                    '& .MuiAlert-icon': { color: 'warning.main' },
+                    '& .MuiAlert-message': { color: 'warning.main' }
+                  }}
+                >
+                  Enable SMS logging for this child to turn on reminders.
+                </Alert>
+              )}
+            </Collapse>
           </Box>
         </Box>
       </Collapse>

@@ -23,6 +23,7 @@ const ChildCardActions = ({
   userRole,
   onMessages,
   onAskQuestion,
+  onLogCreated,
   sx = {}
 }) => {
   const { USER_ROLES } = useRole();
@@ -158,6 +159,7 @@ const ChildCardActions = ({
         childName={child.name}
         open={showQuickNote}
         onClose={() => setShowQuickNote(false)}
+        onLogged={onLogCreated}
       />
     </Box>
   );
