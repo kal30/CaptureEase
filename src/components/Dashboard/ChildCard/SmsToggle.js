@@ -240,21 +240,24 @@ const SmsToggle = ({ child, onSettingsUpdate }) => {
             label={
               <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                 <Typography variant="caption" sx={{ fontWeight: 600 }}>
-                  SMS
+                  {localSmsEnabled ? "SMS" : "SMS Off"}
                 </Typography>
                 {localSmsEnabled && <VerifiedIcon sx={{ fontSize: 14 }} />}
               </Box>
             }
             size="small"
             sx={{
-              backgroundColor: localSmsEnabled ? "#D1FAE5" : "#F3F4F6",
-              color: localSmsEnabled ? "#065F46" : "#6B7280",
+              backgroundColor: localSmsEnabled ? "#D1FAE5" : "#FFF7ED",
+              color: localSmsEnabled ? "#065F46" : "#9A3412",
               border: localSmsEnabled
                 ? "1px solid #A7F3D0"
-                : "1px solid #E5E7EB",
+                : "1px solid #FDBA74",
               fontWeight: 600,
               "& .MuiChip-icon": {
-                color: localSmsEnabled ? "#065F46" : "#6B7280",
+                color: localSmsEnabled ? "#065F46" : "#EA580C",
+              },
+              "&:hover": {
+                backgroundColor: localSmsEnabled ? "#A7F3D0" : "#FFEDD5",
               },
             }}
           />

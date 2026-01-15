@@ -1,5 +1,5 @@
 import { db } from "./firebase";
-import { collection, addDoc, serverTimestamp, Timestamp } from "firebase/firestore";
+import { collection, addDoc, Timestamp } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
 /**
@@ -44,9 +44,7 @@ export const markMedicationTaken = async ({
     },
     status: "active",
     createdBy: user.uid,
-    createdAt: serverTimestamp(),
-    updatedBy: user.uid,
-    updatedAt: serverTimestamp(),
+    // createdAt/updatedAt are server-managed; Firestore rules block client-set timestamps.
   };
 
   const logsRef = collection(db, "logs");

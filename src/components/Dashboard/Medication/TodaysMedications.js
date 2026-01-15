@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, CircularProgress, Stack, IconButton, Switch } from '@mui/material';
+import { Box, Typography, Button, CircularProgress, IconButton } from '@mui/material';
 import MedicationIcon from '@mui/icons-material/Medication';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { getMedications } from '../../../services/medicationManagementService';
 import { markMedicationTaken } from '../../../services/markMedicationTaken';
@@ -115,8 +114,7 @@ const TodaysMedications = ({ child, onLogCreated }) => {
     }
   };
 
-  // Don't show if no medications
-  if (!loading && medications.length === 0) return null;
+  const pendingCount = medications.filter((med) => !takenToday[med.id]).length;
 
   return (
     <Box
@@ -134,13 +132,16 @@ const TodaysMedications = ({ child, onLogCreated }) => {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <MedicationIcon fontSize="small" color="primary" />
           <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-            Today's medications
+            Today's medications{pendingCount > 0 ? ` (${pendingCount} pending)` : ''}
           </Typography>
           {loading && <CircularProgress size={16} />}
         </Box>
         <IconButton
           size="small"
-          onClick={() => setDialogOpen(true)}
+          onClick={(event) => {
+            event.stopPropagation();
+            setDialogOpen(true);
+          }}
           title="Manage medications"
         >
           <SettingsIcon fontSize="small" />
@@ -154,70 +155,69 @@ const TodaysMedications = ({ child, onLogCreated }) => {
       )}
 
       {!loading && !error && medications.length > 0 && (
-        <Stack spacing={0.75}>
-          {medications.map(med => {
-            const isTaken = !!takenToday[med.id];
-            const isMarking = markingTaken === med.id;
-            const times = med.scheduledTimes || [];
-            const visibleTimes = times.slice(0, 2);
-            const remainingTimes = times.length - visibleTimes.length;
-            const timeLabel = visibleTimes.join(', ');
-            const timesSuffix = remainingTimes > 0 ? ` +${remainingTimes}` : '';
-            const summary = [med.name, med.dosage, timeLabel].filter(Boolean).join(' · ');
+        <>
+          <Box
+            sx={{ display: 'flex', gap: 1, overflowX: 'auto', pb: 0.5 }}
+            onClick={(event) => event.stopPropagation()}
+          >
+            {medications.map((med) => {
+              const isTaken = !!takenToday[med.id];
+              const isMarking = markingTaken === med.id;
+              const times = med.scheduledTimes || [];
+              const visibleTimes = times.slice(0, 2);
+              const remainingTimes = times.length - visibleTimes.length;
+              const timeLabel = visibleTimes.join(', ');
+              const timesSuffix = remainingTimes > 0 ? ` +${remainingTimes}` : '';
+              const summary = [med.name, med.dosage, timeLabel].filter(Boolean).join(' · ');
 
-            return (
-              <Box
-                key={med.id}
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: 1,
-                  px: 1,
-                  py: 0.75,
-                  borderRadius: 1,
-                  border: '1px solid',
-                  borderColor: isTaken ? 'success.main' : 'divider',
-                  bgcolor: isTaken ? 'success.lighter' : 'background.default'
-                }}
-              >
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                  <Typography
-                    component="span"
-                    sx={{
-                      fontSize: '0.85rem',
-                      fontWeight: 600,
-                      color: 'inherit'
-                    }}
-                  >
-                    {summary || 'Medication'}
-                  </Typography>
-                  {timesSuffix && (
+              return (
+                <Button
+                  key={med.id}
+                  variant={isTaken ? 'contained' : 'outlined'}
+                  color="success"
+                  size="small"
+                  disabled={isMarking}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    if (!isMarking) {
+                      handleToggleTaken(med, !isTaken);
+                    }
+                  }}
+                  sx={{
+                    minWidth: 220,
+                    flex: '0 0 auto',
+                    borderRadius: 999,
+                    px: 1.5,
+                    py: 1,
+                    textTransform: 'none',
+                    fontWeight: 700,
+                    justifyContent: 'flex-start',
+                    gap: 0.75
+                  }}
+                >
+                  {isMarking ? (
+                    <CircularProgress size={14} color="inherit" />
+                  ) : (
                     <Typography
-                      component="span"
-                      sx={{ fontSize: '0.75rem', color: 'text.secondary' }}
+                      variant="body2"
+                      sx={{
+                        fontWeight: 700,
+                        color: 'inherit',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        maxWidth: '100%'
+                      }}
                     >
-                      {timesSuffix}
+                      {summary || 'Medication'}
+                      {timesSuffix && ` ${timesSuffix}`}
                     </Typography>
                   )}
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  {isMarking && <CircularProgress size={14} />}
-                  <Switch
-                    size="small"
-                    checked={isTaken}
-                    onChange={() => {
-                      if (!isMarking) {
-                        handleToggleTaken(med, !isTaken);
-                      }
-                    }}
-                    disabled={isMarking}
-                  />
-                </Box>
-              </Box>
-            );
-          })}
-        </Stack>
+                </Button>
+              );
+            })}
+          </Box>
+        </>
       )}
 
       {!loading && !error && medications.length === 0 && (
