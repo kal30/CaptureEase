@@ -1,7 +1,16 @@
 import React, { useState } from 'react';
 import { Box, Collapse, FormControlLabel, Switch, TextField, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { Bedtime, SentimentSatisfiedAlt } from '@mui/icons-material';
+import LocalOfferIcon from '@mui/icons-material/LocalOffer';
+import {
+  Bedtime,
+  BedtimeOff,
+  Hotel,
+  SentimentNeutral,
+  SentimentSatisfiedAlt,
+  SentimentVeryDissatisfied,
+  SentimentVerySatisfied
+} from '@mui/icons-material';
 import { Star } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import TagInput from '../../Common/TagInput';
@@ -23,8 +32,16 @@ const QuickNoteForm = ({
   const theme = useTheme();
   const isMobile = useIsMobile();
   const suggestions = useTagSuggestions(childId);
-  const moodOptions = ['calm', 'ok', 'rough'];
-  const sleepOptions = ['good', 'ok', 'poor'];
+  const moodOptions = [
+    { value: 'calm', label: 'Calm', color: '#16A34A', icon: <SentimentVerySatisfied fontSize="small" /> },
+    { value: 'ok', label: 'Ok', color: '#F59E0B', icon: <SentimentNeutral fontSize="small" /> },
+    { value: 'rough', label: 'Rough', color: '#DC2626', icon: <SentimentVeryDissatisfied fontSize="small" /> }
+  ];
+  const sleepOptions = [
+    { value: 'good', label: 'Good', color: '#2563EB', icon: <Bedtime fontSize="small" /> },
+    { value: 'ok', label: 'Ok', color: '#0EA5E9', icon: <Hotel fontSize="small" /> },
+    { value: 'poor', label: 'Poor', color: '#7C3AED', icon: <BedtimeOff fontSize="small" /> }
+  ];
   const [showQuickTags, setShowQuickTags] = useState(false);
 
   const getCategoryValue = (category) => {
@@ -97,11 +114,21 @@ const QuickNoteForm = ({
             alignItems: 'center',
             gap: 0.5,
             cursor: 'pointer',
-            color: theme.palette.text.secondary,
-            fontSize: isMobile ? '0.75rem' : '0.8rem',
-            width: 'fit-content'
+            color: showQuickTags ? theme.palette.primary.main : theme.palette.text.secondary,
+            fontSize: isMobile ? '0.8rem' : '0.85rem',
+            width: isMobile ? '100%' : 'fit-content',
+            px: 1,
+            py: 0.5,
+            borderRadius: 999,
+            border: '1px solid',
+            borderColor: showQuickTags ? theme.palette.primary.main : theme.palette.divider,
+            bgcolor: showQuickTags
+              ? theme.palette.action.selected
+              : theme.palette.action.hover,
+            fontWeight: 600
           }}
         >
+          <LocalOfferIcon sx={{ fontSize: '1rem' }} />
           <Typography sx={{ fontSize: 'inherit', color: 'inherit' }}>Quick tags</Typography>
           <ExpandMoreIcon
             sx={{
@@ -149,8 +176,23 @@ const QuickNoteForm = ({
                 }}
               >
                 {moodOptions.map((option) => (
-                  <ToggleButton key={option} value={option}>
-                    {option}
+                  <ToggleButton
+                    key={option.value}
+                    value={option.value}
+                    sx={{
+                      borderColor: option.color,
+                      color: option.color,
+                      '&.Mui-selected': {
+                        bgcolor: `${option.color}22`,
+                        borderColor: option.color,
+                        color: option.color
+                      }
+                    }}
+                  >
+                    <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
+                      {option.icon}
+                      {option.label}
+                    </Box>
                   </ToggleButton>
                 ))}
               </ToggleButtonGroup>
@@ -191,8 +233,23 @@ const QuickNoteForm = ({
                 }}
               >
                 {sleepOptions.map((option) => (
-                  <ToggleButton key={option} value={option}>
-                    {option}
+                  <ToggleButton
+                    key={option.value}
+                    value={option.value}
+                    sx={{
+                      borderColor: option.color,
+                      color: option.color,
+                      '&.Mui-selected': {
+                        bgcolor: `${option.color}22`,
+                        borderColor: option.color,
+                        color: option.color
+                      }
+                    }}
+                  >
+                    <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
+                      {option.icon}
+                      {option.label}
+                    </Box>
                   </ToggleButton>
                 ))}
               </ToggleButtonGroup>

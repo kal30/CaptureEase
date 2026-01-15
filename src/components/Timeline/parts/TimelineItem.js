@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box } from '@mui/material';
 
-const TimelineItem = ({ color, icon, children, ariaLabel }) => (
+const TimelineItem = ({ color, icon, children, ariaLabel, compact = false }) => (
   <Box
     sx={{
       position: 'relative',
@@ -21,10 +21,10 @@ const TimelineItem = ({ color, icon, children, ariaLabel }) => (
     <Box
       sx={{
         position: 'absolute',
-        left: 12,
-        top: 0,
-        width: 18,
-        height: 18,
+        left: compact ? 9 : 12,
+        top: compact ? 2 : 0,
+        width: compact ? 14 : 18,
+        height: compact ? 14 : 18,
         borderRadius: '50%',
         bgcolor: color,
         border: '3px solid',
@@ -33,7 +33,7 @@ const TimelineItem = ({ color, icon, children, ariaLabel }) => (
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        fontSize: '0.7rem',
+        fontSize: compact ? '0.6rem' : '0.7rem',
       }}
     >
       {icon || '●'}
@@ -41,10 +41,10 @@ const TimelineItem = ({ color, icon, children, ariaLabel }) => (
 
     <Box
       sx={{
-        ml: 6,
-        px: 1.25,
-        pt: 1,
-        pb: 0.75,
+        ml: compact ? 5 : 6,
+        px: compact ? 0.75 : 1.25,
+        pt: compact ? 0.5 : 1,
+        pb: compact ? 0.5 : 0.75,
         bgcolor: 'background.paper',
         borderRadius: 0,
         borderBottom: '1px solid',

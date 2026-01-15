@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { Box, Button, IconButton, Tooltip } from '@mui/material';
+import { Box, Button, IconButton, ListItemIcon, ListItemText, Menu, MenuItem, Tooltip } from '@mui/material';
 import { useRole } from '../../../contexts/RoleContext';
 import { getMessagesDisplayInfo } from '../../../constants/uiDisplayConstants';
 import QuickNoteLog from '../QuickNoteLog';
 import QuickNoteIcon from '../QuickNoteLog/QuickNoteIcon';
 import SmsToggle from './SmsToggle';
-import { Search } from '@mui/icons-material';
+import { NotificationsActive, MoreVert, Search } from '@mui/icons-material';
 import useIsMobile from '../../../hooks/useIsMobile';
+import DailyReminderDialog from './DailyReminderDialog';
 
 /**
  * ChildCardActions - Action buttons for quick log/search/messaging
@@ -29,11 +30,27 @@ const ChildCardActions = ({
   const { USER_ROLES } = useRole();
   const messagesDisplay = getMessagesDisplayInfo();
   const [showQuickNote, setShowQuickNote] = useState(false);
+  const [menuAnchor, setMenuAnchor] = useState(null);
+  const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
   const isMobile = useIsMobile();
   const actionSize = isMobile ? 34 : 40;
   const actionFontSize = isMobile ? '0.95rem' : '1.1rem';
   const quickNoteSize = actionSize;
   const quickNoteFontSize = actionFontSize;
+
+  const handleMenuOpen = (event) => {
+    event.stopPropagation();
+    setMenuAnchor(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setMenuAnchor(null);
+  };
+
+  const handleOpenReminder = () => {
+    setReminderDialogOpen(true);
+    handleMenuClose();
+  };
 
   return (
     <Box 
@@ -123,6 +140,27 @@ const ChildCardActions = ({
           </IconButton>
         </Tooltip>
 
+        <Tooltip title="More" arrow>
+          <IconButton
+            onClick={handleMenuOpen}
+            sx={{
+              width: actionSize,
+              height: actionSize,
+              backgroundColor: '#E2E8F0',
+              color: '#475569',
+              fontSize: actionFontSize,
+              border: '2px solid #CBD5F5',
+              '&:hover': {
+                backgroundColor: '#CBD5F5',
+                transform: 'scale(1.05)',
+              },
+              transition: 'all 0.2s ease-in-out',
+            }}
+          >
+            <MoreVert fontSize="small" />
+          </IconButton>
+        </Tooltip>
+
         {userRole === USER_ROLES.THERAPIST && (
           // Professional tools for therapists
           <Button
@@ -153,6 +191,28 @@ const ChildCardActions = ({
         )}
       </Box>
 
+      <Menu
+        anchorEl={menuAnchor}
+        open={Boolean(menuAnchor)}
+        onClose={handleMenuClose}
+        onClick={(event) => event.stopPropagation()}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        slotProps={{
+          paper: {
+            elevation: 8,
+            sx: { borderRadius: 2, minWidth: 200 }
+          }
+        }}
+      >
+        <MenuItem onClick={handleOpenReminder}>
+          <ListItemIcon>
+            <NotificationsActive fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Daily reminder</ListItemText>
+        </MenuItem>
+      </Menu>
+
       {/* Quick Note Dialog */}
       <QuickNoteLog
         childId={child.id}
@@ -160,6 +220,12 @@ const ChildCardActions = ({
         open={showQuickNote}
         onClose={() => setShowQuickNote(false)}
         onLogged={onLogCreated}
+      />
+
+      <DailyReminderDialog
+        open={reminderDialogOpen}
+        onClose={() => setReminderDialogOpen(false)}
+        child={child}
       />
     </Box>
   );

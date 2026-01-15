@@ -23,7 +23,13 @@ const getPeriodLabel = (date) => {
 const useTimelineWidgetSummary = (entries = []) =>
   useMemo(() => {
     if (!entries.length) {
-      return { lastEntry: null, loggedToday: false, daysLoggedThisWeek: 0 };
+      return {
+        lastEntry: null,
+        loggedToday: false,
+        daysLoggedThisWeek: 0,
+        importantCountThisWeek: 0,
+        patternSummary: null
+      };
     }
 
     const now = new Date();

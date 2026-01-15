@@ -5,6 +5,9 @@ import {
   Stack,
   CircularProgress,
   Alert,
+  Button,
+  FormControlLabel,
+  Switch,
 } from "@mui/material";
 import { Timeline as TimelineIcon } from "@mui/icons-material";
 import { getEntryTypeMeta, mapLegacyType, ENTRY_TYPE } from "../../constants/timeline";
@@ -25,6 +28,7 @@ import EntryHeader from "./parts/EntryHeader";
 import TimelineItem from "./parts/TimelineItem";
 import { getIncidentDisplayInfo } from '../../constants/uiDisplayConstants';
 import LogEntryActions from "./parts/LogEntryActions";
+import useIsMobile from "../../hooks/useIsMobile";
 
 /**
  * UnifiedTimeline - Main unified timeline component
@@ -48,6 +52,7 @@ const UnifiedTimeline = ({
   const incidentDisplay = getIncidentDisplayInfo();
   const { getUserRoleForChild } = useRole();
   const theme = useTheme();
+  const isMobile = useIsMobile();
 
   // Get user role for this child
   const userRole = getUserRoleForChild(child?.id);
@@ -61,10 +66,17 @@ const UnifiedTimeline = ({
   const currentUserId = getAuth().currentUser?.uid;
   const [localEntries, setLocalEntries] = React.useState([]);
   const [editRequest, setEditRequest] = React.useState({ id: null, focus: null });
+  const [compactMode, setCompactMode] = React.useState(false);
+  const initialVisibleCount = isMobile ? 6 : 10;
+  const [visibleCount, setVisibleCount] = React.useState(initialVisibleCount);
 
   React.useEffect(() => {
     setLocalEntries(entries);
   }, [entries]);
+
+  React.useEffect(() => {
+    setVisibleCount(initialVisibleCount);
+  }, [selectedDate?.toDateString?.(), entries.length, initialVisibleCount]);
 
   const handleLogUpdated = React.useCallback((entryId, updates) => {
     setLocalEntries((prev) =>
@@ -200,7 +212,7 @@ const UnifiedTimeline = ({
           <Box
             sx={{
               position: "absolute",
-              left: 20,
+              left: compactMode ? 16 : 20,
               top: 0,
               bottom: 0,
               width: 2,
@@ -210,8 +222,30 @@ const UnifiedTimeline = ({
           />
 
           {/* Timeline Entries */}
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "flex-end",
+              gap: 1,
+              mb: 1,
+              flexWrap: "wrap",
+            }}
+          >
+            <FormControlLabel
+              control={
+                <Switch
+                  size="small"
+                  checked={compactMode}
+                  onChange={(event) => setCompactMode(event.target.checked)}
+                />
+              }
+              label={<Typography variant="caption">Compact</Typography>}
+              sx={{ m: 0 }}
+            />
+          </Box>
           <Stack spacing={0} role="list">
-          {localEntries.map((entry, entryIndex) => {
+          {localEntries.slice(0, visibleCount).map((entry, entryIndex) => {
 
               const timestamp = new Date(entry.timestamp);
               const timeString = timestamp.toLocaleTimeString([], {
@@ -253,6 +287,7 @@ const UnifiedTimeline = ({
                   key={`${entry.type}-${entry.id}-${entryIndex}`}
                   color={entryColor}
                   icon={meta.icon}
+                  compact={compactMode}
                   ariaLabel={`${entryLabel} at ${timeString}`}
                 >
                   <EntryHeader
@@ -283,6 +318,29 @@ const UnifiedTimeline = ({
               );
             })}
           </Stack>
+
+          {localEntries.length > visibleCount && (
+            <Box sx={{ display: "flex", justifyContent: "center", mt: 1.5 }}>
+              <Button
+                variant="outlined"
+                size="small"
+                fullWidth={isMobile}
+                onClick={() => setVisibleCount((prev) => prev + initialVisibleCount)}
+              >
+                Show {Math.min(initialVisibleCount, localEntries.length - visibleCount)} more
+              </Button>
+            </Box>
+          )}
+
+          {localEntries.length > initialVisibleCount && (
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ mt: 1, display: "block", textAlign: "center" }}
+            >
+              Showing {Math.min(visibleCount, localEntries.length)} of {localEntries.length}
+            </Typography>
+          )}
         </Box>
       )}
     </Box>
