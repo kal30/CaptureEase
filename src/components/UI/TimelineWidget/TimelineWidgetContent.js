@@ -216,6 +216,7 @@ const TimelineWidgetContent = ({
               filters={timelineFilters}
               onFiltersChange={onFiltersChange}
               showFilters={false}
+              injectedEntries={timeline?.recentEntries || []}
             />
           </Box>
         </Box>

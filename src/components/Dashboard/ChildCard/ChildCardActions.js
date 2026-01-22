@@ -79,12 +79,14 @@ const ChildCardActions = ({
         <SmsToggle child={child} />
 
         {/* Quick Note Icon Button - Available for all roles */}
-        <QuickNoteIcon
-          onClick={() => setShowQuickNote(true)}
-          size={quickNoteSize}
-          fontSize={quickNoteFontSize}
-          showLabel={false}
-        />
+        <Box onClick={(e) => e.stopPropagation()}>
+          <QuickNoteIcon
+            onClick={() => setShowQuickNote(true)}
+            size={quickNoteSize}
+            fontSize={quickNoteFontSize}
+            showLabel={false}
+          />
+        </Box>
 
         {/* Ask Question Button */}
         <Tooltip title="Ask a question about logs" arrow>

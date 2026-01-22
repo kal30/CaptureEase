@@ -18,6 +18,7 @@ import {
 import GoogleAuth from "../components/AuthProviders/GoogleAuth"; // Keep Google Auth
 import ResponsiveLayout from "../components/Layout/ResponsiveLayout";
 import { createUserProfile } from "../services/userService";
+import { sendVerificationEmail } from "../services/emailVerificationService";
 
 const Register = () => {
   const [email, setEmail] = useState("");
@@ -55,7 +56,9 @@ const Register = () => {
           photoURL: user.photoURL
         });
         
-        await user.sendEmailVerification();
+        await sendVerificationEmail({
+          continueUrl: `${window.location.origin}/login`,
+        });
         navigate("/login", {
           state: {
             message:

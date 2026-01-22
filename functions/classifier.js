@@ -330,10 +330,129 @@ const createWebEvent = onCall(
 );
 
 // Placeholder functions for future classification logic
+// --- Rule-Based Classification Logic ---
+
+const CLASSIFICATION_RULES = {
+  emotional_positive: {
+    keywords: ['happy', 'excited', 'joyful', 'calm', 'pleased', 'content', 'smiling', 'laughing', 'giggling'],
+    contextPatterns: ['good mood', 'positive', 'cheerful', 'delighted'],
+    buckets: ['emotional_positive'],
+    targetCollection: 'moodLogs',
+    type: 'mood_log',
+    confidence: 0.8
+  },
+  emotional_negative: {
+    keywords: ['sad', 'angry', 'frustrated', 'upset', 'crying', 'tears', 'anxious', 'worried', 'scared', 'cranky'],
+    contextPatterns: ['bad mood', 'difficult', 'challenging', 'distressed'],
+    buckets: ['emotional_negative'],
+    targetCollection: 'moodLogs',
+    type: 'mood_log',
+    confidence: 0.8
+  },
+  behavioral_challenging: {
+    keywords: ['meltdown', 'tantrum', 'screaming', 'hitting', 'throwing', 'kicking', 'biting', 'aggressive'],
+    contextPatterns: ['difficult behavior', 'challenging', 'acting out', 'defiant'],
+    buckets: ['behavioral_challenging'],
+    targetCollection: 'behaviors',
+    type: 'behavior',
+    confidence: 0.9
+  },
+  sleep_related: {
+    keywords: ['sleep', 'nap', 'bedtime', 'tired', 'sleepy', 'woke up', 'nightmare'],
+    contextPatterns: ['going to bed', 'sleep time', 'rest'],
+    buckets: ['sleep_related'],
+    targetCollection: 'sleepLogs',
+    type: 'sleep_log',
+    confidence: 0.8
+  },
+  nutrition_feeding: {
+    keywords: ['eating', 'food', 'hungry', 'thirsty', 'appetite', 'refused food', 'lunch', 'dinner', 'breakfast'],
+    contextPatterns: ['meal', 'feeding', 'nutrition'],
+    buckets: ['nutrition_feeding'],
+    targetCollection: 'foodLogs',
+    type: 'food_log',
+    confidence: 0.7
+  },
+  medical_incident: {
+    keywords: ['fever', 'sick', 'pain', 'injury', 'hurt', 'emergency', 'hospital', 'vomit'],
+    contextPatterns: ['medical emergency', 'urgent', 'symptoms'],
+    buckets: ['medical_incident'],
+    targetCollection: 'medicalEvents',
+    type: 'medical_event',
+    confidence: 0.9
+  }
+};
+
+/**
+ * Classify a text string using rule-based logic
+ * @param {string} text 
+ * @returns {Object} classification result
+ */
+const classifyText = (text) => {
+  if (!text) return { type: 'unclassified', confidence: 0 };
+  
+  const normalize = t => t.toLowerCase();
+  const normalizedText = normalize(text);
+  
+  let bestMatch = null;
+  let maxConfidence = 0;
+
+  for (const [ruleKey, rule] of Object.entries(CLASSIFICATION_RULES)) {
+    let matches = 0;
+    
+    // Check keywords
+    rule.keywords.forEach(kw => {
+      if (normalizedText.includes(normalize(kw))) matches++;
+    });
+
+    // Check context
+    if (rule.contextPatterns) {
+      rule.contextPatterns.forEach(cp => {
+        if (normalizedText.includes(normalize(cp))) matches++;
+      });
+    }
+
+    if (matches > 0) {
+      // Simple confidence calculator
+      const confidence = Math.min(rule.confidence + (matches * 0.05), 1.0);
+      if (confidence > maxConfidence) {
+        maxConfidence = confidence;
+        bestMatch = { ...rule, ruleKey };
+      }
+    }
+  }
+
+  // Default to General Log (dailyLogs) if no match
+  if (!bestMatch) {
+    return {
+      type: 'journal',
+      collection: 'dailyLogs',
+      buckets: ['general'],
+      confidence: 0.1
+    };
+  }
+
+  return {
+    type: bestMatch.type,
+    collection: bestMatch.targetCollection,
+    buckets: bestMatch.buckets,
+    confidence: maxConfidence
+  };
+};
+
+/**
+ * Classify an event object
+ * @param {Object} eventData 
+ * @returns {Object} classification result
+ */
 const classifyEvent = (eventData) => {
-  // TODO: Implement actual classification logic
-  logger.info('classifyEvent called - placeholder implementation');
-  return { type: 'unclassified', confidence: 0 };
+  // Use text field if available, or extract from other fields
+  const text = eventData.text || eventData.note || eventData.content || '';
+  const result = classifyText(text);
+  
+  logger.info(`Classified event: ${result.type} (${result.confidence})`, { text: text.substring(0, 50) });
+  
+  return result;
 };
 
 const classifyUnprocessed = async () => {
@@ -347,6 +466,7 @@ module.exports = {
   whatsappWebhook,
   createWebEvent,
   classifyEvent,
+  classifyText, // Export helper for direct use
   classifyUnprocessed,
   createEventAdmin
 };

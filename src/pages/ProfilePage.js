@@ -1,30 +1,38 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Typography, TextField, Box, Paper, Alert, Divider } from '@mui/material';
+import { Typography, TextField, Box, Paper, Alert, Divider, Chip, Button } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { EnhancedLoadingButton } from '../components/UI';
-import { getAuth, updateProfile, updatePassword } from 'firebase/auth';
-import PasskeyAuth from '../components/AuthProviders/PasskeyAuth';
+import { getAuth, updateProfile, updatePassword, onAuthStateChanged } from 'firebase/auth';
 import ResponsiveLayout from '../components/Layout/ResponsiveLayout';
+import { useLocation } from 'react-router-dom';
+import PasskeyAuth from '../components/AuthProviders/PasskeyAuth';
+import { sendVerificationEmail } from '../services/emailVerificationService';
 
 const ProfilePage = () => {
   const theme = useTheme(); // Get theme object
+  const SHOW_PASSKEYS = false;
   const auth = getAuth();
-  const user = auth.currentUser;
+  const location = useLocation();
+  const [user, setUser] = useState(auth.currentUser);
 
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [verificationLoading, setVerificationLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const isEmailTest = new URLSearchParams(location.search).get('emailTest') === 'unverified';
 
   useEffect(() => {
-    if (user) {
-      setDisplayName(user.displayName || '');
-      setEmail(user.email || '');
-    }
-  }, [user]);
+    const unsubscribe = onAuthStateChanged(auth, (nextUser) => {
+      setUser(nextUser || null);
+      setDisplayName(nextUser?.displayName || '');
+      setEmail(nextUser?.email || '');
+    });
+    return () => unsubscribe();
+  }, [auth]);
 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
@@ -42,6 +50,28 @@ const ProfilePage = () => {
       setError('Failed to update profile.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    if (!user) return;
+    setVerificationLoading(true);
+    setMessage('');
+    setError('');
+    try {
+      const result = await sendVerificationEmail({
+        continueUrl: `${window.location.origin}/profile?verified=1`,
+      });
+      if (result?.success === false) {
+        setMessage(result?.message || 'Email already verified.');
+        return;
+      }
+      setMessage('Verification email sent. Please check your inbox.');
+    } catch (err) {
+      console.error('Error sending verification email:', err);
+      setError('Failed to send verification email.');
+    } finally {
+      setVerificationLoading(false);
     }
   };
 
@@ -158,20 +188,41 @@ const ProfilePage = () => {
 
         <Divider sx={{ width: '100%', my: 3 }} />
 
-        {/* Passkey Management Section */}
-        <Box sx={{ mt: 2, width: '100%' }}>
-          <PasskeyAuth mode="register" />
-        </Box>
+        {SHOW_PASSKEYS && (
+          <>
+            <Box sx={{ mt: 2, width: '100%' }}>
+              <PasskeyAuth mode="register" />
+            </Box>
+            <Divider sx={{ width: '100%', my: 3 }} />
+          </>
+        )}
 
-        <Divider sx={{ width: '100%', my: 3 }} />
-
         <Box sx={{ mt: 2, width: '100%' }}>
-          <Typography variant="h6" sx={{ mb: 1 }}>Your Email</Typography>
-          <Typography variant="body1" sx={{ mb: 2 }}>
-            {email}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+            <Typography variant="h6">Your Email</Typography>
+          <Chip
+            size="small"
+            color={user?.emailVerified && !isEmailTest ? 'success' : 'warning'}
+            label={user?.emailVerified && !isEmailTest ? 'Verified' : 'Not verified'}
+            variant={user?.emailVerified && !isEmailTest ? 'filled' : 'outlined'}
+          />
+          </Box>
+          <Typography variant="body1" sx={{ mb: 1 }}>
+            {email || user?.email || '—'}
           </Typography>
-_          <Typography variant="body2" color="text.secondary">
-            To change your email, please contact support or use your Firebase console if you have direct access.
+          {(!user?.emailVerified || isEmailTest) && (
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={handleResendVerification}
+              disabled={verificationLoading}
+              sx={{ textTransform: 'none', mb: 1 }}
+            >
+              {verificationLoading ? 'Sending…' : 'Resend verification email'}
+            </Button>
+          )}
+          <Typography variant="body2" color="text.secondary">
+            Email changes aren’t self-serve yet. Contact support if you need to update it.
           </Typography>
         </Box>
       </Paper>

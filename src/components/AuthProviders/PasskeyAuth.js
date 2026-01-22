@@ -34,7 +34,23 @@ import {
   removePasskey
 } from '../../services/passkeyService';
 
-const PasskeyAuth = ({ mode = 'signin' }) => { // mode can be 'signin', 'register', or 'manage'
+const withTimeout = (promise, ms, message) =>
+  new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error(message));
+    }, ms);
+    promise
+      .then((value) => {
+        clearTimeout(timer);
+        resolve(value);
+      })
+      .catch((error) => {
+        clearTimeout(timer);
+        reject(error);
+      });
+  });
+
+const PasskeyAuth = ({ mode = 'signin', userEmail = null, onSignedIn }) => { // mode can be 'signin', 'register', or 'manage'
   const [user] = useAuthState(auth);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -78,7 +94,11 @@ const PasskeyAuth = ({ mode = 'signin' }) => { // mode can be 'signin', 'registe
     setSuccess(null);
     
     try {
-      const result = await registerPasskey(user.uid, user.email, user.displayName);
+      const result = await withTimeout(
+        registerPasskey(),
+        20000,
+        'Passkey setup timed out. Please try again.'
+      );
       setSuccess('Passkey registered successfully! You can now use it to sign in quickly.');
       await checkUserPasskeys(); // Refresh passkeys list
     } catch (error) {
@@ -94,10 +114,15 @@ const PasskeyAuth = ({ mode = 'signin' }) => { // mode can be 'signin', 'registe
     setSuccess(null);
     
     try {
-      const result = await authenticateWithPasskey();
+      const result = await withTimeout(
+        authenticateWithPasskey(userEmail),
+        20000,
+        'Passkey sign-in timed out. Please try again.'
+      );
       setSuccess('Authentication successful! Signing you in...');
-      // Here you would typically sign the user into Firebase
-      // This is a simplified implementation
+      if (onSignedIn && result?.user) {
+        onSignedIn(result.user);
+      }
     } catch (error) {
       setError(error.message || 'Failed to authenticate with passkey. Please try again.');
     } finally {
@@ -183,6 +208,30 @@ const PasskeyAuth = ({ mode = 'signin' }) => { // mode can be 'signin', 'registe
         >
           {loading ? 'Authenticating...' : 'Sign in with Passkey'}
         </Button>
+        <Box
+          sx={{
+            mt: 1.5,
+            px: 1.25,
+            py: 1,
+            borderRadius: 1,
+            bgcolor: 'action.hover',
+            border: '1px dashed',
+            borderColor: 'divider'
+          }}
+        >
+          <Typography variant="caption" sx={{ fontWeight: 600, display: 'block', mb: 0.5 }}>
+            New to passkeys?
+          </Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+            1) Sign in with Google or email/password.
+          </Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+            2) Go to Profile and add a passkey.
+          </Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+            3) Next time, use this button and confirm with Face ID/Touch ID.
+          </Typography>
+        </Box>
       </Box>
     );
   }

@@ -17,9 +17,14 @@ import {
   ExpandLess,
   Send,
   AutoAwesome,
+  Psychology,
+  Mood as MoodIcon,
 } from '@mui/icons-material';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { app } from '../../services/firebase';
+import { classifyEvent } from '../../services/classificationService';
+import { addBehavior } from '../../services/behaviorService';
+import { logMood } from '../../services/moodService';
 
 const functions = getFunctions(app, 'us-central1');
 const createLogCallable = httpsCallable(functions, 'createLog');
@@ -47,24 +52,80 @@ const QuickNotesWidget = ({ children = [] }) => {
     setMessage({ type: '', text: '' });
 
     try {
-      await createLogCallable({
-        childId: selectedChildId,
-        type: 'note',
-        note: note.trim(),
-        source: 'app'
-      });
+      // 1. Run Smart Classification
+      const classification = classifyEvent({ type: 'note', note: note.trim() });
+      const { type, confidence, buckets } = classification.classification;
 
-      setMessage({
-        type: 'success',
-        text: `✅ Note logged for ${selectedChild?.name}! Auto-classified as Daily Log or Important Moment.`
-      });
+      console.log('Smart Classification:', classification.classification);
+
+      // 2. Route to appropriate service based on high confidence
+      if (confidence >= 0.7) {
+        if (type === 'behavior') {
+          await addBehavior(selectedChildId, {
+            name: buckets[0] === 'behavioral_positive' ? 'Good Behavior' : 'Challenging Behavior',
+            description: note.trim(),
+            goal: null, // Optional
+            iconName: buckets[0] === 'behavioral_positive' ? 'Star' : 'Alert',
+            createdAt: new Date(),
+            isTemplate: false
+          });
+          setMessage({
+            type: 'success',
+            text: `✅ Logged as BEHAVIOR (${buckets[0].replace('_', ' ')})`
+          });
+        } else if (type === 'mood_log') {
+          const moodLevel = buckets[0].includes('positive') ? 'Happy' : 'Upset';
+          await logMood(selectedChildId, moodLevel);
+          // Also save the note if needed, but logMood service might not take a note directly based on signature
+          // For now, we just log the mood. To save the text, we might want to also create a generic log or update mood service.
+          // Let's fallback to createLog if we want to save the text, OR just accept mood tracking is simple.
+          // Better UX: Log the mood rating, AND saving the text as a log with tag.
+          await createLogCallable({
+            childId: selectedChildId,
+            type: 'note',
+            note: note.trim(),
+            source: 'app',
+            tags: ['mood', moodLevel] 
+          });
+          
+          setMessage({
+             type: 'success',
+             text: `✅ Logged Mood: ${moodLevel}`
+          });
+        } else {
+           // Default fallback for other types not yet fully wired
+           await createLogCallable({
+            childId: selectedChildId,
+            type: 'note',
+            note: note.trim(),
+            source: 'app'
+           });
+           setMessage({
+            type: 'success',
+            text: `✅ Note logged. Tagged as: ${type}`
+           });
+        }
+      } else {
+        // Low confidence - Generic Log
+        await createLogCallable({
+          childId: selectedChildId,
+          type: 'note',
+          note: note.trim(),
+          source: 'app'
+        });
+
+        setMessage({
+          type: 'success',
+          text: `✅ Note logged for ${selectedChild?.name}!`
+        });
+      }
 
       setNote('');
 
-      // Clear success message after 3 seconds
+      // Clear success message after 4 seconds
       setTimeout(() => {
         setMessage({ type: '', text: '' });
-      }, 3000);
+      }, 4000);
 
     } catch (error) {
       console.error('Error creating log:', error);
@@ -126,17 +187,18 @@ const QuickNotesWidget = ({ children = [] }) => {
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: '1.3rem',
+              color: 'white',
+              boxShadow: '0 2px 4px rgba(16, 185, 129, 0.3)'
             }}
           >
-            📝
+            <AutoAwesome sx={{ fontSize: '1.2rem' }} />
           </Box>
           <Box>
             <Typography variant="h6" sx={{ fontWeight: 600, color: '#065F46' }}>
-              Quick Note
+              Smart Quick Note
             </Typography>
             <Typography variant="caption" sx={{ color: '#047857', display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <AutoAwesome sx={{ fontSize: '0.9rem' }} />
-              Auto-classified as Daily Log or Important Moment
+              AI-powered auto-classification enabled
             </Typography>
           </Box>
         </Box>
@@ -187,7 +249,7 @@ const QuickNotesWidget = ({ children = [] }) => {
             fullWidth
             multiline
             rows={3}
-            placeholder={`What happened with ${selectedChild?.name || 'your child'}? (e.g., "Had lunch with applesauce", "Fell at playground but okay", "First time walking!")`}
+            placeholder={`What happened? Try: "He threw a tantrum because he was tired" or "She ate all her peas!"`}
             value={note}
             onChange={(e) => setNote(e.target.value)}
             onKeyPress={handleKeyPress}
@@ -219,16 +281,19 @@ const QuickNotesWidget = ({ children = [] }) => {
               bgcolor: '#EEF2FF',
               borderRadius: 1,
               border: '1px solid #C7D2FE',
+              display: 'flex',
+              gap: 1
             }}
           >
+            <Psychology sx={{ color: '#4338CA', fontSize: '1.2rem', mt: 0.2 }} />
             <Typography variant="body2" sx={{ fontSize: '0.8rem', color: '#4338CA' }}>
-              <strong>💡 Smart Classification:</strong>
+              <strong>Try these examples to test smart filing:</strong>
               <br />
-              • <strong>Important Moments</strong> - Milestones, incidents, health concerns, therapy progress
+              • "He had a massive meltdown" → <em>Files as Behavior</em>
               <br />
-              • <strong>Daily Log</strong> - Routine meals, naps, play activities
+              • "She is so happy and smiling today" → <em>Files as Mood</em>
               <br />
-              <em>Press Ctrl+Enter to submit quickly</em>
+              • "Give 5ml of Tylenol for fever" → <em>Files as Medical (coming soon)</em>
             </Typography>
           </Box>
 
@@ -247,12 +312,13 @@ const QuickNotesWidget = ({ children = [] }) => {
                 },
                 '&:disabled': {
                   bgcolor: '#D1FAE5',
+                  color: 'rgba(0,0,0,0.26)'
                 },
                 px: 4,
                 fontWeight: 600,
               }}
             >
-              {loading ? 'Logging...' : 'Log Note'}
+              {loading ? 'Analyzing...' : 'Log It'}
             </Button>
           </Box>
         </Box>

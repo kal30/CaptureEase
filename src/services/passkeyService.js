@@ -1,10 +1,8 @@
 import { startRegistration, startAuthentication } from '@simplewebauthn/browser';
-import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
-import { db } from './firebase';
+import { getAuth, signInWithCustomToken } from 'firebase/auth';
 
-// Configuration for WebAuthn
-const rpName = 'CaptureEz';
-const rpID = window.location.hostname;
+const ENDPOINT_BASE =
+  'https://us-central1-captureease-ef82f.cloudfunctions.net';
 
 /**
  * Check if passkeys are supported in this browser
@@ -13,92 +11,69 @@ export const isPasskeySupported = () => {
   return !!(navigator.credentials && navigator.credentials.create);
 };
 
-/**
- * Generate registration options for a new passkey
- */
-const generateRegistrationOptions = (userEmail, userName, userID) => {
-  return {
-    rp: {
-      name: rpName,
-      id: rpID,
-    },
-    user: {
-      id: new TextEncoder().encode(userID),
-      name: userEmail,
-      displayName: userName || userEmail,
-    },
-    challenge: crypto.getRandomValues(new Uint8Array(32)),
-    pubKeyCredParams: [
-      { alg: -7, type: 'public-key' }, // ES256
-      { alg: -257, type: 'public-key' }, // RS256
-    ],
-    timeout: 60000,
-    attestation: 'direct',
-    authenticatorSelection: {
-      authenticatorAttachment: 'platform',
-      userVerification: 'preferred',
-      residentKey: 'preferred',
-    },
-  };
+const getAuthToken = async () => {
+  const auth = getAuth();
+  const user = auth.currentUser;
+  if (!user) {
+    throw new Error('Please sign in first');
+  }
+  return user.getIdToken();
 };
 
-/**
- * Generate authentication options for existing passkey
- */
-const generateAuthenticationOptions = (allowCredentials = []) => {
-  return {
-    challenge: crypto.getRandomValues(new Uint8Array(32)),
-    timeout: 60000,
-    rpId: rpID,
-    allowCredentials: allowCredentials.length > 0 ? allowCredentials : undefined,
-    userVerification: 'preferred',
-  };
+const postJson = async (path, body, token = null) => {
+  const response = await fetch(`${ENDPOINT_BASE}/${path}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(body || {}),
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const message = data.error || 'Request failed';
+    const err = new Error(message);
+    err.code = response.status;
+    throw err;
+  }
+  return data;
 };
 
 /**
  * Register a new passkey for a user
  */
-export const registerPasskey = async (userID, userEmail, userName) => {
+export const registerPasskey = async () => {
   try {
     if (!isPasskeySupported()) {
       throw new Error('Passkeys are not supported in this browser');
     }
 
-    // Generate registration options
-    const options = generateRegistrationOptions(userEmail, userName, userID);
-    
-    // Start registration process
-    const registrationResponse = await startRegistration(options);
-
-    // Store the passkey credential in Firestore
-    const userRef = doc(db, 'users', userID);
-    const userDoc = await getDoc(userRef);
-    
-    const passkeyData = {
-      credentialID: registrationResponse.id,
-      credentialPublicKey: registrationResponse.response.publicKey,
-      counter: registrationResponse.response.counter || 0,
-      deviceType: registrationResponse.response.authenticatorData ? 'platform' : 'cross-platform',
-      createdAt: new Date(),
-      lastUsed: new Date(),
-    };
-
-    if (userDoc.exists()) {
-      // Add passkey to existing user
-      await updateDoc(userRef, {
-        passkeys: userDoc.data().passkeys ? [...userDoc.data().passkeys, passkeyData] : [passkeyData],
-        updatedAt: new Date(),
-      });
-    } else {
-      // Create new user document with passkey
-      await setDoc(userRef, {
-        email: userEmail,
-        displayName: userName || userEmail,
-        passkeys: [passkeyData],
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+    const token = await getAuthToken();
+    const { options, challengeId } = await postJson(
+      'passkeyRegisterOptions',
+      {},
+      token
+    );
+    if (!options || !challengeId) {
+      throw new Error('Passkey registration unavailable. Please try again.');
     }
+    if (!options.user || !options.user.id) {
+      throw new Error('Passkey setup failed. Please refresh and try again.');
+    }
+    if (!options.challenge) {
+      throw new Error('Passkey setup failed. Please refresh and try again.');
+    }
+
+    const registrationResponse = await startRegistration(options);
+    if (!registrationResponse || !registrationResponse.id) {
+      throw new Error('Passkey registration was not completed.');
+    }
+    await postJson(
+      'passkeyRegisterVerify',
+      { challengeId, response: registrationResponse },
+      token
+    );
 
     return { success: true, credentialID: registrationResponse.id };
   } catch (error) {
@@ -116,26 +91,25 @@ export const authenticateWithPasskey = async (userEmail = null) => {
       throw new Error('Passkeys are not supported in this browser');
     }
 
-    let allowCredentials = [];
-    
-    // If email provided, try to get their saved credentials
-    if (userEmail) {
-      // In a real implementation, you'd query your backend for this user's credentials
-      // For now, we'll let the browser handle credential selection
-    }
+    const { options, challengeId } = await postJson('passkeyAuthOptions', {
+      email: userEmail || null,
+    });
 
-    // Generate authentication options
-    const options = generateAuthenticationOptions(allowCredentials);
-    
-    // Start authentication process
     const authenticationResponse = await startAuthentication(options);
+    const { customToken, userId } = await postJson('passkeyAuthVerify', {
+      challengeId,
+      response: authenticationResponse,
+    });
 
-    // Here you would normally verify the response with your backend
-    // For this demo, we'll simulate a successful authentication
+    const auth = getAuth();
+    const credential = await signInWithCustomToken(auth, customToken);
+
     return {
       success: true,
       credentialID: authenticationResponse.id,
       userHandle: authenticationResponse.response.userHandle,
+      userId,
+      user: credential.user,
     };
   } catch (error) {
     console.error('Passkey authentication failed:', error);
@@ -146,16 +120,11 @@ export const authenticateWithPasskey = async (userEmail = null) => {
 /**
  * Check if user has any registered passkeys
  */
-export const hasPasskeys = async (userID) => {
+export const hasPasskeys = async () => {
   try {
-    const userRef = doc(db, 'users', userID);
-    const userDoc = await getDoc(userRef);
-    
-    if (userDoc.exists() && userDoc.data().passkeys) {
-      return userDoc.data().passkeys.length > 0;
-    }
-    
-    return false;
+    const token = await getAuthToken();
+    const data = await postJson('passkeyList', {}, token);
+    return (data.passkeys || []).length > 0;
   } catch (error) {
     console.error('Error checking for passkeys:', error);
     return false;
@@ -167,23 +136,8 @@ export const hasPasskeys = async (userID) => {
  */
 export const removePasskey = async (userID, credentialID) => {
   try {
-    const userRef = doc(db, 'users', userID);
-    const userDoc = await getDoc(userRef);
-    
-    if (userDoc.exists() && userDoc.data().passkeys) {
-      const updatedPasskeys = userDoc.data().passkeys.filter(
-        passkey => passkey.credentialID !== credentialID
-      );
-      
-      await updateDoc(userRef, {
-        passkeys: updatedPasskeys,
-        updatedAt: new Date(),
-      });
-      
-      return { success: true };
-    }
-    
-    throw new Error('No passkeys found for this user');
+    const token = await getAuthToken();
+    return await postJson('passkeyRemove', { credentialID }, token);
   } catch (error) {
     console.error('Error removing passkey:', error);
     throw error;
@@ -193,21 +147,16 @@ export const removePasskey = async (userID, credentialID) => {
 /**
  * Get user's passkeys list
  */
-export const getUserPasskeys = async (userID) => {
+export const getUserPasskeys = async () => {
   try {
-    const userRef = doc(db, 'users', userID);
-    const userDoc = await getDoc(userRef);
-    
-    if (userDoc.exists() && userDoc.data().passkeys) {
-      return userDoc.data().passkeys.map(passkey => ({
-        credentialID: passkey.credentialID,
-        deviceType: passkey.deviceType,
-        createdAt: passkey.createdAt,
-        lastUsed: passkey.lastUsed,
-      }));
-    }
-    
-    return [];
+    const token = await getAuthToken();
+    const data = await postJson('passkeyList', {}, token);
+    return (data.passkeys || []).map((passkey) => ({
+      credentialID: passkey.credentialID,
+      deviceType: passkey.deviceType,
+      createdAt: passkey.createdAt,
+      lastUsed: passkey.lastUsed,
+    }));
   } catch (error) {
     console.error('Error getting user passkeys:', error);
     return [];

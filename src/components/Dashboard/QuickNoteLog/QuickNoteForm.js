@@ -102,7 +102,10 @@ const QuickNoteForm = ({
         <Box
           role="button"
           tabIndex={0}
-          onClick={() => setShowQuickTags((prev) => !prev)}
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowQuickTags((prev) => !prev);
+          }}
           onKeyDown={(event) => {
             if (event.key === 'Enter' || event.key === ' ') {
               event.preventDefault();

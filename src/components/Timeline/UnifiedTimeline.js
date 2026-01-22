@@ -47,6 +47,7 @@ const UnifiedTimeline = ({
   filters = {},
   onFiltersChange,
   showFilters = true,
+  injectedEntries = []
 }) => {
   // Get centralized display info
   const incidentDisplay = getIncidentDisplayInfo();
@@ -71,8 +72,30 @@ const UnifiedTimeline = ({
   const [visibleCount, setVisibleCount] = React.useState(initialVisibleCount);
 
   React.useEffect(() => {
-    setLocalEntries(entries);
-  }, [entries]);
+    // Merge fetched entries with injected (optimistic) entries
+    const merged = [...entries];
+    
+    if (injectedEntries?.length > 0) {
+      const existingIds = new Set(entries.map(e => e.id));
+      // Only add injected entries that:
+      // 1. Don't exist in fetched entries
+      // 2. Match the selected date
+      injectedEntries.forEach(injected => {
+        const injectedDate = new Date(injected.timestamp);
+        const isSameDate = injectedDate.toDateString() === selectedDate.toDateString();
+        
+        if (!existingIds.has(injected.id) && isSameDate) {
+          // Normalize injected entry if needed to match UnifiedTimeline format
+          merged.unshift(injected);
+        }
+      });
+      
+      // Re-sort descending
+      merged.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    }
+    
+    setLocalEntries(merged);
+  }, [entries, injectedEntries, selectedDate]);
 
   React.useEffect(() => {
     setVisibleCount(initialVisibleCount);

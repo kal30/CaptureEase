@@ -45,6 +45,8 @@ exports.acceptInvitation =
   require("./invitations").acceptInvitation;
 exports.sendInvitationEmail =
   require("./email/invitation").sendInvitationEmail;
+exports.sendVerificationEmail =
+  require("./email/verification").sendVerificationEmail;
 
 /**
  * Notifications – Daily Log Reminders
@@ -90,3 +92,19 @@ exports.onLogCreate =
 exports.migrateExistingChildren =
   require("./migrations/migrateExistingChildren")
     .migrateExistingChildren;
+
+/**
+ * Passkeys – WebAuthn login
+ */
+exports.passkeyRegisterOptions =
+  require("./passkeys").passkeyRegisterOptions;
+exports.passkeyRegisterVerify =
+  require("./passkeys").passkeyRegisterVerify;
+exports.passkeyAuthOptions =
+  require("./passkeys").passkeyAuthOptions;
+exports.passkeyAuthVerify =
+  require("./passkeys").passkeyAuthVerify;
+exports.passkeyList =
+  require("./passkeys").passkeyList;
+exports.passkeyRemove =
+  require("./passkeys").passkeyRemove;

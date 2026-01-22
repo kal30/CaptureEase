@@ -6,7 +6,8 @@ import {
   DialogActions,
   IconButton,
   Alert,
-  Box
+  Box,
+  Typography
 } from '@mui/material';
 import { Close, NoteAdd } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
@@ -85,6 +86,32 @@ const QuickNoteDialog = ({ childId, childName, open, onClose, onLogged }) => {
           >
             {message.text}
           </Alert>
+        )}
+
+        {/* Smart Classification Hint Banner */}
+        {!message.text && (
+           <Box
+             sx={{
+               mb: 2,
+               p: 1.5,
+               bgcolor: '#EEF2FF',
+               borderRadius: 2,
+               border: '1px solid #C7D2FE',
+               display: 'flex',
+               gap: 1.5,
+               alignItems: 'center'
+             }}
+           >
+             <Box sx={{ fontSize: '1.2rem' }}>✨</Box>
+             <Box>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#4338CA', lineHeight: 1.2 }}>
+                  Smart Auto-Classification
+                </Typography>
+                <Typography variant="caption" sx={{ color: '#4338CA', display: 'block', lineHeight: 1.1, mt: 0.5 }}>
+                  Just write naturally! We'll sort it as Behavior, Mood, or Log automatically.
+                </Typography>
+             </Box>
+           </Box>
         )}
 
         <QuickNoteForm

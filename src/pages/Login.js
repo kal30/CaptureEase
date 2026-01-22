@@ -13,7 +13,6 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { handlePostAuthRedirect } from "../services/auth/navigation";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import GoogleAuth from "../components/AuthProviders/GoogleAuth";
-import PasskeyAuth from "../components/AuthProviders/PasskeyAuth";
 import ResponsiveLayout from "../components/Layout/ResponsiveLayout";
 
 const Login = () => {
@@ -153,9 +152,7 @@ const Login = () => {
           </EnhancedLoadingButton>
         </Box>
         <Divider sx={{ width: "100%", my: 2 }}>OR</Divider>
-        <Box sx={{ width: "100%", mb: 2 }}>
-          <PasskeyAuth mode="signin" />
-        </Box>
+        {/* Passkey login hidden for now */}
         <GoogleAuth buttonText="Sign In with Google" />
         <Box sx={{ mt: 2 }}>
           <Link
