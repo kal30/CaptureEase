@@ -1,3 +1,4 @@
+import { useState, useCallback } from 'react';
 import { useAsyncOperation } from './useAsyncOperation';
 
 /**
@@ -18,11 +19,19 @@ export const useAsyncForm = (options = {}) => {
     autoClose = true,
     onClose,
     onSuccess,
+    onError,
     ...baseOptions
   } = options;
 
+  // Local error state for validation errors
+  const [validationError, setValidationError] = useState(null);
+
   const operation = useAsyncOperation({
     ...baseOptions,
+    onError: (err) => {
+      // Call original error handler if provided
+      if (onError) onError(err);
+    },
     onSuccess: (result) => {
       // Call original success handler
       if (onSuccess) onSuccess(result);
@@ -39,7 +48,10 @@ export const useAsyncForm = (options = {}) => {
    * @param {Function} submitOperation - Async operation to perform
    * @param {any} formData - Form data to validate (optional)
    */
-  const submitForm = async (submitOperation, formData) => {
+  const submitForm = useCallback(async (submitOperation, formData) => {
+    // Clear any previous validation error
+    setValidationError(null);
+    
     try {
       // Run validation if provided
       if (validate) {
@@ -49,22 +61,52 @@ export const useAsyncForm = (options = {}) => {
       // Execute the operation
       return await operation.execute(submitOperation);
       
-    } catch (validationError) {
-      // Handle validation errors
-      operation.reset(); // Clear loading state
-      throw validationError;
+    } catch (validationErr) {
+      // Handle validation errors by storing them in state
+      console.error('Form validation error:', validationErr);
+      const errorMessage = validationErr?.message || 'Validation failed';
+      setValidationError(errorMessage);
+      
+      // Call error handler if provided
+      if (onError) onError(validationErr);
+      
+      return null;
     }
-  };
+  }, [validate, operation, onError]);
+
+  /**
+   * Reset form state including validation errors
+   */
+  const reset = useCallback(() => {
+    setValidationError(null);
+    operation.reset();
+  }, [operation]);
+
+  /**
+   * Clear error state (both validation and operation errors)
+   */
+  const clearError = useCallback(() => {
+    setValidationError(null);
+    operation.clearError();
+  }, [operation]);
 
   /**
    * Check if form can be submitted (not loading and validation passes)
    */
   const canSubmit = operation.canExecute;
 
+  // Combine validation error with operation error
+  const error = validationError || operation.error;
+
   return {
     ...operation,
+    error,
+    loading: operation.loading,
+    success: operation.success,
     submitForm,
-    canSubmit
+    canSubmit,
+    reset,
+    clearError
   };
 };
 

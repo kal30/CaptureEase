@@ -23,6 +23,15 @@ export const useAsyncOperation = (options = {}) => {
   
   // Track current operation to prevent duplicates
   const currentOperation = useRef(null);
+  // Use ref to track loading state without causing callback recreation
+  const loadingRef = useRef(false);
+  // Use refs to store callbacks so they don't cause recreations
+  const onSuccessRef = useRef(onSuccess);
+  const onErrorRef = useRef(onError);
+  
+  // Keep refs synced with latest props
+  onSuccessRef.current = onSuccess;
+  onErrorRef.current = onError;
 
   /**
    * Execute an async operation with consistent error handling
@@ -30,8 +39,8 @@ export const useAsyncOperation = (options = {}) => {
    * @param {Object} operationOptions - Per-operation options
    */
   const execute = useCallback(async (operation, operationOptions = {}) => {
-    // Prevent duplicate executions if enabled
-    if (preventDuplicates && loading) {
+    // Prevent duplicate executions if enabled - use ref to avoid stale closure
+    if (preventDuplicates && loadingRef.current) {
       console.warn('useAsyncOperation: Preventing duplicate execution');
       return null;
     }
@@ -40,6 +49,7 @@ export const useAsyncOperation = (options = {}) => {
     setError(null);
     setSuccess(false);
     setLoading(true);
+    loadingRef.current = true;
 
     const operationId = Symbol('operation');
     currentOperation.current = operationId;
@@ -57,9 +67,10 @@ export const useAsyncOperation = (options = {}) => {
       // Success!
       setSuccess(true);
       setLoading(false);
+      loadingRef.current = false;
 
-      // Call success callbacks
-      if (onSuccess) onSuccess(result);
+      // Call success callbacks using refs
+      if (onSuccessRef.current) onSuccessRef.current(result);
       if (operationOptions.onSuccess) operationOptions.onSuccess(result);
 
       return result;
@@ -76,25 +87,27 @@ export const useAsyncOperation = (options = {}) => {
       setError(errorMessage);
       setSuccess(false);
       setLoading(false);
+      loadingRef.current = false;
 
-      // Call error callbacks
-      if (onError) onError(err);
+      // Call error callbacks using refs
+      if (onErrorRef.current) onErrorRef.current(err);
       if (operationOptions.onError) operationOptions.onError(err);
 
       // Re-throw if no error handlers (allows component to handle if needed)
-      if (!onError && !operationOptions.onError) {
+      if (!onErrorRef.current && !operationOptions.onError) {
         throw err;
       }
 
       return null;
     }
-  }, [loading, onSuccess, onError, preventDuplicates]);
+  }, [preventDuplicates]); // Removed loading, onSuccess, onError from deps - using refs instead
 
   /**
    * Reset all states to initial values
    */
   const reset = useCallback(() => {
     setLoading(false);
+    loadingRef.current = false;
     setError(null);
     setSuccess(false);
     currentOperation.current = null;

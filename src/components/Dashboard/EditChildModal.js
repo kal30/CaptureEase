@@ -44,8 +44,15 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
   const storage = getStorage();
 
   // Permission checks - updated for new role system
-  const canEdit = userRole === USER_ROLES.CARE_OWNER || userRole === USER_ROLES.CARE_PARTNER || userRole === 'parent'; // Legacy support
-  const canEditMedicalInfo = userRole === USER_ROLES.CARE_OWNER || userRole === USER_ROLES.CARE_PARTNER; // Family can edit medical info
+  // Debug: Log the userRole to understand why permission might fail
+  console.log('EditChildModal: userRole received =', userRole, 'child =', child?.name);
+  
+  const canEdit = userRole === USER_ROLES.CARE_OWNER || 
+                  userRole === USER_ROLES.CARE_PARTNER || 
+                  userRole === 'care_owner' ||  // Direct string match fallback
+                  userRole === 'care_partner' || // Direct string match fallback
+                  userRole === 'parent'; // Legacy support
+  const canEditMedicalInfo = userRole === USER_ROLES.CARE_OWNER || userRole === USER_ROLES.CARE_PARTNER;
 
   // Use async form hook for child editing
   const childForm = useAsyncForm({
