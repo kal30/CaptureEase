@@ -8,6 +8,32 @@ import {
 import { db } from '../firebase';
 import { getDayDateRange, isWithinDateRange } from './dateUtils';
 
+const JOURNAL_CATEGORY_META = {
+  behavior: { type: 'behavior', timelineType: 'behavior', titlePrefix: 'Behavior', color: '#D32F2F' },
+  health: { type: 'health', timelineType: 'health', titlePrefix: 'Health', color: '#00796B' },
+  mood: { type: 'mood', timelineType: 'mood', titlePrefix: 'Mood', color: '#F57F17' },
+  sleep: { type: 'sleep', timelineType: 'sleep', titlePrefix: 'Sleep', color: '#1A237E' },
+  food: { type: 'food', timelineType: 'food', titlePrefix: 'Food', color: '#E65100' },
+  milestone: { type: 'milestone', timelineType: 'milestone', titlePrefix: 'Win', color: '#2E7D32' },
+  log: { type: 'journal', timelineType: 'journal', titlePrefix: 'Daily Log' }
+};
+
+const mapJournalEntry = (doc) => {
+  const data = doc.data();
+  const categoryMeta = JOURNAL_CATEGORY_META[data.category] || JOURNAL_CATEGORY_META.log;
+
+  return {
+    id: doc.id,
+    ...data,
+    timestamp: data.timestamp?.toDate() || new Date(data.createdAt),
+    type: categoryMeta.type,
+    timelineType: categoryMeta.timelineType,
+    collection: 'dailyLogs',
+    titlePrefix: categoryMeta.titlePrefix,
+    color: categoryMeta.color
+  };
+};
+
 /**
  * Get journal entries (daily logs) for a specific child and date
  * @param {string} childId - Child ID
@@ -30,13 +56,7 @@ export const getJournalEntries = async (childId, selectedDate) => {
       
       const snapshot = await getDocs(dailyLogQuery);
       return snapshot.docs
-        .map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-          timestamp: doc.data().timestamp?.toDate() || new Date(doc.data().createdAt),
-          type: 'journal',
-          collection: 'dailyLogs'
-        }))
+        .map(mapJournalEntry)
         .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
       
     } catch (indexError) {
@@ -52,13 +72,7 @@ export const getJournalEntries = async (childId, selectedDate) => {
         
         const snapshot = await getDocs(fallbackQuery);
         return snapshot.docs
-          .map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-            timestamp: doc.data().timestamp?.toDate() || new Date(doc.data().createdAt),
-            type: 'journal',
-            collection: 'dailyLogs'
-          }))
+          .map(mapJournalEntry)
           .filter(entry => isWithinDateRange(entry.timestamp, start, end))
           .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
       } else {

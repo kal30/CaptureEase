@@ -18,7 +18,7 @@ import RichTextInput from '../UI/RichTextInput';
 /**
  * EntryForm - Reusable form component for both incidents and habits
  * Provides consistent structure: Date → Slider → Notes → Save
- * For Quick Notes: Shows text input instead of slider
+ * For text-entry habits: shows text input instead of slider
  * 
  * @param {Object} props
  * @param {string} props.title - Form title
@@ -30,7 +30,7 @@ import RichTextInput from '../UI/RichTextInput';
  * @param {boolean} props.loading - Loading state
  * @param {string} props.notesPlaceholder - Placeholder for notes field
  * @param {Date} props.defaultDate - Default date value
- * @param {boolean} props.isTextInput - Show text input instead of slider (for Quick Notes)
+ * @param {boolean} props.isTextInput - Show text input instead of slider
  */
 const EntryForm = ({
   title = "Entry Form",
@@ -54,7 +54,7 @@ const EntryForm = ({
   const handleSave = async () => {
     const formData = {
       date,
-      level: isTextInput ? null : level, // No level for Quick Notes
+      level: isTextInput ? null : level,
       notes: notesData.text,
       mediaFile: notesData.mediaFile,
       audioBlob: notesData.audioBlob,
@@ -123,7 +123,7 @@ const EntryForm = ({
           />
         </Paper>
 
-        {/* Level Slider - Skip for Quick Notes */}
+        {/* Level Slider - Skip for text-entry habits */}
         {!isTextInput && (
           <Paper 
             elevation={0}
@@ -166,7 +166,7 @@ const EntryForm = ({
               mb: 2
             }}
           >
-            {isTextInput ? 'Quick Notes' : 'Notes'}
+            {isTextInput ? 'Notes' : 'Notes'}
           </Typography>
           <RichTextInput
             onDataChange={handleNotesChange}
@@ -175,7 +175,7 @@ const EntryForm = ({
           />
           <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
             {isTextInput 
-              ? 'Write a quick note about today - add text, photos, voice recordings, or videos'
+              ? 'Write a note and add text, photos, voice recordings, or videos'
               : 'Add text notes, photos, voice recordings, or videos to provide context'
             }
           </Typography>

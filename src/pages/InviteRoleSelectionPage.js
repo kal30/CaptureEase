@@ -100,7 +100,7 @@ const InviteRoleSelectionPage = () => {
       {/* Header */}
       <Box sx={{ textAlign: 'center', mb: 4 }}>
         <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
-          Invite Team Member
+          + Build Your Care Team
         </Typography>
         <Typography variant="body1" color="text.secondary">
           Choose who you'd like to invite to your care team

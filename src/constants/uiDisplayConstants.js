@@ -20,7 +20,19 @@ export const UI_LABELS = {
   DAILY_HABITS_SECTION: {
     emoji: "📅",
     label: "Daily Habits",
-    description: "Track mood, sleep, nutrition, progress & quick notes",
+    description: "Track mood, sleep, nutrition, progress, and other daily care data",
+  },
+
+  MEDICATION_SECTION: {
+    emoji: "💊",
+    label: "Medication",
+    description: "Log medication given",
+  },
+
+  DIAPER_SECTION: {
+    emoji: "💩",
+    label: "Diaper",
+    description: "Log diaper changes and results",
   },
 
   Messages: {
@@ -35,3 +47,5 @@ export const getIncidentDisplayInfo = () => UI_LABELS.INCIDENT_SECTION;
 export const getMessagesDisplayInfo = () => UI_LABELS.Messages;
 export const getJournalDisplayInfo = () => UI_LABELS.JOURNAL_SECTION;
 export const getDailyHabitsDisplayInfo = () => UI_LABELS.DAILY_HABITS_SECTION;
+export const getMedicationDisplayInfo = () => UI_LABELS.MEDICATION_SECTION;
+export const getDiaperDisplayInfo = () => UI_LABELS.DIAPER_SECTION;

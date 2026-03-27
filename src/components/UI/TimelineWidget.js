@@ -19,7 +19,7 @@ import {
   Timeline as TimelineIcon,
   CalendarMonth as CalendarIcon,
 } from '@mui/icons-material';
-import TimelineProgressRing from './TimelineProgressRing';
+import { alpha } from '@mui/material/styles';
 import MiniCalendar from './MiniCalendar';
 import { UnifiedTimeline, TimelineFullModal, TimelineFilters } from '../Timeline';
 import { useTimelineProgress } from '../../hooks/useTimelineProgress';
@@ -47,24 +47,10 @@ const TimelineWidget = ({
   const [expanded, setExpanded] = useState(defaultExpanded);
   const [showTimelineModal, setShowTimelineModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
-  
-  // Debug: Log current state
-  console.log('TimelineWidget state:', {
-    childId: child?.id,
-    childName: child?.name,
-    selectedDate,
-    entriesCount: entries.length,
-    childSpecificEntriesCount: entries.filter(entry => 
-      entry.childId === child?.id || entry.child?.id === child?.id
-    ).length
-  });
- // 'daily' or 'recent'
+
   const [timelineFilters, setTimelineFilters] = useState({}); // Unified timeline filters
   
-  // Filter entries to ensure they belong to the current child
-  const childSpecificEntries = entries.filter(entry => 
-    entry.childId === child?.id || entry.child?.id === child?.id
-  );
+  const childSpecificEntries = entries;
   
   const timeline = useTimelineProgress(childSpecificEntries, dailyCareStatus);
   
@@ -90,175 +76,18 @@ const TimelineWidget = ({
   };
 
   const contentStyles = {
-    p: { xs: 1.5, md: 2 }
-  };
-
-  // Mobile-responsive progress ring size
-  const getRingSize = () => {
-    if (variant === 'compact') return 'small';
-    return 'medium'; // Let CSS handle responsive sizing
-  };
-
-  const handleProgressRingClick = (e) => {
-    if (e) {
-      e.stopPropagation();
-    }
-    console.log('Progress ring clicked for child:', child?.id, child?.name);
-    if (!expanded) {
-      setExpanded(true);
-    }
+    p: { xs: 1.25, md: 1.5 }
   };
 
   const handleViewFullTimeline = () => {
     setShowTimelineModal(true);
   };
 
-  // Test function to check if any data exists at all
-  const testDataExists = async () => {
-    try {
-      
-      // Import Firebase functions locally for testing
-      const { collection, getDocs, query, limit, orderBy, where } = await import('firebase/firestore');
-      const { db } = await import('../../services/firebase');
-      
-      // Test each collection with a simple limit query - check multiple possible names
-      const collections = [
-        'incidents', 
-        'journalEntries', 'journal_entries', 'journals',
-        'dailyLogs', 'daily_logs', 'dailyLog', 'daily-logs',
-        'followUpResponses', 'follow_up_responses', 'followUps'
-      ];
-      
-      for (const collectionName of collections) {
-        try {
-          // Test 1: Any data at all
-          const testQuery = query(collection(db, collectionName), limit(5));
-          const snapshot = await getDocs(testQuery);
-          console.log(`📊 Collection '${collectionName}':`, {
-            exists: snapshot.size > 0,
-            count: snapshot.size
-          });
-          
-          // Test 2: Recent data (last 24 hours)
-          const yesterday = new Date();
-          yesterday.setDate(yesterday.getDate() - 1);
-          
-          try {
-            const recentQuery = query(
-              collection(db, collectionName),
-              where('timestamp', '>=', yesterday),
-              orderBy('timestamp', 'desc'),
-              limit(5)
-            );
-            const recentSnapshot = await getDocs(recentQuery);
-            console.log(`📅 Recent '${collectionName}' (last 24h):`, {
-              count: recentSnapshot.size,
-              docs: recentSnapshot.docs.map(doc => ({
-                id: doc.id,
-                timestamp: doc.data().timestamp?.toDate(),
-                childId: doc.data().childId,
-                ...doc.data()
-              }))
-            });
-          } catch (recentErr) {
-          }
-          
-          // Test 3: For current child specifically
-          if (child?.id) {
-            try {
-              const childQuery = query(
-                collection(db, collectionName),
-                where('childId', '==', child.id),
-                limit(5)
-              );
-              const childSnapshot = await getDocs(childQuery);
-              console.log(`👶 '${collectionName}' for child ${child.id}:`, {
-                count: childSnapshot.size,
-                docs: childSnapshot.docs.map(doc => ({
-                  id: doc.id,
-                  timestamp: doc.data().timestamp?.toDate(),
-                  ...doc.data()
-                }))
-              });
-            } catch (childErr) {
-            }
-          }
-          
-        } catch (err) {
-          console.error(`❌ Error testing collection '${collectionName}':`, err);
-        }
-      }
-    } catch (error) {
-      console.error('❌ Error in testDataExists:', error);
-    }
-  };
-
-  // Specific test for journal/daily log collections
-  const testJournalCollections = async () => {
-    try {
-      console.log('📔 Testing specific journal/daily log collections...');
-      
-      const { collection, getDocs, query, limit, where } = await import('firebase/firestore');
-      const { db } = await import('../../services/firebase');
-      
-      // Test subcollections under children/{childId}/
-      const journalSubcollections = ['journals', 'journal_entries', 'journal'];
-      const dailyLogSubcollections = ['moodLogs', 'dailyLogs', 'daily_logs', 'logs'];
-      
-      if (child?.id) {
-        console.log(`Testing journal subcollections for child ${child.id}:`);
-        for (const name of journalSubcollections) {
-          try {
-            const snapshot = await getDocs(query(collection(db, 'children', child.id, name), limit(3)));
-            if (snapshot.size > 0) {
-              snapshot.docs.forEach((doc, i) => {
-                console.log(`  Journal ${i + 1}:`, doc.data());
-              });
-            } else {
-              console.log(`📭 Empty subcollection: 'children/${child.id}/${name}'`);
-            }
-          } catch (err) {
-            console.log(`❌ Subcollection 'children/${child.id}/${name}' doesn't exist or error:`, err.message);
-          }
-        }
-      }
-      
-      if (child?.id) {
-        console.log(`Testing daily log subcollections for child ${child.id}:`);
-        for (const name of dailyLogSubcollections) {
-          try {
-            const snapshot = await getDocs(query(collection(db, 'children', child.id, name), limit(3)));
-            if (snapshot.size > 0) {
-              snapshot.docs.forEach((doc, i) => {
-                console.log(`  Daily Log ${i + 1}:`, doc.data());
-              });
-            } else {
-              console.log(`📭 Empty subcollection: 'children/${child.id}/${name}'`);
-            }
-          } catch (err) {
-            console.log(`❌ Subcollection 'children/${child.id}/${name}' doesn't exist or error:`, err.message);
-          }
-        }
-      }
-      
-      
-    } catch (error) {
-      console.error('❌ Error in testJournalCollections:', error);
-    }
-  };
-
   const handleDayClick = (day, dayEntries, date) => {
-    // Handle day click from mini calendar or timeline calendar
-    console.log('Day clicked for child:', child?.id, child?.name, { day, date, entriesCount: dayEntries?.length || 0 });
     if (showUnifiedLog) {
       setSelectedDate(date);
       if (!expanded) {
         setExpanded(true);
-      }
-    } else {
-      // Legacy behavior
-      if (dayEntries?.length > 0) {
-        console.log('Day clicked:', { day, dayEntries, date });
       }
     }
   };
@@ -287,9 +116,13 @@ const TimelineWidget = ({
             key={`${entry.type}-${entry.id}`}
             className={`timeline-widget__entry timeline-widget__entry--${entry.type}`}
             sx={{
-              borderRadius: 1,
+              borderRadius: 2.5,
               mb: index < timeline.recentEntries.length - 1 ? 1 : 0,
-              bgcolor: 'background.default'
+              bgcolor: '#ffffff',
+              border: `1px solid ${alpha(entry.color, 0.14)}`,
+              boxShadow: '0 6px 16px rgba(15, 23, 42, 0.045)',
+              px: 1.25,
+              py: 0.75,
             }}
           >
             <ListItemAvatar>
@@ -309,11 +142,15 @@ const TimelineWidget = ({
               secondary={timeline.formatTimeAgo(entry.timestamp)}
               primaryTypographyProps={{
                 variant: 'body2',
-                sx: { fontWeight: 500, mb: 0.5 }
+                sx: { fontWeight: 500, mb: 0.25, lineHeight: 1.25 }
               }}
               secondaryTypographyProps={{
                 variant: 'caption',
-                color: 'text.secondary'
+                color: 'text.secondary',
+                sx: {
+                  fontSize: '0.7rem',
+                  fontWeight: 500,
+                }
               }}
             />
           </ListItem>
@@ -423,17 +260,9 @@ const TimelineWidget = ({
           <Box sx={{ 
             display: 'flex', 
             alignItems: 'center', 
-            gap: { xs: 1.5, md: 2 },
+            gap: { xs: 1, md: 1.5 },
             flexWrap: { xs: 'nowrap', sm: 'nowrap' }
           }}>
-            {/* Progress Ring */}
-            <TimelineProgressRing
-              status={timeline.dailyCareStatus}
-              completionRate={timeline.completionRate}
-              size={getRingSize()}
-              onClick={handleProgressRingClick}
-            />
-            
             {/* Header Content */}
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
@@ -465,10 +294,7 @@ const TimelineWidget = ({
                     }}
                     style={{ cursor: 'pointer' }}
                   >
-                    {timeline.hasActivity ? 
-                      `${timeline.metrics?.totalCount || 0} total entries` : 
-                      'No activity yet'
-                    } | <span onClick={(e) => {e.stopPropagation(); testDataExists();}}>🔍 Test DB</span> | <span onClick={(e) => {e.stopPropagation(); setSelectedDate(new Date(selectedDate));}}>🔄 Refresh</span> | <span onClick={(e) => {e.stopPropagation(); testJournalCollections();}}>📔 Test Journal</span>
+                    {timeline.hasActivity ? `${timeline.metrics?.totalCount || 0} total entries` : ''}
                   </Typography>
                 </Box>
                 
@@ -537,7 +363,7 @@ const TimelineWidget = ({
                 <Box sx={{ 
                   flex: { xs: 'none', md: 1 }, 
                   minWidth: 0,
-                  width: { xs: '100%', md: 'auto' }
+                  width: { xs: '100%', md: 'auto' },
                 }}>
                   <UnifiedTimeline 
                     child={child}

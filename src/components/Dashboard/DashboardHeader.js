@@ -43,7 +43,7 @@ const DashboardHeader = ({
           elevated
           sx={{ width: { xs: "100%", sm: "auto" } }}
         >
-          Invite Team Member
+          + Build Your Care Team
         </GradientButton>
       )}
       <GradientButton

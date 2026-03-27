@@ -39,13 +39,30 @@ export const HABIT_TYPES = {
     icon: TrendingUpIcon,
     sliderLabel: "Progress/Development",
   },
+  // Deprecated legacy note flow. New notes should use dailyLogs via the dashboard quick note modal.
   QUICK_NOTES: {
     id: "quick_notes",
-    label: "Quick Notes",
-    description: "Brief daily observations and thoughts",
+    label: "Legacy Notes",
+    description: "Deprecated legacy note flow",
     color: "#2ff3e0",
     icon: BookIcon,
-    isTextInput: true // Special flag to show text input instead of slider
+    isTextInput: true
+  },
+  DIAPER: {
+    id: "diaper",
+    label: "Diaper",
+    description: "Log diaper changes",
+    color: "#607D8B",
+    icon: RestaurantIcon, // Will use a better icon in the UI
+    sliderLabel: "Diaper Status",
+  },
+  MEDICATION: {
+    id: "medication",
+    label: "Medication",
+    description: "Log meds given",
+    color: "#F44336",
+    icon: RestaurantIcon, // Will use a better icon in the UI
+    sliderLabel: "Meds Confirmation",
   },
   OTHER: {
     id: "other",
@@ -274,7 +291,7 @@ export const PROGRESS_SCALE = {
 };
 
 
-// Quick Notes Quality scale (1-10)
+// Legacy note-entry scale kept only for backward compatibility.
 export const QUICK_NOTES_SCALE = {
   1: {
     label: "Brief Note",
@@ -283,7 +300,7 @@ export const QUICK_NOTES_SCALE = {
   },
   2: {
     label: "Short Entry",
-    color: "#F44336", 
+    color: "#F44336",
     description: "Basic observations, few details",
   },
   3: {

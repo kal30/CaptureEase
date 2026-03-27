@@ -33,9 +33,9 @@ const testimonials = [
   {
     quote:
       "I love how easy it is to use. I can quickly log a behavior or a mood, and I know that information will be there when I need it.",
-    author: "Sarah Jones",
+    author: "Kalyani Jones",
     role: "Caregiver",
-    image: "https://via.placeholder.com/150/00FF00/FFFFFF?text=Sarah", // Replace with actual image path
+    image: "https://via.placeholder.com/150/00FF00/FFFFFF?text=Kalyani", // Replace with actual image path
   },
   {
     quote:

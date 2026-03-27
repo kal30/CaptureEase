@@ -31,43 +31,43 @@ const LogInput = ({ childId, selectedDate = new Date() }) => {
 
   // Entry templates with category and tags
   const templates = [
-    { 
-      emoji: "🍽️", 
+    {
+      emoji: "🍽️",
       name: "Meal Time",
       text: "Had [meal] at [time]. Ate [food items].",
       category: "mealtime",
       tags: ["mealtime", "food"]
     },
-    { 
-      emoji: "😊", 
+    {
+      emoji: "😊",
       name: "Good Day",
       text: "Great day today! Was happy and engaged. Had fun [activity].",
       category: "mood",
       tags: ["goodday", "mood", "positive"]
     },
-    { 
-      emoji: "😴", 
+    {
+      emoji: "😴",
       name: "Nap Time",
       text: "Took a nap from [start time] to [end time]. Slept well.",
       category: "sleep",
       tags: ["nap", "sleep", "rest"]
     },
-    { 
-      emoji: "🎉", 
+    {
+      emoji: "🎉",
       name: "Milestone",
       text: "🎉 Did something amazing today! [achievement]. So proud!",
       category: "milestone",
       tags: ["milestone", "development", "achievement"]
     },
-    { 
-      emoji: "😤", 
+    {
+      emoji: "😤",
       name: "Challenge",
       text: "Had some challenges today. Struggled with [issue]. We worked through it by [solution].",
       category: "challenge",
       tags: ["challenges", "behavior", "coping"]
     },
-    { 
-      emoji: "🏥", 
+    {
+      emoji: "🏥",
       name: "Medical",
       text: "Medical update: [medical information].",
       category: "medical_note",
@@ -93,7 +93,7 @@ const LogInput = ({ childId, selectedDate = new Date() }) => {
     let mediaURL = "";
     let voiceMemoURL = "";
     let mediaType = "";
-    
+
     // Combine template tags with extracted hashtags
     const hashtagTags = extractTags(richTextData.text);
     const templateTags = selectedTemplate?.tags || [];
@@ -132,26 +132,26 @@ const LogInput = ({ childId, selectedDate = new Date() }) => {
         createdAt: serverTimestamp(),
         text: richTextData.text,
         status: 'active',
-        
+
         // Optional structured fields
         ...(selectedTemplate?.category && { category: selectedTemplate.category }),
         ...(allTags.length > 0 && { tags: allTags }),
-        
+
         // Media fields (optional)
         ...(mediaURL && { mediaURL }),
         ...(mediaType && { mediaType }),
         ...(voiceMemoURL && { voiceMemoURL }),
-        
+
         // Timestamp fields for UI
         timestamp: entryTimestamp, // Use selected date with current time
         entryDate: selectedDate.toDateString(), // Store the selected date for filtering
-        
+
         // Author info (keeping for UI display)
         authorId: user?.uid,
         authorName: user?.displayName || user?.email?.split('@')[0] || 'User',
         authorEmail: user?.email,
       };
-      
+
       // Debug logging to see exactly what's being sent
       console.log('🔍 LogInput Debug Info:');
       console.log('  childId:', childId);
@@ -161,7 +161,7 @@ const LogInput = ({ childId, selectedDate = new Date() }) => {
         ...docData,
         createdAt: '[serverTimestamp()]' // serverTimestamp shows as function, not actual value
       });
-      
+
       await addDoc(collection(db, "dailyLogs"), docData);
 
       // Clear the input after successful submission
@@ -204,9 +204,9 @@ const LogInput = ({ childId, selectedDate = new Date() }) => {
         </Box>
       </Box>
 
-      <RichTextInput 
-        onDataChange={setRichTextData} 
-        clearData={clearInput} 
+      <RichTextInput
+        onDataChange={setRichTextData}
+        clearData={clearInput}
         templateText={templateText}
       />
       <Box
@@ -215,6 +215,7 @@ const LogInput = ({ childId, selectedDate = new Date() }) => {
           justifyContent: "flex-end",
           alignItems: "center",
           marginTop: 2,
+          gap: 1
         }}
       >
         <Button

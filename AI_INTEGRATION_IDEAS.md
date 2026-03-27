@@ -1,7 +1,7 @@
-# AI Integration Ideas for CaptureEase Journal System
+# AI Integration Ideas for CaptureEz Journal System
 
 ## Overview
-This document captures AI integration opportunities for the journal entry system in CaptureEase.
+This document captures AI integration opportunities for the journal entry system in CaptureEz.
 
 ## AI Integration Opportunities
 

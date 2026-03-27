@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { AppBar, Toolbar, Button, Box, Container } from "@mui/material";
 import { useRole } from "../../contexts/RoleContext";
 import NavButton from "./NavButton";
-import InfoIcon from "@mui/icons-material/Info";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import GroupIcon from "@mui/icons-material/Group";
 import AvatarMenu from "./AvatarMenu";
@@ -20,20 +19,19 @@ import {
   navLinksContainerStyles,
   authButtonsContainerStyles,
   loginButtonStyles,
-  signUpButtonStyles,
 } from "../../assets/theme/navbarTheme";
 
 const Navbar = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const auth = getAuth();
+  const [isLoggedIn, setIsLoggedIn] = useState(() => !!auth.currentUser);
   const { childrenWithAccess } = useRole();
 
   useEffect(() => {
-    const auth = getAuth();
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setIsLoggedIn(!!user);
     });
     return () => unsubscribe();
-  }, []);
+  }, [auth]);
 
   const colorScheme = getNavbarColorScheme("current");
 
@@ -69,21 +67,6 @@ const Navbar = () => {
                 navLinksContainerStyles(theme, isLoggedIn, colorScheme)
               }
             >
-              {!isLoggedIn && (
-                <>
-                  <NavButton
-                    text="About Us"
-                    icon={
-                      <InfoIcon
-                        sx={navbarIconStyles}
-                        htmlColor={navbarIconStyles.color}
-                      />
-                    }
-                    to="/about"
-                  />
-                </>
-              )}
-
               {isLoggedIn && (
                 <>
                   <NavButton
@@ -115,26 +98,16 @@ const Navbar = () => {
             {/* Auth Buttons or Avatar - Mobile optimized */}
             <Box sx={authButtonsContainerStyles}>
               {isLoggedIn ? (
-                <AvatarMenu user={getAuth().currentUser} />
+                <AvatarMenu user={auth.currentUser} />
               ) : (
-                <>
-                  <Button
-                    variant="contained"
-                    component={RouterLink}
-                    to="/login"
-                    sx={loginButtonStyles()}
-                  >
-                    Login
-                  </Button>
-                  <Button
-                    variant="contained"
-                    component={RouterLink}
-                    to="/register"
-                    sx={signUpButtonStyles}
-                  >
-                    Sign Up
-                  </Button>
-                </>
+                <Button
+                  variant="contained"
+                  component={RouterLink}
+                  to="/login"
+                  sx={loginButtonStyles()}
+                >
+                  Sign In
+                </Button>
               )}
             </Box>
           </Container>

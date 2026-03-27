@@ -1,4 +1,4 @@
-// Custom Cypress commands for CaptureEase testing
+// Custom Cypress commands for CaptureEz testing
 
 // Login command
 Cypress.Commands.add('login', (email, password) => {

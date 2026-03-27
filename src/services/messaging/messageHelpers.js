@@ -179,7 +179,7 @@ export const sendSystemMessage = async (conversationId, text, metadata = {}) => 
     const result = await sendMessage({
       conversationId,
       senderId: 'system',
-      senderName: 'CaptureEase',
+      senderName: 'CaptureEz',
       text,
       type: MessageTypes.SYSTEM,
       metadata: {

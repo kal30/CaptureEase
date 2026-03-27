@@ -7,7 +7,7 @@ import EditTherapistModal from './EditTherapistModal';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 
-const TherapistManager = () => {
+const TherapistManager = ({ child }) => {
   const [therapists, setTherapists] = useState([]);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -68,6 +68,7 @@ const TherapistManager = () => {
         open={addModalOpen}
         onClose={handleAddModalClose}
         onTherapistAdded={fetchTherapists}
+        child={child}
       />
       <EditTherapistModal
         open={editModalOpen}

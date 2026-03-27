@@ -5,16 +5,18 @@ import {
   IconButton,
   Tooltip,
   Button,
+  Menu,
+  MenuItem,
+  ListItemText,
 } from '@mui/material';
 import {
   Assessment as AssessmentIcon,
-  ChatBubble as ChatBubbleIcon,
+  MoreHoriz as MoreHorizIcon,
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
 import { useChildContext } from '../../contexts/ChildContext';
 import { therapyTheme } from '../../assets/theme/therapyTheme';
-import { getIncidentDisplayInfo, getJournalDisplayInfo, getDailyHabitsDisplayInfo } from '../../constants/uiDisplayConstants';
 
 /**
  * QuickEntrySection - Integrated Quick Entry circles with Daily Report
@@ -35,58 +37,45 @@ const QuickEntrySection = ({
   const navigate = useNavigate();
   const { setCurrentChildId } = useChildContext();
   const [hoveredAction, setHoveredAction] = useState(null);
+  const [menuAnchorEl, setMenuAnchorEl] = useState(null);
 
-  // Get centralized display info
-  const incidentDisplay = getIncidentDisplayInfo();
-  const journalDisplay = getJournalDisplayInfo();
-  const dailyHabitsDisplay = getDailyHabitsDisplayInfo();
-
-  // Quick action items with theme-driven colors and distinct styling
+  // The "Core Four" Hero Buttons
   const quickActions = [
     {
-      key: 'journal',
-      emoji: dailyHabitsDisplay.emoji,
-      label: dailyHabitsDisplay.label,
-      description: dailyHabitsDisplay.description,
-      color: '#f9d030', // Yellow for daily habits
-      bgColor: '#fef9e7',
-      type: 'input', // Indicates this opens an input
-      shape: 'circle' // Circle shape like incident
-    },
-    { 
-      key: 'incident', 
-      emoji: incidentDisplay.emoji, 
-      label: incidentDisplay.label, 
-      description: incidentDisplay.description,
-      color: '#DC2626', // Red for urgent/incidents
-      bgColor: '#FEF2F2',
-      type: 'input', // Indicates this opens an input form
-      shape: 'circle' // Back to circle shape
+      key: 'magic',
+      emoji: '＋',
+      label: 'Log Something',
+      description: 'Quick note popup',
+      color: '#4caf50', // Green
+      bgColor: '#e8f5e9',
+      type: 'input',
+      shape: 'button'
     },
     {
-      key: 'journaling',
-      emoji: journalDisplay.emoji,
-      label: journalDisplay.label,
-      description: journalDisplay.description,
-      color: '#795548', // Brown for journaling
-      bgColor: '#f3e5ab',
-      type: 'navigation', // Indicates this navigates to a page
+      key: 'messages',
+      emoji: '💬',
+      label: 'Messages',
+      description: 'Chat with care team',
+      color: '#6366F1', // Indigo
+      bgColor: '#E0E7FF',
+      type: 'navigation',
       shape: 'circle',
-      navigationPath: '/log'
+      navigationPath: '/messages'
     },
   ];
+  const primaryAction = quickActions[0];
+  const secondaryActions = quickActions.slice(1);
 
   const handleQuickEntryClick = (action, e) => {
     e.stopPropagation();
-    
-    // Handle navigation actions (like Journaling)
+
+    // Handle navigation actions
     if (action.type === 'navigation' && action.navigationPath) {
-      // Set the current child ID before navigating
       setCurrentChildId(child.id);
-      navigate(action.navigationPath);
+      navigate(action.navigationPath, { state: { selectedChildId: child.id } });
       return;
     }
-    
+
     // Handle regular input actions
     onQuickEntry?.(child, action.key, e);
   };
@@ -104,6 +93,15 @@ const QuickEntrySection = ({
   const handleDailyReportClick = (e) => {
     e.stopPropagation();
     onDailyReport?.(child);
+  };
+
+  const handleMenuOpen = (e) => {
+    e.stopPropagation();
+    setMenuAnchorEl(e.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setMenuAnchorEl(null);
   };
 
   // Therapist-specific view with therapy notes access
@@ -131,7 +129,7 @@ const QuickEntrySection = ({
         >
           🩺 Professional View:
         </Typography>
-        
+
         {/* Status indicators (read-only) */}
         <Box sx={{ display: "flex", gap: 0.5 }}>
           {quickActions.map((action) => (
@@ -141,8 +139,8 @@ const QuickEntrySection = ({
                 width: 20,
                 height: 20,
                 borderRadius: "50%",
-                border: `1px solid ${status[action.key] 
-                  ? action.color 
+                border: `1px solid ${status[action.key]
+                  ? action.color
                   : theme.palette.divider}`,
                 bgcolor: status[action.key]
                   ? action.bgColor
@@ -191,99 +189,93 @@ const QuickEntrySection = ({
   }
 
   return (
-    <Box 
-      sx={{ 
-        display: "flex", 
+    <Box
+      sx={{
+        display: "flex",
         alignItems: "center",
-        gap: 2, 
+        gap: 1.25,
         px: { xs: 0, md: 2 },
         width: { xs: "100%", md: "auto" },
         justifyContent: { xs: "center", md: "flex-start" },
       }}
     >
-      {/* Quick Entry Circles */}
-      {quickActions.map((action) => (
-        <Tooltip
-          key={action.key}
-          title={`${action.label}: ${action.description}`}
-          arrow
-          placement="top"
-        >
-          <Box
-            onClick={(e) => handleQuickEntryClick(action, e)}
-            onMouseEnter={() => handleQuickEntryHover(action.key)}
-            onMouseLeave={handleQuickEntryLeave}
-            sx={{
-              width: 30, // Same size for all circles
-              height: 30, // Same size for all circles
-              borderRadius: "50%", // All circles now
-              border: action.key === 'journal' ? `3px solid ${action.color}` : `2px solid ${action.color}`, // Thicker border for journal
-              bgcolor: status[action.key]
-                ? action.bgColor
-                : action.key === 'journal' ? action.bgColor : theme.palette.background.paper, // Always use colored bg for journal
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              transition: "all 0.2s ease",
-              transform: (hoveredAction === action.key || externalHoveredAction === action.key) ? "scale(1.15)" : "scale(1)",
-              boxShadow: (hoveredAction === action.key || externalHoveredAction === action.key)
-                ? `0 4px 12px ${action.color}60` 
-                : action.key === 'journal' ? `0 2px 8px ${action.color}30` : "none", // Always have subtle shadow for journal
-              // Gradient background for journal
-              ...(action.key === 'journal' && {
-                background: `linear-gradient(135deg, ${action.bgColor} 0%, ${action.color}20 100%)`, // Gradient background for journal
-              }),
-              // Gradient background for journaling
-              ...(action.key === 'journaling' && {
-                background: `linear-gradient(135deg, ${action.bgColor} 0%, ${action.color}20 100%)`, // Gradient background for journaling
-              }),
-              "&:hover": {
-                borderColor: action.color,
-                bgcolor: action.bgColor,
-                transform: action.key === 'journal' ? "scale(1.25)" : "scale(1.1)", // Even more dramatic hover for journal
-                boxShadow: action.key === 'journal' ? `0 6px 16px ${action.color}50` : `0 2px 8px ${action.color}40`,
-              },
-            }}
-          >
-            <Typography sx={{ fontSize: "1.2rem" }}>
-              {status[action.key] && action.key === 'journal' ? "📅" : status[action.key] ? "✓" : action.emoji}
-            </Typography>
-          </Box>
-        </Tooltip>
-      ))}
-
-      {/* Daily Report Button - Integrated */}
-      <Tooltip
-        title="Analytics: View today's daily care summary and progress insights"
-        arrow
-        placement="top"
+      <Button
+        variant="contained"
+        onClick={(e) => handleQuickEntryClick(primaryAction, e)}
+        onMouseEnter={() => handleQuickEntryHover(primaryAction.key)}
+        onMouseLeave={handleQuickEntryLeave}
+        sx={{
+          minHeight: 42,
+          px: 2,
+          borderRadius: '12px',
+          textTransform: 'none',
+          fontWeight: 700,
+          fontSize: '0.95rem',
+          color: '#ffffff',
+          background: 'linear-gradient(135deg, #4caf50 0%, #2e7d32 100%)',
+          boxShadow: (hoveredAction === primaryAction.key || externalHoveredAction === primaryAction.key)
+            ? '0 8px 18px rgba(76, 175, 80, 0.28)'
+            : '0 4px 10px rgba(76, 175, 80, 0.18)',
+          '&:hover': {
+            background: 'linear-gradient(135deg, #43a047 0%, #1f6a28 100%)',
+            boxShadow: '0 10px 20px rgba(76, 175, 80, 0.3)',
+          },
+        }}
       >
+        {`+ ${primaryAction.label}`}
+      </Button>
+
+      <Tooltip title="More actions" arrow placement="top">
         <IconButton
-          size="small"
-          onClick={handleDailyReportClick}
+          size="medium"
+          onClick={handleMenuOpen}
           sx={{
-            width: 36,
-            height: 36,
-            borderRadius: '50%',
-            background: completedToday
-              ? `linear-gradient(135deg, ${theme.palette.success.main} 0%, ${theme.palette.success.dark} 100%)`
-              : `linear-gradient(135deg, ${theme.palette.dailyCare.primary} 0%, ${theme.palette.dailyCare.dark} 100%)`,
-            color: 'white',
-            boxShadow: `0 2px 4px ${theme.palette.dailyCare.primary}20`,
+            width: 42,
+            height: 42,
+            borderRadius: '12px',
+            border: '1px solid rgba(8, 31, 92, 0.14)',
+            backgroundColor: '#ffffff',
+            color: '#102d72',
             '&:hover': {
-              background: completedToday
-                ? `linear-gradient(135deg, ${theme.palette.success.dark} 0%, ${theme.palette.success.main} 100%)`
-                : `linear-gradient(135deg, ${theme.palette.dailyCare.dark} 0%, ${theme.palette.dailyCare.primary} 100%)`,
-              transform: "scale(1.1)",
-              boxShadow: `0 4px 8px ${theme.palette.dailyCare.primary}30`,
+              backgroundColor: '#f6f8fc',
             },
             transition: "all 0.2s ease",
           }}
         >
-          <AssessmentIcon sx={{ fontSize: 16 }} />
+          <MoreHorizIcon sx={{ fontSize: 20 }} />
         </IconButton>
       </Tooltip>
+
+      <Menu
+        anchorEl={menuAnchorEl}
+        open={Boolean(menuAnchorEl)}
+        onClose={handleMenuClose}
+        onClick={(e) => e.stopPropagation()}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        {secondaryActions.map((action) => (
+          <MenuItem
+            key={action.key}
+            onClick={(e) => {
+              handleMenuClose();
+              handleQuickEntryClick(action, e);
+            }}
+          >
+            <Typography sx={{ mr: 1, fontSize: '1rem' }}>{action.emoji}</Typography>
+            <ListItemText primary={action.label} secondary={action.description} />
+          </MenuItem>
+        ))}
+        <MenuItem
+          onClick={(e) => {
+            handleMenuClose();
+            handleDailyReportClick(e);
+          }}
+        >
+          <AssessmentIcon sx={{ mr: 1.5, fontSize: 18, color: theme.palette.dailyCare.dark }} />
+          <ListItemText primary="Daily Report" secondary="View today's summary" />
+        </MenuItem>
+      </Menu>
     </Box>
   );
 };

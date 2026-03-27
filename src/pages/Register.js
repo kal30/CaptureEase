@@ -1,15 +1,14 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Typography,
   TextField,
-  Container,
   Paper,
   Alert,
   Divider,
 } from "@mui/material";
 import { EnhancedLoadingButton } from "../components/UI";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   getAuth,
   createUserWithEmailAndPassword,
@@ -27,7 +26,16 @@ const Register = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const auth = getAuth();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const prefilledEmail = params.get("email");
+    if (prefilledEmail) {
+      setEmail(prefilledEmail);
+    }
+  }, [location.search]);
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -114,6 +122,12 @@ const Register = () => {
         >
           Sign Up for CaptureEz
         </Typography>
+        {email && (
+          <Alert severity="info" sx={{ width: "100%", mb: 2 }}>
+            You&apos;re starting with your email first. Finish setting up your
+            account below.
+          </Alert>
+        )}
         {error && (
           <Alert severity="error" sx={{ width: "100%", mb: 2 }}>
             {error}

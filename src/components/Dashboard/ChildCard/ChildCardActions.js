@@ -1,7 +1,6 @@
 import React from 'react';
-import { Box, Button, IconButton, Tooltip } from '@mui/material';
+import { Box, Button } from '@mui/material';
 import { useRole } from '../../../contexts/RoleContext';
-import { getMessagesDisplayInfo } from '../../../constants/uiDisplayConstants';
 import QuickEntrySection from '../QuickEntrySection';
 
 /**
@@ -35,7 +34,6 @@ const ChildCardActions = ({
   sx = {}
 }) => {
   const { USER_ROLES } = useRole();
-  const messagesDisplay = getMessagesDisplayInfo();
 
   const handleQuickActionHover = (actionType) => {
     if (onHoverAction) {
@@ -95,34 +93,6 @@ const ChildCardActions = ({
             width: { xs: '100%', md: 'auto' }
           }}
         >
-          {/* Messages Icon Button - Available for all roles */}
-          <Tooltip title={`${messagesDisplay.label}: ${messagesDisplay.description}`} arrow>
-            <IconButton
-              onClick={(e) => {
-                e.stopPropagation(); // Prevent card expansion
-                if (onMessages) {
-                  onMessages(child);
-                }
-              }}
-              sx={{
-                width: 40,
-                height: 40,
-                backgroundColor: '#6366F1', // Indigo for messages
-                color: 'white',
-                fontSize: '1.1rem',
-                border: '2px solid #E0E7FF',
-                mb: userRole === USER_ROLES.THERAPIST ? 1 : 0,
-                '&:hover': {
-                  backgroundColor: '#4F46E5',
-                  transform: 'scale(1.05)',
-                },
-                transition: 'all 0.2s ease-in-out',
-              }}
-            >
-              {messagesDisplay.emoji}
-            </IconButton>
-          </Tooltip>
-
           {userRole === USER_ROLES.THERAPIST && (
             // Professional tools for therapists
             <Button

@@ -10,6 +10,16 @@ import { useDailyCareStatus } from "./useDailyCareStatus";
 import { listenForFollowUps, initializeNotificationsForPendingFollowUps, processQuickResponses, startQuickResponseListener } from "../services/followUpService";
 import { analyzeOtherIncidentPatterns, getIncidents } from "../services/incidentService";
 
+const QUICK_NOTE_CATEGORY_META = {
+  behavior: { type: 'behavior', label: 'Behavior', icon: '🌋', color: '#D32F2F' },
+  health: { type: 'health', label: 'Health', icon: '💊', color: '#00796B' },
+  mood: { type: 'mood', label: 'Mood', icon: '😰', color: '#F57F17' },
+  sleep: { type: 'sleep', label: 'Sleep', icon: '😴', color: '#1A237E' },
+  food: { type: 'food', label: 'Food', icon: '🍽️', color: '#E65100' },
+  milestone: { type: 'milestone', label: 'Win', icon: '⭐', color: '#2E7D32' },
+  log: { type: 'log', label: 'Daily Log', icon: '📝', color: '#64748B' },
+};
+
 export const usePanelDashboard = () => {
   const theme = useTheme();
   const navigate = useNavigate();
@@ -29,16 +39,17 @@ export const usePanelDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [recentEntries, setRecentEntries] = useState({});
   const [incidents, setIncidents] = useState({}); // Store incidents by child ID
-  
+
   // Use separated Daily Care status hook
-  const { 
-    completionStatus: quickDataStatus, 
+  const {
+    completionStatus: quickDataStatus,
     refreshChildStatus: refreshDailyCareStatus,
-    loading: dailyCareLoading 
+    loading: dailyCareLoading
   } = useDailyCareStatus(children);
   const [showQuickEntry, setShowQuickEntry] = useState(false);
   const [selectedChild, setSelectedChild] = useState(null);
   const [entryType, setEntryType] = useState("micro"); // 'micro' or 'full'
+  const [quickEntryStep, setQuickEntryStep] = useState(0);
   const [expandedCards, setExpandedCards] = useState({});
   const [expandedCategories, setExpandedCategories] = useState({});
   const [highlightedActions] = useState({});
@@ -59,6 +70,9 @@ export const usePanelDashboard = () => {
   const [suggestionsChildId, setSuggestionsChildId] = useState(null);
   const [showDailyHabitsModal, setShowDailyHabitsModal] = useState(false);
   const [dailyHabitsChild, setDailyHabitsChild] = useState(null);
+  const [dailyHabitsInitialCategoryId, setDailyHabitsInitialCategoryId] = useState(null);
+  const [showCareReportModal, setShowCareReportModal] = useState(false);
+  const [careReportChild, setCareReportChild] = useState(null);
 
   useEffect(() => {
     // Start SW quick response listener once on mount
@@ -73,11 +87,11 @@ export const usePanelDashboard = () => {
         if (childrenWithRoles.length > 0 && !currentChildId) {
           setCurrentChildId(childrenWithRoles[0].id);
         }
-        
+
         // Initialize notifications for pending follow-ups
         if (childrenWithRoles.length > 0) {
           initializeNotificationsForPendingFollowUps(childrenWithRoles);
-          
+
           // Process any quick responses from notifications
           processQuickResponses().then(processedResponses => {
             if (processedResponses.length > 0) {
@@ -147,14 +161,14 @@ export const usePanelDashboard = () => {
     if (children.length === 0) return;
 
     const childIds = children.map(child => child.id);
-    
+
     const handleFollowUpNeeded = (incident) => {
       setFollowUpIncident(incident);
       setShowFollowUpModal(true);
     };
 
     const cleanup = listenForFollowUps(childIds, handleFollowUpNeeded);
-    
+
     return cleanup;
   }, [children]);
 
@@ -178,6 +192,13 @@ export const usePanelDashboard = () => {
       return;
     }
 
+    if (type === "medication" || type === "diaper") {
+      setDailyHabitsChild(child);
+      setDailyHabitsInitialCategoryId(null);
+      setShowDailyHabitsModal(true);
+      return;
+    }
+
     if (type === "incident") {
       setIncidentChild(child);
       setShowIncidentModal(true);
@@ -185,8 +206,10 @@ export const usePanelDashboard = () => {
     }
 
     if (type === "journal") {
-      setDailyHabitsChild(child);
-      setShowDailyHabitsModal(true);
+      setSelectedChild(child);
+      setEntryType("full");
+      setQuickEntryStep(0);
+      setShowQuickEntry(true);
       return;
     }
 
@@ -196,11 +219,52 @@ export const usePanelDashboard = () => {
     } else {
       setSelectedChild(child);
       setEntryType("full");
+      // Set initial step based on type
+      if (type === "quick_note") {
+        setQuickEntryStep(2);
+      } else {
+        setQuickEntryStep(0);
+      }
       setShowQuickEntry(true);
     }
   };
 
-  const handleQuickEntryComplete = () => {
+  const handleQuickEntryComplete = (entry) => {
+    if (selectedChild && entry?.text) {
+      const meta = QUICK_NOTE_CATEGORY_META[entry.category] || QUICK_NOTE_CATEGORY_META.log;
+      const optimisticEntry = {
+        id: `local-${Date.now()}`,
+        childId: selectedChild.id,
+        type: meta.type,
+        timelineType: meta.type,
+        category: entry.category || 'log',
+        title: meta.label,
+        content: entry.text,
+        text: entry.text,
+        timestamp: entry.timestamp || new Date(),
+        icon: meta.icon,
+        color: meta.color,
+        collection: 'dailyLogs',
+        tags: entry.tags || [],
+        importantMoment: entry.importantMoment || false,
+      };
+
+      setRecentEntries((prev) => {
+        const nextEntries = [optimisticEntry, ...(prev[selectedChild.id] || [])]
+          .sort((a, b) => {
+            const aTime = a.timestamp?.toDate?.() || new Date(a.timestamp);
+            const bTime = b.timestamp?.toDate?.() || new Date(b.timestamp);
+            return bTime - aTime;
+          })
+          .slice(0, 5);
+
+        return {
+          ...prev,
+          [selectedChild.id]: nextEntries,
+        };
+      });
+    }
+
     setShowQuickEntry(false);
     setSelectedChild(null);
   };
@@ -264,7 +328,7 @@ export const usePanelDashboard = () => {
     setShowIncidentModal(false);
     const childId = incidentChild?.id;
     setIncidentChild(null);
-    
+
     // Check for patterns after a delay to allow the new incident to be processed
     if (childId) {
       setTimeout(() => {
@@ -300,6 +364,17 @@ export const usePanelDashboard = () => {
   const handleCloseDailyHabitsModal = () => {
     setShowDailyHabitsModal(false);
     setDailyHabitsChild(null);
+    setDailyHabitsInitialCategoryId(null);
+  };
+
+  const handleShowCareReport = (child) => {
+    setCareReportChild(child);
+    setShowCareReportModal(true);
+  };
+
+  const handleCloseCareReportModal = () => {
+    setShowCareReportModal(false);
+    setCareReportChild(null);
   };
 
   const handleCreateCustomCategories = (categories) => {
@@ -313,8 +388,8 @@ export const usePanelDashboard = () => {
   };
 
   const handleDailyReport = (child) => {
-    setDailyReportChild(child);
-    setShowDailyReportModal(true);
+    setCareReportChild(child);
+    setShowCareReportModal(true);
   };
 
   const handleMessages = (child) => {
@@ -419,10 +494,12 @@ export const usePanelDashboard = () => {
     patternSuggestions,
     suggestionsChildId,
     showDailyHabitsModal,
+    dailyHabitsInitialCategoryId,
     dailyHabitsChild,
     showQuickEntry,
     selectedChild,
     entryType,
+    quickEntryStep,
     USER_ROLES,
     isReadOnlyForChild,
     getUserRoleForChild,
@@ -450,7 +527,12 @@ export const usePanelDashboard = () => {
     handleCloseFollowUpModal,
     handleClosePatternSuggestionModal,
     handleCreateCustomCategories,
+    setShowDailyHabitsModal,
     handleCloseDailyHabitsModal,
+    handleShowCareReport,
+    handleCloseCareReportModal,
+    showCareReportModal,
+    careReportChild,
     checkForPatterns,
     handleQuickEntryComplete,
     handleQuickEntrySkip,

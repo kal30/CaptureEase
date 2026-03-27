@@ -20,12 +20,47 @@ export const getEntryTypes = () => {
       icon: dailyHabitsDisplay.emoji,
       paletteKey: 'timeline.entries.dailyHabit',
     },
-    // dailyNote removed - was only used for legacy progressNotes
     journal: {
       key: 'journal',
       label: journalDisplay.label,
       icon: journalDisplay.emoji,
       paletteKey: 'timeline.entries.journal',
+    },
+    behavior: {
+      key: 'behavior',
+      label: 'Behavior',
+      icon: '🌋',
+      paletteKey: 'timeline.entries.behavior',
+    },
+    health: {
+      key: 'health',
+      label: 'Health',
+      icon: '💊',
+      paletteKey: 'timeline.entries.health',
+    },
+    mood: {
+      key: 'mood',
+      label: 'Mood',
+      icon: '😰',
+      paletteKey: 'timeline.entries.mood',
+    },
+    sleep: {
+      key: 'sleep',
+      label: 'Sleep',
+      icon: '😴',
+      paletteKey: 'timeline.entries.sleep',
+    },
+    food: {
+      key: 'food',
+      label: 'Food',
+      icon: '🍽️',
+      paletteKey: 'timeline.entries.food',
+    },
+    milestone: {
+      key: 'milestone',
+      label: 'Win',
+      icon: '⭐',
+      paletteKey: 'timeline.entries.milestone',
     },
     therapyNote: {
       key: 'therapyNote',
@@ -44,6 +79,12 @@ export const ENTRY_TYPE = {
   INCIDENT: 'incident',
   DAILY_HABIT: 'dailyHabit',
   JOURNAL: 'journal',
+  BEHAVIOR: 'behavior',
+  HEALTH: 'health',
+  MOOD: 'mood',
+  SLEEP: 'sleep',
+  FOOD: 'food',
+  MILESTONE: 'milestone',
   THERAPY_NOTE: 'therapyNote',
 };
 
@@ -71,6 +112,9 @@ export const mapLegacyType = (type) => {
   if (type === 'incident') return 'incident';
   if (type === 'followUp') return 'incident'; // Follow-ups should display as incidents
   if (type === 'journal') return 'journal'; // dailyLogs collection = journal entries
+  if (['behavior', 'health', 'mood', 'sleep', 'food', 'milestone', 'log'].includes(type)) {
+    return type === 'log' ? 'journal' : type;
+  }
   if (type === 'dailyHabit') return 'dailyHabit'; // dailyCare collection = daily habits
   if (type === 'therapyNote') return 'therapyNote'; // therapyNotes collection = therapy notes
   // Removed legacy progressNote mapping - no longer used

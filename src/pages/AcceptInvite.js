@@ -372,7 +372,7 @@ const AcceptInvite = () => {
                   ) : (
                     <Box>
                       <Typography variant="body1" sx={{ mb: 3 }}>
-                        Ready to join {inviteData.childName}'s care team?
+                        Ready to join {inviteData.childNames ? inviteData.childNames.join(', ') : inviteData.childName}'s care team?
                       </Typography>
                       <StyledButton
                         variant="contained"

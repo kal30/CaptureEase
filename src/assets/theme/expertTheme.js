@@ -29,7 +29,7 @@ export const expertSectionStyles = {
 
 // Card container styles
 export const expertCardStyles = {
-  bgcolor: "transparent", // transparent background
+  bgcolor: "transparent",
   borderRadius: 1,
   boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
   position: "relative",
@@ -54,12 +54,13 @@ export const expertLeftColumnStyles = {
 
 // Title typography
 export const expertTitleStyles = {
-  fontWeight: 200,
-  lineHeight: 1.2,
-  mb: "20px",
-  color: "#001B48", // deepNavy
-  fontSize: { xs: "2rem", md: "2.75rem" },
-  textShadow: "1px 1px 2px rgba(0,0,0,0.1)",
+  fontWeight: 300,
+  lineHeight: 1.22,
+  mb: { xs: 1.5, md: 2 },
+  color: "rgba(8, 31, 92, 0.82)",
+  fontSize: { xs: "1.5rem", md: "1.95rem", lg: "2.15rem" },
+  letterSpacing: "-0.01em",
+  maxWidth: "24ch",
   fontFamily: '"Coco Gothic", "Inter", "Segoe UI", sans-serif',
 };
 

@@ -1,14 +1,14 @@
 # CLAUDE.md
 
 > **Purpose**  
-> This document tells you (Claude) how to write good, consistent code for the **CaptureEase** project.  
+> This document tells you (Claude) how to write good, consistent code for the **CaptureEz** project.  
 > Follow these rules unless a file explicitly documents an exception.
 
 ---
 
 ## 1) Project Snapshot
 
-- **App**: CaptureEase — caregiver/parent PWA for logging mood, sleep, energy, notes, media, and messaging for each child.
+- **App**: CaptureEz — caregiver/parent PWA for logging mood, sleep, energy, notes, media, and messaging for each child.
 - **Stack**
   - React (functional components, hooks, React Router)
   - Firebase: Hosting, Auth (Google only), Firestore, Storage, Functions (Node 18 when needed)

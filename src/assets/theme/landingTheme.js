@@ -22,13 +22,16 @@ export const landingColors = {
 export const landingTypography = {
   // Landing page hero styles
   heroMain: {
-    fontSize: { xs: "1.2rem", md: "1.6rem", lg: "1.8rem" },
+    fontSize: { xs: "1.55rem", md: "2rem", lg: "2.3rem" },
     fontFamily: '"Coco Gothic", sans-serif',
     fontWeight: 300,
-    letterSpacing: "0.12em",
-    textTransform: "uppercase",
-    lineHeight: { xs: 1.1, md: 1.1, lg: 1.1 },
-    marginBottom: { xs: 0.5, md: 1, lg: 1.5 },
+    letterSpacing: "0.015em",
+    textTransform: "none",
+    lineHeight: { xs: 1.2, md: 1.18, lg: 1.15 },
+    marginBottom: { xs: 0.5, md: 0.75, lg: 1 },
+    maxWidth: { xs: "100%", md: "18ch", lg: "18ch" },
+    mx: { xs: "auto", md: 0 },
+    textAlign: { xs: "center", md: "left" },
   },
   heroSubtitle: {
     marginTop: { xs: 1, md: 1.5, lg: 2 },
@@ -41,15 +44,15 @@ export const landingTypography = {
     maxWidth: { xs: "100%", md: "90%", lg: "85%" },
   },
   heroBody: {
-    marginTop: { xs: 3, md: 4, lg: 5 }, // Increased spacing
+    marginTop: { xs: 1.5, md: 2, lg: 2.25 },
     fontSize: { xs: "1.0rem", md: "1.0rem", lg: "1.2rem" },
     lineHeight: { xs: 1.6, md: 1.7, lg: 1.8 },
     color: landingColors.bodyText,
     textAlign: { xs: "center", md: "left" },
     fontFamily: '"Lancelot", "Inter", "Segoe UI", Roboto, sans-serif',
     fontWeight: 300,
-    maxWidth: { xs: "100%", md: "90%", lg: "85%" },
-    mx: "auto",
+    maxWidth: { xs: "100%", md: "32rem", lg: "34rem" },
+    mx: { xs: "auto", md: 0 },
   },
 
   brandAccent: {
@@ -65,22 +68,24 @@ export const landingTypography = {
 export const landingLayout = {
   heroSection: {
     padding: {
-      xs: { pt: 2, pb: 4 },
-      md: { pt: 3, pb: 6 },
-      lg: { pt: 4, pb: 8 },
+      xs: { pt: 1, pb: 2 },
+      md: { pt: 2, pb: 3.5 },
+      lg: { pt: 2.5, pb: 4.5 },
     },
     container: {
-      gap: { xs: 3, md: 4, lg: 5 },
+      gap: { xs: 2.5, md: 4, lg: 5 },
       padding: { xs: 1, md: 2, lg: 3 },
+      maxWidth: { md: 1220, lg: 1280 },
+      mx: "auto",
     },
     leftColumn: {
-      width: { xs: "100%", md: "50%", lg: "45%" },
-      paddingRight: { md: 2, lg: 4 },
+      width: { xs: "100%", md: "50%", lg: "47%" },
+      paddingRight: { md: 1, lg: 2 },
     },
     rightColumn: {
-      width: { xs: "100%", md: "50%", lg: "55%" },
-      marginTop: { xs: 4, md: 0 },
-      minHeight: { xs: 300, md: 400, lg: 500, xl: 600 },
+      width: { xs: "100%", md: "50%", lg: "53%" },
+      marginTop: { xs: 2, md: 0 },
+      minHeight: { xs: 280, md: 380, lg: 470, xl: 560 },
     },
   },
   floatingCircle: {
@@ -95,12 +100,12 @@ export const landingLayout = {
   heroHeading: {
     display: "flex",
     flexDirection: "column",
-    alignItems: "center",
+    alignItems: { xs: "center", md: "flex-start" },
     justifyContent: "center",
-    textAlign: "center",
+    textAlign: { xs: "center", md: "left" },
     gap: { xs: 0.5, md: 0.5, lg: 0.5 },
     mt: { xs: 0, md: 0, lg: 0 },
-    mb: { xs: 2, md: 3, lg: 4 },
+    mb: { xs: 1, md: 1.25, lg: 1.5 },
   },
 };
 

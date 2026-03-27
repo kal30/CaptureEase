@@ -1,14 +1,11 @@
 import React from "react";
-import { Box, Typography, Avatar, Button } from "@mui/material";
-import { GradientButton, ThemeSpacing } from "../UI";
-import { PRODUCT_NAME } from "../../constants/config";
+import { Box, Typography } from "@mui/material";
 import {
   expertSectionStyles,
   expertCardStyles,
   expertLeftColumnStyles,
   expertTitleStyles,
   expertBodyTextStyles,
-  expertCtaButtonStyles,
   expertSubTitleStyles,
 } from "../../assets/theme/expertTheme";
 
@@ -17,41 +14,35 @@ const ExpertProgram = () => {
     <Box sx={expertSectionStyles}>
       <Box sx={expertCardStyles}>
         {/* Left Side: Text */}
-        <Box
-        >
+        <Box>
           <Box sx={expertLeftColumnStyles}>
             <Typography variant="h2" sx={expertTitleStyles}>
-              Real-World Results with Personalized Digital Care
-            </Typography>
-            <Typography sx={expertSubTitleStyles}>
-              Built with love for families, caregivers, and anyone who deserve
-              better care tools.
+              The Moment I Knew I Needed Something Better
             </Typography>
             <Typography variant="body1" sx={expertBodyTextStyles}>
-              🩺 Healthcare professionals and families report that digital care
-              tools improve coordination; a 2022 AMA survey found{" "}
-              <strong>78%</strong> of clinicians saw better care outcomes.
+              There was a day things escalated so badly I knew something had to
+              change.
             </Typography>
             <Typography sx={expertBodyTextStyles}>
-              🎥 Multimedia logging (voice, photo, video) improves communication
-              between caregivers, families, and clinicians. Research in JMIR
-              reports up to a <strong>65%</strong> improvement in care
-              effectiveness.
+              Afterwards, sitting with his therapist, I couldn't answer the
+              most basic questions. When did this pattern start? What happened
+              the three days before? Were there warning signs?
             </Typography>
             <Typography sx={expertBodyTextStyles}>
-              💡 Reducing administrative burden by <strong>20%+</strong>{" "}
-              improves both care quality and caregiver well-being, according to
-              a 2023 WHO report.
+              I had nothing. No record. No timeline. Just guilt and exhaustion.
             </Typography>
             <Typography sx={expertBodyTextStyles}>
-              Tools like <strong>{PRODUCT_NAME}</strong> can help achieve these
-              benefits by making it easy to log, share, and review important
-              updates in one place—streamlining communication and improving care
-              coordination.
+              That day I realized scattered notes on my phone weren't enough.
+              My nephews needed me to be their memory — organized, clear, and
+              ready to share with every doctor, therapist, and teacher trying
+              to help them.
             </Typography>
-            <Button variant="text" sx={expertSubTitleStyles}>
-              See How CaptureEase Works &rarr;
-            </Button>
+            <Typography sx={expertBodyTextStyles}>
+              That's why I built CaptureEz.
+            </Typography>
+            <Typography sx={expertSubTitleStyles}>
+              — Kalyani, founder and autism mom
+            </Typography>
           </Box>
         </Box>
       </Box>

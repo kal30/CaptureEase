@@ -4,6 +4,7 @@
     "indexes": "firestore.indexes.json"
   },
   "hosting": {
+    "//": "Production domain captureez.com / www.captureez.com is served from Firebase Hosting site 'carelog'. See DEPLOYMENT.md.",
     "site": "carelog",
     "public": "build",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"]

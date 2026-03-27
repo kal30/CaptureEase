@@ -55,8 +55,8 @@ const ChildCardHeader = memo(({
         <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.25, mb: 0.5 }}>
           <Typography
             variant="h5"
-            sx={{ 
-              fontWeight: 700, 
+            sx={{
+              fontWeight: 700,
               fontSize: '1.4rem',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
@@ -67,7 +67,7 @@ const ChildCardHeader = memo(({
           >
             {child.name}
           </Typography>
-          
+
           {/* Settings Menu - Very close to name */}
           <ChildManagementMenu
             child={child}
@@ -78,7 +78,7 @@ const ChildCardHeader = memo(({
             onInviteTeamMember={onInviteTeamMember}
             onDailyReport={onDailyReport}
           />
-          
+
           {/* Notification Badge - Next to settings */}
           <ChildNotificationBadge
             childId={child.id}
@@ -98,43 +98,36 @@ const ChildCardHeader = memo(({
           >
             Age {child.age}
           </Typography>
-          
+
           {/* Role Chips */}
           {allChips.map((chip, index) => (
-              <Chip
-                key={index}
-                label={chip.label}
-                size="small"
-                variant={chip.variant || 'outlined'}
-                color={chip.sx ? undefined : (chip.color || 'default')}
-                sx={{
-                  height: 24, // Slightly taller for better visibility
-                  fontSize: '0.75rem',
-                  fontWeight: chip.sx?.fontWeight || 600,
-                  minWidth: '80px', // Ensure minimum width
-                  ...chip.sx, // Apply the role colors
-                  // Ensure the colors are applied with higher specificity
-                  '&.MuiChip-root': {
-                    backgroundColor: chip.sx?.backgroundColor,
-                    color: chip.sx?.color,
-                    border: chip.sx?.border,
-                  }
-                }}
-              />
+            <Chip
+              key={index}
+              label={chip.label}
+              size="small"
+              variant={chip.variant || 'outlined'}
+              color={chip.sx ? undefined : (chip.color || 'default')}
+              sx={{
+                height: 24, // Slightly taller for better visibility
+                fontSize: '0.75rem',
+                fontWeight: chip.sx?.fontWeight || 600,
+                minWidth: '80px', // Ensure minimum width
+                ...chip.sx, // Apply the role colors
+                // Ensure the colors are applied with higher specificity
+                '&.MuiChip-root': {
+                  backgroundColor: chip.sx?.backgroundColor,
+                  color: chip.sx?.color,
+                  border: chip.sx?.border,
+                }
+              }}
+            />
           ))}
         </Box>
 
-        {/* Medical Info Section - Below Age */}
-        {/* Diagnosis and Concerns */}
-        {(child.concerns || child.conditions) && (
-          <DiagnosisChips concerns={child.concerns || child.conditions} />
-        )}
-        
-        {/* Allergies and Medical Details */}
-        {(child.diagnosis || 
-          (child.medicalProfile?.foodAllergies && child.medicalProfile.foodAllergies.length > 0)) && (
-          <MedicalInfoDisplay 
-            diagnosis={child.diagnosis}
+        {/* Medical Info Section - Clean Text Line */}
+        {(child.diagnosis || child.concerns || child.conditions || child.medicalProfile?.foodAllergies?.length > 0) && (
+          <MedicalInfoDisplay
+            diagnosis={child.diagnosis || (child.concerns && child.concerns[0]?.label) || (child.conditions && child.conditions[0])}
             allergies={child.medicalProfile?.foodAllergies}
           />
         )}

@@ -1,13 +1,13 @@
 # Firestore Security Rules & Permissions Guide
 
-> **CaptureEase Security Architecture**  
+> **CaptureEz Security Architecture**  
 > Comprehensive guide to role-based access control, data validation, and security rules.
 
 ---
 
 ## 🎯 Overview
 
-CaptureEase uses a sophisticated **role-based permission system** with **immutable audit trails**, **soft deletes**, and **comprehensive data validation** to ensure enterprise-grade security and compliance.
+CaptureEz uses a sophisticated **role-based permission system** with **immutable audit trails**, **soft deletes**, and **comprehensive data validation** to ensure enterprise-grade security and compliance.
 
 ### Key Security Principles
 - **Principle of Least Privilege**: Users only get access they need
@@ -165,7 +165,7 @@ The `users.members` field is automatically updated by:
 
 ### **No Hard Deletes**
 
-CaptureEase **never** permanently deletes data. Instead:
+CaptureEz **never** permanently deletes data. Instead:
 
 - **Soft Delete**: Change `status` from `"active"` to `"deleted"`
 - **Archive**: Change `status` from `"active"` to `"archived"`

@@ -156,20 +156,22 @@ const UnifiedTimeline = ({
         </Box>
       ) : (
         // Vertical Timeline with color-coded dots
-        <Box sx={{ position: "relative", mt: 2 }}>
-          {/* Vertical Timeline Line */}
-          <Box
-            sx={{
-              position: "absolute",
-              left: 20,
-              top: 0,
-              bottom: 0,
-              width: 2,
-              bgcolor: "divider",
-              zIndex: 1,
-            }}
-          />
-
+        <Box
+          sx={{
+            position: "relative",
+            mt: 2,
+            maxHeight: { xs: 420, md: 520 },
+            overflowY: 'auto',
+            pr: 0.5,
+            '&::-webkit-scrollbar': {
+              width: 8,
+            },
+            '&::-webkit-scrollbar-thumb': {
+              backgroundColor: 'rgba(148, 163, 184, 0.45)',
+              borderRadius: 999,
+            },
+          }}
+        >
           {/* Timeline Entries */}
           <Stack spacing={0} role="list">
             {entries.map((entry, entryIndex) => {
@@ -187,7 +189,7 @@ const UnifiedTimeline = ({
               } else if (entry.collection === 'dailyCare') {
                 typeForTimeline = 'dailyHabit';
               } else if (entry.collection === 'dailyLogs') {
-                typeForTimeline = 'journal';
+                typeForTimeline = entry.timelineType || entry.type || 'journal';
               } else if (entry.collection === 'therapyNotes') {
                 typeForTimeline = 'therapyNote';
               } else {
@@ -197,7 +199,7 @@ const UnifiedTimeline = ({
               const entryType = mapLegacyType(typeForTimeline);
               const meta = getEntryTypeMeta(typeForTimeline);
               const entryLabel = meta.label.replace(/s$/, '');
-              const entryColor = theme.palette.timeline.entries[meta.key] || theme.palette.primary.main;
+              const entryColor = entry.color || theme.palette.timeline.entries?.[meta.key] || theme.palette.primary.main;
 
               return (
                 <TimelineItem
@@ -205,6 +207,8 @@ const UnifiedTimeline = ({
                   color={entryColor}
                   icon={meta.icon}
                   ariaLabel={`${entryLabel} at ${timeString}`}
+                  isFirst={entryIndex === 0}
+                  isLast={entryIndex === entries.length - 1}
                 >
                   <EntryHeader
                     entryLabel={entryLabel}
@@ -220,7 +224,9 @@ const UnifiedTimeline = ({
                       )}
                       {entryType === ENTRY_TYPE.DAILY_HABIT && (<DailyHabitDetails entry={entry} />)}
                       {/* DAILY_NOTE removed - was only used for legacy progressNotes */}
-                      {entryType === ENTRY_TYPE.JOURNAL && (<JournalDetails entry={entry} />)}
+                      {[ENTRY_TYPE.JOURNAL, ENTRY_TYPE.BEHAVIOR, ENTRY_TYPE.HEALTH, ENTRY_TYPE.MOOD, ENTRY_TYPE.SLEEP, ENTRY_TYPE.FOOD, ENTRY_TYPE.MILESTONE].includes(entryType) && (
+                        <JournalDetails entry={entry} />
+                      )}
                       {entryType === ENTRY_TYPE.THERAPY_NOTE && (<TherapyNoteDetails entry={entry} />)}
 
                 </TimelineItem>

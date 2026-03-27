@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# CaptureEase Aggressive Testing Script
+# CaptureEz aggressive testing script
 # This script runs comprehensive tests to ensure code quality and functionality
 
 set -e  # Exit on any error
 
-echo "🧪 CAPTUREEASE AGGRESSIVE TESTING SUITE"
+echo "🧪 CAPTUREEZ AGGRESSIVE TESTING SUITE"
 echo "========================================"
 
 # Colors for output

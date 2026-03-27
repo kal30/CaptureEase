@@ -7,6 +7,16 @@ import {
 import { useRole } from '../contexts/RoleContext';
 import { USER_ROLES } from '../constants/roles';
 
+const QUICK_NOTE_CATEGORY_META = {
+  behavior: { type: 'behavior', timelineType: 'behavior', titlePrefix: 'Behavior', color: '#D32F2F' },
+  health: { type: 'health', timelineType: 'health', titlePrefix: 'Health', color: '#00796B' },
+  mood: { type: 'mood', timelineType: 'mood', titlePrefix: 'Mood', color: '#F57F17' },
+  sleep: { type: 'sleep', timelineType: 'sleep', titlePrefix: 'Sleep', color: '#1A237E' },
+  food: { type: 'food', timelineType: 'food', titlePrefix: 'Food', color: '#E65100' },
+  milestone: { type: 'milestone', timelineType: 'milestone', titlePrefix: 'Win', color: '#2E7D32' },
+  log: { type: 'journal', timelineType: 'journal', titlePrefix: 'Daily Log' }
+};
+
 /**
  * useUnifiedTimelineData - Hook to fetch and combine all timeline data for a specific day
  * Combines incidents, journal entries, daily logs, and follow-ups
@@ -62,6 +72,51 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
 
     fetchAllData();
   }, [childId, selectedDate, filters]);
+
+  useEffect(() => {
+    if (!childId || !selectedDate) {
+      return undefined;
+    }
+
+    const isSameDay = (dateA, dateB) => (
+      dateA.getFullYear() === dateB.getFullYear() &&
+      dateA.getMonth() === dateB.getMonth() &&
+      dateA.getDate() === dateB.getDate()
+    );
+
+    const handleQuickEntryCreated = (event) => {
+      const entry = event.detail;
+      if (!entry || entry.collection !== 'dailyLogs' || entry.childId !== childId) {
+        return;
+      }
+
+      const entryTimestamp = entry.timestamp?.toDate ? entry.timestamp.toDate() : new Date(entry.timestamp);
+      if (Number.isNaN(entryTimestamp.getTime()) || !isSameDay(entryTimestamp, selectedDate)) {
+        return;
+      }
+
+      const categoryMeta = QUICK_NOTE_CATEGORY_META[entry.category] || QUICK_NOTE_CATEGORY_META.log;
+      const optimisticJournal = {
+        ...entry,
+        timestamp: entryTimestamp,
+        type: categoryMeta.type,
+        timelineType: categoryMeta.timelineType,
+        titlePrefix: categoryMeta.titlePrefix,
+        color: categoryMeta.color,
+      };
+
+      setRawEntries((prev) => ({
+        ...prev,
+        journals: [
+          optimisticJournal,
+          ...prev.journals.filter((journal) => journal.id !== optimisticJournal.id),
+        ],
+      }));
+    };
+
+    window.addEventListener('captureez:timeline-entry-created', handleQuickEntryCreated);
+    return () => window.removeEventListener('captureez:timeline-entry-created', handleQuickEntryCreated);
+  }, [childId, selectedDate]);
 
   // Process and filter entries
   const processedData = useMemo(() => {
@@ -127,10 +182,14 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
       // Transform journal entries (from dailyLogs - avoid duplicates by using journals data only)
       ...childFilteredEntries.journals.map(journal => ({
         id: journal.id,
-        type: 'journal',
-        timelineType: 'journal',
+        type: journal.type || 'journal',
+        timelineType: journal.timelineType || journal.type || 'journal',
         collection: 'dailyLogs',
+        childId: journal.childId,
         timestamp: journal.timestamp?.toDate ? journal.timestamp.toDate() : new Date(journal.timestamp),
+        category: journal.category || 'log',
+        title: journal.titlePrefix || 'Daily Log',
+        color: journal.color,
         text: journal.text,
         tags: journal.tags,
         mediaURL: journal.mediaURL,
@@ -225,7 +284,7 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
     const summary = {
       totalEntries: filteredEntries.length,
       incidentCount: filteredEntries.filter(e => e.type === 'incident').length,
-      journalCount: filteredEntries.filter(e => e.type === 'journal').length,
+      journalCount: filteredEntries.filter(e => e.collection === 'dailyLogs').length,
       dailyHabitCount: filteredEntries.filter(e => e.type === 'dailyHabit').length,
       therapyNoteCount: filteredEntries.filter(e => e.type === 'therapyNote').length,
       lastActivityTime: filteredEntries.length > 0 
@@ -237,15 +296,15 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
       byTimePeriod: {
         morning: {
           hasIncidents: filteredEntries.some(e => e.type === 'incident' && getTimePeriod(e.timestamp) === 'morning'),
-          hasJournalEntries: filteredEntries.some(e => e.type === 'journal' && getTimePeriod(e.timestamp) === 'morning')
+          hasJournalEntries: filteredEntries.some(e => e.collection === 'dailyLogs' && getTimePeriod(e.timestamp) === 'morning')
         },
         afternoon: {
           hasIncidents: filteredEntries.some(e => e.type === 'incident' && getTimePeriod(e.timestamp) === 'afternoon'),
-          hasJournalEntries: filteredEntries.some(e => e.type === 'journal' && getTimePeriod(e.timestamp) === 'afternoon')
+          hasJournalEntries: filteredEntries.some(e => e.collection === 'dailyLogs' && getTimePeriod(e.timestamp) === 'afternoon')
         },
         evening: {
           hasIncidents: filteredEntries.some(e => e.type === 'incident' && getTimePeriod(e.timestamp) === 'evening'),
-          hasJournalEntries: filteredEntries.some(e => e.type === 'journal' && getTimePeriod(e.timestamp) === 'evening')
+          hasJournalEntries: filteredEntries.some(e => e.collection === 'dailyLogs' && getTimePeriod(e.timestamp) === 'evening')
         }
       }
     };

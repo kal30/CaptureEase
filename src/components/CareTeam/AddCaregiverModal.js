@@ -1,41 +1,39 @@
 import React, { useState } from 'react';
-import { Button, Dialog, DialogActions, DialogContent, TextField } from '@mui/material';
+import { Alert, Button, Dialog, DialogActions, DialogContent, TextField } from '@mui/material';
 import { sendInvitation } from '../../services/invitationService';
 
 const AddCaregiverModal = ({ open, onClose, onCaregiverAdded, child }) => {
-  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [error, setError] = useState('');
 
   const handleAddCaregiver = async () => {
     if (!child) {
-      console.error('No child selected');
+      setError('No child selected');
       return;
     }
-    
+    setError('');
     try {
       await sendInvitation(child.id, email, 'caregiver');
       onCaregiverAdded();
-      setName('');
       setEmail('');
       onClose();
-    } catch (error) {
-      console.error('Error inviting caregiver:', error);
+    } catch (err) {
+      setError(err.message || 'Failed to send invitation. Please try again.');
     }
   };
 
+  const handleClose = () => {
+    setEmail('');
+    setError('');
+    onClose();
+  };
+
   return (
-    <Dialog open={open} onClose={onClose}>
+    <Dialog open={open} onClose={handleClose}>
       <DialogContent>
+        {error && <Alert severity="error" sx={{ mb: 1 }}>{error}</Alert>}
         <TextField
           autoFocus
-          margin="dense"
-          label="Name"
-          type="text"
-          fullWidth
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-        <TextField
           margin="dense"
           label="Email Address"
           type="email"
@@ -45,8 +43,8 @@ const AddCaregiverModal = ({ open, onClose, onCaregiverAdded, child }) => {
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button onClick={handleAddCaregiver}>Add</Button>
+        <Button onClick={handleClose}>Cancel</Button>
+        <Button onClick={handleAddCaregiver}>Send Invitation</Button>
       </DialogActions>
     </Dialog>
   );

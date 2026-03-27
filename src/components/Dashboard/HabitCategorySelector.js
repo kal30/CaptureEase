@@ -26,7 +26,7 @@ const HabitCategorySelector = ({
     onCategorySelect({ ...habitType, customHabit });
   };
   const standardHabits = Object.values(HABIT_TYPES).filter(
-    (h) => h.id !== "other"
+    (h) => h.id !== "other" && h.id !== "quick_notes"
   );
 
   return (

@@ -14,7 +14,7 @@ module.exports = defineConfig({
     responseTimeout: 10000,
     env: {
       // Test user credentials
-      TEST_EMAIL: 'test@captureease.com',
+      TEST_EMAIL: 'test@captureez.com',
       TEST_PASSWORD: 'TestPassword123!',
       // Firebase emulator settings
       FIREBASE_AUTH_EMULATOR_HOST: 'localhost:9099',

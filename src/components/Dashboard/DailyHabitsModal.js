@@ -18,7 +18,7 @@ import { useTheme, alpha } from "@mui/material/styles";
 
 import HabitCategorySelector from "./HabitCategorySelector";
 import EntryForm from "../Common/EntryForm";
-import { getHabitScale } from "../../constants/habitTypes";
+import { getHabitScale, HABIT_TYPES } from "../../constants/habitTypes";
 import { saveHabitEntry } from "../../services/habitService";
 
 
@@ -33,12 +33,20 @@ import { saveHabitEntry } from "../../services/habitService";
  * @param {string} props.childName - Child name for display
  * @param {function} props.onHabitSaved - Optional callback when habit is saved
  */
-const DailyHabitsModal = ({ open, onClose, childId, childName, onHabitSaved }) => {
+const DailyHabitsModal = ({ open, onClose, childId, childName, initialCategoryId = null, onHabitSaved }) => {
   const theme = useTheme();
   const [currentStep, setCurrentStep] = useState('select'); // 'select' | 'entry'
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [completedHabits, setCompletedHabits] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!open || !initialCategoryId) return;
+    const matchingCategory = Object.values(HABIT_TYPES).find((habit) => habit.id === initialCategoryId);
+    if (!matchingCategory) return;
+    setSelectedCategory(matchingCategory);
+    setCurrentStep('entry');
+  }, [open, initialCategoryId]);
 
 
   const handleClose = () => {
@@ -68,7 +76,7 @@ const DailyHabitsModal = ({ open, onClose, childId, childName, onHabitSaved }) =
         childId,
         categoryId: selectedCategory.id,
         categoryLabel: selectedCategory.label,
-        level: formData.level, // Will be null for Quick Notes
+        level: formData.level,
         date: formData.date,
         notes: formData.notes,
         mediaFile: formData.mediaFile,
@@ -125,7 +133,7 @@ const DailyHabitsModal = ({ open, onClose, childId, childName, onHabitSaved }) =
       scale,
       color: selectedCategory.color,
       notesPlaceholder: `Add notes about ${selectedCategory.label.toLowerCase()}...`,
-      isTextInput: selectedCategory.isTextInput || false // Handle Quick Notes text input
+      isTextInput: selectedCategory.isTextInput || false
     };
   };
 

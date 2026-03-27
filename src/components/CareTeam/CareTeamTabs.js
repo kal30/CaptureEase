@@ -3,10 +3,8 @@ import { Tabs, Tab, Box } from '@mui/material';
 import CaregiverManager from './CaregiverManager';
 import TherapistManager from './TherapistManager';
 
-const CareTeamTabs = ({ initialTab }) => {
+const CareTeamTabs = ({ initialTab, child }) => {
   const [selectedTab, setSelectedTab] = useState(initialTab);
-  console.log("CareTeamTabs - initialTab prop:", initialTab);
-  console.log("CareTeamTabs - selectedTab state:", selectedTab);
 
   const handleChange = (event, newValue) => {
     setSelectedTab(newValue);
@@ -18,8 +16,8 @@ const CareTeamTabs = ({ initialTab }) => {
         <Tab label="Caregivers" />
         <Tab label="Therapists" />
       </Tabs>
-      {selectedTab === 0 && <CaregiverManager />}
-      {selectedTab === 1 && <TherapistManager />}
+      {selectedTab === 0 && <CaregiverManager child={child} />}
+      {selectedTab === 1 && <TherapistManager child={child} />}
     </Box>
   );
 };

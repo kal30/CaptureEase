@@ -1,10 +1,27 @@
 import { collection, onSnapshot, query, orderBy, where } from 'firebase/firestore';
 import { db } from './firebase';
 
+const NOTE_CATEGORY_META = {
+  behavior: { type: 'behavior', label: 'Behavior', icon: '🌋', color: '#D32F2F', entryGroup: 'dailyHabit' },
+  health: { type: 'health', label: 'Health', icon: '💊', color: '#00796B', entryGroup: 'dailyHabit' },
+  mood: { type: 'mood', label: 'Mood', icon: '😰', color: '#F57F17', entryGroup: 'dailyHabit' },
+  sleep: { type: 'sleep', label: 'Sleep', icon: '😴', color: '#1A237E', entryGroup: 'dailyHabit' },
+  food: { type: 'food', label: 'Food', icon: '🍽️', color: '#E65100', entryGroup: 'dailyHabit' },
+  milestone: { type: 'milestone', label: 'Win', icon: '⭐', color: '#2E7D32', entryGroup: 'dailyHabit' },
+  log: { type: 'log', label: 'Daily Log', icon: '📝', color: '#64748B', entryGroup: 'journal' }
+};
+
 // Timeline entry types with their display configurations
 export const TIMELINE_TYPES = {
-  // DAILY_NOTE removed - was only used for legacy progressNotes mapping
-  // PROGRESS_NOTE removed - legacy collection no longer used
+  DAILY_NOTE: {
+    type: 'daily_note',
+    label: 'Daily Log',
+    icon: '📝',
+    color: '#64748B',
+    entryGroup: 'journal',
+    collection: 'dailyLogs',
+    isRootCollection: true
+  },
   SENSORY_LOG: {
     type: 'sensory_log',
     label: 'Sensory Log', 
@@ -90,6 +107,9 @@ export const getTimelineEntryGroup = (type) => {
 const normalizeTimelineEntry = (doc, type) => {
   const data = doc.data();
   const typeConfig = Object.values(TIMELINE_TYPES).find(t => t.type === type);
+  const noteMeta = type === 'daily_note'
+    ? (NOTE_CATEGORY_META[data.category] || NOTE_CATEGORY_META.log)
+    : null;
   
   // Extract common fields with fallbacks for different data structures
   let title = '';
@@ -102,12 +122,12 @@ const normalizeTimelineEntry = (doc, type) => {
       const noteText = data.text || data.note || data.content || data.description || '';
       // Generate title from first line of text (up to 50 chars) or use tags
       if (data.tags && data.tags.length > 0) {
-        title = `Note: #${data.tags[0]}`;
+        title = `${noteMeta.label}: #${data.tags[0]}`;
       } else if (noteText) {
         const firstLine = noteText.split('\n')[0].trim();
-        title = firstLine.length > 50 ? `${firstLine.substring(0, 47)}...` : firstLine || 'Daily Note';
+        title = firstLine.length > 50 ? `${firstLine.substring(0, 47)}...` : firstLine || noteMeta.label;
       } else {
-        title = 'Daily Note';
+        title = noteMeta.label;
       }
       content = noteText;
       break;
@@ -146,12 +166,15 @@ const normalizeTimelineEntry = (doc, type) => {
 
   return {
     id: doc.id,
-    type,
+    childId: data.childId || null,
+    type: noteMeta?.type || type,
     title,
     content,
     timestamp,
     author: data.author || data.createdBy || data.userId || 'Unknown',
-    ...typeConfig,
+    ...(noteMeta || typeConfig),
+    category: data.category || 'log',
+    timelineType: noteMeta?.type || type,
     originalData: data // Keep original data for detailed views
   };
 };
@@ -159,21 +182,18 @@ const normalizeTimelineEntry = (doc, type) => {
 // Fetch timeline entries for a specific child
 export const getTimelineEntries = (childId, callback) => {
   const unsubscribeFunctions = [];
-  let allEntries = [];
-  let loadedCollections = 0;
-  const totalCollections = Object.keys(TIMELINE_TYPES).length;
+  const entriesByType = {};
 
-  const updateCallback = () => {
-    loadedCollections += 1;
-    if (loadedCollections === totalCollections) {
-      // Sort all entries by timestamp (newest first)
-      const sortedEntries = allEntries.sort((a, b) => {
+  const emitEntries = () => {
+    const sortedEntries = Object.values(entriesByType)
+      .flat()
+      .sort((a, b) => {
         const aTime = a.timestamp?.toDate?.() || new Date(a.timestamp) || new Date(0);
         const bTime = b.timestamp?.toDate?.() || new Date(b.timestamp) || new Date(0);
         return bTime - aTime;
       });
-      callback(sortedEntries);
-    }
+
+    callback(sortedEntries);
   };
 
   // Subscribe to each collection
@@ -203,25 +223,21 @@ export const getTimelineEntries = (childId, callback) => {
       }
 
       const unsubscribe = onSnapshot(q, (snapshot) => {
-        // Remove existing entries of this type
-        allEntries = allEntries.filter(entry => entry.type !== typeConfig.type);
-        
-        // Add new entries of this type
-        const newEntries = snapshot.docs.map(doc => 
+        entriesByType[typeConfig.type] = snapshot.docs.map(doc =>
           normalizeTimelineEntry(doc, typeConfig.type)
         );
-        allEntries = [...allEntries, ...newEntries];
-        
-        updateCallback();
+        emitEntries();
       }, (error) => {
         console.error(`Error fetching ${typeConfig.collection}:`, error);
-        updateCallback(); // Continue even if one collection fails
+        entriesByType[typeConfig.type] = [];
+        emitEntries();
       });
 
       unsubscribeFunctions.push(unsubscribe);
     } catch (error) {
       console.error(`Error setting up listener for ${typeConfig.collection}:`, error);
-      updateCallback(); // Continue even if setup fails
+      entriesByType[typeConfig.type] = [];
+      emitEntries();
     }
   });
 

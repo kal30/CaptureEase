@@ -1,6 +1,5 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
-  Container,
   Typography,
   Box,
   Button,
@@ -16,8 +15,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { DateCalendar } from "@mui/x-date-pickers/DateCalendar";
 import { PickersDay } from "@mui/x-date-pickers/PickersDay";
-import { isToday } from "date-fns";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import SearchIcon from "@mui/icons-material/Search";
@@ -30,8 +28,9 @@ import DailyLogFeed from "../components/DailyNotes/DailyLogFeed";
 
 const DailyLogPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const theme = useTheme(); // Get theme object
-  const { currentChildId } = useChildContext();
+  const { currentChildId, setCurrentChildId } = useChildContext();
   const {
     childName,
     loading: childNameLoading,
@@ -39,7 +38,13 @@ const DailyLogPage = () => {
   } = useChildName(currentChildId);
 
   const [calendarAnchor, setCalendarAnchor] = useState(null);
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const getInitialDate = () => {
+    const stateDate = location.state?.selectedDate;
+    const parsedDate = stateDate ? new Date(stateDate) : null;
+    return parsedDate && !Number.isNaN(parsedDate.getTime()) ? parsedDate : new Date();
+  };
+
+  const [selectedDate, setSelectedDate] = useState(getInitialDate);
   const [datesWithEntries, setDatesWithEntries] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -90,6 +95,21 @@ const DailyLogPage = () => {
   const handleClearSearch = () => {
     setSearchQuery("");
   };
+
+  useEffect(() => {
+    const selectedChildId = location.state?.selectedChildId;
+    if (selectedChildId) {
+      setCurrentChildId(selectedChildId);
+    }
+
+    const stateDate = location.state?.selectedDate;
+    if (stateDate) {
+      const parsedDate = new Date(stateDate);
+      if (!Number.isNaN(parsedDate.getTime())) {
+        setSelectedDate(parsedDate);
+      }
+    }
+  }, [location.state, setCurrentChildId]);
 
 
   if (childNameLoading) return <Typography>Loading...</Typography>;

@@ -1,5 +1,5 @@
-// Service Worker for CaptureEase Follow-up Notifications
-const CACHE_NAME = 'captureease-notifications-v1';
+// Service Worker for CaptureEz follow-up notifications
+const CACHE_NAME = 'captureez-notifications-v1';
 
 // Install event
 self.addEventListener('install', (event) => {
@@ -37,7 +37,7 @@ self.addEventListener('notificationclick', (event) => {
     
     // Show confirmation notification
     self.registration.showNotification('Response Recorded! 🎉', {
-      body: `Your feedback has been saved. Open CaptureEase to see details.`,
+      body: `Your feedback has been saved. Open CaptureEz to see details.`,
       icon: '/favicon.ico',
       badge: '/favicon.ico',
       tag: `response-${data.incidentId}`,

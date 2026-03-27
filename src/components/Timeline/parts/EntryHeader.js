@@ -31,13 +31,22 @@ const EntryHeader = ({
   }, [timeString, time, timeFormatter, safeLocale, timeOptions]);
 
   return (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-      <Typography variant="body2" sx={{ fontWeight: 600, color: entryColor }}>
-        {entryLabel}
-        {computedTime ? ` @ ${computedTime}` : ''}
-      </Typography>
+    <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1, mb: 0.25 }}>
+      <Box sx={{ minWidth: 0 }}>
+        <Typography variant="body2" sx={{ fontWeight: 700, color: entryColor, lineHeight: 1.15 }}>
+          {entryLabel}
+        </Typography>
+        {computedTime && (
+          <Typography
+            variant="caption"
+            sx={{ color: 'text.secondary', fontSize: '0.7rem', fontWeight: 500, lineHeight: 1.05 }}
+          >
+            {computedTime}
+          </Typography>
+        )}
+      </Box>
       {loggedByUser && (
-        <Typography variant="caption" sx={{ color: 'text.secondary', ml: 'auto' }}>
+        <Typography variant="caption" sx={{ color: 'text.secondary', flexShrink: 0 }}>
           by {loggedByUser}
         </Typography>
       )}

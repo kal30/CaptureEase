@@ -47,7 +47,7 @@ const UnifiedTimelineEntry = ({
   const theme = useTheme();
   const normalizedType = mapLegacyType(entry.type);
   const typeMeta = getEntryTypeMeta(entry.type);
-  const typeColor = theme.palette.timeline?.entries?.[typeMeta.key] || theme.palette.primary.main;
+  const typeColor = entry.color || theme.palette.timeline?.entries?.[typeMeta.key] || theme.palette.primary.main;
 
   // Get user role color using centralized theme.palette.roles
   const getUserRoleColor = (userRole) => {
@@ -88,6 +88,17 @@ const UnifiedTimelineEntry = ({
           secondary: entry.content?.substring(0, 100) + (entry.content?.length > 100 ? '...' : ''),
           hasMedia: false
         };
+      case 'behavior':
+      case 'health':
+      case 'mood':
+      case 'sleep':
+      case 'food':
+      case 'milestone':
+        return {
+          primary: entry.title || typeMeta.label,
+          secondary: entry.text || entry.content || entry.notes,
+          hasMedia: false
+        };
       case 'dailyLog':
         return {
           primary: `${entry.activityType || 'Activity'} - ${entry.mood || 'No mood recorded'}`,
@@ -116,13 +127,15 @@ const UnifiedTimelineEntry = ({
       variant="outlined"
       sx={{
         border: '1px solid',
-        borderColor: 'divider',
+        borderColor: alpha(typeColor, 0.12),
         borderLeft: `4px solid ${typeColor}`,
-        bgcolor: isExpanded ? alpha(typeColor, 0.06) : 'background.paper',
+        bgcolor: '#ffffff',
+        borderRadius: 3,
+        boxShadow: '0 8px 22px rgba(15, 23, 42, 0.06)',
         transition: 'all 0.2s ease',
         '&:hover': {
-          bgcolor: alpha(typeColor, 0.06),
-          boxShadow: 1
+          bgcolor: '#ffffff',
+          boxShadow: '0 10px 24px rgba(15, 23, 42, 0.08)'
         }
       }}
     >
