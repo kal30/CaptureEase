@@ -23,7 +23,7 @@ export const getActionGroups = (theme) => (userRole) => {
       actions: [
         { key: 'timeline', label: 'View Timeline', icon: '📈', types: ['timeline_view'], trackingType: 'view', description: 'See daily activity timeline' },
         { key: 'progress', label: 'Progress Review', icon: '📊', types: ['progress_note'], trackingType: 'task', description: 'Review developmental progress' },
-        { key: 'daily_summary', label: 'Daily Summary', icon: '📋', types: ['daily_summary'], trackingType: 'view', description: 'View today\'s activities' },
+        { key: 'daily_summary', label: 'Therapy Prep', icon: '📋', types: ['daily_summary'], trackingType: 'view', description: 'Prepare notes for therapy and specialist visits' },
       ],
     },
     {

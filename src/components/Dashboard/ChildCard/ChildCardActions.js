@@ -57,7 +57,7 @@ const ChildCardActions = ({
         ...sx 
       }}
     >
-      {/* Quick Entry Section with Daily Report */}
+      {/* Quick Entry Section with Therapy Prep */}
       <QuickEntrySection
         child={child}
         status={status}

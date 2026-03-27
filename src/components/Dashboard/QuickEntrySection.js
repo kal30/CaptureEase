@@ -19,7 +19,7 @@ import { useChildContext } from '../../contexts/ChildContext';
 import { therapyTheme } from '../../assets/theme/therapyTheme';
 
 /**
- * QuickEntrySection - Integrated Quick Entry circles with Daily Report
+ * QuickEntrySection - Integrated Quick Entry circles with Therapy Prep access
  * Connects to Daily Care data and provides hover highlighting
  */
 const QuickEntrySection = ({
@@ -273,7 +273,7 @@ const QuickEntrySection = ({
           }}
         >
           <AssessmentIcon sx={{ mr: 1.5, fontSize: 18, color: theme.palette.dailyCare.dark }} />
-          <ListItemText primary="Daily Report" secondary="View today's summary" />
+          <ListItemText primary="Therapy Prep" secondary="Prepare notes for therapy and specialist visits" />
         </MenuItem>
       </Menu>
     </Box>

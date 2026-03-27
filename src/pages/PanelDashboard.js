@@ -251,8 +251,13 @@ const PanelDashboard = () => {
       <DailyCareReport
         open={hook.showCareReportModal}
         onClose={hook.handleCloseCareReportModal}
+        child={hook.careReportChild}
         childId={hook.careReportChild?.id}
         childName={hook.careReportChild?.name}
+        onLogSomething={(child) => {
+          hook.handleCloseCareReportModal();
+          hook.handleQuickDataEntry(child, "quick_note");
+        }}
       />
     </Container>
   );
