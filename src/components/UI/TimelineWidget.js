@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Box,
   Typography,
@@ -10,18 +10,15 @@ import {
   ListItemText,
   ListItemAvatar,
   Avatar,
-  Chip,
-  Button,
 } from '@mui/material';
 import {
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
   Timeline as TimelineIcon,
-  CalendarMonth as CalendarIcon,
 } from '@mui/icons-material';
 import { alpha } from '@mui/material/styles';
 import MiniCalendar from './MiniCalendar';
-import { UnifiedTimeline, TimelineFullModal, TimelineFilters } from '../Timeline';
+import { UnifiedTimeline, TimelineFilters } from '../Timeline';
 import { useTimelineProgress } from '../../hooks/useTimelineProgress';
 
 /**
@@ -41,11 +38,11 @@ const TimelineWidget = ({
   entries = [],
   dailyCareStatus = {},
   defaultExpanded = false,
+  expanded: controlledExpanded,
   variant = 'full',
   showUnifiedLog = true
 }) => {
   const [expanded, setExpanded] = useState(defaultExpanded);
-  const [showTimelineModal, setShowTimelineModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
 
   const [timelineFilters, setTimelineFilters] = useState({}); // Unified timeline filters
@@ -53,6 +50,12 @@ const TimelineWidget = ({
   const childSpecificEntries = entries;
   
   const timeline = useTimelineProgress(childSpecificEntries, dailyCareStatus);
+
+  useEffect(() => {
+    if (typeof controlledExpanded === 'boolean') {
+      setExpanded(controlledExpanded);
+    }
+  }, [controlledExpanded]);
   
   // Component styles - mobile-first responsive
   const widgetStyles = {
@@ -77,10 +80,6 @@ const TimelineWidget = ({
 
   const contentStyles = {
     p: { xs: 1.25, md: 1.5 }
-  };
-
-  const handleViewFullTimeline = () => {
-    setShowTimelineModal(true);
   };
 
   const handleDayClick = (day, dayEntries, date) => {
@@ -158,49 +157,6 @@ const TimelineWidget = ({
       </List>
     );
   };
-
-  // Render activity metrics
-  const renderMetrics = () => {
-    const mostActiveType = timeline.getMostActiveType();
-    const streak = timeline.getActivityStreak();
-    const metrics = timeline.metrics || { todayCount: 0, weekCount: 0, totalCount: 0 };
-
-    return (
-      <Box className="timeline-widget__metrics" sx={{ mb: 2 }}>
-        <Box sx={{ display: 'flex', gap: 1, mb: 1, flexWrap: 'wrap' }}>
-          {metrics.todayCount > 0 && (
-            <Chip
-              label={`${metrics.todayCount} today`}
-              size="small"
-              color="primary"
-              variant="filled"
-            />
-          )}
-          {metrics.weekCount > 0 && (
-            <Chip
-              label={`${metrics.weekCount} this week`}
-              size="small"
-              variant="outlined"
-            />
-          )}
-          {streak > 0 && (
-            <Chip
-              label={`${streak} day streak`}
-              size="small"
-              color="success"
-              variant="outlined"
-            />
-          )}
-        </Box>
-        {mostActiveType && (
-          <Typography variant="caption" color="text.secondary">
-            Most active: {mostActiveType.icon} {mostActiveType.label} ({mostActiveType.count} entries)
-          </Typography>
-        )}
-      </Box>
-    );
-  };
-
 
   // Render legacy content (original recent entries + calendar)
   const renderLegacyContent = () => {
@@ -285,16 +241,12 @@ const TimelineWidget = ({
                       display: 'block',
                       lineHeight: 1.2
                     }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const yesterday = new Date();
-                      yesterday.setDate(yesterday.getDate() - 1);
-                      setSelectedDate(yesterday);
-                      console.log('Switched to yesterday:', yesterday.toDateString());
-                    }}
-                    style={{ cursor: 'pointer' }}
                   >
-                    {timeline.hasActivity ? `${timeline.metrics?.totalCount || 0} total entries` : ''}
+                    {selectedDate.toLocaleDateString('en-US', {
+                      weekday: 'short',
+                      month: 'short',
+                      day: 'numeric',
+                    })}
                   </Typography>
                 </Box>
                 
@@ -335,8 +287,6 @@ const TimelineWidget = ({
             sx={contentStyles}
             onClick={(e) => e.stopPropagation()}
           >
-            {variant === 'full' && renderMetrics()}
-            
             {showUnifiedLog ? (
               <Box sx={{ 
                 display: 'flex', 
@@ -371,37 +321,16 @@ const TimelineWidget = ({
                     filters={timelineFilters}
                     onFiltersChange={setTimelineFilters}
                     showFilters={false}
+                    showDaySummary={false}
                   />
                 </Box>
               </Box>
             ) : renderLegacyContent()}
             
-            {/* Action Buttons */}
-            {timeline.hasActivity && (
-              <Box sx={{ display: 'flex', gap: 1, mt: 2, justifyContent: 'center' }}>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  startIcon={<CalendarIcon />}
-                  onClick={handleViewFullTimeline}
-                  sx={{ fontSize: '0.75rem' }}
-                >
-                  View Full Timeline
-                </Button>
-              </Box>
-            )}
           </Box>
         </Collapse>
       </Paper>
 
-      {/* Full Timeline Modal */}
-      <TimelineFullModal
-        open={showTimelineModal}
-        onClose={() => setShowTimelineModal(false)}
-        child={child}
-        entries={childSpecificEntries}
-        onDayClick={handleDayClick}
-      />
     </>
   );
 };

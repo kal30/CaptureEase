@@ -17,6 +17,26 @@ const QUICK_NOTE_CATEGORY_META = {
   log: { type: 'journal', timelineType: 'journal', titlePrefix: 'Daily Log' }
 };
 
+const getEntryUser = (entry) => ({
+  loggedByUser: entry.loggedBy?.name || entry.authorName || entry.authorEmail || null,
+  userRole: entry.loggedBy?.role || entry.authorRole || null,
+  userId: entry.loggedBy?.id || entry.authorId || entry.createdBy || null,
+});
+
+const getQuickJournalTitle = (entry, categoryMeta) => {
+  const text = (entry.title || entry.text || '').trim();
+  if (!text) {
+    return categoryMeta.titlePrefix;
+  }
+
+  const firstLine = text.split('\n')[0].trim();
+  if (!firstLine) {
+    return categoryMeta.titlePrefix;
+  }
+
+  return firstLine.length > 60 ? `${firstLine.slice(0, 57)}...` : firstLine;
+};
+
 /**
  * useUnifiedTimelineData - Hook to fetch and combine all timeline data for a specific day
  * Combines incidents, journal entries, daily logs, and follow-ups
@@ -101,8 +121,10 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
         timestamp: entryTimestamp,
         type: categoryMeta.type,
         timelineType: categoryMeta.timelineType,
+        title: getQuickJournalTitle(entry, categoryMeta),
         titlePrefix: categoryMeta.titlePrefix,
         color: categoryMeta.color,
+        ...getEntryUser(entry),
       };
 
       setRawEntries((prev) => ({
@@ -174,9 +196,7 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
         interventions: incident.interventions,
         mediaAttachments: incident.mediaAttachments,
         mediaURL: incident.mediaURL,
-        loggedByUser: incident.loggedBy?.name,
-        userRole: incident.loggedBy?.role,
-        userId: incident.loggedBy?.id
+        ...getEntryUser(incident),
       })),
       
       // Transform journal entries (from dailyLogs - avoid duplicates by using journals data only)
@@ -195,9 +215,7 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
         mediaURL: journal.mediaURL,
         mediaType: journal.mediaType,
         voiceMemoURL: journal.voiceMemoURL,
-        loggedByUser: journal.loggedBy?.name,
-        userRole: journal.loggedBy?.role,
-        userId: journal.loggedBy?.id
+        ...getEntryUser(journal),
       })),
       
       // Transform daily habits (from dailyCare collection)
@@ -211,9 +229,7 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
         level: habit.level,
         notes: habit.notes,
         mediaUrls: habit.mediaUrls,
-        loggedByUser: habit.loggedBy?.name,
-        userRole: habit.loggedBy?.role,
-        userId: habit.loggedBy?.id
+        ...getEntryUser(habit),
       })),
 
       // Transform therapy notes (Professional entries from therapyNotes collection)

@@ -13,6 +13,7 @@ const ChildCard = ({
   groupType,
   status = {},
   recentEntries = [],
+  timelineSummary = {},
   incidents = [],
   isExpanded,
   onToggleExpanded,
@@ -56,6 +57,7 @@ const ChildCard = ({
             userRole={userRole}
             canAddData={canAddData}
             completedToday={completedToday}
+            timelineSummary={timelineSummary}
             onEditChild={onEditChild}
             onDeleteChild={onDeleteChild}
             onInviteTeamMember={onInviteTeamMember}

@@ -32,6 +32,7 @@ const PanelDashboard = () => {
   const commonChildGroupProps = {
     quickDataStatus: hook.quickDataStatus,
     recentEntries: hook.recentEntries,
+    timelineSummary: hook.timelineSummary,
     incidents: hook.incidents,
     isCardExpanded: hook.isCardExpanded,
     onToggleExpanded: hook.toggleCard,

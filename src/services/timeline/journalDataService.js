@@ -18,6 +18,28 @@ const JOURNAL_CATEGORY_META = {
   log: { type: 'journal', timelineType: 'journal', titlePrefix: 'Daily Log' }
 };
 
+const buildJournalTitle = (data, categoryMeta) => {
+  if (data.title?.trim()) {
+    return data.title.trim();
+  }
+
+  if (Array.isArray(data.tags) && data.tags.length > 0) {
+    return `${categoryMeta.titlePrefix}: #${data.tags[0]}`;
+  }
+
+  const noteText = (data.text || data.note || data.content || '').trim();
+  if (!noteText) {
+    return categoryMeta.titlePrefix;
+  }
+
+  const firstLine = noteText.split('\n')[0].trim();
+  if (!firstLine) {
+    return categoryMeta.titlePrefix;
+  }
+
+  return firstLine.length > 60 ? `${firstLine.slice(0, 57)}...` : firstLine;
+};
+
 const mapJournalEntry = (doc) => {
   const data = doc.data();
   const categoryMeta = JOURNAL_CATEGORY_META[data.category] || JOURNAL_CATEGORY_META.log;
@@ -29,6 +51,7 @@ const mapJournalEntry = (doc) => {
     type: categoryMeta.type,
     timelineType: categoryMeta.timelineType,
     collection: 'dailyLogs',
+    title: buildJournalTitle(data, categoryMeta),
     titlePrefix: categoryMeta.titlePrefix,
     color: categoryMeta.color
   };

@@ -18,7 +18,6 @@ import { TimelineWidget } from '../../UI';
  */
 const ChildCardContent = ({
   child,
-  groupType,
   isExpanded,
   recentEntries = [],
   incidents = [],
@@ -44,6 +43,7 @@ const ChildCardContent = ({
             incidents={incidents}
             dailyCareStatus={status}
             defaultExpanded={false}
+            expanded={isExpanded}
             variant="full"
             showUnifiedLog={true}
           />

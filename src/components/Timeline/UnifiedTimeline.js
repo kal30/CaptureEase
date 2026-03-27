@@ -22,7 +22,6 @@ import JournalDetails from "./parts/JournalDetails";
 import TherapyNoteDetails from "./parts/TherapyNoteDetails";
 import EntryHeader from "./parts/EntryHeader";
 import TimelineItem from "./parts/TimelineItem";
-import { getIncidentDisplayInfo } from '../../constants/uiDisplayConstants';
 
 /**
  * UnifiedTimeline - Main unified timeline component
@@ -41,9 +40,8 @@ const UnifiedTimeline = ({
   filters = {},
   onFiltersChange,
   showFilters = true,
+  showDaySummary = true,
 }) => {
-  // Get centralized display info
-  const incidentDisplay = getIncidentDisplayInfo();
   const { getUserRoleForChild } = useRole();
   const theme = useTheme();
 
@@ -91,7 +89,7 @@ const UnifiedTimeline = ({
       )}
 
       {/* Day Summary Header */}
-      {summary && entries.length > 0 && (
+      {showDaySummary && summary && entries.length > 0 && (
         <Box
           sx={{
             mb: 2,
@@ -112,11 +110,7 @@ const UnifiedTimeline = ({
           
           {/* Basic Summary */}
           <Typography variant="body2" color="text.secondary">
-            {summary.totalEntries} total activities
-            {summary.incidentCount > 0 && ` • ${summary.incidentCount} ${incidentDisplay.pluralLabelLowercase}`}
-            {summary.journalCount > 0 && ` • ${summary.journalCount} journal entries`}
-            {summary.dailyHabitCount > 0 && ` • ${summary.dailyHabitCount} daily habits`}
-            {summary.therapyNoteCount > 0 && ` • ${summary.therapyNoteCount} therapy notes`}
+            {summary.totalEntries} entries
             {summary.lastActivityTime && ` • Last activity at ${summary.lastActivityTime}`}
           </Typography>
 
@@ -198,7 +192,10 @@ const UnifiedTimeline = ({
               }
               const entryType = mapLegacyType(typeForTimeline);
               const meta = getEntryTypeMeta(typeForTimeline);
-              const entryLabel = meta.label.replace(/s$/, '');
+              const defaultEntryLabel = meta.label.replace(/s$/, '');
+              const entryLabel = entry.collection === 'dailyLogs'
+                ? (entry.title || defaultEntryLabel)
+                : defaultEntryLabel;
               const entryColor = entry.color || theme.palette.timeline.entries?.[meta.key] || theme.palette.primary.main;
 
               return (

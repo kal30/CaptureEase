@@ -20,6 +20,42 @@ const QUICK_NOTE_CATEGORY_META = {
   log: { type: 'log', label: 'Daily Log', icon: '📝', color: '#64748B' },
 };
 
+const toEntryDate = (timestamp) => timestamp?.toDate?.() || new Date(timestamp);
+
+const formatTimeForSummary = (timestamp) => {
+  const date = toEntryDate(timestamp);
+  return Number.isNaN(date.getTime())
+    ? null
+    : date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+};
+
+const getActivityStreak = (entries = []) => {
+  if (!entries.length) return 0;
+
+  let streak = 0;
+  const today = new Date();
+
+  for (let i = 0; i < 30; i++) {
+    const checkDate = new Date(today);
+    checkDate.setDate(today.getDate() - i);
+    const dayStart = new Date(checkDate.getFullYear(), checkDate.getMonth(), checkDate.getDate());
+    const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
+
+    const hasEntryForDay = entries.some((entry) => {
+      const entryDate = toEntryDate(entry.timestamp);
+      return !Number.isNaN(entryDate.getTime()) && entryDate >= dayStart && entryDate < dayEnd;
+    });
+
+    if (hasEntryForDay) {
+      streak++;
+    } else if (i > 0) {
+      break;
+    }
+  }
+
+  return streak;
+};
+
 export const usePanelDashboard = () => {
   const theme = useTheme();
   const navigate = useNavigate();
@@ -38,6 +74,7 @@ export const usePanelDashboard = () => {
   const [children, setChildren] = useState([]);
   const [loading, setLoading] = useState(true);
   const [recentEntries, setRecentEntries] = useState({});
+  const [timelineSummary, setTimelineSummary] = useState({});
   const [incidents, setIncidents] = useState({}); // Store incidents by child ID
 
   // Use separated Daily Care status hook
@@ -113,23 +150,51 @@ export const usePanelDashboard = () => {
   useEffect(() => {
     const unsubscribes = [];
     const entriesByChild = {};
+    const timelineSummaryByChild = {};
     const incidentsByChild = {};
 
     children.forEach((child) => {
       // Fetch timeline entries
       const timelineUnsubscribe = getTimelineEntries(child.id, (entries) => {
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        const weekAgo = new Date();
+        weekAgo.setDate(weekAgo.getDate() - 7);
+
+        const todaysEntries = entries
+          .filter((entry) => {
+            const entryDate = toEntryDate(entry.timestamp);
+            return !Number.isNaN(entryDate.getTime()) && entryDate >= todayStart;
+          })
+          .sort((a, b) => {
+            const aTime = toEntryDate(a.timestamp);
+            const bTime = toEntryDate(b.timestamp);
+            return bTime - aTime;
+          });
+
+        const weekEntries = entries.filter((entry) => {
+          const entryDate = toEntryDate(entry.timestamp);
+          return !Number.isNaN(entryDate.getTime()) && entryDate >= weekAgo;
+        });
+
         const recentTimelineEntries = entries
           .filter((entry) => {
-            const entryDate = new Date(entry.timestamp);
-            const weekAgo = new Date();
-            weekAgo.setDate(weekAgo.getDate() - 7);
-            return entryDate >= weekAgo;
+            const entryDate = toEntryDate(entry.timestamp);
+            return !Number.isNaN(entryDate.getTime()) && entryDate >= weekAgo;
           })
-          .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+          .sort((a, b) => toEntryDate(b.timestamp) - toEntryDate(a.timestamp))
           .slice(0, 5);
 
         entriesByChild[child.id] = recentTimelineEntries;
+        timelineSummaryByChild[child.id] = {
+          totalEntries: todaysEntries.length,
+          todayCount: todaysEntries.length,
+          weekCount: weekEntries.length,
+          activityStreak: getActivityStreak(entries),
+          lastActivityTime: todaysEntries[0] ? formatTimeForSummary(todaysEntries[0].timestamp) : null,
+        };
         setRecentEntries({ ...entriesByChild });
+        setTimelineSummary({ ...timelineSummaryByChild });
       });
 
       // Fetch incidents (for unified daily log)
@@ -261,6 +326,24 @@ export const usePanelDashboard = () => {
         return {
           ...prev,
           [selectedChild.id]: nextEntries,
+        };
+      });
+
+      setTimelineSummary((prev) => {
+        const currentSummary = prev[selectedChild.id] || {};
+        const nextTodayCount = (currentSummary.todayCount || 0) + 1;
+        const nextWeekCount = (currentSummary.weekCount || 0) + 1;
+        const nextLastActivityTime = formatTimeForSummary(optimisticEntry.timestamp);
+
+        return {
+          ...prev,
+          [selectedChild.id]: {
+            totalEntries: nextTodayCount,
+            todayCount: nextTodayCount,
+            weekCount: nextWeekCount,
+            activityStreak: currentSummary.activityStreak || 1,
+            lastActivityTime: nextLastActivityTime,
+          },
         };
       });
     }
@@ -474,6 +557,7 @@ export const usePanelDashboard = () => {
     professionalChildren,
     quickDataStatus,
     recentEntries,
+    timelineSummary,
     incidents,
     expandedCards,
     expandedCategories,

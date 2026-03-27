@@ -6,7 +6,6 @@ import ChildNotificationBadge from '../../UI/ChildNotificationBadge';
 import CareTeamDisplay from '../../UI/CareTeamDisplay';
 import ChildManagementMenu from '../ChildManagementMenu';
 import MedicalInfoDisplay from './MedicalInfoDisplay';
-import DiagnosisChips from '../DiagnosisChips';
 import useChildCardChips from '../../../hooks/useChildCardChips';
 
 /**
@@ -30,6 +29,7 @@ const ChildCardHeader = memo(({
   userRole,
   canAddData,
   completedToday,
+  timelineSummary = {},
   onEditChild,
   onDeleteChild,
   onInviteTeamMember,
@@ -38,6 +38,36 @@ const ChildCardHeader = memo(({
   sx = {}
 }) => {
   const allChips = useChildCardChips(userRole, completedToday);
+  const metricChips = [
+    timelineSummary.todayCount > 0
+      ? {
+          key: 'today',
+          label: `${timelineSummary.todayCount} today`,
+          color: 'primary',
+          variant: 'filled',
+        }
+      : null,
+    timelineSummary.weekCount > 0
+      ? {
+          key: 'week',
+          label: `${timelineSummary.weekCount} this week`,
+          variant: 'outlined',
+          sx: {
+            borderColor: 'divider',
+            color: 'text.primary',
+            backgroundColor: 'background.paper',
+          },
+        }
+      : null,
+    timelineSummary.activityStreak > 0
+      ? {
+          key: 'streak',
+          label: `${timelineSummary.activityStreak} day streak`,
+          color: 'success',
+          variant: 'outlined',
+        }
+      : null,
+  ].filter(Boolean);
 
   return (
     <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, ...sx }}>
@@ -140,6 +170,35 @@ const ChildCardHeader = memo(({
             onInviteTeamMember={onInviteTeamMember}
             maxVisible={4}
           />
+        )}
+
+        {(metricChips.length > 0 || timelineSummary.lastActivityTime) && (
+          <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+            {metricChips.length > 0 && (
+              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                {metricChips.map((chip) => (
+                  <Chip
+                    key={chip.key}
+                    label={chip.label}
+                    size="small"
+                    color={chip.color}
+                    variant={chip.variant}
+                    sx={chip.sx}
+                  />
+                ))}
+              </Box>
+            )}
+
+            {timelineSummary.lastActivityTime && (
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ display: 'block', fontSize: '0.78rem', fontWeight: 500 }}
+              >
+                Last activity at {timelineSummary.lastActivityTime}
+              </Typography>
+            )}
+          </Box>
         )}
       </Box>
 
