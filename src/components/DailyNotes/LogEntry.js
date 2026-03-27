@@ -8,15 +8,21 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
+import { auth } from '../../services/firebase';
+import { useRole } from '../../contexts/RoleContext';
 
 dayjs.extend(relativeTime);
 dayjs.extend(isSameOrAfter);
 
 const LogEntry = ({ entry, onEdit, onDelete }) => {
+  const { getUserRoleForChild } = useRole();
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(entry.text || '');
   const [anchorEl, setAnchorEl] = useState(null);
   const [loading, setLoading] = useState(false);
+  const currentUser = auth.currentUser;
+  const currentUserRole = getUserRoleForChild?.(entry.childId);
+  const canEdit = entry.createdBy === currentUser?.uid || currentUserRole === 'care_owner';
 
   const entryTimestamp = entry.timestamp ? 
     (typeof entry.timestamp.toDate === 'function' ? 
@@ -108,13 +114,15 @@ const LogEntry = ({ entry, onEdit, onDelete }) => {
         <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.8rem', fontWeight: 500 }}>
           {formattedTimeOnly}
         </Typography>
-        <IconButton 
-          size="small" 
-          onClick={handleMenuOpen}
-          sx={{ opacity: 0, transition: 'opacity 0.2s', '.MuiBox-root:hover &': { opacity: 0.7 }, '&:hover': { opacity: 1 } }}
-        >
-          <MoreVertIcon fontSize="small" />
-        </IconButton>
+        {canEdit && (
+          <IconButton 
+            size="small" 
+            onClick={handleMenuOpen}
+            sx={{ opacity: 0, transition: 'opacity 0.2s', '.MuiBox-root:hover &': { opacity: 0.7 }, '&:hover': { opacity: 1 } }}
+          >
+            <MoreVertIcon fontSize="small" />
+          </IconButton>
+        )}
       </Box>
 
       {/* Entry content */}
@@ -203,20 +211,22 @@ const LogEntry = ({ entry, onEdit, onDelete }) => {
       </Box>
       
       {/* Dropdown Menu */}
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleMenuClose}
-      >
-        <MenuItem onClick={handleEdit}>
-          <EditIcon sx={{ marginRight: 1 }} />
-          Edit
-        </MenuItem>
-        <MenuItem onClick={handleDelete} sx={{ color: 'error.main' }}>
-          <DeleteIcon sx={{ marginRight: 1 }} />
-          Delete
-        </MenuItem>
-      </Menu>
+      {canEdit && (
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={handleMenuClose}
+        >
+          <MenuItem onClick={handleEdit}>
+            <EditIcon sx={{ marginRight: 1 }} />
+            Edit
+          </MenuItem>
+          <MenuItem onClick={handleDelete} sx={{ color: 'error.main' }}>
+            <DeleteIcon sx={{ marginRight: 1 }} />
+            Delete
+          </MenuItem>
+        </Menu>
+      )}
     </Box>
   );
 };

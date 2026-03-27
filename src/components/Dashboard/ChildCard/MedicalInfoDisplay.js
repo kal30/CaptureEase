@@ -21,6 +21,12 @@ const MedicalInfoDisplay = ({
 
   // Sort allergies by priority (life-threatening first)
   const sortedAllergies = sortAllergiesByPriority(allergies);
+  const getAllergyLabel = (allergy) => {
+    if (typeof allergy === 'string') return allergy;
+    if (allergy?.name) return allergy.name;
+    if (allergy?.label) return allergy.label;
+    return '';
+  };
 
   const maxVisible = 2;
   const hasMoreAllergies = sortedAllergies.length > maxVisible;
@@ -47,31 +53,29 @@ const MedicalInfoDisplay = ({
           </>
         )}
 
-        {diagnosis && sortedAllergies.length > 0 && (
+        {diagnosis && (
           <Box component="span" sx={{ mx: 0.5, color: 'divider' }}>|</Box>
         )}
 
-        {sortedAllergies.length > 0 && (
-          <>
-            <Box component="span" sx={{ fontWeight: 600, color: 'text.primary' }}>Allergies:</Box>
-            {visibleAllergies.map(a => a.name).join(', ')}
-            {hasMoreAllergies && (
-              <Box
-                component="span"
-                onClick={() => setShowAllAllergies(!showAllAllergies)}
-                sx={{
-                  color: 'primary.main',
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                  ml: 0.5,
-                  '&:hover': { textDecoration: 'underline' }
-                }}
-              >
-                +{allergyRemainingCount} more
-              </Box>
-            )}
-          </>
-        )}
+        <>
+          <Box component="span" sx={{ fontWeight: 600, color: 'text.primary' }}>Allergies:</Box>
+          {sortedAllergies.length > 0 ? visibleAllergies.map(getAllergyLabel).filter(Boolean).join(', ') || 'N/A' : 'N/A'}
+          {hasMoreAllergies && (
+            <Box
+              component="span"
+              onClick={() => setShowAllAllergies(!showAllAllergies)}
+              sx={{
+                color: 'primary.main',
+                cursor: 'pointer',
+                fontWeight: 600,
+                ml: 0.5,
+                '&:hover': { textDecoration: 'underline' }
+              }}
+            >
+              +{allergyRemainingCount} more
+            </Box>
+          )}
+        </>
       </Typography>
 
       {/* Additional allergies when expanded */}
