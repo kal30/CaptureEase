@@ -47,7 +47,7 @@ const EntryHeader = ({
       </Box>
       {loggedByUser && (
         <Typography variant="caption" sx={{ color: 'text.secondary', flexShrink: 0 }}>
-          by {loggedByUser}
+          Logged by {loggedByUser}
         </Typography>
       )}
     </Box>
