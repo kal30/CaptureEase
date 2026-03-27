@@ -3,7 +3,6 @@ import { Container, Typography, TextField, Box, Paper, Alert, Divider } from '@m
 import { useTheme } from '@mui/material/styles';
 import { EnhancedLoadingButton } from '../components/UI';
 import { getAuth, updateProfile, updatePassword } from 'firebase/auth';
-import PasskeyAuth from '../components/AuthProviders/PasskeyAuth';
 import ResponsiveLayout from '../components/Layout/ResponsiveLayout';
 
 const ProfilePage = () => {
@@ -158,19 +157,12 @@ const ProfilePage = () => {
 
         <Divider sx={{ width: '100%', my: 3 }} />
 
-        {/* Passkey Management Section */}
-        <Box sx={{ mt: 2, width: '100%' }}>
-          <PasskeyAuth mode="register" />
-        </Box>
-
-        <Divider sx={{ width: '100%', my: 3 }} />
-
         <Box sx={{ mt: 2, width: '100%' }}>
           <Typography variant="h6" sx={{ mb: 1 }}>Your Email</Typography>
           <Typography variant="body1" sx={{ mb: 2 }}>
             {email}
           </Typography>
-_          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" color="text.secondary">
             To change your email, please contact support or use your Firebase console if you have direct access.
           </Typography>
         </Box>

@@ -23,7 +23,7 @@ import DailyReportModal from "../components/DailyCare/DailyReportModal";
 import { IncidentLoggingModal, IncidentFollowUpModal } from "../components/Dashboard/Incidents";
 import PatternSuggestionModal from "../components/Dashboard/PatternSuggestionModal";
 import DailyHabitsModal from "../components/Dashboard/DailyHabitsModal";
-import { NotificationPermissionPrompt } from "../components/UI";
+import DailyCareReport from "../components/Reports/DailyCareReport";
 
 const PanelDashboard = () => {
   const hook = usePanelDashboard();
@@ -38,7 +38,7 @@ const PanelDashboard = () => {
     onQuickEntry: hook.handleQuickDataEntry,
     onEditChild: hook.handleEditChild,
     onInviteTeamMember: hook.handleInviteTeamMember,
-    onDailyReport: hook.handleDailyReport,
+    onDailyReport: hook.handleShowCareReport, // Switch to new report
     onMessages: hook.handleMessages,
     getActionGroups: actionGroups,
     handleGroupActionClick: hook.handleGroupActionClick,
@@ -137,16 +137,8 @@ const PanelDashboard = () => {
         isReadOnlyForChild={hook.isReadOnlyForChild}
         getUserRoleForChild={hook.getUserRoleForChild}
         USER_ROLES={hook.USER_ROLES}
-        onInviteClick={() => hook.setShowInviteModal(true)}
+        onInviteClick={hook.handleInviteTeamMember}
         onAddChildClick={() => hook.setShowAddChildModal(true)}
-      />
-
-      {/* Notification Permission Prompt */}
-      <NotificationPermissionPrompt 
-        onPermissionGranted={() => {
-        }}
-        onDismiss={() => {
-        }}
       />
 
       <Box sx={{ maxWidth: 800, mx: "auto" }}>
@@ -185,6 +177,7 @@ const PanelDashboard = () => {
               child={hook.selectedChild}
               onComplete={hook.handleQuickEntryComplete}
               onSkip={hook.handleQuickEntrySkip}
+              initialStep={hook.quickEntryStep}
             />
           )}
         </Box>
@@ -250,7 +243,15 @@ const PanelDashboard = () => {
         onClose={hook.handleCloseDailyHabitsModal}
         childId={hook.dailyHabitsChild?.id}
         childName={hook.dailyHabitsChild?.name}
+        initialCategoryId={hook.dailyHabitsInitialCategoryId}
         onHabitSaved={hook.refreshDailyCareStatus}
+      />
+
+      <DailyCareReport
+        open={hook.showCareReportModal}
+        onClose={hook.handleCloseCareReportModal}
+        childId={hook.careReportChild?.id}
+        childName={hook.careReportChild?.name}
       />
     </Container>
   );

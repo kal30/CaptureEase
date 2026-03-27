@@ -1,10 +1,11 @@
 import React from "react";
 import { Box } from "@mui/material";
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 import BreadcrumbsComponent from "../components/UI/BreadcrumbsComponent";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
 import About from "../pages/About";
+import ContactUs from "../pages/ContactUs";
 import PanelDashboard from "../pages/PanelDashboard";
 import LandingPage from "../pages/LandingPage";
 import HealthInfoPage from "../pages/HealthInforPage";
@@ -54,13 +55,14 @@ const AppRoutes = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/about" element={<About />} />
+        <Route path="/contact-us" element={<ContactUs />} />
         <Route path="/dashboard" element={<PanelDashboard />} />
         <Route path="/care-team" element={<CareTeamPage />} />
         <Route path="/daily-activities" element={<DailyActivitiesPage />} />
         <Route path="/health-info" element={<HealthInfoPage />} />
         {/* /progress-notes route removed - feature deprecated */}
         <Route path="/sensory" element={<SensoryPage />} />
-        <Route path="/log" element={<DailyLogPage />} />
+        <Route path="/log" element={<Navigate to="/dashboard" replace />} />
         <Route path="/therapy-notes" element={<TherapyNotesPage />} />
         <Route path="/templates" element={<TemplateLibraryPage />} />
         <Route path="/medical" element={<MedicalLogPage />} />

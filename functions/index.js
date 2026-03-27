@@ -1,7 +1,7 @@
 const { onCall } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
 const logger = require("firebase-functions/logger");
-const sgMail = require("@sendgrid/mail");
+const { Resend } = require("resend");
 const admin = require("firebase-admin");
 
 // Initialize Firebase Admin (for server-side operations)
@@ -10,9 +10,17 @@ if (!admin.apps.length) {
 }
 
 // Declare secrets
-const SENDGRID_API_KEY = defineSecret("SENDGRID_API_KEY");
+const RESEND_API_KEY = defineSecret("RESEND_API_KEY");
 const FROM_EMAIL = defineSecret("FROM_EMAIL");
 const SENDER_NAME = defineSecret("SENDER_NAME");
+
+const escapeHtml = (value = "") =>
+  String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 
 // Helper function to generate email templates
 const generateInvitationEmailTemplate = (
@@ -127,9 +135,72 @@ const generateInvitationEmailTemplate = (
   return { html, text };
 };
 
+const generateContactEmailTemplate = ({
+  senderName,
+  senderEmail,
+  subject,
+  message,
+}) => {
+  const safeSenderName = escapeHtml(senderName);
+  const safeSenderEmail = escapeHtml(senderEmail);
+  const safeSubject = escapeHtml(subject);
+  const safeMessage = escapeHtml(message).replace(/\n/g, "<br>");
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>CaptureEz Contact Request</title>
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #243126; background-color: #F5FBF7; margin: 0; padding: 24px 0; }
+        .container { max-width: 640px; margin: 0 auto; background-color: #FFFFFF; border-radius: 20px; overflow: hidden; border: 1px solid #D7EADC; }
+        .header { background: linear-gradient(135deg, #2A7A56 0%, #3E9470 100%); color: #FFFFFF; padding: 32px 28px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .content { padding: 28px; }
+        .label { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: #678074; font-weight: 700; margin-bottom: 6px; }
+        .value { font-size: 16px; color: #183B2B; margin-bottom: 18px; word-break: break-word; }
+        .message-box { background-color: #F5FBF7; border: 1px solid #D7EADC; border-radius: 14px; padding: 18px; color: #183B2B; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>New Contact Request</h1>
+        </div>
+        <div class="content">
+          <div class="label">From</div>
+          <div class="value">${safeSenderName}</div>
+          <div class="label">Reply To</div>
+          <div class="value">${safeSenderEmail}</div>
+          <div class="label">Subject</div>
+          <div class="value">${safeSubject}</div>
+          <div class="label">Message</div>
+          <div class="message-box">${safeMessage}</div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const text = `
+New Contact Request
+
+From: ${senderName}
+Reply To: ${senderEmail}
+Subject: ${subject}
+
+Message:
+${message}
+  `.trim();
+
+  return { html, text };
+};
+
 exports.sendInvitationEmail = onCall(
   {
-    secrets: [SENDGRID_API_KEY, FROM_EMAIL, SENDER_NAME],
+    secrets: [RESEND_API_KEY, FROM_EMAIL, SENDER_NAME],
   },
   async (request) => {
     try {
@@ -154,8 +225,7 @@ exports.sendInvitationEmail = onCall(
         throw new Error("Missing required fields");
       }
 
-      // Set SendGrid API key
-      sgMail.setApiKey(SENDGRID_API_KEY.value());
+      const resend = new Resend(RESEND_API_KEY.value());
 
       const { html, text } = generateInvitationEmailTemplate(
         childName,
@@ -167,54 +237,113 @@ exports.sendInvitationEmail = onCall(
 
       const emailData = {
         to: recipientEmail,
-        from: {
-          email: FROM_EMAIL.value(),
-          name: SENDER_NAME.value(),
-        },
+        from: `${SENDER_NAME.value()} <${FROM_EMAIL.value()}>`,
         subject: `🎯 You're invited to join ${childName}'s care team on CaptureEz`,
         html,
         text,
-        customArgs: {
-          category: "care-team-invitation",
-          role: role,
-          childName: childName,
-        },
-        // Temporarily disable click tracking until Link Branding (CNAMEs) is verified
-        trackingSettings: {
-          clickTracking: {
-            enable: false,
-            enableText: false,
-          },
-          openTracking: {
-            enable: true,
-          },
-        },
       };
 
-      const response = await sgMail.send(emailData);
+      const response = await resend.emails.send(emailData);
+
+      if (response.error) {
+        throw new Error(response.error.message || "Resend invitation send failed");
+      }
 
       logger.info("Email sent successfully", {
-        messageId: response[0]?.headers?.["x-message-id"],
+        messageId: response.data?.id,
         to: recipientEmail,
         childName,
         role,
-        statusCode: response[0]?.statusCode,
       });
 
       return {
         success: true,
-        messageId: response[0]?.headers?.["x-message-id"],
-        message: "Invitation email sent successfully via SendGrid",
+        messageId: response.data?.id,
+        message: "Invitation email sent successfully via Resend",
       };
     } catch (error) {
-      logger.error("SendGrid email send failed", {
+      logger.error("Resend invitation send failed", {
         error: error.message,
         stack: error.stack,
         data: request.data,
-        response: error.response?.body,
+        response: error.response,
       });
 
-      throw new Error(`Failed to send email via SendGrid: ${error.message}`);
+      throw new Error(`Failed to send email via Resend: ${error.message}`);
+    }
+  }
+);
+
+exports.sendContactEmail = onCall(
+  {
+    secrets: [RESEND_API_KEY, FROM_EMAIL, SENDER_NAME],
+    enforceAppCheck: false,
+  },
+  async (request) => {
+    try {
+      const senderName = request.data?.senderName?.trim();
+      const senderEmail = request.data?.senderEmail?.trim().toLowerCase();
+      const subject = request.data?.subject?.trim();
+      const message = request.data?.message?.trim();
+
+      if (!senderName || !senderEmail || !subject || !message) {
+        throw new Error("All contact form fields are required.");
+      }
+
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(senderEmail)) {
+        throw new Error("A valid email address is required.");
+      }
+
+      if (subject.length > 120) {
+        throw new Error("Subject must be 120 characters or fewer.");
+      }
+
+      if (message.length > 5000) {
+        throw new Error("Message must be 5000 characters or fewer.");
+      }
+
+      const resend = new Resend(RESEND_API_KEY.value());
+
+      const { html, text } = generateContactEmailTemplate({
+        senderName,
+        senderEmail,
+        subject,
+        message,
+      });
+
+      const emailData = {
+        to: "captureezhq@gmail.com",
+        from: `${SENDER_NAME.value()} <${FROM_EMAIL.value()}>`,
+        replyTo: senderEmail,
+        subject: `CaptureEz Contact: ${subject}`,
+        html,
+        text,
+      };
+
+      const response = await resend.emails.send(emailData);
+
+      if (response.error) {
+        throw new Error(response.error.message || "Resend contact send failed");
+      }
+
+      logger.info("Contact email sent successfully", {
+        messageId: response.data?.id,
+        senderEmail,
+      });
+
+      return {
+        success: true,
+        message: "Contact email sent successfully.",
+      };
+    } catch (error) {
+      logger.error("Contact email send failed", {
+        error: error.message,
+        stack: error.stack,
+        data: request.data,
+        response: error.response,
+      });
+
+      throw new Error(`Failed to send contact email: ${error.message}`);
     }
   }
 );
