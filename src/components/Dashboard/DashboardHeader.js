@@ -21,9 +21,7 @@ const DashboardHeader = ({
 
   const title = `${user?.displayName || user?.email?.split("@")[0] || "Your"} Dashboard`;
 
-  const subtitle = children.some((child) => !isReadOnlyForChild(child.id))
-    ? "Support and track progress for the individuals you care for — personally or professionally."
-    : "Monitor updates and stay connected to the people you support.";
+  const subtitle = `Welcome back, ${user?.displayName || user?.email?.split("@")[0] || "there"}. Here's what's happening today.`;
 
   // IRON-CLAD: Only Care Owners can invite
   const canInvite = children?.some((child) => {

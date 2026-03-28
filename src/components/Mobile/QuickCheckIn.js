@@ -11,7 +11,6 @@ import {
   CircularProgress,
   Stack,
   Slide,
-  Tooltip,
 } from '@mui/material';
 import {
   Close as CloseIcon,
@@ -25,15 +24,7 @@ import { collection, addDoc, serverTimestamp, updateDoc } from 'firebase/firesto
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { uploadIncidentMedia } from '../Dashboard/Incidents/Media/mediaUploadService';
 import { CATEGORY_COLORS } from '../../constants/categoryColors';
-
-const QUICK_TAG_CATEGORY_MAP = {
-  meltdown: 'behavior',
-  medication: 'health',
-  sleep: 'sleep',
-  win: 'milestone',
-  food: 'food',
-  anxiety: 'mood',
-};
+import { classifyQuickNoteCategory, QUICK_TAG_CATEGORY_MAP } from '../../utils/quickNoteClassification';
 
 const QUICK_TAG_PLACEHOLDERS = {
   meltdown: 'What triggered it? How long did it last?',
@@ -43,17 +34,6 @@ const QUICK_TAG_PLACEHOLDERS = {
   anxiety: 'What caused it? How did they respond?',
   win: 'What happened? Celebrate it!',
 };
-
-const CATEGORY_KEYWORDS = {
-  health: ['fever', 'doctor', 'sick', 'ill', 'medicine', 'medication', 'dose', 'clinic', 'pain', 'rash', 'cough'],
-  food: ['ate', 'eating', 'food', 'meal', 'snack', 'lunch', 'dinner', 'breakfast', 'refused food', 'hungry', 'drank'],
-  sleep: ['sleep', 'slept', 'nap', 'napped', 'woke', 'woke up', 'wake', 'bedtime', 'rested', 'restless'],
-  mood: ['sad', 'happy', 'angry', 'mood', 'anxious', 'anxiety', 'calm', 'upset', 'frustrated', 'worried'],
-  behavior: ['meltdown', 'tantrum', 'behavior', 'aggressive', 'hit', 'bit', 'threw', 'screamed', 'eloped'],
-  milestone: ['win', 'milestone', 'progress', 'achievement', 'success', 'did it', 'great job'],
-};
-
-const CATEGORY_PRIORITY = ['health', 'behavior', 'sleep', 'food', 'mood', 'milestone'];
 
 const QUICK_TAG_GROUPS = [
   {
@@ -90,16 +70,7 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
   }, [selectedTag]);
 
   const autoCategory = useMemo(() => {
-    const text = noteText.toLowerCase();
-    if (!text.trim()) return 'log';
-
-    for (const category of CATEGORY_PRIORITY) {
-      if (CATEGORY_KEYWORDS[category].some((keyword) => text.includes(keyword))) {
-        return category;
-      }
-    }
-
-    return 'log';
+    return classifyQuickNoteCategory(noteText);
   }, [noteText]);
 
   const resolvedCategory = selectedTagCategory || autoCategory;
@@ -537,47 +508,46 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
                         const categoryKey = QUICK_TAG_CATEGORY_MAP[item.key] || 'log';
                         const categoryColors = CATEGORY_COLORS[categoryKey] || CATEGORY_COLORS.log;
                         return (
-                          <Tooltip key={item.key} title={item.label}>
-                            <Chip
-                              icon={item.icon}
-                              label={selected ? `✓ ${item.label}` : item.label}
-                              onClick={() => handleQuickTagSelect(item.key)}
-                              sx={{
-                                borderRadius: '10px',
-                                border: `2px solid ${categoryColors.border}`,
-                                bgcolor: selected ? categoryColors.border : categoryColors.bg,
-                                color: selected ? '#ffffff' : categoryColors.text,
-                                width: '100%',
-                                maxWidth: { xs: '100%', sm: 140 },
-                                justifyContent: 'flex-start',
+                          <Chip
+                            key={item.key}
+                            icon={item.icon}
+                            label={selected ? `✓ ${item.label}` : item.label}
+                            onClick={() => handleQuickTagSelect(item.key)}
+                            sx={{
+                              borderRadius: '10px',
+                              border: `2px solid ${categoryColors.border}`,
+                              bgcolor: selected ? categoryColors.border : categoryColors.bg,
+                              color: selected ? '#ffffff' : categoryColors.text,
+                              width: '100%',
+                              maxWidth: { xs: '100%', sm: 140 },
+                              justifyContent: 'flex-start',
+                              px: 0.5,
+                              height: 46,
+                              boxShadow: selected ? `0 10px 22px ${categoryColors.border}40` : 'none',
+                              '& .MuiChip-label': {
                                 px: 0.5,
-                                height: 46,
-                                boxShadow: selected ? `0 10px 22px ${categoryColors.border}40` : 'none',
-                                '& .MuiChip-label': {
-                                  px: 0.5,
-                                  width: '100%',
-                                  fontSize: '0.9rem',
-                                  fontWeight: 700,
-                                  color: selected ? '#ffffff' : categoryColors.text,
-                                  textAlign: 'left',
-                                  whiteSpace: 'nowrap',
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                },
-                                '& .MuiChip-icon': {
-                                  ml: 0.75,
-                                  mr: 0.25,
-                                  fontSize: 21,
-                                  opacity: selected ? 1 : 0.92,
-                                  color: selected ? '#ffffff' : categoryColors.text,
-                                },
-                                '&:hover': {
-                                  bgcolor: selected ? categoryColors.border : categoryColors.bg,
-                                  borderColor: categoryColors.border,
-                                },
-                              }}
-                            />
-                          </Tooltip>
+                                width: '100%',
+                                fontSize: '0.9rem',
+                                fontWeight: 700,
+                                color: selected ? '#ffffff' : categoryColors.text,
+                                textAlign: 'left',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                              },
+                              '& .MuiChip-icon': {
+                                ml: 0.75,
+                                mr: 0.25,
+                                fontSize: 21,
+                                opacity: selected ? 1 : 0.92,
+                                color: selected ? '#ffffff' : categoryColors.text,
+                              },
+                              '&:hover': {
+                                bgcolor: selected ? categoryColors.border : categoryColors.bg,
+                                borderColor: categoryColors.border,
+                              },
+                            }}
+                          />
                         );
                       })}
                     </Box>

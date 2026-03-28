@@ -10,7 +10,7 @@ import {
   ListItemText,
 } from '@mui/material';
 import {
-  Assessment as AssessmentIcon,
+  AssignmentOutlined as AssignmentOutlinedIcon,
   MoreHoriz as MoreHorizIcon,
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
@@ -50,17 +50,6 @@ const QuickEntrySection = ({
       bgColor: '#e8f5e9',
       type: 'input',
       shape: 'button'
-    },
-    {
-      key: 'messages',
-      emoji: '💬',
-      label: 'Messages',
-      description: 'Chat with care team',
-      color: '#6366F1', // Indigo
-      bgColor: '#E0E7FF',
-      type: 'navigation',
-      shape: 'circle',
-      navigationPath: '/messages'
     },
   ];
   const primaryAction = quickActions[0];
@@ -272,7 +261,7 @@ const QuickEntrySection = ({
             handleDailyReportClick(e);
           }}
         >
-          <AssessmentIcon sx={{ mr: 1.5, fontSize: 18, color: theme.palette.dailyCare.dark }} />
+          <AssignmentOutlinedIcon sx={{ mr: 1.5, fontSize: 18, color: theme.palette.dailyCare.dark }} />
           <ListItemText primary="Therapy Prep" secondary="Prepare notes for therapy and specialist visits" />
         </MenuItem>
       </Menu>

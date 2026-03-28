@@ -24,11 +24,13 @@ import {
 const Navbar = () => {
   const auth = getAuth();
   const [isLoggedIn, setIsLoggedIn] = useState(() => !!auth.currentUser);
+  const [authReady, setAuthReady] = useState(() => !!auth.currentUser);
   const { childrenWithAccess } = useRole();
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setIsLoggedIn(!!user);
+      setAuthReady(true);
     });
     return () => unsubscribe();
   }, [auth]);
@@ -67,7 +69,7 @@ const Navbar = () => {
                 navLinksContainerStyles(theme, isLoggedIn, colorScheme)
               }
             >
-              {isLoggedIn && (
+              {authReady && isLoggedIn && (
                 <>
                   <NavButton
                     text="Dashboard"
@@ -97,7 +99,7 @@ const Navbar = () => {
 
             {/* Auth Buttons or Avatar - Mobile optimized */}
             <Box sx={authButtonsContainerStyles}>
-              {isLoggedIn ? (
+              {authReady && isLoggedIn ? (
                 <AvatarMenu user={auth.currentUser} />
               ) : (
                 <Button

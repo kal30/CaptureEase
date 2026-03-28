@@ -14,6 +14,7 @@ import { db, storage, auth } from "../../services/firebase";
 import RichTextInput from "../UI/RichTextInput";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { uploadIncidentMedia } from "../Dashboard/Incidents/Media/mediaUploadService";
+import { classifyQuickNoteCategory } from "../../utils/quickNoteClassification";
 
 const LogInput = ({ childId, selectedDate = new Date() }) => {
   const theme = useTheme(); // Get the theme object
@@ -126,6 +127,7 @@ const LogInput = ({ childId, selectedDate = new Date() }) => {
     const hashtagTags = extractTags(noteText);
     const templateTags = selectedTemplate?.tags || [];
     const allTags = [...new Set([...templateTags, ...hashtagTags])]; // Remove duplicates
+    const inferredCategory = selectedTemplate?.category || classifyQuickNoteCategory(noteText);
 
     try {
       // Create timestamp for the selected date
@@ -143,7 +145,7 @@ const LogInput = ({ childId, selectedDate = new Date() }) => {
         status: 'active',
 
         // Optional structured fields
-        ...(selectedTemplate?.category && { category: selectedTemplate.category }),
+        ...(inferredCategory && { category: inferredCategory }),
         ...(allTags.length > 0 && { tags: allTags }),
 
         // Timestamp fields for UI
