@@ -281,6 +281,7 @@ exports.sendContactEmail = onCall(
   },
   async (request) => {
     try {
+      const db = admin.firestore();
       const senderName = request.data?.senderName?.trim();
       const senderEmail = request.data?.senderEmail?.trim().toLowerCase();
       const subject = request.data?.subject?.trim();
@@ -302,7 +303,25 @@ exports.sendContactEmail = onCall(
         throw new Error("Message must be 5000 characters or fewer.");
       }
 
-      const resend = new Resend(RESEND_API_KEY.value());
+      const contactSubmissionRef = db.collection("contactSubmissions").doc();
+      const contactSubmission = {
+        senderName,
+        senderEmail,
+        subject,
+        message,
+        source: "contact_us",
+        status: "new",
+        emailStatus: "pending",
+        emailError: null,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      };
+
+      if (request.auth?.uid) {
+        contactSubmission.userId = request.auth.uid;
+      }
+
+      await contactSubmissionRef.set(contactSubmission);
 
       const { html, text } = generateContactEmailTemplate({
         senderName,
@@ -311,29 +330,63 @@ exports.sendContactEmail = onCall(
         message,
       });
 
-      const emailData = {
-        to: "captureezhq@gmail.com",
-        from: `${SENDER_NAME.value()} <${FROM_EMAIL.value()}>`,
-        replyTo: senderEmail,
-        subject: `CaptureEz Contact: ${subject}`,
-        html,
-        text,
-      };
+      let emailSent = false;
 
-      const response = await resend.emails.send(emailData);
+      try {
+        const resend = new Resend(RESEND_API_KEY.value());
+        const emailData = {
+          to: "captureezhq@gmail.com",
+          from: `${SENDER_NAME.value()} <${FROM_EMAIL.value()}>`,
+          replyTo: senderEmail,
+          subject: `CaptureEz Contact: ${subject}`,
+          html,
+          text,
+        };
 
-      if (response.error) {
-        throw new Error(response.error.message || "Resend contact send failed");
+        const response = await resend.emails.send(emailData);
+
+        if (response.error) {
+          throw new Error(response.error.message || "Resend contact send failed");
+        }
+
+        emailSent = true;
+
+        await contactSubmissionRef.update({
+          emailStatus: "sent",
+          emailError: null,
+          messageId: response.data?.id || null,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        logger.info("Contact email sent successfully", {
+          submissionId: contactSubmissionRef.id,
+          messageId: response.data?.id,
+          senderEmail,
+        });
+      } catch (emailError) {
+        await contactSubmissionRef.update({
+          emailStatus: "failed",
+          emailError: emailError.message || "Unknown email send failure",
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        logger.error("Contact email send failed after save", {
+          submissionId: contactSubmissionRef.id,
+          error: emailError.message,
+          stack: emailError.stack,
+          senderEmail,
+          response: emailError.response,
+        });
       }
-
-      logger.info("Contact email sent successfully", {
-        messageId: response.data?.id,
-        senderEmail,
-      });
 
       return {
         success: true,
-        message: "Contact email sent successfully.",
+        saved: true,
+        emailSent,
+        submissionId: contactSubmissionRef.id,
+        message: emailSent
+          ? "Contact request saved and email sent successfully."
+          : "Contact request saved successfully. Email delivery is currently delayed.",
       };
     } catch (error) {
       logger.error("Contact email send failed", {

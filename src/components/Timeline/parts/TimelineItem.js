@@ -60,7 +60,7 @@ const TimelineItem = ({ color, icon, children, ariaLabel, isFirst = false, isLas
         px: 1.5,
         py: 1.25,
         bgcolor: '#ffffff',
-        borderRadius: 2.5,
+        borderRadius: 1,
         border: '1px solid rgba(148, 163, 184, 0.18)',
         boxShadow: '0 6px 16px rgba(15, 23, 42, 0.045)',
       }}

@@ -13,6 +13,7 @@ const JournalDetails = ({ entry }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(entry.text || '');
   const [isSaving, setIsSaving] = useState(false);
+  const canEdit = (entry.userId || entry.authorId || entry.createdBy) === auth.currentUser?.uid;
 
   // Don't render if entry has no meaningful content
   const hasContent = entry.text || (entry.tags && entry.tags.length > 0) || entry.mediaURL || entry.voiceMemoURL;
@@ -115,7 +116,7 @@ const JournalDetails = ({ entry }) => {
         </Box>
       )}
 
-      {!isEditing && (
+      {!isEditing && canEdit && (
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.25, mt: 0 }}>
           <Tooltip title="Edit entry">
             <IconButton size="small" onClick={() => setIsEditing(true)} sx={{ p: 0.5 }}>

@@ -9,20 +9,17 @@ import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import { auth } from '../../services/firebase';
-import { useRole } from '../../contexts/RoleContext';
 
 dayjs.extend(relativeTime);
 dayjs.extend(isSameOrAfter);
 
 const LogEntry = ({ entry, onEdit, onDelete }) => {
-  const { getUserRoleForChild } = useRole();
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(entry.text || '');
   const [anchorEl, setAnchorEl] = useState(null);
   const [loading, setLoading] = useState(false);
   const currentUser = auth.currentUser;
-  const currentUserRole = getUserRoleForChild?.(entry.childId);
-  const canEdit = entry.createdBy === currentUser?.uid || currentUserRole === 'care_owner';
+  const canEdit = (entry.createdBy || entry.authorId) === currentUser?.uid;
 
   const entryTimestamp = entry.timestamp ? 
     (typeof entry.timestamp.toDate === 'function' ? 

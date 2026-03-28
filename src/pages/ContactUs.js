@@ -52,8 +52,12 @@ export default function ContactUs() {
 
     try {
       setSubmitting(true);
-      await sendContactEmail(trimmedData);
-      setSubmitSuccess("Your message has been sent. We'll get back to you by email.");
+      const response = await sendContactEmail(trimmedData);
+      setSubmitSuccess(
+        response?.emailSent === false
+          ? "Your message was saved successfully. Our team will still review it even if email delivery is delayed."
+          : "Your message has been sent. We'll get back to you by email."
+      );
       setFormData({
         senderName: "",
         senderEmail: "",
