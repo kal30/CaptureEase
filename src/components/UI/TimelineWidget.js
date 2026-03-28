@@ -37,6 +37,7 @@ const TimelineWidget = ({
   child,
   entries = [],
   dailyCareStatus = {},
+  onQuickEntry,
   defaultExpanded = false,
   expanded: controlledExpanded,
   variant = 'full',
@@ -91,18 +92,50 @@ const TimelineWidget = ({
     }
   };
 
+  const handleEmptyStateClick = () => {
+    onQuickEntry?.(child, 'quick_note');
+  };
+
 
   // Render recent entries list
   const renderRecentEntries = () => {
     if (!timeline.recentEntries.length) {
       return (
-        <Box className="timeline-widget__empty-state" sx={{ textAlign: 'center', py: 3 }}>
+        <Box
+          className="timeline-widget__empty-state"
+          onClick={handleEmptyStateClick}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              handleEmptyStateClick();
+            }
+          }}
+          role="button"
+          tabIndex={0}
+          sx={{
+            textAlign: 'center',
+            py: 3,
+            px: 2,
+            borderRadius: 2,
+            cursor: 'pointer',
+            transition: 'background-color 0.2s ease, box-shadow 0.2s ease',
+            '&:hover': {
+              backgroundColor: 'action.hover',
+              boxShadow: '0 2px 8px rgba(15, 23, 42, 0.06)',
+            },
+            '&:focus-visible': {
+              outline: '2px solid',
+              outlineColor: 'primary.main',
+              outlineOffset: 2,
+            },
+          }}
+        >
           <TimelineIcon sx={{ fontSize: 32, color: 'text.disabled', mb: 1 }} />
           <Typography variant="body2" color="text.secondary">
             No recent activity
           </Typography>
           <Typography variant="caption" color="text.secondary">
-            Start logging daily activities to see them here
+            No entries yet today — tap to log something
           </Typography>
         </Box>
       );
@@ -320,6 +353,7 @@ const TimelineWidget = ({
                     selectedDate={selectedDate}
                     filters={timelineFilters}
                     onFiltersChange={setTimelineFilters}
+                    onEmptyStateClick={handleEmptyStateClick}
                     showFilters={false}
                     showDaySummary={false}
                   />

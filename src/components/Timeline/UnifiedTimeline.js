@@ -6,7 +6,6 @@ import {
   CircularProgress,
   Alert,
 } from "@mui/material";
-import { Timeline as TimelineIcon } from "@mui/icons-material";
 import { getEntryTypeMeta, mapLegacyType, ENTRY_TYPE } from "../../constants/timeline";
 import { useTheme } from "@mui/material/styles";
 
@@ -40,6 +39,7 @@ const UnifiedTimeline = ({
   selectedDate,
   filters = {},
   onFiltersChange,
+  onEmptyStateClick,
   showFilters = true,
   showDaySummary = true,
 }) => {
@@ -152,15 +152,62 @@ const UnifiedTimeline = ({
       {/* Timeline Content */}
       {entries.length === 0 ? (
         // Empty state
-        <Box sx={{ textAlign: "center", py: 6 }}>
-          <TimelineIcon sx={{ fontSize: 64, color: "text.disabled", mb: 2 }} />
+        <Box
+          onClick={onEmptyStateClick}
+          onKeyDown={(event) => {
+            if ((event.key === "Enter" || event.key === " ") && onEmptyStateClick) {
+              event.preventDefault();
+              onEmptyStateClick();
+            }
+          }}
+          role={onEmptyStateClick ? "button" : undefined}
+          tabIndex={onEmptyStateClick ? 0 : undefined}
+          sx={{
+            textAlign: "center",
+            py: 6,
+            px: 2,
+            borderRadius: 2,
+            cursor: onEmptyStateClick ? "pointer" : "default",
+            transition: "background-color 0.2s ease, box-shadow 0.2s ease",
+            "&:hover": onEmptyStateClick
+              ? {
+                  backgroundColor: "action.hover",
+                  boxShadow: "0 2px 8px rgba(15, 23, 42, 0.06)",
+                }
+              : undefined,
+            "&:focus-visible": onEmptyStateClick
+              ? {
+                  outline: "2px solid",
+                  outlineColor: "primary.main",
+                  outlineOffset: 2,
+                }
+              : undefined,
+          }}
+        >
+          <Box
+            sx={{
+              width: 64,
+              height: 64,
+              borderRadius: 2,
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: "rgba(148, 163, 184, 0.12)",
+              color: "text.disabled",
+              mb: 2,
+              fontSize: "1.8rem",
+              fontWeight: 700,
+            }}
+          >
+            +
+          </Box>
           <Typography variant="h6" color="text.secondary" gutterBottom>
-            No activity for {selectedDate.toLocaleDateString()}
+            No entries yet today
           </Typography>
           <Typography variant="body2" color="text.secondary">
             {Object.keys(filters).length > 0
               ? "Try adjusting your filters or select a different date"
-              : "Start logging activities to see them here"}
+              : "Tap to log something"}
           </Typography>
         </Box>
       ) : (

@@ -230,18 +230,6 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
           </IconButton>
         </Box>
 
-        <Typography
-          sx={{
-            mb: 1,
-            color: '#6b7280',
-            fontSize: '0.92rem',
-            fontWeight: 400,
-            lineHeight: 1.35,
-          }}
-        >
-          Just write what happened — we'll figure out the rest.
-        </Typography>
-
         <TextField
           fullWidth
           multiline

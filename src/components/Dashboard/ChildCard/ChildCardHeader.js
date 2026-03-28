@@ -87,11 +87,13 @@ const ChildCardHeader = memo(({
           <Typography
             variant="h5"
             sx={{
+              flex: 1,
+              minWidth: 0,
               fontWeight: 700,
-              fontSize: '1.4rem',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
+              fontSize: { xs: '1.2rem', md: '1.4rem' },
+              overflow: { xs: 'visible', md: 'hidden' },
+              textOverflow: { xs: 'clip', md: 'ellipsis' },
+              whiteSpace: { xs: 'normal', md: 'nowrap' },
               color: 'text.primary'
             }}
             title={child.name}

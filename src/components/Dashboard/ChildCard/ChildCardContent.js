@@ -14,6 +14,7 @@ import { TimelineWidget } from '../../UI';
  * @param {Array} props.recentEntries - Recent activity entries
  * @param {Array} props.incidents - Incident entries
  * @param {Object} props.status - Daily care status
+ * @param {function} props.onQuickEntry - Handler for quick entry actions
  * @param {Object} props.sx - Additional styling
  */
 const ChildCardContent = ({
@@ -22,6 +23,7 @@ const ChildCardContent = ({
   recentEntries = [],
   incidents = [],
   status = {},
+  onQuickEntry,
   sx = {}
 }) => {
   const theme = useTheme();
@@ -42,6 +44,7 @@ const ChildCardContent = ({
             entries={recentEntries}
             incidents={incidents}
             dailyCareStatus={status}
+            onQuickEntry={onQuickEntry}
             defaultExpanded={false}
             expanded={isExpanded}
             variant="full"

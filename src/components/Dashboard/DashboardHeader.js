@@ -18,10 +18,12 @@ const DashboardHeader = ({
   onAddChildClick,
 }) => {
   // Notification badges moved to individual child cards for better UX
+  const fullName = user?.displayName || user?.email?.split("@")[0] || "there";
+  const firstName = fullName.split(/\s+/).filter(Boolean)[0] || "there";
 
   const title = `${user?.displayName || user?.email?.split("@")[0] || "Your"} Dashboard`;
 
-  const subtitle = `Welcome back, ${user?.displayName || user?.email?.split("@")[0] || "there"}. Here's what's happening today.`;
+  const subtitle = `Welcome back, ${firstName}. Here's what's happening today.`;
 
   // IRON-CLAD: Only Care Owners can invite
   const canInvite = children?.some((child) => {

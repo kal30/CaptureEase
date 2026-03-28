@@ -57,10 +57,11 @@ const HeaderSection = () => {
         minHeight: { xs: "auto", md: "auto", lg: "auto" },
         display: "flex",
         alignItems: "center",
-        overflow: "visible",
+        overflow: "hidden",
+        maxWidth: "100%",
       }}
     >
-      <Container maxWidth="xl">
+      <Container maxWidth="xl" sx={{ maxWidth: "100%", overflow: "hidden" }}>
         <Box
           sx={{
             display: "flex",
@@ -68,12 +69,16 @@ const HeaderSection = () => {
             alignItems: "center",
             justifyContent: { xs: "center", md: "space-between" },
             ...landingLayout.heroSection.container,
+            maxWidth: "100%",
+            overflow: "hidden",
           }}
         >
           {/* Left Side - Text */}
           <Box
             sx={{
               ...landingLayout.heroSection.leftColumn,
+              maxWidth: "100%",
+              overflow: "hidden",
             }}
           >
             {/* Hero Heading */}

@@ -95,6 +95,7 @@ const ChildCard = ({
           recentEntries={recentEntries}
           incidents={incidents}
           status={status}
+          onQuickEntry={onQuickEntry}
         />
       </GroupStyledCard>
 
