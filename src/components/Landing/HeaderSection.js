@@ -52,7 +52,7 @@ const HeaderSection = () => {
       sx={{
         backgroundColor: "transparent",
         position: "relative",
-        mt: { xs: 3, md: 4, lg: 5 },
+        mt: { xs: 1, md: 2, lg: 2.5 },
         ...landingLayout.heroSection.padding,
         minHeight: { xs: "auto", md: "auto", lg: "auto" },
         display: "flex",
@@ -198,6 +198,7 @@ const HeaderSection = () => {
                         backgroundColor: "rgba(255,255,255,0.72)",
                         borderRadius: 0,
                         height: 48,
+                        minHeight: 48,
                         "& fieldset": {
                           borderRadius: 0,
                           borderColor: "rgba(8, 31, 92, 0.18)",
@@ -224,6 +225,7 @@ const HeaderSection = () => {
                       whiteSpace: "nowrap",
                       minWidth: { sm: 180 },
                       height: 48,
+                      minHeight: 48,
                       px: 2.5,
                       borderRadius: 0,
                       fontWeight: 600,

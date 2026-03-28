@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   Box,
   ToggleButton,
-  ToggleButtonGroup,
   FormControl,
   InputLabel,
   Select,
@@ -20,10 +19,10 @@ import {
   Today as DateIcon,
   Search as SearchIcon,
   Clear as ClearIcon,
-  CalendarToday as CalendarIcon
+  CalendarToday as CalendarIcon,
+  ArrowDropDown as ArrowDropDownIcon,
 } from '@mui/icons-material';
 import MiniCalendar from '../UI/MiniCalendar';
-import { getIncidentDisplayInfo, getJournalDisplayInfo } from '../../constants/uiDisplayConstants';
 
 /**
  * TimelineFilters - Filter controls for unified timeline
@@ -43,19 +42,26 @@ const TimelineFilters = ({
   onFiltersChange,
   selectedDate,
   onDateChange,
-  summary = {},
+  summary: _summary = {},
   compact = false,
   sx = {}
 }) => {
   const [datePickerAnchor, setDatePickerAnchor] = useState(null);
+  const [categoryMenuAnchor, setCategoryMenuAnchor] = useState(null);
   const [searchText, setSearchText] = useState(filters.searchText || '');
 
-  const handleEntryTypeFilter = (event, newTypes) => {
-    onFiltersChange({
-      ...filters,
-      entryTypes: newTypes
-    });
-  };
+  const IMPORTANT_FILTER_VALUES = ['incident', 'importantMoment'];
+  const CATEGORY_FILTER_VALUES = ['behavior', 'milestone', 'sleep', 'food', 'mood', 'health', 'journal'];
+
+  const categoryFilterOptions = [
+    { value: 'behavior', label: 'Behavior', icon: '🌋' },
+    { value: 'milestone', label: 'Win', icon: '⭐' },
+    { value: 'sleep', label: 'Sleep', icon: '😴' },
+    { value: 'food', label: 'Food', icon: '🍽️' },
+    { value: 'mood', label: 'Anxiety', icon: '😰' },
+    { value: 'health', label: 'Medication', icon: '💊' },
+    { value: 'journal', label: 'Daily Log', icon: '📓' },
+  ];
 
   const handleUserRoleFilter = (event) => {
     const value = event.target.value;
@@ -98,26 +104,27 @@ const TimelineFilters = ({
     setDatePickerAnchor(null);
   };
 
-  // Get centralized display info
-  const incidentDisplay = getIncidentDisplayInfo();
-  const journalDisplay = getJournalDisplayInfo();
-  // Entry type options with icons and counts (matching dashboard quick entries)
-  const entryTypeOptions = [
-    { 
-      value: 'incident', 
-      label: incidentDisplay.pluralLabel, 
-      icon: incidentDisplay.emoji,
-      count: summary.incidentCount || 0,
-      color: 'error'
-    },
-    {
-      value: 'journal',
-      label: journalDisplay.label,
-      icon: journalDisplay.emoji,
-      count: summary.journalCount || 0,
-      color: 'secondary'
-    }
-  ];
+  const handleCategoryMenuOpen = (event) => {
+    setCategoryMenuAnchor(event.currentTarget);
+  };
+
+  const handleCategoryMenuClose = () => {
+    setCategoryMenuAnchor(null);
+  };
+
+  const setCategoryTypeFilter = (categoryValue) => {
+    const currentTypes = filters.entryTypes || [];
+    const preservedTypes = currentTypes.filter((type) => !CATEGORY_FILTER_VALUES.includes(type));
+
+    onFiltersChange({
+      ...filters,
+      entryTypes: categoryValue ? [...preservedTypes, categoryValue] : (preservedTypes.length > 0 ? preservedTypes : undefined),
+    });
+    handleCategoryMenuClose();
+  };
+
+  const importantMomentsSelected = IMPORTANT_FILTER_VALUES.some((value) => filters.entryTypes?.includes(value));
+  const selectedCategoryType = (filters.entryTypes || []).find((type) => CATEGORY_FILTER_VALUES.includes(type));
 
   // User role options - CLEAN VERSION
   const userRoleOptions = [
@@ -187,29 +194,54 @@ const TimelineFilters = ({
           </Box>
         </Popover>
 
-        {/* Entry Type Chips */}
-        {entryTypeOptions.map((option) => {
-          const isActive = filters.entryTypes?.includes(option.value);
-          return (
-            <Chip
-              key={option.value}
-              label={`${option.icon} ${option.label}`}
-              size="small"
-              variant={isActive ? 'filled' : 'outlined'}
-              color={isActive ? option.color : 'default'}
-              onClick={() => {
-                const newTypes = isActive 
-                  ? (filters.entryTypes || []).filter(type => type !== option.value)
-                  : [...(filters.entryTypes || []), option.value];
-                onFiltersChange({
-                  ...filters,
-                  entryTypes: newTypes.length > 0 ? newTypes : undefined
-                });
-              }}
-              sx={{ fontSize: '0.7rem', height: 24 }}
-            />
-          );
-        })}
+        <Chip
+          label="⭐ Important Moments"
+          size="small"
+          variant={importantMomentsSelected ? 'filled' : 'outlined'}
+          color={importantMomentsSelected ? 'secondary' : 'default'}
+          onClick={() => {
+            const currentTypes = filters.entryTypes || [];
+            const remainingTypes = currentTypes.filter((type) => !IMPORTANT_FILTER_VALUES.includes(type));
+            onFiltersChange({
+              ...filters,
+              entryTypes: importantMomentsSelected
+                ? (remainingTypes.length > 0 ? remainingTypes : undefined)
+                : [...remainingTypes, ...IMPORTANT_FILTER_VALUES],
+            });
+          }}
+          sx={{ fontSize: '0.7rem', height: 24 }}
+        />
+
+        <Chip
+          label="All"
+          deleteIcon={<ArrowDropDownIcon />}
+          onDelete={handleCategoryMenuOpen}
+          onClick={handleCategoryMenuOpen}
+          size="small"
+          variant={selectedCategoryType ? 'filled' : 'outlined'}
+          sx={{ fontSize: '0.7rem', height: 24 }}
+        />
+
+        <Popover
+          open={Boolean(categoryMenuAnchor)}
+          anchorEl={categoryMenuAnchor}
+          onClose={handleCategoryMenuClose}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+          transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+        >
+          <Box sx={{ p: 1, minWidth: 180 }}>
+            <MenuItem onClick={() => setCategoryTypeFilter(undefined)}>
+              <Typography sx={{ fontSize: '0.9rem', fontWeight: 600 }}>All entries</Typography>
+            </MenuItem>
+            <Divider sx={{ my: 0.5 }} />
+            {categoryFilterOptions.map((option) => (
+              <MenuItem key={option.value} onClick={() => setCategoryTypeFilter(option.value)}>
+                <Typography sx={{ mr: 1, fontSize: '1rem' }}>{option.icon}</Typography>
+                <Typography sx={{ fontSize: '0.9rem', fontWeight: 600 }}>{option.label}</Typography>
+              </MenuItem>
+            ))}
+          </Box>
+        </Popover>
 
         {/* Clear All Filters */}
         {(Object.keys(filters).length > 0 || searchText) && (
@@ -243,49 +275,38 @@ const TimelineFilters = ({
         <Typography variant="caption" sx={{ fontWeight: 600, mb: 1, display: 'block' }}>
           ENTRY TYPES
         </Typography>
-        <ToggleButtonGroup
-          value={filters.entryTypes || []}
-          onChange={handleEntryTypeFilter}
-          size="small"
-          sx={{ flexWrap: 'wrap', gap: 0.5 }}
+        <ToggleButton
+          value="importantMoments"
+          selected={importantMomentsSelected}
+          onChange={() => {
+            const currentTypes = filters.entryTypes || [];
+            const remainingTypes = currentTypes.filter((type) => !IMPORTANT_FILTER_VALUES.includes(type));
+            onFiltersChange({
+              ...filters,
+              entryTypes: importantMomentsSelected
+                ? (remainingTypes.length > 0 ? remainingTypes : undefined)
+                : [...remainingTypes, ...IMPORTANT_FILTER_VALUES],
+            });
+          }}
+          sx={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 0.5,
+            px: 1.5,
+            py: 0.5,
+            fontSize: '0.75rem',
+            textTransform: 'none',
+            border: '1px solid',
+            borderColor: 'divider',
+            '&.Mui-selected': {
+              bgcolor: 'secondary.50',
+              borderColor: 'secondary.main',
+              color: 'secondary.main'
+            }
+          }}
         >
-          {entryTypeOptions.map((option) => (
-            <ToggleButton
-              key={option.value}
-              value={option.value}
-              disabled={option.count === 0}
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 0.5,
-                px: 1.5,
-                py: 0.5,
-                fontSize: '0.75rem',
-                textTransform: 'none',
-                border: '1px solid',
-                borderColor: 'divider',
-                '&.Mui-selected': {
-                  bgcolor: `${option.color}.50`,
-                  borderColor: `${option.color}.main`,
-                  color: `${option.color}.main`
-                }
-              }}
-            >
-              {option.icon}
-              {option.label}
-              <Chip 
-                label={option.count} 
-                size="small" 
-                sx={{ 
-                  height: 16, 
-                  fontSize: '0.6rem',
-                  ml: 0.5,
-                  bgcolor: option.count > 0 ? `${option.color}.100` : 'action.disabled'
-                }} 
-              />
-            </ToggleButton>
-          ))}
-        </ToggleButtonGroup>
+          ⭐ Important Moments
+        </ToggleButton>
       </Box>
 
       {/* User Role Filter */}

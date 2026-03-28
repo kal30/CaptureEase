@@ -6,6 +6,7 @@ import {
   Modal,
   CircularProgress,
   Fade,
+  Button,
 } from "@mui/material";
 
 // Hooks and Services
@@ -142,26 +143,80 @@ const PanelDashboard = () => {
         onAddChildClick={() => hook.setShowAddChildModal(true)}
       />
 
-      <Box sx={{ maxWidth: 800, mx: "auto" }}>
-        <ChildGroup
-          title="In Your Full Care"
-          groupType="own"
-          children={hook.ownChildren}
-          {...commonChildGroupProps}
-        />
-        <ChildGroup
-          title="Family Children"
-          groupType="family"
-          children={hook.familyChildren}
-          {...commonChildGroupProps}
-        />
-        <ChildGroup
-          title="Professional Assignments"
-          groupType="professional"
-          children={hook.professionalChildren}
-          {...commonChildGroupProps}
-        />
-      </Box>
+      {hook.children.length === 0 ? (
+        <Box
+          sx={{
+            minHeight: '55vh',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            px: 2,
+          }}
+        >
+          <Box
+            sx={{
+              maxWidth: 520,
+              width: '100%',
+              textAlign: 'center',
+              bgcolor: 'background.paper',
+              border: '1px solid',
+              borderColor: 'divider',
+              borderRadius: 3,
+              px: { xs: 3, md: 5 },
+              py: { xs: 4, md: 5 },
+              boxShadow: '0 18px 40px rgba(15, 23, 42, 0.06)',
+            }}
+          >
+            <Typography
+              variant="h4"
+              sx={{
+                fontWeight: 700,
+                color: 'text.primary',
+                mb: 3,
+                fontSize: { xs: '1.75rem', md: '2.1rem' },
+              }}
+            >
+              Welcome to CaptureEz — let&apos;s add your first child
+            </Typography>
+            <Button
+              variant="contained"
+              size="large"
+              onClick={() => hook.setShowAddChildModal(true)}
+              sx={{
+                px: 3.5,
+                py: 1.4,
+                fontSize: '1rem',
+                fontWeight: 700,
+                borderRadius: 2,
+                textTransform: 'none',
+              }}
+            >
+              + Add Child
+            </Button>
+          </Box>
+        </Box>
+      ) : (
+        <Box sx={{ maxWidth: 800, mx: "auto" }}>
+          <ChildGroup
+            title="In Your Full Care"
+            groupType="own"
+            children={hook.ownChildren}
+            {...commonChildGroupProps}
+          />
+          <ChildGroup
+            title="Family Children"
+            groupType="family"
+            children={hook.familyChildren}
+            {...commonChildGroupProps}
+          />
+          <ChildGroup
+            title="Professional Assignments"
+            groupType="professional"
+            children={hook.professionalChildren}
+            {...commonChildGroupProps}
+          />
+        </Box>
+      )}
 
       {/* Modals */}
       <Modal

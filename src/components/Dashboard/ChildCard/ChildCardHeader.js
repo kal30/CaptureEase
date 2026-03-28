@@ -38,8 +38,9 @@ const ChildCardHeader = memo(({
   sx = {}
 }) => {
   const allChips = useChildCardChips(userRole, completedToday);
+  const hasEntriesToday = (timelineSummary.todayCount || 0) > 0;
   const metricChips = [
-    timelineSummary.todayCount > 0
+    hasEntriesToday
       ? {
           key: 'today',
           label: `${timelineSummary.todayCount} today`,
@@ -172,7 +173,7 @@ const ChildCardHeader = memo(({
           />
         )}
 
-        {(metricChips.length > 0 || timelineSummary.lastActivityTime) && (
+        {(metricChips.length > 0 || timelineSummary.lastActivityTime || !hasEntriesToday) && (
           <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 0.75 }}>
             {metricChips.length > 0 && (
               <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
@@ -187,6 +188,16 @@ const ChildCardHeader = memo(({
                   />
                 ))}
               </Box>
+            )}
+
+            {!hasEntriesToday && (
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ fontSize: '0.82rem', fontWeight: 500 }}
+              >
+                No entries yet today — tap to log something
+              </Typography>
             )}
 
             {timelineSummary.lastActivityTime && (

@@ -102,14 +102,29 @@ const Navbar = () => {
               {authReady && isLoggedIn ? (
                 <AvatarMenu user={auth.currentUser} />
               ) : (
-                <Button
-                  variant="contained"
-                  component={RouterLink}
-                  to="/login"
-                  sx={loginButtonStyles()}
-                >
-                  Sign In
-                </Button>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Button
+                    variant="text"
+                    component={RouterLink}
+                    to="/login"
+                    sx={{
+                      color: navbarIconStyles.color,
+                      textTransform: "none",
+                      fontWeight: 600,
+                      px: 1.5,
+                    }}
+                  >
+                    Login
+                  </Button>
+                  <Button
+                    variant="contained"
+                    component={RouterLink}
+                    to="/register"
+                    sx={loginButtonStyles()}
+                  >
+                    Get Started Free
+                  </Button>
+                </Box>
               )}
             </Box>
           </Container>
