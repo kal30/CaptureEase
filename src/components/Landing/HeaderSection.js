@@ -103,7 +103,7 @@ const HeaderSection = () => {
             <Typography sx={landingTypography.heroBody}>
               Everyone caring for your child sees the same timeline in real
               time. Caregiver logs a meltdown at 1pm. You see it before the
-              2pm appointment. Therapist walks in already knowing. No more
+              2 PM appointment. Therapist walks in already knowing. No more
               "I didn't know that happened."
             </Typography>
 
@@ -204,6 +204,7 @@ const HeaderSection = () => {
                         borderRadius: 0,
                         height: 48,
                         minHeight: 48,
+                        fontSize: "1rem",
                         "& fieldset": {
                           borderRadius: 0,
                           borderColor: "rgba(8, 31, 92, 0.18)",
@@ -234,6 +235,7 @@ const HeaderSection = () => {
                       px: 2.5,
                       borderRadius: 0,
                       fontWeight: 600,
+                      fontSize: "1rem",
                     }}
                   >
                     {isSubmitting ? "Joining..." : "Add Email"}
