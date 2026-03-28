@@ -76,13 +76,14 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
   const [user] = useAuthState(auth);
 
   const [noteText, setNoteText] = useState('');
-  const [showQuickTags, setShowQuickTags] = useState(true);
+  const [showQuickTags, setShowQuickTags] = useState(false);
   const [selectedTag, setSelectedTag] = useState(null);
   const [importantMoment, setImportantMoment] = useState(false);
   const [saving, setSaving] = useState(false);
   const [selectedPhotoFile, setSelectedPhotoFile] = useState(null);
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState('');
   const photoInputRef = useRef(null);
+  const quickTagTouchStartYRef = useRef(null);
 
   const selectedTagCategory = useMemo(() => {
     return selectedTag ? QUICK_TAG_CATEGORY_MAP[selectedTag] || null : null;
@@ -116,6 +117,28 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
   const handleQuickTagSelect = (tagKey) => {
     toggleQuickTag(tagKey);
     setShowQuickTags(false);
+  };
+
+  const closeQuickTags = () => {
+    setShowQuickTags(false);
+  };
+
+  const handleQuickTagTouchStart = (event) => {
+    quickTagTouchStartYRef.current = event.touches?.[0]?.clientY ?? null;
+  };
+
+  const handleQuickTagTouchEnd = (event) => {
+    const touchStartY = quickTagTouchStartYRef.current;
+    const touchEndY = event.changedTouches?.[0]?.clientY ?? null;
+    quickTagTouchStartYRef.current = null;
+
+    if (touchStartY == null || touchEndY == null) {
+      return;
+    }
+
+    if (touchEndY - touchStartY > 50) {
+      closeQuickTags();
+    }
   };
 
   useEffect(() => {
@@ -422,100 +445,146 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
         <Box
           sx={{
             position: 'absolute',
-            left: 0,
-            right: 0,
-            bottom: 0,
+            inset: 0,
             zIndex: 3,
-            px: 1.5,
-            pb: 1.5,
           }}
         >
           <Box
             sx={{
-              borderRadius: '18px 18px 12px 12px',
-              border: '1px solid #d8def0',
-              bgcolor: '#ffffff',
-              boxShadow: '0 -18px 40px rgba(31, 41, 55, 0.16)',
-              p: 1.5,
+              position: 'absolute',
+              inset: 0,
+              bgcolor: 'rgba(15, 23, 42, 0.2)',
             }}
+            onClick={closeQuickTags}
           >
             <Box
               sx={{
-                width: 44,
-                height: 5,
-                borderRadius: 999,
-                bgcolor: '#d5d9e3',
-                mx: 'auto',
-                mb: 1.5,
+                position: 'absolute',
+                left: 0,
+                right: 0,
+                bottom: 0,
+                px: 1.5,
+                pb: 1.5,
               }}
-            />
-
-            <Typography sx={{ fontWeight: 800, fontSize: '0.98rem', color: '#283142', mb: 1.25 }}>
-              Pick a quick tag
-            </Typography>
-
-            <Stack spacing={1} sx={{ width: '100%' }}>
-              {QUICK_TAG_GROUPS.map((group, groupIndex) => (
+              onClick={(event) => event.stopPropagation()}
+            >
+              <Box
+                sx={{
+                  borderRadius: '18px 18px 12px 12px',
+                  border: '1px solid #d8def0',
+                  bgcolor: '#ffffff',
+                  boxShadow: '0 -18px 40px rgba(31, 41, 55, 0.16)',
+                  p: 1.5,
+                }}
+              >
                 <Box
-                  key={groupIndex}
                   sx={{
-                    display: 'grid',
-                    gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, minmax(0, 140px))' },
-                    gap: 1,
-                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    justifyContent: 'space-between',
+                    mb: 1.25,
                   }}
                 >
-                  {group.items.map((item) => {
-                    const selected = selectedTag === item.key;
-                    const categoryKey = QUICK_TAG_CATEGORY_MAP[item.key] || 'log';
-                    const categoryColors = CATEGORY_COLORS[categoryKey] || CATEGORY_COLORS.log;
-                    return (
-                      <Tooltip key={item.key} title={item.label}>
-                        <Chip
-                          icon={item.icon}
-                          label={selected ? `✓ ${item.label}` : item.label}
-                          onClick={() => handleQuickTagSelect(item.key)}
-                          sx={{
-                            borderRadius: '10px',
-                            border: `2px solid ${categoryColors.border}`,
-                            bgcolor: selected ? categoryColors.border : categoryColors.bg,
-                            color: selected ? '#ffffff' : categoryColors.text,
-                            width: '100%',
-                            maxWidth: { xs: '100%', sm: 140 },
-                            justifyContent: 'flex-start',
-                            px: 0.5,
-                            height: 46,
-                            boxShadow: selected ? `0 10px 22px ${categoryColors.border}40` : 'none',
-                            '& .MuiChip-label': {
-                              px: 0.5,
-                              width: '100%',
-                              fontSize: '0.9rem',
-                              fontWeight: 700,
-                              color: selected ? '#ffffff' : categoryColors.text,
-                              textAlign: 'left',
-                              whiteSpace: 'nowrap',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                            },
-                            '& .MuiChip-icon': {
-                              ml: 0.75,
-                              mr: 0.25,
-                              fontSize: 21,
-                              opacity: selected ? 1 : 0.92,
-                              color: selected ? '#ffffff' : categoryColors.text,
-                            },
-                            '&:hover': {
-                              bgcolor: selected ? categoryColors.border : categoryColors.bg,
-                              borderColor: categoryColors.border,
-                            },
-                          }}
-                        />
-                      </Tooltip>
-                    );
-                  })}
+                  <Box
+                    sx={{
+                      flex: 1,
+                      display: 'flex',
+                      justifyContent: 'center',
+                    }}
+                    onTouchStart={handleQuickTagTouchStart}
+                    onTouchEnd={handleQuickTagTouchEnd}
+                  >
+                    <Box
+                      sx={{
+                        width: 44,
+                        height: 5,
+                        borderRadius: 999,
+                        bgcolor: '#d5d9e3',
+                      }}
+                    />
+                  </Box>
+
+                  <IconButton
+                    size="small"
+                    onClick={closeQuickTags}
+                    sx={{
+                      ml: 1,
+                      mt: -0.5,
+                      color: '#6b7280',
+                    }}
+                  >
+                    <CloseIcon sx={{ fontSize: 20 }} />
+                  </IconButton>
                 </Box>
-              ))}
-            </Stack>
+
+                <Typography sx={{ fontWeight: 800, fontSize: '0.98rem', color: '#283142', mb: 1.25 }}>
+                  Pick a quick tag
+                </Typography>
+
+                <Stack spacing={1} sx={{ width: '100%' }}>
+                  {QUICK_TAG_GROUPS.map((group, groupIndex) => (
+                    <Box
+                      key={groupIndex}
+                      sx={{
+                        display: 'grid',
+                        gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, minmax(0, 140px))' },
+                        gap: 1,
+                        width: '100%',
+                      }}
+                    >
+                      {group.items.map((item) => {
+                        const selected = selectedTag === item.key;
+                        const categoryKey = QUICK_TAG_CATEGORY_MAP[item.key] || 'log';
+                        const categoryColors = CATEGORY_COLORS[categoryKey] || CATEGORY_COLORS.log;
+                        return (
+                          <Tooltip key={item.key} title={item.label}>
+                            <Chip
+                              icon={item.icon}
+                              label={selected ? `✓ ${item.label}` : item.label}
+                              onClick={() => handleQuickTagSelect(item.key)}
+                              sx={{
+                                borderRadius: '10px',
+                                border: `2px solid ${categoryColors.border}`,
+                                bgcolor: selected ? categoryColors.border : categoryColors.bg,
+                                color: selected ? '#ffffff' : categoryColors.text,
+                                width: '100%',
+                                maxWidth: { xs: '100%', sm: 140 },
+                                justifyContent: 'flex-start',
+                                px: 0.5,
+                                height: 46,
+                                boxShadow: selected ? `0 10px 22px ${categoryColors.border}40` : 'none',
+                                '& .MuiChip-label': {
+                                  px: 0.5,
+                                  width: '100%',
+                                  fontSize: '0.9rem',
+                                  fontWeight: 700,
+                                  color: selected ? '#ffffff' : categoryColors.text,
+                                  textAlign: 'left',
+                                  whiteSpace: 'nowrap',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                },
+                                '& .MuiChip-icon': {
+                                  ml: 0.75,
+                                  mr: 0.25,
+                                  fontSize: 21,
+                                  opacity: selected ? 1 : 0.92,
+                                  color: selected ? '#ffffff' : categoryColors.text,
+                                },
+                                '&:hover': {
+                                  bgcolor: selected ? categoryColors.border : categoryColors.bg,
+                                  borderColor: categoryColors.border,
+                                },
+                              }}
+                            />
+                          </Tooltip>
+                        );
+                      })}
+                    </Box>
+                  ))}
+                </Stack>
+              </Box>
+            </Box>
           </Box>
         </Box>
       </Slide>
