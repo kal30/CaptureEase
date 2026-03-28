@@ -11,7 +11,12 @@ const MAX_FILE_SIZES = {
   audio: 10, // 10MB
 };
 
-const uploadIncidentMedia = async (mediaFile, audioBlob, incidentId) => {
+const uploadIncidentMedia = async (
+  mediaFile,
+  audioBlob,
+  incidentId,
+  basePath = `incidents/${incidentId}`
+) => {
   const storage = getStorage();
   const mediaUrls = [];
   
@@ -27,7 +32,7 @@ const uploadIncidentMedia = async (mediaFile, audioBlob, incidentId) => {
       
       const fileRef = ref(
         storage, 
-        `incidents/${incidentId}/media/${Date.now()}_${mediaFile.file.name}`
+        `${basePath}/media/${Date.now()}_${mediaFile.file.name}`
       );
       
       const uploadTask = uploadBytesResumable(fileRef, mediaFile.file);
@@ -71,7 +76,7 @@ const uploadIncidentMedia = async (mediaFile, audioBlob, incidentId) => {
       
       const audioRef = ref(
         storage, 
-        `incidents/${incidentId}/audio/${Date.now()}_recording.webm`
+        `${basePath}/audio/${Date.now()}_recording.webm`
       );
       
       const audioUploadTask = uploadBytesResumable(audioRef, audioBlob);

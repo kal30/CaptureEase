@@ -1,7 +1,16 @@
 import React from 'react';
 import { Box } from '@mui/material';
 
-const TimelineItem = ({ color, icon, children, ariaLabel, isFirst = false, isLast = false }) => (
+const TimelineItem = ({
+  color,
+  icon,
+  children,
+  ariaLabel,
+  isFirst = false,
+  isLast = false,
+  cardBackground = '#ffffff',
+  cardBorderColor = 'rgba(148, 163, 184, 0.18)',
+}) => (
   <Box sx={{ position: 'relative', pb: isLast ? 0 : 2 }} role="listitem" aria-label={ariaLabel}>
     {!isFirst && (
       <Box
@@ -59,9 +68,9 @@ const TimelineItem = ({ color, icon, children, ariaLabel, isFirst = false, isLas
         ml: 5.5,
         px: 1.5,
         py: 1.25,
-        bgcolor: '#ffffff',
+        bgcolor: cardBackground,
         borderRadius: 1,
-        border: '1px solid rgba(148, 163, 184, 0.18)',
+        border: `1px solid ${cardBorderColor}`,
         boxShadow: '0 6px 16px rgba(15, 23, 42, 0.045)',
       }}
     >

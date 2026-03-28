@@ -22,6 +22,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { getTimelineEntries } from "../../services/timelineService";
+import { CATEGORY_COLORS } from "../../constants/categoryColors";
 
 const RANGE_PRESET = {
   WEEK: "week",
@@ -31,6 +32,7 @@ const RANGE_PRESET = {
 
 const CATEGORY_META = {
   incident: { label: "IMPORTANT MOMENT", emoji: "🚨", order: 1 },
+  importantMoment: { label: "IMPORTANT MOMENT", emoji: "⭐", order: 1 },
   behavior: { label: "BEHAVIOR", emoji: "🌋", order: 2 },
   health: { label: "HEALTH", emoji: "💊", order: 3 },
   mood: { label: "MOOD", emoji: "😰", order: 4 },
@@ -150,7 +152,24 @@ const isLowSignalEntry = (entry) => {
   return false;
 };
 
-const getCategoryMeta = (entry) => CATEGORY_META[entry.type] || CATEGORY_META.log;
+const isImportantMomentEntry = (entry) =>
+  entry.type === "incident" || entry.isImportantMoment || entry.importantMoment || entry.originalData?.importantMoment;
+
+const getCategoryMeta = (entry) => {
+  if (isImportantMomentEntry(entry)) {
+    return CATEGORY_META.importantMoment;
+  }
+
+  return CATEGORY_META[entry.type] || CATEGORY_META.log;
+};
+
+const getCategoryColors = (entry) => {
+  if (isImportantMomentEntry(entry)) {
+    return CATEGORY_COLORS.importantMoment;
+  }
+
+  return CATEGORY_COLORS[entry.type] || CATEGORY_COLORS.log;
+};
 
 const buildCategorySections = (entries) => {
   const grouped = entries.reduce((acc, entry) => {
@@ -343,9 +362,24 @@ const DailyCareReport = ({ open, onClose, child, childId, childName, onLogSometh
     <Stack spacing={3}>
       {categorySections.map((section) => (
         <Box key={section.label}>
-          <Typography variant="h6" sx={{ fontWeight: 900, fontSize: "1.08rem", mb: 1, letterSpacing: 0.5 }}>
-            {section.emoji} {section.label} · {section.items.length} {section.items.length === 1 ? "entry" : "entries"}
-          </Typography>
+          <Box
+            sx={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 0.75,
+              px: 1.1,
+              py: 0.6,
+              borderRadius: 999,
+              bgcolor: getCategoryColors(section.items[0]).bg,
+              color: getCategoryColors(section.items[0]).text,
+              border: `1px solid ${getCategoryColors(section.items[0]).border}`,
+              mb: 1,
+            }}
+          >
+            <Typography variant="h6" sx={{ fontWeight: 900, fontSize: "1.08rem", letterSpacing: 0.5, color: "inherit" }}>
+              {section.emoji} {section.label} · {section.items.length} {section.items.length === 1 ? "entry" : "entries"}
+            </Typography>
+          </Box>
           <Box sx={{ height: 1, bgcolor: alpha(theme.palette.text.primary, 0.14), mb: 1.5 }} />
           <Stack spacing={0}>
             {section.items.map((entry, index) => (
@@ -353,7 +387,6 @@ const DailyCareReport = ({ open, onClose, child, childId, childName, onLogSometh
                 key={entry.id}
                 sx={{
                   py: 1,
-                  borderBottom: index === section.items.length - 1 ? "none" : `1px solid ${alpha(theme.palette.text.primary, 0.08)}`,
                 }}
               >
                 <Typography variant="body1" sx={{ color: "text.primary" }}>
@@ -396,7 +429,6 @@ const DailyCareReport = ({ open, onClose, child, childId, childName, onLogSometh
                   key={entry.id}
                   sx={{
                     py: 1,
-                    borderBottom: index === section.items.length - 1 ? "none" : `1px solid ${alpha(theme.palette.text.primary, 0.08)}`,
                   }}
                 >
                   <Typography variant="body1" sx={{ color: "text.primary" }}>

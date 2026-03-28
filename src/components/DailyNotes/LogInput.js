@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Box,
   Button,
@@ -8,11 +8,12 @@ import {
 } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
 import { useTheme } from "@mui/material/styles"; // Import useTheme
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage, auth } from "../../services/firebase";
 import RichTextInput from "../UI/RichTextInput";
 import { useAuthState } from "react-firebase-hooks/auth";
+import { uploadIncidentMedia } from "../Dashboard/Incidents/Media/mediaUploadService";
 
 const LogInput = ({ childId, selectedDate = new Date() }) => {
   const theme = useTheme(); // Get the theme object
@@ -21,7 +22,13 @@ const LogInput = ({ childId, selectedDate = new Date() }) => {
   const [clearInput, setClearInput] = useState(false);
   const [templateText, setTemplateText] = useState("");
   const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [selectedPhotoFile, setSelectedPhotoFile] = useState(null);
+  const [photoPreviewUrl, setPhotoPreviewUrl] = useState("");
   const [user] = useAuthState(auth);
+  const photoInputRef = useRef(null);
+  const noteText = richTextData?.text || "";
+  const inlineMediaFile = richTextData?.mediaFile;
+  const audioBlob = richTextData?.audioBlob;
 
   const extractTags = (inputText) => {
     const tagRegex = /#(\w+)/g;
@@ -82,43 +89,45 @@ const LogInput = ({ childId, selectedDate = new Date() }) => {
     setTimeout(() => setTemplateText(""), 100);
   };
 
+  useEffect(() => {
+    if (!selectedPhotoFile) {
+      setPhotoPreviewUrl("");
+      return undefined;
+    }
+
+    const previewUrl = URL.createObjectURL(selectedPhotoFile);
+    setPhotoPreviewUrl(previewUrl);
+
+    return () => {
+      URL.revokeObjectURL(previewUrl);
+    };
+  }, [selectedPhotoFile]);
+
+  const handlePhotoSelect = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    setSelectedPhotoFile(file);
+    event.target.value = "";
+  };
+
   const handleSubmit = async () => {
     console.log('LogInput: handleSubmit called with richTextData:', richTextData);
-    if (!richTextData || (!richTextData.text.trim() && !richTextData.mediaFile && !richTextData.audioBlob)) {
+    if (!noteText.trim() && !inlineMediaFile && !audioBlob && !selectedPhotoFile) {
       console.log('LogInput: Submission blocked - no content');
       return; // Don't submit empty
     }
 
     setLoading(true);
-    let mediaURL = "";
-    let voiceMemoURL = "";
-    let mediaType = "";
 
     // Combine template tags with extracted hashtags
-    const hashtagTags = extractTags(richTextData.text);
+    const hashtagTags = extractTags(noteText);
     const templateTags = selectedTemplate?.tags || [];
     const allTags = [...new Set([...templateTags, ...hashtagTags])]; // Remove duplicates
 
     try {
-      if (richTextData.mediaFile) {
-        const mediaRef = ref(
-          storage,
-          `dailyLogs/${childId}/${Date.now()}-${richTextData.mediaFile.file.name}`
-        );
-        await uploadBytes(mediaRef, richTextData.mediaFile.file);
-        mediaURL = await getDownloadURL(mediaRef);
-        mediaType = richTextData.mediaFile.type;
-      }
-
-      if (richTextData.audioBlob) {
-        const audioRef = ref(
-          storage,
-          `dailyLogs/${childId}/${Date.now()}-voice-memo.webm`
-        );
-        await uploadBytes(audioRef, richTextData.audioBlob);
-        voiceMemoURL = await getDownloadURL(audioRef);
-      }
-
       // Create timestamp for the selected date
       const entryTimestamp = new Date(selectedDate);
       // Set to current time but keep the selected date
@@ -130,17 +139,12 @@ const LogInput = ({ childId, selectedDate = new Date() }) => {
         childId,
         createdBy: user?.uid,
         createdAt: serverTimestamp(),
-        text: richTextData.text,
+        text: noteText,
         status: 'active',
 
         // Optional structured fields
         ...(selectedTemplate?.category && { category: selectedTemplate.category }),
         ...(allTags.length > 0 && { tags: allTags }),
-
-        // Media fields (optional)
-        ...(mediaURL && { mediaURL }),
-        ...(mediaType && { mediaType }),
-        ...(voiceMemoURL && { voiceMemoURL }),
 
         // Timestamp fields for UI
         timestamp: entryTimestamp, // Use selected date with current time
@@ -162,13 +166,53 @@ const LogInput = ({ childId, selectedDate = new Date() }) => {
         createdAt: '[serverTimestamp()]' // serverTimestamp shows as function, not actual value
       });
 
-      await addDoc(collection(db, "dailyLogs"), docData);
+      const docRef = await addDoc(collection(db, "dailyLogs"), docData);
+
+      const updateData = {};
+
+      if (inlineMediaFile) {
+        const mediaRef = ref(
+          storage,
+          `dailyLogs/${childId}/${docRef.id}/${Date.now()}-${inlineMediaFile.file.name}`
+        );
+        await uploadBytes(mediaRef, inlineMediaFile.file);
+        updateData.mediaURL = await getDownloadURL(mediaRef);
+        updateData.mediaType = inlineMediaFile.type;
+      }
+
+      if (audioBlob) {
+        const audioRef = ref(
+          storage,
+          `dailyLogs/${childId}/${docRef.id}/${Date.now()}-voice-memo.webm`
+        );
+        await uploadBytes(audioRef, audioBlob);
+        updateData.voiceMemoURL = await getDownloadURL(audioRef);
+      }
+
+      if (selectedPhotoFile) {
+        const uploadedMedia = await uploadIncidentMedia(
+          { file: selectedPhotoFile, type: "image" },
+          null,
+          docRef.id,
+          `dailyLogs/${docRef.id}`
+        );
+        const mediaUrls = uploadedMedia.map((item) => item.url).filter(Boolean);
+
+        if (mediaUrls.length > 0) {
+          updateData.mediaUrls = mediaUrls;
+        }
+      }
+
+      if (Object.keys(updateData).length > 0) {
+        await updateDoc(docRef, updateData);
+      }
 
       // Clear the input after successful submission
       setClearInput(true);
       setTimeout(() => setClearInput(false), 100); // Reset clear flag
       setRichTextData(null);
       setSelectedTemplate(null); // Clear selected template
+      setSelectedPhotoFile(null);
     } catch (error) {
       console.error("Error adding daily log:", error);
       console.error("Full error details:", error.code, error.message);
@@ -209,6 +253,55 @@ const LogInput = ({ childId, selectedDate = new Date() }) => {
         clearData={clearInput}
         templateText={templateText}
       />
+      <input
+        ref={photoInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        hidden
+        onChange={handlePhotoSelect}
+      />
+      <Box sx={{ mt: 2, display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 1 }}>
+        <Button
+          variant="outlined"
+          onClick={() => photoInputRef.current?.click()}
+          sx={{
+            textTransform: "none",
+            borderRadius: 999,
+            fontWeight: 700,
+            fontSize: "0.98rem",
+            color: "#2f3441",
+            borderColor: "#d7dbe2",
+            bgcolor: "#f1f3f6",
+            px: 2.2,
+            py: 0.85,
+            "&:hover": {
+              bgcolor: "#e6eaf0",
+              borderColor: "#c8ced8",
+            },
+          }}
+        >
+          <Box component="span" sx={{ fontSize: "1.2rem", mr: 0.9, lineHeight: 1 }}>
+            📷
+          </Box>
+          Add Photo or Video
+        </Button>
+        {photoPreviewUrl ? (
+          <Box
+            component="img"
+            src={photoPreviewUrl}
+            alt="Selected attachment"
+            sx={{
+              width: 88,
+              height: 88,
+              objectFit: "cover",
+              borderRadius: 2,
+              border: "1px solid",
+              borderColor: "divider",
+            }}
+          />
+        ) : null}
+      </Box>
       <Box
         sx={{
           display: "flex",
@@ -229,7 +322,7 @@ const LogInput = ({ childId, selectedDate = new Date() }) => {
             )
           }
           onClick={handleSubmit}
-          disabled={loading || !richTextData || (!richTextData.text.trim() && !richTextData.mediaFile && !richTextData.audioBlob)}
+          disabled={loading || (!noteText.trim() && !inlineMediaFile && !audioBlob && !selectedPhotoFile)}
         >
           {loading ? 'Saving...' : 'Log'}
         </Button>

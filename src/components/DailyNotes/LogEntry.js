@@ -9,6 +9,7 @@ import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import { auth } from '../../services/firebase';
+import { CATEGORY_COLORS } from '../../constants/categoryColors';
 
 dayjs.extend(relativeTime);
 dayjs.extend(isSameOrAfter);
@@ -20,6 +21,11 @@ const LogEntry = ({ entry, onEdit, onDelete }) => {
   const [loading, setLoading] = useState(false);
   const currentUser = auth.currentUser;
   const canEdit = (entry.createdBy || entry.authorId) === currentUser?.uid;
+  const categoryKey = CATEGORY_COLORS[entry.category] ? entry.category : 'log';
+  const categoryColors = CATEGORY_COLORS[categoryKey];
+  const categoryLabel = categoryKey === 'milestone'
+    ? 'Win'
+    : categoryKey.charAt(0).toUpperCase() + categoryKey.slice(1);
 
   const entryTimestamp = entry.timestamp ? 
     (typeof entry.timestamp.toDate === 'function' ? 
@@ -87,11 +93,18 @@ const LogEntry = ({ entry, onEdit, onDelete }) => {
     return <div dangerouslySetInnerHTML={{ __html: displayableText }} />;
   };
 
+  const firstAttachedPhoto = Array.isArray(entry.mediaUrls) && entry.mediaUrls.length > 0
+    ? (typeof entry.mediaUrls[0] === 'string' ? entry.mediaUrls[0] : entry.mediaUrls[0]?.url)
+    : '';
+
   return (
     <Box 
       sx={{ 
         position: 'relative',
         pb: 1.5,
+        pl: 1.25,
+        borderLeft: '4px solid',
+        borderLeftColor: categoryColors.border,
         borderBottom: '1px solid',
         borderBottomColor: 'grey.100',
         '&:last-child': {
@@ -108,9 +121,27 @@ const LogEntry = ({ entry, onEdit, onDelete }) => {
     >
       {/* Header with time and menu */}
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.8rem', fontWeight: 500 }}>
-          {formattedTimeOnly}
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box
+            sx={{
+              px: 1,
+              py: 0.35,
+              borderRadius: 999,
+              bgcolor: categoryColors.bg,
+              color: categoryColors.text,
+              border: '1px solid',
+              borderColor: categoryColors.border,
+              fontSize: '0.72rem',
+              fontWeight: 700,
+              lineHeight: 1,
+            }}
+          >
+            {categoryLabel}
+          </Box>
+          <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.8rem', fontWeight: 500 }}>
+            {formattedTimeOnly}
+          </Typography>
+        </Box>
         {canEdit && (
           <IconButton 
             size="small" 
@@ -182,6 +213,22 @@ const LogEntry = ({ entry, onEdit, onDelete }) => {
                   borderRadius: '4px',
                   display: 'block'
                 }} 
+              />
+            </Box>
+          )}
+
+          {!entry.mediaURL && firstAttachedPhoto && (
+            <Box sx={{ mt: 1 }}>
+              <img
+                src={firstAttachedPhoto}
+                alt="log attachment"
+                style={{
+                  width: '100%',
+                  maxWidth: '140px',
+                  borderRadius: '8px',
+                  display: 'block',
+                  objectFit: 'cover',
+                }}
               />
             </Box>
           )}

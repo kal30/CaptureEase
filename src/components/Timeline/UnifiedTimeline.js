@@ -22,6 +22,7 @@ import JournalDetails from "./parts/JournalDetails";
 import TherapyNoteDetails from "./parts/TherapyNoteDetails";
 import EntryHeader from "./parts/EntryHeader";
 import TimelineItem from "./parts/TimelineItem";
+import { CATEGORY_COLORS } from "../../constants/categoryColors";
 
 /**
  * UnifiedTimeline - Main unified timeline component
@@ -42,6 +43,20 @@ const UnifiedTimeline = ({
   showFilters = true,
   showDaySummary = true,
 }) => {
+  const resolveCategoryColor = (entry) => {
+    if (entry.isImportantMoment) {
+      return CATEGORY_COLORS.importantMoment;
+    }
+
+    const categoryKey = CATEGORY_COLORS[entry.category]
+      ? entry.category
+      : CATEGORY_COLORS[entry.type]
+        ? entry.type
+        : 'log';
+
+    return CATEGORY_COLORS[categoryKey];
+  };
+
   const { getUserRoleForChild } = useRole();
   const theme = useTheme();
 
@@ -196,22 +211,28 @@ const UnifiedTimeline = ({
               const entryLabel = entry.collection === 'dailyLogs'
                 ? (entry.title || defaultEntryLabel)
                 : defaultEntryLabel;
-              const entryColor = entry.color || theme.palette.timeline.entries?.[meta.key] || theme.palette.primary.main;
+              const entryColor = resolveCategoryColor(entry).dot;
+              const timelineColors = resolveCategoryColor(entry);
 
               return (
                 <TimelineItem
                   key={`${entry.type}-${entry.id}-${entryIndex}`}
                   color={entryColor}
-                  icon={meta.icon}
+                  icon={entry.isImportantMoment ? '⭐' : meta.icon}
                   ariaLabel={`${entryLabel} at ${timeString}`}
                   isFirst={entryIndex === 0}
                   isLast={entryIndex === entries.length - 1}
+                  cardBackground={entry.isImportantMoment ? CATEGORY_COLORS.importantMoment.bg : '#ffffff'}
+                  cardBorderColor={entry.isImportantMoment ? CATEGORY_COLORS.importantMoment.border : 'rgba(148, 163, 184, 0.18)'}
                 >
                   <EntryHeader
                     entryLabel={entryLabel}
                     timeString={timeString}
                     entryColor={entryColor}
                     loggedByUser={entry.loggedByUser}
+                    badgeLabel={entry.isImportantMoment ? '⭐ Important' : null}
+                    badgeBg={entry.isImportantMoment ? timelineColors.bg : null}
+                    badgeColor={entry.isImportantMoment ? timelineColors.text : null}
                   />
 
                       {entryType === ENTRY_TYPE.INCIDENT && (
@@ -221,7 +242,7 @@ const UnifiedTimeline = ({
                       )}
                       {entryType === ENTRY_TYPE.DAILY_HABIT && (<DailyHabitDetails entry={entry} />)}
                       {/* DAILY_NOTE removed - was only used for legacy progressNotes */}
-                      {[ENTRY_TYPE.JOURNAL, ENTRY_TYPE.BEHAVIOR, ENTRY_TYPE.HEALTH, ENTRY_TYPE.MOOD, ENTRY_TYPE.SLEEP, ENTRY_TYPE.FOOD, ENTRY_TYPE.MILESTONE].includes(entryType) && (
+                      {[ENTRY_TYPE.JOURNAL, ENTRY_TYPE.IMPORTANT_MOMENT, ENTRY_TYPE.BEHAVIOR, ENTRY_TYPE.HEALTH, ENTRY_TYPE.MOOD, ENTRY_TYPE.SLEEP, ENTRY_TYPE.FOOD, ENTRY_TYPE.MILESTONE].includes(entryType) && (
                         <JournalDetails entry={entry} />
                       )}
                       {entryType === ENTRY_TYPE.THERAPY_NOTE && (<TherapyNoteDetails entry={entry} />)}

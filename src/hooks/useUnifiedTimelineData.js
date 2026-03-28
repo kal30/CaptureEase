@@ -6,6 +6,7 @@ import {
 } from '../services/timeline/timelinePermissionService';
 import { useRole } from '../contexts/RoleContext';
 import { USER_ROLES } from '../constants/roles';
+import { CATEGORY_COLORS } from '../constants/categoryColors';
 
 const QUICK_NOTE_CATEGORY_META = {
   behavior: { type: 'behavior', timelineType: 'behavior', titlePrefix: 'Behavior', color: '#D32F2F' },
@@ -35,6 +36,19 @@ const getQuickJournalTitle = (entry, categoryMeta) => {
   }
 
   return firstLine.length > 60 ? `${firstLine.slice(0, 57)}...` : firstLine;
+};
+
+const getQuickNoteMeta = (entry) => {
+  if (entry.importantMoment) {
+    return {
+      type: 'importantMoment',
+      timelineType: 'importantMoment',
+      titlePrefix: 'Important Moment',
+      color: CATEGORY_COLORS.importantMoment.dot,
+    };
+  }
+
+  return QUICK_NOTE_CATEGORY_META[entry.category] || QUICK_NOTE_CATEGORY_META.log;
 };
 
 /**
@@ -115,7 +129,7 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
         return;
       }
 
-      const categoryMeta = QUICK_NOTE_CATEGORY_META[entry.category] || QUICK_NOTE_CATEGORY_META.log;
+      const categoryMeta = getQuickNoteMeta(entry);
       const optimisticJournal = {
         ...entry,
         timestamp: entryTimestamp,
@@ -124,6 +138,7 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
         title: getQuickJournalTitle(entry, categoryMeta),
         titlePrefix: categoryMeta.titlePrefix,
         color: categoryMeta.color,
+        isImportantMoment: !!entry.importantMoment,
         ...getEntryUser(entry),
       };
 
@@ -200,23 +215,32 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
       })),
       
       // Transform journal entries (from dailyLogs - avoid duplicates by using journals data only)
-      ...childFilteredEntries.journals.map(journal => ({
-        id: journal.id,
-        type: journal.type || 'journal',
-        timelineType: journal.timelineType || journal.type || 'journal',
-        collection: 'dailyLogs',
-        childId: journal.childId,
-        timestamp: journal.timestamp?.toDate ? journal.timestamp.toDate() : new Date(journal.timestamp),
-        category: journal.category || 'log',
-        title: journal.titlePrefix || 'Daily Log',
-        color: journal.color,
-        text: journal.text,
-        tags: journal.tags,
-        mediaURL: journal.mediaURL,
-        mediaType: journal.mediaType,
-        voiceMemoURL: journal.voiceMemoURL,
-        ...getEntryUser(journal),
-      })),
+      ...childFilteredEntries.journals.map(journal => {
+        const categoryMeta = getQuickNoteMeta(journal);
+
+        return {
+          id: journal.id,
+          type: categoryMeta.type,
+          timelineType: categoryMeta.timelineType,
+          collection: 'dailyLogs',
+          childId: journal.childId,
+          timestamp: journal.timestamp?.toDate ? journal.timestamp.toDate() : new Date(journal.timestamp),
+          category: journal.category || 'log',
+          title: journal.importantMoment
+            ? 'Important Moment'
+            : (journal.titlePrefix || categoryMeta.titlePrefix || 'Daily Log'),
+          color: categoryMeta.color,
+          text: journal.text,
+          tags: journal.tags,
+          mediaURL: journal.mediaURL,
+          mediaType: journal.mediaType,
+          mediaUrls: journal.mediaUrls,
+          voiceMemoURL: journal.voiceMemoURL,
+          importantMoment: !!journal.importantMoment,
+          isImportantMoment: !!journal.importantMoment,
+          ...getEntryUser(journal),
+        };
+      }),
       
       // Transform daily habits (from dailyCare collection)
       ...childFilteredEntries.dailyHabits.map(habit => ({

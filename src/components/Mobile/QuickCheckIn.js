@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Card,
   CardContent,
@@ -10,11 +10,10 @@ import {
   IconButton,
   CircularProgress,
   Stack,
-  Switch,
+  Slide,
   Tooltip,
 } from '@mui/material';
 import {
-  InfoOutlined as InfoOutlinedIcon,
   Close as CloseIcon,
   LocalOffer as LocalOfferIcon,
   ExpandMore as ExpandMoreIcon,
@@ -22,8 +21,10 @@ import {
 } from '@mui/icons-material';
 import StyledButton from '../UI/StyledButton';
 import { db, auth } from '../../services/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { useAuthState } from 'react-firebase-hooks/auth';
+import { uploadIncidentMedia } from '../Dashboard/Incidents/Media/mediaUploadService';
+import { CATEGORY_COLORS } from '../../constants/categoryColors';
 
 const QUICK_TAG_CATEGORY_MAP = {
   meltdown: 'behavior',
@@ -41,15 +42,6 @@ const QUICK_TAG_PLACEHOLDERS = {
   food: 'What did they eat or refuse?',
   anxiety: 'What caused it? How did they respond?',
   win: 'What happened? Celebrate it!',
-};
-
-const QUICK_TAG_COLORS = {
-  meltdown: { main: '#D32F2F', soft: '#FDECEC', selected: '#F8D7D7', text: '#8F1F1F' },
-  medication: { main: '#00796B', soft: '#E6F4F1', selected: '#CDEBE5', text: '#00584E' },
-  sleep: { main: '#1A237E', soft: '#ECEEFC', selected: '#D7DBF8', text: '#141B63' },
-  food: { main: '#E65100', soft: '#FFF1E7', selected: '#FFE0CC', text: '#A53A00' },
-  anxiety: { main: '#F57F17', soft: '#FFF7E7', selected: '#FEEABF', text: '#A6540F' },
-  win: { main: '#2E7D32', soft: '#EDF7EE', selected: '#D8EED9', text: '#1F5A23' },
 };
 
 const CATEGORY_KEYWORDS = {
@@ -88,6 +80,9 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
   const [selectedTag, setSelectedTag] = useState(null);
   const [importantMoment, setImportantMoment] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [selectedPhotoFile, setSelectedPhotoFile] = useState(null);
+  const [photoPreviewUrl, setPhotoPreviewUrl] = useState('');
+  const photoInputRef = useRef(null);
 
   const selectedTagCategory = useMemo(() => {
     return selectedTag ? QUICK_TAG_CATEGORY_MAP[selectedTag] || null : null;
@@ -112,10 +107,39 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
 
   const notePlaceholder = selectedTag
     ? QUICK_TAG_PLACEHOLDERS[selectedTag]
-    : "What happened? (e.g., 'Had lunch with applesauce', 'Took a 2-hour nap', 'Fell at playground but okay')";
+    : "Just write what happened — we'll figure out the rest.";
 
   const toggleQuickTag = (tagKey) => {
     setSelectedTag((prev) => (prev === tagKey ? null : tagKey));
+  };
+
+  const handleQuickTagSelect = (tagKey) => {
+    toggleQuickTag(tagKey);
+    setShowQuickTags(false);
+  };
+
+  useEffect(() => {
+    if (!selectedPhotoFile) {
+      setPhotoPreviewUrl('');
+      return undefined;
+    }
+
+    const previewUrl = URL.createObjectURL(selectedPhotoFile);
+    setPhotoPreviewUrl(previewUrl);
+
+    return () => {
+      URL.revokeObjectURL(previewUrl);
+    };
+  }, [selectedPhotoFile]);
+
+  const handlePhotoSelect = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    setSelectedPhotoFile(file);
+    event.target.value = '';
   };
 
   const saveQuickNote = async () => {
@@ -137,7 +161,7 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
         authorEmail: user?.email,
       };
 
-      await addDoc(collection(db, 'dailyLogs'), {
+      const docRef = await addDoc(collection(db, 'dailyLogs'), {
         childId: child.id,
         createdBy: user?.uid,
         createdAt: serverTimestamp(),
@@ -145,11 +169,28 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
         entryDate: new Date().toDateString(),
       });
 
+      let mediaUrls = [];
+
+      if (selectedPhotoFile) {
+        const uploadedMedia = await uploadIncidentMedia(
+          { file: selectedPhotoFile, type: 'image' },
+          null,
+          docRef.id,
+          `dailyLogs/${docRef.id}`
+        );
+        mediaUrls = uploadedMedia.map((item) => item.url).filter(Boolean);
+
+        if (mediaUrls.length > 0) {
+          await updateDoc(docRef, { mediaUrls });
+        }
+      }
+
       window.dispatchEvent(new CustomEvent('captureez:timeline-entry-created', {
         detail: {
-          id: `local-${Date.now()}`,
+          id: docRef.id,
           collection: 'dailyLogs',
           ...optimisticEntry,
+          ...(mediaUrls.length > 0 && { mediaUrls }),
         },
       }));
 
@@ -159,7 +200,9 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
         importantMoment,
         category: resolvedCategory,
         timestamp: new Date(),
+        ...(mediaUrls.length > 0 && { mediaUrls }),
       });
+      setSelectedPhotoFile(null);
     } catch (error) {
       console.error('Error saving quick note:', error);
     } finally {
@@ -174,6 +217,8 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
         border: '2px solid #cfcfcf',
         borderRadius: '32px',
         backgroundColor: '#f8f8f8',
+        position: 'relative',
+        overflow: 'hidden',
       }}
     >
       <CardContent sx={{ p: { xs: 2, md: 2.25 } }}>
@@ -191,27 +236,17 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
           </IconButton>
         </Box>
 
-        <Box
+        <Typography
           sx={{
-            borderRadius: '24px',
-            bgcolor: '#edf2ff',
-            p: 1,
-            mb: 1.6,
-            display: 'flex',
-            gap: 1,
-            alignItems: 'flex-start',
+            mb: 1,
+            color: '#6b7280',
+            fontSize: '0.92rem',
+            fontWeight: 400,
+            lineHeight: 1.35,
           }}
         >
-          <InfoOutlinedIcon sx={{ color: '#3f44be', fontSize: 18, mt: 0.2 }} />
-          <Box sx={{ minWidth: 0 }}>
-            <Typography sx={{ color: '#3f44be', fontWeight: 700, fontSize: { xs: '0.95rem', md: '1rem' }, lineHeight: 1.1 }}>
-              Smart Auto-Classification
-            </Typography>
-            <Typography sx={{ color: '#3f44be', fontSize: { xs: '0.78rem', md: '0.82rem' }, lineHeight: 1.2 }}>
-              Just write naturally. Quick tags and keywords will sort it into the right category automatically.
-            </Typography>
-          </Box>
-        </Box>
+          Just write what happened — we'll figure out the rest.
+        </Typography>
 
         <TextField
           fullWidth
@@ -229,7 +264,7 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
           sx={{
             mb: 2,
             '& .MuiOutlinedInput-root': {
-              borderRadius: '32px',
+              borderRadius: '14px',
               fontSize: '1rem',
               color: '#48484b',
               '& fieldset': { borderColor: '#c7d2f4', borderWidth: 3 },
@@ -242,13 +277,91 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
           }}
         />
 
+        <input
+          ref={photoInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          hidden
+          onChange={handlePhotoSelect}
+        />
+
+        <Box sx={{ mb: 2, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1 }}>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, width: '100%' }}>
+            <Button
+              variant="outlined"
+              onClick={() => photoInputRef.current?.click()}
+              sx={{
+                borderRadius: '10px',
+                textTransform: 'none',
+                fontWeight: 700,
+                fontSize: '0.98rem',
+                color: '#2f3441',
+                borderColor: '#d7dbe2',
+                bgcolor: '#f1f3f6',
+                px: 2.2,
+                py: 0.85,
+                '&:hover': {
+                  bgcolor: '#e6eaf0',
+                  borderColor: '#c8ced8',
+                },
+              }}
+            >
+              <Box component="span" sx={{ fontSize: '1.2rem', mr: 0.9, lineHeight: 1 }}>
+                📷
+              </Box>
+              Add Photo or Video
+            </Button>
+
+            <Button
+              variant="outlined"
+              onClick={() => setImportantMoment((prev) => !prev)}
+              sx={{
+                borderRadius: '10px',
+                textTransform: 'none',
+                fontWeight: 800,
+                fontSize: '0.95rem',
+                color: importantMoment ? '#8A5A00' : '#4b5563',
+                borderColor: importantMoment ? '#F4B400' : '#d7dbe2',
+                bgcolor: importantMoment ? '#FFFBF0' : '#f1f3f6',
+                px: 1.8,
+                py: 0.85,
+                '&:hover': {
+                  bgcolor: importantMoment ? '#FFF4CC' : '#e6eaf0',
+                  borderColor: importantMoment ? '#E0A800' : '#c8ced8',
+                },
+              }}
+            >
+              <Box component="span" sx={{ fontSize: '1.1rem', mr: 0.75, lineHeight: 1 }}>
+                ⭐
+              </Box>
+              {importantMoment ? 'Important Moment On' : 'Flag Important'}
+            </Button>
+          </Box>
+
+          {photoPreviewUrl ? (
+            <Box
+              component="img"
+              src={photoPreviewUrl}
+              alt="Selected attachment"
+              sx={{
+                width: 92,
+                height: 92,
+                objectFit: 'cover',
+                borderRadius: '10px',
+                border: '2px solid #d7def4',
+              }}
+            />
+          ) : null}
+        </Box>
+
         <Button
           variant="outlined"
           startIcon={<LocalOfferIcon sx={{ color: '#102d72' }} />}
           endIcon={<ExpandMoreIcon sx={{ transform: showQuickTags ? 'rotate(180deg)' : 'none', transition: 'all 0.2s', color: '#102d72' }} />}
           onClick={() => setShowQuickTags((prev) => !prev)}
           sx={{
-            borderRadius: '999px',
+            borderRadius: '10px',
             borderColor: '#102d72',
             color: '#102d72',
             px: 2.5,
@@ -257,114 +370,15 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
             fontSize: '1rem',
             fontWeight: 700,
             mb: 1.5,
-          }}
-        >
-          Quick tags
-        </Button>
-
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', mb: 1.8, gap: 1.1 }}>
-          {showQuickTags && (
-            <Stack spacing={1} sx={{ width: '100%' }}>
-              {QUICK_TAG_GROUPS.map((group, groupIndex) => (
-                <Box
-                  key={groupIndex}
-                  sx={{
-                    display: 'grid',
-                    gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, minmax(0, 140px))' },
-                    gap: 1,
-                    width: '100%',
-                  }}
-                >
-                  {group.items.map((item) => {
-                    const selected = selectedTag === item.key;
-                    const tagColors = QUICK_TAG_COLORS[item.key];
-                    return (
-                      <Tooltip key={item.key} title={item.label}>
-                        <Chip
-                          icon={item.icon}
-                          label={item.label}
-                          onClick={() => toggleQuickTag(item.key)}
-                          sx={{
-                            borderRadius: '14px',
-                            border: `2px solid ${selected ? tagColors.main : 'rgba(148, 163, 184, 0.28)'}`,
-                            bgcolor: selected ? tagColors.selected : tagColors.soft,
-                            color: tagColors.text,
-                            width: '100%',
-                            maxWidth: { xs: '100%', sm: 140 },
-                            justifyContent: 'flex-start',
-                            px: 0.5,
-                            height: 44,
-                            boxShadow: selected ? `0 8px 18px ${tagColors.main}33` : 'none',
-                            '& .MuiChip-label': {
-                              px: 0.5,
-                              width: '100%',
-                              fontSize: '0.9rem',
-                              fontWeight: 700,
-                              color: tagColors.text,
-                              textAlign: 'left',
-                              whiteSpace: 'nowrap',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                            },
-                            '& .MuiChip-icon': {
-                              ml: 0.75,
-                              mr: 0.25,
-                              fontSize: 21,
-                              opacity: selected ? 1 : 0.92,
-                            },
-                            '&:hover': {
-                              bgcolor: selected ? tagColors.selected : tagColors.soft,
-                              borderColor: tagColors.main,
-                            },
-                          }}
-                        />
-                      </Tooltip>
-                    );
-                  })}
-                </Box>
-              ))}
-            </Stack>
-          )}
-
-          <Box
-            sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 0.75,
-            px: 1.2,
-            py: 0.45,
-            borderRadius: '999px',
-            bgcolor: '#ece5f8',
-            minHeight: 42,
-            '& .MuiSwitch-root': {
-              p: 0.5,
-              mr: 0.25,
+            bgcolor: '#f1f5ff',
+            '&:hover': {
+              bgcolor: '#e7eeff',
+              borderColor: '#102d72',
             },
           }}
-          >
-          <Switch
-            checked={importantMoment}
-            onChange={(e) => setImportantMoment(e.target.checked)}
-            size="small"
-            sx={{
-              '& .MuiSwitch-switchBase': {
-                p: 0.5,
-              },
-              '& .MuiSwitch-thumb': {
-                width: 18,
-                height: 18,
-              },
-              '& .MuiSwitch-track': {
-                borderRadius: 10,
-              },
-            }}
-          />
-          <Box component="span" sx={{ color: '#6c43e5', fontSize: 22, lineHeight: 1 }}>
-            ⭐
-          </Box>
-          <Typography sx={{ fontWeight: 800, color: '#35353a', fontSize: '0.9rem', lineHeight: 1 }}>Flag as Important Moment</Typography>
-          </Box>
-        </Box>
+        >
+          {selectedTag ? `Quick tags: ${selectedTag}` : 'Quick tags'}
+        </Button>
 
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
@@ -403,6 +417,108 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
           </Box>
         </Box>
       </CardContent>
+
+      <Slide direction="up" in={showQuickTags} mountOnEnter unmountOnExit>
+        <Box
+          sx={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 3,
+            px: 1.5,
+            pb: 1.5,
+          }}
+        >
+          <Box
+            sx={{
+              borderRadius: '18px 18px 12px 12px',
+              border: '1px solid #d8def0',
+              bgcolor: '#ffffff',
+              boxShadow: '0 -18px 40px rgba(31, 41, 55, 0.16)',
+              p: 1.5,
+            }}
+          >
+            <Box
+              sx={{
+                width: 44,
+                height: 5,
+                borderRadius: 999,
+                bgcolor: '#d5d9e3',
+                mx: 'auto',
+                mb: 1.5,
+              }}
+            />
+
+            <Typography sx={{ fontWeight: 800, fontSize: '0.98rem', color: '#283142', mb: 1.25 }}>
+              Pick a quick tag
+            </Typography>
+
+            <Stack spacing={1} sx={{ width: '100%' }}>
+              {QUICK_TAG_GROUPS.map((group, groupIndex) => (
+                <Box
+                  key={groupIndex}
+                  sx={{
+                    display: 'grid',
+                    gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, minmax(0, 140px))' },
+                    gap: 1,
+                    width: '100%',
+                  }}
+                >
+                  {group.items.map((item) => {
+                    const selected = selectedTag === item.key;
+                    const categoryKey = QUICK_TAG_CATEGORY_MAP[item.key] || 'log';
+                    const categoryColors = CATEGORY_COLORS[categoryKey] || CATEGORY_COLORS.log;
+                    return (
+                      <Tooltip key={item.key} title={item.label}>
+                        <Chip
+                          icon={item.icon}
+                          label={selected ? `✓ ${item.label}` : item.label}
+                          onClick={() => handleQuickTagSelect(item.key)}
+                          sx={{
+                            borderRadius: '10px',
+                            border: `2px solid ${categoryColors.border}`,
+                            bgcolor: selected ? categoryColors.border : categoryColors.bg,
+                            color: selected ? '#ffffff' : categoryColors.text,
+                            width: '100%',
+                            maxWidth: { xs: '100%', sm: 140 },
+                            justifyContent: 'flex-start',
+                            px: 0.5,
+                            height: 46,
+                            boxShadow: selected ? `0 10px 22px ${categoryColors.border}40` : 'none',
+                            '& .MuiChip-label': {
+                              px: 0.5,
+                              width: '100%',
+                              fontSize: '0.9rem',
+                              fontWeight: 700,
+                              color: selected ? '#ffffff' : categoryColors.text,
+                              textAlign: 'left',
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                            },
+                            '& .MuiChip-icon': {
+                              ml: 0.75,
+                              mr: 0.25,
+                              fontSize: 21,
+                              opacity: selected ? 1 : 0.92,
+                              color: selected ? '#ffffff' : categoryColors.text,
+                            },
+                            '&:hover': {
+                              bgcolor: selected ? categoryColors.border : categoryColors.bg,
+                              borderColor: categoryColors.border,
+                            },
+                          }}
+                        />
+                      </Tooltip>
+                    );
+                  })}
+                </Box>
+              ))}
+            </Stack>
+          </Box>
+        </Box>
+      </Slide>
     </Card>
   );
 };

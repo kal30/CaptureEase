@@ -10,6 +10,9 @@ const EntryHeader = ({
   entryLabel,
   entryColor,
   loggedByUser,
+  badgeLabel,
+  badgeBg,
+  badgeColor,
   // time display (choose one of the below approaches)
   timeString,
   time, // Date instance
@@ -33,9 +36,27 @@ const EntryHeader = ({
   return (
     <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1, mb: 0.25 }}>
       <Box sx={{ minWidth: 0 }}>
-        <Typography variant="body2" sx={{ fontWeight: 700, color: entryColor, lineHeight: 1.15 }}>
-          {entryLabel}
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+          <Typography variant="body2" sx={{ fontWeight: 700, color: entryColor, lineHeight: 1.15 }}>
+            {entryLabel}
+          </Typography>
+          {badgeLabel ? (
+            <Box
+              sx={{
+                px: 0.8,
+                py: 0.2,
+                borderRadius: 999,
+                bgcolor: badgeBg || '#f5f5f5',
+                color: badgeColor || '#555555',
+                fontSize: '0.68rem',
+                fontWeight: 800,
+                lineHeight: 1.2,
+              }}
+            >
+              {badgeLabel}
+            </Box>
+          ) : null}
+        </Box>
         {computedTime && (
           <Typography
             variant="caption"

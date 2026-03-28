@@ -26,6 +26,12 @@ export const getEntryTypes = () => {
       icon: journalDisplay.emoji,
       paletteKey: 'timeline.entries.journal',
     },
+    importantMoment: {
+      key: 'importantMoment',
+      label: 'Important Moment',
+      icon: '⭐',
+      paletteKey: 'timeline.entries.journal',
+    },
     behavior: {
       key: 'behavior',
       label: 'Behavior',
@@ -79,6 +85,7 @@ export const ENTRY_TYPE = {
   INCIDENT: 'incident',
   DAILY_HABIT: 'dailyHabit',
   JOURNAL: 'journal',
+  IMPORTANT_MOMENT: 'importantMoment',
   BEHAVIOR: 'behavior',
   HEALTH: 'health',
   MOOD: 'mood',
@@ -112,6 +119,7 @@ export const mapLegacyType = (type) => {
   if (type === 'incident') return 'incident';
   if (type === 'followUp') return 'incident'; // Follow-ups should display as incidents
   if (type === 'journal') return 'journal'; // dailyLogs collection = journal entries
+  if (type === 'importantMoment') return 'importantMoment';
   if (['behavior', 'health', 'mood', 'sleep', 'food', 'milestone', 'log'].includes(type)) {
     return type === 'log' ? 'journal' : type;
   }
