@@ -1,0 +1,70 @@
+import React from 'react';
+import { Fade } from '@mui/material';
+import { useDashboardView } from './shared/DashboardViewContext';
+import Switchboard from './mobile/Switchboard';
+import ChildDashboard from './mobile/ChildDashboard';
+
+const MobileDashboardFlow = ({
+  children = [],
+  getUserRoleForChild,
+  USER_ROLES,
+  quickDataStatus,
+  recentEntries,
+  timelineSummary,
+  incidents,
+  onQuickEntry,
+  onEditChild,
+  onInviteTeamMember,
+  onDailyReport,
+  onMessages,
+  onAddChildClick,
+}) => {
+  const { activeChildId, mobileView, enterChild, goToSwitchboard } = useDashboardView();
+  const activeChild = children.find((child) => child.id === activeChildId) || children[0] || null;
+  const activeRole = activeChild ? getUserRoleForChild?.(activeChild.id) : null;
+  const groupType = activeRole === USER_ROLES.CARE_OWNER
+    ? 'own'
+    : activeRole === USER_ROLES.CARE_PARTNER
+      ? 'family'
+      : 'professional';
+
+  if (!activeChild) {
+    return null;
+  }
+
+  if (children.length > 1 && mobileView === 'switchboard') {
+    return (
+      <Fade in={true} timeout={220}>
+        <div>
+          <Switchboard
+            children={children}
+            onSelectChild={enterChild}
+            onAddChild={onAddChildClick}
+          />
+        </div>
+      </Fade>
+    );
+  }
+
+  return (
+    <ChildDashboard
+      child={activeChild}
+      children={children}
+      groupType={groupType}
+      quickDataStatus={quickDataStatus}
+      recentEntries={recentEntries}
+      timelineSummary={timelineSummary}
+      incidents={incidents}
+      onQuickEntry={onQuickEntry}
+      onEditChild={onEditChild}
+      onInviteTeamMember={onInviteTeamMember}
+      onDailyReport={onDailyReport}
+      onMessages={onMessages}
+      onBack={children.length > 1 ? goToSwitchboard : undefined}
+      onSwitchChild={enterChild}
+      onAddChildClick={onAddChildClick}
+    />
+  );
+};
+
+export default MobileDashboardFlow;

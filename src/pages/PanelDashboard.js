@@ -7,15 +7,17 @@ import {
   CircularProgress,
   Fade,
   Button,
+  useMediaQuery,
 } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 
 // Hooks and Services
 import { usePanelDashboard } from "../hooks/usePanelDashboard";
 import { getActionGroups } from "../constants/actionGroups";
 
 // Components
-import DashboardHeader from "../components/Dashboard/DashboardHeader";
-import ChildGroup from "../components/Dashboard/ChildGroup";
+import MobileDashboardFlow from "../components/Dashboard/MobileDashboardFlow";
+import DesktopDashboardOverview from "../components/Dashboard/DesktopDashboardOverview";
 import QuickCheckIn from "../components/Mobile/QuickCheckIn";
 import AddChildModal from "../components/Dashboard/AddChildModal";
 import EditChildModal from "../components/Dashboard/EditChildModal";
@@ -25,31 +27,13 @@ import { IncidentLoggingModal, IncidentFollowUpModal } from "../components/Dashb
 import PatternSuggestionModal from "../components/Dashboard/PatternSuggestionModal";
 import DailyHabitsModal from "../components/Dashboard/DailyHabitsModal";
 import DailyCareReport from "../components/Reports/DailyCareReport";
+import { DashboardViewProvider } from "../components/Dashboard/shared/DashboardViewContext";
 
 const PanelDashboard = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const hook = usePanelDashboard();
   const actionGroups = getActionGroups(hook.theme);
-
-  const commonChildGroupProps = {
-    quickDataStatus: hook.quickDataStatus,
-    recentEntries: hook.recentEntries,
-    timelineSummary: hook.timelineSummary,
-    incidents: hook.incidents,
-    isCardExpanded: hook.isCardExpanded,
-    onToggleExpanded: hook.toggleCard,
-    onQuickEntry: hook.handleQuickDataEntry,
-    onEditChild: hook.handleEditChild,
-    onInviteTeamMember: hook.handleInviteTeamMember,
-    onDailyReport: hook.handleShowCareReport, // Switch to new report
-    onMessages: hook.handleMessages,
-    getActionGroups: actionGroups,
-    handleGroupActionClick: hook.handleGroupActionClick,
-    highlightedActions: hook.highlightedActions,
-    expandedCategories: hook.expandedCategories,
-    setExpandedCategories: hook.setExpandedCategories,
-    getTypeConfig: hook.getTypeConfig,
-    formatTimeAgo: hook.formatTimeAgo,
-  };
 
   if (hook.loading) {
     return (
@@ -133,16 +117,6 @@ const PanelDashboard = () => {
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-      <DashboardHeader
-        user={hook.user}
-        children={hook.children}
-        isReadOnlyForChild={hook.isReadOnlyForChild}
-        getUserRoleForChild={hook.getUserRoleForChild}
-        USER_ROLES={hook.USER_ROLES}
-        onInviteClick={hook.handleInviteTeamMember}
-        onAddChildClick={() => hook.setShowAddChildModal(true)}
-      />
-
       {hook.children.length === 0 ? (
         <Box
           sx={{
@@ -196,26 +170,35 @@ const PanelDashboard = () => {
           </Box>
         </Box>
       ) : (
-        <Box sx={{ maxWidth: 800, mx: "auto" }}>
-          <ChildGroup
-            title="In Your Full Care"
-            groupType="own"
-            children={hook.ownChildren}
-            {...commonChildGroupProps}
-          />
-          <ChildGroup
-            title="Family Children"
-            groupType="family"
-            children={hook.familyChildren}
-            {...commonChildGroupProps}
-          />
-          <ChildGroup
-            title="Professional Assignments"
-            groupType="professional"
-            children={hook.professionalChildren}
-            {...commonChildGroupProps}
-          />
-        </Box>
+        <DashboardViewProvider
+          childOptions={hook.children}
+          initialActiveChildId={hook.currentChildId || hook.children[0]?.id || null}
+          onActiveChildChange={hook.setCurrentChildId}
+        >
+          {isMobile ? (
+            <MobileDashboardFlow
+              children={hook.children}
+              getUserRoleForChild={hook.getUserRoleForChild}
+              USER_ROLES={hook.USER_ROLES}
+              quickDataStatus={hook.quickDataStatus}
+              recentEntries={hook.recentEntries}
+              timelineSummary={hook.timelineSummary}
+              incidents={hook.incidents}
+              onQuickEntry={hook.handleQuickDataEntry}
+              onEditChild={hook.handleEditChild}
+              onInviteTeamMember={hook.handleInviteTeamMember}
+              onDailyReport={hook.handleShowCareReport}
+              onMessages={hook.handleMessages}
+              onAddChildClick={() => hook.setShowAddChildModal(true)}
+            />
+          ) : (
+            <DesktopDashboardOverview
+              hook={hook}
+              actionGroups={actionGroups}
+              onAddChildClick={() => hook.setShowAddChildModal(true)}
+            />
+          )}
+        </DashboardViewProvider>
       )}
 
       {/* Modals */}

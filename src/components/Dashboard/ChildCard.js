@@ -23,6 +23,7 @@ const ChildCard = ({
   onInviteTeamMember,
   onDailyReport,
   onMessages,
+  compactIdentityOnMobile = false,
 }) => {
   // Business logic hook
   const {
@@ -63,6 +64,7 @@ const ChildCard = ({
             onInviteTeamMember={onInviteTeamMember}
             onDailyReport={onDailyReport}
             onNotificationClick={handleNotificationClick}
+            compactIdentityOnMobile={compactIdentityOnMobile}
             sx={{ flex: 1, minWidth: 0 }}
           />
 

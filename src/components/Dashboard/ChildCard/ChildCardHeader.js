@@ -36,10 +36,12 @@ const ChildCardHeader = memo(({
   onInviteTeamMember,
   onDailyReport,
   onNotificationClick,
+  compactIdentityOnMobile = false,
   sx = {}
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const showCompactMobileIdentity = compactIdentityOnMobile && isMobile;
   const allChips = useChildCardChips(userRole, completedToday);
   const hasEntriesToday = (timelineSummary.todayCount || 0) > 0;
   const metricChips = [
@@ -75,94 +77,118 @@ const ChildCardHeader = memo(({
 
   return (
     <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: { xs: 1.25, md: 2 }, ...sx }}>
-      {/* Avatar */}
-      <ChildAvatar
-        child={child}
-        userRole={userRole}
-        size={isMobile ? 'medium' : 'large'}
-        showRole={false} // Don't show role indicator on avatar since we have chip
-      />
+      {!showCompactMobileIdentity && (
+        <ChildAvatar
+          child={child}
+          userRole={userRole}
+          size={isMobile ? 'medium' : 'large'}
+          showRole={false}
+        />
+      )}
 
-      {/* Child Info and Management Menu Row */}
       <Box sx={{ flex: 1, minWidth: 0 }}>
-        {/* Name, Settings, and Notification Row */}
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.25, mb: { xs: 0.25, md: 0.5 } }}>
-          <Typography
-            variant="h5"
+        {showCompactMobileIdentity ? (
+          <Box
             sx={{
-              flex: 1,
-              minWidth: 0,
-              fontWeight: 700,
-              fontSize: { xs: '1.05rem', md: '1.4rem' },
-              lineHeight: { xs: 1.15, md: 1.2 },
-              overflow: { xs: 'visible', md: 'hidden' },
-              textOverflow: { xs: 'clip', md: 'ellipsis' },
-              whiteSpace: { xs: 'normal', md: 'nowrap' },
-              color: 'text.primary'
+              display: 'flex',
+              justifyContent: 'flex-end',
+              alignItems: 'center',
+              gap: 0.35,
+              mb: 0.25,
             }}
-            title={child.name}
           >
-            {child.name}
-          </Typography>
-
-          {/* Settings Menu - Very close to name */}
-          <ChildManagementMenu
-            child={child}
-            userRole={userRole}
-            canAddData={canAddData}
-            onEditChild={onEditChild}
-            onDeleteChild={onDeleteChild}
-            onInviteTeamMember={onInviteTeamMember}
-            onDailyReport={onDailyReport}
-          />
-
-          {/* Notification Badge - Next to settings */}
-          <ChildNotificationBadge
-            childId={child.id}
-            onClick={onNotificationClick}
-            size="small"
-            color="error"
-            showIcon={true}
-          />
-        </Box>
-
-        {/* Age and Role Chip Row */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: { xs: 0.25, md: 0.5 }, flexWrap: 'wrap' }}>
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{ fontSize: { xs: '1rem', md: '1.2rem' }, lineHeight: 1.1 }}
-          >
-            Age {child.age}
-          </Typography>
-
-          {/* Role Chips */}
-          {allChips.map((chip, index) => (
-            <Chip
-              key={index}
-              label={chip.label}
-              size="small"
-              variant={chip.variant || 'outlined'}
-              color={chip.sx ? undefined : (chip.color || 'default')}
-              sx={{
-                height: { xs: 22, md: 24 },
-                fontSize: { xs: '0.68rem', md: '0.75rem' },
-                fontWeight: chip.sx?.fontWeight || 600,
-                minWidth: { xs: 'unset', md: '80px' },
-                px: { xs: 0.35, md: 0.75 },
-                ...chip.sx, // Apply the role colors
-                // Ensure the colors are applied with higher specificity
-                '&.MuiChip-root': {
-                  backgroundColor: chip.sx?.backgroundColor,
-                  color: chip.sx?.color,
-                  border: chip.sx?.border,
-                }
-              }}
+            <ChildManagementMenu
+              child={child}
+              userRole={userRole}
+              canAddData={canAddData}
+              onEditChild={onEditChild}
+              onDeleteChild={onDeleteChild}
+              onInviteTeamMember={onInviteTeamMember}
+              onDailyReport={onDailyReport}
             />
-          ))}
-        </Box>
+            <ChildNotificationBadge
+              childId={child.id}
+              onClick={onNotificationClick}
+              size="small"
+              color="error"
+              showIcon={true}
+            />
+          </Box>
+        ) : (
+          <>
+            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.25, mb: { xs: 0.25, md: 0.5 } }}>
+              <Typography
+                variant="h5"
+                sx={{
+                  flex: 1,
+                  minWidth: 0,
+                  fontWeight: 700,
+                  fontSize: { xs: '1.05rem', md: '1.4rem' },
+                  lineHeight: { xs: 1.15, md: 1.2 },
+                  overflow: { xs: 'visible', md: 'hidden' },
+                  textOverflow: { xs: 'clip', md: 'ellipsis' },
+                  whiteSpace: { xs: 'normal', md: 'nowrap' },
+                  color: 'text.primary'
+                }}
+                title={child.name}
+              >
+                {child.name}
+              </Typography>
 
-        {/* Medical Info Section - Clean Text Line */}
+              <ChildManagementMenu
+                child={child}
+                userRole={userRole}
+                canAddData={canAddData}
+                onEditChild={onEditChild}
+                onDeleteChild={onDeleteChild}
+                onInviteTeamMember={onInviteTeamMember}
+                onDailyReport={onDailyReport}
+              />
+
+              <ChildNotificationBadge
+                childId={child.id}
+                onClick={onNotificationClick}
+                size="small"
+                color="error"
+                showIcon={true}
+              />
+            </Box>
+
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: { xs: 0.25, md: 0.5 }, flexWrap: 'wrap' }}>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ fontSize: { xs: '1rem', md: '1.2rem' }, lineHeight: 1.1 }}
+              >
+                Age {child.age}
+              </Typography>
+
+              {allChips.map((chip, index) => (
+                <Chip
+                  key={index}
+                  label={chip.label}
+                  size="small"
+                  variant={chip.variant || 'outlined'}
+                  color={chip.sx ? undefined : (chip.color || 'default')}
+                  sx={{
+                    height: { xs: 22, md: 24 },
+                    fontSize: { xs: '0.68rem', md: '0.75rem' },
+                    fontWeight: chip.sx?.fontWeight || 600,
+                    minWidth: { xs: 'unset', md: '80px' },
+                    px: { xs: 0.35, md: 0.75 },
+                    ...chip.sx,
+                    '&.MuiChip-root': {
+                      backgroundColor: chip.sx?.backgroundColor,
+                      color: chip.sx?.color,
+                      border: chip.sx?.border,
+                    }
+                  }}
+                />
+              ))}
+            </Box>
+          </>
+        )}
+
         {(child.diagnosis || child.concerns || child.conditions || child.medicalProfile?.foodAllergies?.length > 0) && (
           <MedicalInfoDisplay
             diagnosis={child.diagnosis || (child.concerns && child.concerns[0]?.label) || (child.conditions && child.conditions[0])}

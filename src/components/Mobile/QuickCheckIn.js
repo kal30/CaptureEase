@@ -11,6 +11,7 @@ import {
   CircularProgress,
   Stack,
   Slide,
+  Avatar,
 } from '@mui/material';
 import {
   Close as CloseIcon,
@@ -216,6 +217,33 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
       }}
     >
       <CardContent sx={{ p: { xs: 2, md: 2.25 } }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            mb: 1.25,
+            px: 0.25,
+          }}
+        >
+          <Avatar
+            src={child.profilePhoto}
+            alt={child.name}
+            sx={{
+              width: 32,
+              height: 32,
+              fontSize: '0.95rem',
+              fontWeight: 700,
+              bgcolor: 'primary.main',
+            }}
+          >
+            {!child.profilePhoto && child.name?.[0]?.toUpperCase()}
+          </Avatar>
+          <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, color: '#51607a' }}>
+            Logging for {child.name}
+          </Typography>
+        </Box>
+
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
             <Typography sx={{ fontSize: '1.9rem', lineHeight: 1 }}>
