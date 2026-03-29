@@ -107,7 +107,7 @@ const JournalDetails = ({ entry }) => {
             </Box>
           </Box>
         ) : (
-          <Typography variant="body2" sx={{ color: 'text.primary', mb: 0, mt: -0.1, lineHeight: 1.35 }}>
+          <Typography variant="body2" sx={{ color: 'text.primary', mb: 0, mt: -0.1, lineHeight: { xs: 1.28, md: 1.35 }, fontSize: { xs: '0.92rem', md: '0.875rem' } }}>
             {entry.text.length > 150 ? `${entry.text.substring(0, 150)}...` : entry.text}
           </Typography>
         )
@@ -116,12 +116,12 @@ const JournalDetails = ({ entry }) => {
       {!entry.mediaURL && firstAttachedPhoto && (
         <Box
           sx={{
-            mt: 0.5,
+            mt: 0.4,
             borderRadius: 1,
             overflow: 'hidden',
             border: '1px solid',
             borderColor: 'grey.200',
-            maxWidth: 220,
+            maxWidth: { xs: 180, md: 220 },
           }}
         >
           <Box
@@ -132,7 +132,7 @@ const JournalDetails = ({ entry }) => {
               display: 'block',
               width: '100%',
               height: 'auto',
-              maxHeight: 180,
+              maxHeight: { xs: 140, md: 180 },
               objectFit: 'cover',
             }}
           />
@@ -141,8 +141,8 @@ const JournalDetails = ({ entry }) => {
 
       {/* Show media if present */}
       {(entry.mediaURL || firstAttachedPhoto || entry.voiceMemoURL) && (
-        <Box sx={{ mt: 0.35, p: 0.75, bgcolor: 'grey.50', borderRadius: 1, border: '1px solid', borderColor: 'grey.200' }}>
-          <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.7rem', fontWeight: 500 }}>
+        <Box sx={{ mt: 0.3, p: { xs: 0.6, md: 0.75 }, bgcolor: 'grey.50', borderRadius: 1, border: '1px solid', borderColor: 'grey.200' }}>
+          <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: { xs: '0.66rem', md: '0.7rem' }, fontWeight: 500 }}>
             📎 Media attached
             {(entry.mediaURL || firstAttachedPhoto) && ' • Photo/Video'}
             {entry.voiceMemoURL && ' • Voice Memo'}
@@ -151,14 +151,14 @@ const JournalDetails = ({ entry }) => {
       )}
 
       {!isEditing && canEdit && (
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.25, mt: 0 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.15, mt: 0 }}>
           <Tooltip title="Edit entry">
-            <IconButton size="small" onClick={() => setIsEditing(true)} sx={{ p: 0.5 }}>
+            <IconButton size="small" onClick={() => setIsEditing(true)} sx={{ p: { xs: 0.35, md: 0.5 } }}>
               <EditIcon fontSize="small" />
             </IconButton>
           </Tooltip>
           <Tooltip title="Delete entry">
-            <IconButton size="small" color="error" onClick={handleDelete} sx={{ p: 0.5 }}>
+            <IconButton size="small" color="error" onClick={handleDelete} sx={{ p: { xs: 0.35, md: 0.5 } }}>
               <DeleteIcon fontSize="small" />
             </IconButton>
           </Tooltip>

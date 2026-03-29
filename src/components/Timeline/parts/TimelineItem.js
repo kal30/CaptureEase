@@ -11,15 +11,15 @@ const TimelineItem = ({
   cardBackground = '#ffffff',
   cardBorderColor = 'rgba(148, 163, 184, 0.18)',
 }) => (
-  <Box sx={{ position: 'relative', pb: isLast ? 0 : 2 }} role="listitem" aria-label={ariaLabel}>
+  <Box sx={{ position: 'relative', pb: isLast ? 0 : { xs: 1.25, md: 2 } }} role="listitem" aria-label={ariaLabel}>
     {!isFirst && (
       <Box
         sx={{
           position: 'absolute',
-          left: 19,
+          left: { xs: 16, md: 19 },
           top: 0,
-          height: 12,
-          width: 4,
+          height: { xs: 8, md: 12 },
+          width: { xs: 3, md: 4 },
           borderRadius: 999,
           bgcolor: color,
           zIndex: 1,
@@ -27,35 +27,35 @@ const TimelineItem = ({
       />
     )}
 
-    <Box
-      sx={{
-        position: 'absolute',
-        left: 12,
-        top: 0,
-        width: 18,
-        height: 18,
-        borderRadius: '50%',
-        bgcolor: color,
-        border: '3px solid',
-        borderColor: 'background.paper',
-        zIndex: 2,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: '0.7rem',
-      }}
-    >
-      {icon || '●'}
+      <Box
+        sx={{
+          position: 'absolute',
+          left: { xs: 10, md: 12 },
+          top: 0,
+          width: { xs: 14, md: 18 },
+          height: { xs: 14, md: 18 },
+          borderRadius: '50%',
+          bgcolor: color,
+          border: { xs: '2px solid', md: '3px solid' },
+          borderColor: 'background.paper',
+          zIndex: 2,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: { xs: '0.58rem', md: '0.7rem' },
+        }}
+      >
+        {icon || '●'}
     </Box>
 
     {!isLast && (
       <Box
         sx={{
           position: 'absolute',
-          left: 19,
-          top: 18,
+          left: { xs: 16, md: 19 },
+          top: { xs: 14, md: 18 },
           bottom: 0,
-          width: 4,
+          width: { xs: 3, md: 4 },
           borderRadius: 999,
           bgcolor: color,
           zIndex: 1,
@@ -65,13 +65,13 @@ const TimelineItem = ({
 
     <Box
       sx={{
-        ml: 5.5,
-        px: 1.5,
-        py: 1.25,
+        ml: { xs: 4.25, md: 5.5 },
+        px: { xs: 1.1, md: 1.5 },
+        py: { xs: 0.9, md: 1.25 },
         bgcolor: cardBackground,
         borderRadius: 1,
         border: `1px solid ${cardBorderColor}`,
-        boxShadow: '0 6px 16px rgba(15, 23, 42, 0.045)',
+        boxShadow: { xs: '0 3px 10px rgba(15, 23, 42, 0.035)', md: '0 6px 16px rgba(15, 23, 42, 0.045)' },
       }}
     >
       {children}

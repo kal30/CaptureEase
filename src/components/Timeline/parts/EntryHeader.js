@@ -34,21 +34,21 @@ const EntryHeader = ({
   }, [timeString, time, timeFormatter, safeLocale, timeOptions]);
 
   return (
-    <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1, mb: 0.25 }}>
+    <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: { xs: 0.75, md: 1 }, mb: { xs: 0.15, md: 0.25 } }}>
       <Box sx={{ minWidth: 0 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-          <Typography variant="body2" sx={{ fontWeight: 700, color: entryColor, lineHeight: 1.15 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.6, md: 1 }, flexWrap: 'wrap' }}>
+          <Typography variant="body2" sx={{ fontWeight: 700, color: entryColor, lineHeight: 1.15, fontSize: { xs: '0.92rem', md: '0.875rem' } }}>
             {entryLabel}
           </Typography>
           {badgeLabel ? (
             <Box
               sx={{
-                px: 0.8,
-                py: 0.2,
+                px: { xs: 0.6, md: 0.8 },
+                py: { xs: 0.15, md: 0.2 },
                 borderRadius: 999,
                 bgcolor: badgeBg || '#f5f5f5',
                 color: badgeColor || '#555555',
-                fontSize: '0.68rem',
+                fontSize: { xs: '0.62rem', md: '0.68rem' },
                 fontWeight: 800,
                 lineHeight: 1.2,
               }}
@@ -60,14 +60,14 @@ const EntryHeader = ({
         {computedTime && (
           <Typography
             variant="caption"
-            sx={{ color: 'text.secondary', fontSize: '0.7rem', fontWeight: 500, lineHeight: 1.05 }}
+            sx={{ color: 'text.secondary', fontSize: { xs: '0.66rem', md: '0.7rem' }, fontWeight: 500, lineHeight: 1.05 }}
           >
             {computedTime}
           </Typography>
         )}
       </Box>
       {loggedByUser && (
-        <Typography variant="caption" sx={{ color: 'text.secondary', flexShrink: 0 }}>
+        <Typography variant="caption" sx={{ color: 'text.secondary', flexShrink: 0, fontSize: { xs: '0.68rem', md: '0.75rem' }, lineHeight: 1.15 }}>
           Logged by {loggedByUser}
         </Typography>
       )}
