@@ -274,6 +274,7 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
               variant="outlined"
               onClick={() => photoInputRef.current?.click()}
               sx={{
+                minHeight: 44,
                 borderRadius: '10px',
                 textTransform: 'none',
                 fontWeight: 700,
@@ -283,6 +284,7 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
                 bgcolor: '#f1f3f6',
                 px: 2.2,
                 py: 0.85,
+                flex: { xs: 1, sm: '0 0 auto' },
                 '&:hover': {
                   bgcolor: '#e6eaf0',
                   borderColor: '#c8ced8',
@@ -299,6 +301,7 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
               variant="outlined"
               onClick={() => setImportantMoment((prev) => !prev)}
               sx={{
+                minHeight: 44,
                 borderRadius: '10px',
                 textTransform: 'none',
                 fontWeight: 800,
@@ -308,6 +311,7 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
                 bgcolor: importantMoment ? '#FFFBF0' : '#f1f3f6',
                 px: 1.8,
                 py: 0.85,
+                flex: { xs: 1, sm: '0 0 auto' },
                 '&:hover': {
                   bgcolor: importantMoment ? '#FFF4CC' : '#e6eaf0',
                   borderColor: importantMoment ? '#E0A800' : '#c8ced8',

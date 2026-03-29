@@ -5,6 +5,7 @@ import "./i18n";
 import "./assets/css/App.css";
 import reportWebVitals from "./reportWebVitals";
 import { ErrorProvider } from "./contexts/ErrorContext";
+import { register as registerServiceWorker } from "./serviceWorkerRegistration";
 // import suppressAllResizeObserverErrors from "./utils/suppressAllResizeObserverErrors";
 
 // Completely suppress ResizeObserver loop errors - TEMPORARILY DISABLED FOR TESTING
@@ -23,3 +24,4 @@ root.render(
 // to log results (for example: reportWebVitals(console.log))
 // or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
 reportWebVitals();
+registerServiceWorker();

@@ -14,9 +14,17 @@ const JournalDetails = ({ entry }) => {
   const [editText, setEditText] = useState(entry.text || '');
   const [isSaving, setIsSaving] = useState(false);
   const canEdit = (entry.userId || entry.authorId || entry.createdBy) === auth.currentUser?.uid;
+  const firstAttachedPhoto = Array.isArray(entry.mediaUrls) && entry.mediaUrls.length > 0
+    ? (typeof entry.mediaUrls[0] === 'string' ? entry.mediaUrls[0] : entry.mediaUrls[0]?.url)
+    : null;
 
   // Don't render if entry has no meaningful content
-  const hasContent = entry.text || (entry.tags && entry.tags.length > 0) || entry.mediaURL || entry.voiceMemoURL;
+  const hasContent =
+    entry.text ||
+    (entry.tags && entry.tags.length > 0) ||
+    entry.mediaURL ||
+    firstAttachedPhoto ||
+    entry.voiceMemoURL;
   
   if (!hasContent) {
     return null;
@@ -105,12 +113,38 @@ const JournalDetails = ({ entry }) => {
         )
       )}
 
+      {!entry.mediaURL && firstAttachedPhoto && (
+        <Box
+          sx={{
+            mt: 0.5,
+            borderRadius: 1,
+            overflow: 'hidden',
+            border: '1px solid',
+            borderColor: 'grey.200',
+            maxWidth: 220,
+          }}
+        >
+          <Box
+            component="img"
+            src={firstAttachedPhoto}
+            alt="Attached note"
+            sx={{
+              display: 'block',
+              width: '100%',
+              height: 'auto',
+              maxHeight: 180,
+              objectFit: 'cover',
+            }}
+          />
+        </Box>
+      )}
+
       {/* Show media if present */}
-      {(entry.mediaURL || entry.voiceMemoURL) && (
+      {(entry.mediaURL || firstAttachedPhoto || entry.voiceMemoURL) && (
         <Box sx={{ mt: 0.35, p: 0.75, bgcolor: 'grey.50', borderRadius: 1, border: '1px solid', borderColor: 'grey.200' }}>
           <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.7rem', fontWeight: 500 }}>
             📎 Media attached
-            {entry.mediaURL && ' • Photo/Video'}
+            {(entry.mediaURL || firstAttachedPhoto) && ' • Photo/Video'}
             {entry.voiceMemoURL && ' • Voice Memo'}
           </Typography>
         </Box>

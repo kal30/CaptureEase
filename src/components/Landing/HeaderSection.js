@@ -102,7 +102,7 @@ const HeaderSection = () => {
 
             <Typography sx={landingTypography.heroBody}>
               Everyone caring for your child sees the same timeline in real
-              time. Caregiver logs a meltdown at 1pm. You see it before the
+              time. Caregiver logs a meltdown at 1 PM. You see it before the
               2 PM appointment. Therapist walks in already knowing. No more
               "I didn't know that happened."
             </Typography>
