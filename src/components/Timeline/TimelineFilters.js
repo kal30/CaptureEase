@@ -44,6 +44,7 @@ const TimelineFilters = ({
   onDateChange,
   summary: _summary = {},
   compact = false,
+  hideDateFilter = false,
   sx = {}
 }) => {
   const [datePickerAnchor, setDatePickerAnchor] = useState(null);
@@ -165,34 +166,38 @@ const TimelineFilters = ({
         />
 
         {/* Date Picker */}
-        <Chip
-          size="small"
-          icon={<CalendarIcon sx={{ fontSize: 14 }} />}
-          label={selectedDate?.toLocaleDateString() || 'Select Date'}
-          onClick={handleDatePickerOpen}
-          variant="outlined"
-          sx={{ fontSize: '0.7rem', height: 24 }}
-        />
-        
-        <Popover
-          open={Boolean(datePickerAnchor)}
-          anchorEl={datePickerAnchor}
-          onClose={handleDatePickerClose}
-          anchorOrigin={{
-            vertical: 'bottom',
-            horizontal: 'left',
-          }}
-          disableAutoFocus
-        >
-          <Box sx={{ p: 1 }}>
-            <MiniCalendar
-              entries={[]} 
-              onDayClick={(day, dayEntries, date) => handleDateChange(date)}
-              currentMonth={selectedDate || new Date()}
-              selectedDate={selectedDate}
+        {!hideDateFilter && (
+          <>
+            <Chip
+              size="small"
+              icon={<CalendarIcon sx={{ fontSize: 14 }} />}
+              label={selectedDate?.toLocaleDateString() || 'Select Date'}
+              onClick={handleDatePickerOpen}
+              variant="outlined"
+              sx={{ fontSize: '0.7rem', height: 24 }}
             />
-          </Box>
-        </Popover>
+            
+            <Popover
+              open={Boolean(datePickerAnchor)}
+              anchorEl={datePickerAnchor}
+              onClose={handleDatePickerClose}
+              anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'left',
+              }}
+              disableAutoFocus
+            >
+              <Box sx={{ p: 1 }}>
+                <MiniCalendar
+                  entries={[]} 
+                  onDayClick={(day, dayEntries, date) => handleDateChange(date)}
+                  currentMonth={selectedDate || new Date()}
+                  selectedDate={selectedDate}
+                />
+              </Box>
+            </Popover>
+          </>
+        )}
 
         <Chip
           label="⭐ Important Moments"

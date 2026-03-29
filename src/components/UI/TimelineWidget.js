@@ -10,13 +10,18 @@ import {
   ListItemText,
   ListItemAvatar,
   Avatar,
+  Button,
+  Chip,
+  Popover,
+  useMediaQuery,
 } from '@mui/material';
 import {
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
   Timeline as TimelineIcon,
+  CalendarToday as CalendarIcon,
 } from '@mui/icons-material';
-import { alpha } from '@mui/material/styles';
+import { alpha, useTheme } from '@mui/material/styles';
 import MiniCalendar from './MiniCalendar';
 import { UnifiedTimeline, TimelineFilters } from '../Timeline';
 import { useTimelineProgress } from '../../hooks/useTimelineProgress';
@@ -43,8 +48,11 @@ const TimelineWidget = ({
   variant = 'full',
   showUnifiedLog = true
 }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [expanded, setExpanded] = useState(defaultExpanded);
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [mobileCalendarAnchor, setMobileCalendarAnchor] = useState(null);
 
   const [timelineFilters, setTimelineFilters] = useState({}); // Unified timeline filters
   
@@ -89,6 +97,14 @@ const TimelineWidget = ({
       if (!expanded) {
         setExpanded(true);
       }
+    }
+  };
+
+  const handleMobileDateChange = (date) => {
+    setSelectedDate(date);
+    setMobileCalendarAnchor(null);
+    if (!expanded) {
+      setExpanded(true);
     }
   };
 
@@ -191,6 +207,101 @@ const TimelineWidget = ({
     );
   };
 
+  const renderMobileTimelineContent = () => (
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+      <Box onClick={(e) => e.stopPropagation()}>
+        <TimelineFilters
+          filters={timelineFilters}
+          onFiltersChange={setTimelineFilters}
+          selectedDate={selectedDate}
+          onDateChange={(date) => setSelectedDate(date)}
+          summary={{}}
+          compact={true}
+          hideDateFilter={true}
+        />
+      </Box>
+
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 1,
+          flexWrap: 'wrap',
+          p: 1,
+          borderRadius: 1.5,
+          border: '1px solid',
+          borderColor: 'divider',
+          bgcolor: 'background.default',
+        }}
+      >
+        <Chip
+          icon={<CalendarIcon sx={{ fontSize: 16 }} />}
+          label={selectedDate.toLocaleDateString('en-US', {
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric',
+          })}
+          variant="outlined"
+          sx={{
+            height: 30,
+            fontSize: '0.78rem',
+            fontWeight: 600,
+            maxWidth: '100%',
+          }}
+        />
+
+        <Button
+          size="small"
+          variant="text"
+          startIcon={<CalendarIcon sx={{ fontSize: 18 }} />}
+          onClick={(event) => {
+            event.stopPropagation();
+            setMobileCalendarAnchor(event.currentTarget);
+          }}
+          sx={{
+            minHeight: 32,
+            px: 1,
+            fontSize: '0.78rem',
+            fontWeight: 700,
+            textTransform: 'none',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          Open Calendar
+        </Button>
+      </Box>
+
+      <UnifiedTimeline 
+        child={child}
+        selectedDate={selectedDate}
+        filters={timelineFilters}
+        onFiltersChange={setTimelineFilters}
+        onEmptyStateClick={handleEmptyStateClick}
+        showFilters={false}
+        showDaySummary={false}
+      />
+
+      <Popover
+        open={Boolean(mobileCalendarAnchor)}
+        anchorEl={mobileCalendarAnchor}
+        onClose={() => setMobileCalendarAnchor(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+        disableAutoFocus
+      >
+        <Box sx={{ p: 1 }}>
+          <MiniCalendar
+            entries={childSpecificEntries}
+            onDayClick={(day, dayEntries, date) => handleMobileDateChange(date)}
+            currentMonth={selectedDate}
+            selectedDate={selectedDate}
+          />
+        </Box>
+      </Popover>
+    </Box>
+  );
+
   // Render legacy content (original recent entries + calendar)
   const renderLegacyContent = () => {
     return (
@@ -284,7 +395,7 @@ const TimelineWidget = ({
                 </Box>
                 
                 {/* Timeline Filters */}
-                {showUnifiedLog && expanded && (
+                {showUnifiedLog && expanded && !isMobile && (
                   <Box onClick={(e) => e.stopPropagation()}>
                     <TimelineFilters
                       filters={timelineFilters}
@@ -321,44 +432,48 @@ const TimelineWidget = ({
             onClick={(e) => e.stopPropagation()}
           >
             {showUnifiedLog ? (
-              <Box sx={{ 
-                display: 'flex', 
-                gap: { xs: 2, sm: 2, md: 3 }, 
-                flexDirection: { xs: 'column', md: 'row' },
-                alignItems: { xs: 'stretch', md: 'flex-start' }
-              }}>
-                {/* Mini Calendar */}
+              isMobile ? (
+                renderMobileTimelineContent()
+              ) : (
                 <Box sx={{ 
-                  flexShrink: 0,
-                  width: { xs: '100%', md: 'auto' },
-                  display: 'flex',
-                  justifyContent: { xs: 'center', md: 'flex-start' }
+                  display: 'flex', 
+                  gap: { xs: 2, sm: 2, md: 3 }, 
+                  flexDirection: { xs: 'column', md: 'row' },
+                  alignItems: { xs: 'stretch', md: 'flex-start' }
                 }}>
-                  <MiniCalendar
-                    entries={childSpecificEntries}
-                    onDayClick={handleDayClick}
-                    currentMonth={new Date()}
-                    selectedDate={selectedDate}
-                  />
+                  {/* Mini Calendar */}
+                  <Box sx={{ 
+                    flexShrink: 0,
+                    width: { xs: '100%', md: 'auto' },
+                    display: 'flex',
+                    justifyContent: { xs: 'center', md: 'flex-start' }
+                  }}>
+                    <MiniCalendar
+                      entries={childSpecificEntries}
+                      onDayClick={handleDayClick}
+                      currentMonth={new Date()}
+                      selectedDate={selectedDate}
+                    />
+                  </Box>
+                  
+                  {/* Unified Timeline */}
+                  <Box sx={{ 
+                    flex: { xs: 'none', md: 1 }, 
+                    minWidth: 0,
+                    width: { xs: '100%', md: 'auto' },
+                  }}>
+                    <UnifiedTimeline 
+                      child={child}
+                      selectedDate={selectedDate}
+                      filters={timelineFilters}
+                      onFiltersChange={setTimelineFilters}
+                      onEmptyStateClick={handleEmptyStateClick}
+                      showFilters={false}
+                      showDaySummary={false}
+                    />
+                  </Box>
                 </Box>
-                
-                {/* Unified Timeline */}
-                <Box sx={{ 
-                  flex: { xs: 'none', md: 1 }, 
-                  minWidth: 0,
-                  width: { xs: '100%', md: 'auto' },
-                }}>
-                  <UnifiedTimeline 
-                    child={child}
-                    selectedDate={selectedDate}
-                    filters={timelineFilters}
-                    onFiltersChange={setTimelineFilters}
-                    onEmptyStateClick={handleEmptyStateClick}
-                    showFilters={false}
-                    showDaySummary={false}
-                  />
-                </Box>
-              </Box>
+              )
             ) : renderLegacyContent()}
             
           </Box>
