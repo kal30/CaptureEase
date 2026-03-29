@@ -1,6 +1,7 @@
 import React, { memo } from 'react';
 import { Box, Chip } from '@mui/material';
 import Typography from '@mui/material/Typography';
+import { useMediaQuery, useTheme } from '@mui/material';
 import ChildAvatar from '../../UI/ChildAvatar';
 import ChildNotificationBadge from '../../UI/ChildNotificationBadge';
 import CareTeamDisplay from '../../UI/CareTeamDisplay';
@@ -37,6 +38,8 @@ const ChildCardHeader = memo(({
   onNotificationClick,
   sx = {}
 }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const allChips = useChildCardChips(userRole, completedToday);
   const hasEntriesToday = (timelineSummary.todayCount || 0) > 0;
   const metricChips = [
@@ -48,7 +51,7 @@ const ChildCardHeader = memo(({
           variant: 'filled',
         }
       : null,
-    timelineSummary.weekCount > 0
+    !isMobile && timelineSummary.weekCount > 0
       ? {
           key: 'week',
           label: `${timelineSummary.weekCount} this week`,
@@ -71,26 +74,27 @@ const ChildCardHeader = memo(({
   ].filter(Boolean);
 
   return (
-    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, ...sx }}>
+    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: { xs: 1.25, md: 2 }, ...sx }}>
       {/* Avatar */}
       <ChildAvatar
         child={child}
         userRole={userRole}
-        size="large"
+        size={isMobile ? 'medium' : 'large'}
         showRole={false} // Don't show role indicator on avatar since we have chip
       />
 
       {/* Child Info and Management Menu Row */}
       <Box sx={{ flex: 1, minWidth: 0 }}>
         {/* Name, Settings, and Notification Row */}
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.25, mb: 0.5 }}>
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.25, mb: { xs: 0.25, md: 0.5 } }}>
           <Typography
             variant="h5"
             sx={{
               flex: 1,
               minWidth: 0,
               fontWeight: 700,
-              fontSize: { xs: '1.2rem', md: '1.4rem' },
+              fontSize: { xs: '1.05rem', md: '1.4rem' },
+              lineHeight: { xs: 1.15, md: 1.2 },
               overflow: { xs: 'visible', md: 'hidden' },
               textOverflow: { xs: 'clip', md: 'ellipsis' },
               whiteSpace: { xs: 'normal', md: 'nowrap' },
@@ -123,11 +127,11 @@ const ChildCardHeader = memo(({
         </Box>
 
         {/* Age and Role Chip Row */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5, flexWrap: 'wrap' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: { xs: 0.25, md: 0.5 }, flexWrap: 'wrap' }}>
           <Typography
             variant="body2"
             color="text.secondary"
-            sx={{ fontSize: '1.2rem' }}
+            sx={{ fontSize: { xs: '1rem', md: '1.2rem' }, lineHeight: 1.1 }}
           >
             Age {child.age}
           </Typography>
@@ -141,10 +145,11 @@ const ChildCardHeader = memo(({
               variant={chip.variant || 'outlined'}
               color={chip.sx ? undefined : (chip.color || 'default')}
               sx={{
-                height: 24, // Slightly taller for better visibility
-                fontSize: '0.75rem',
+                height: { xs: 22, md: 24 },
+                fontSize: { xs: '0.68rem', md: '0.75rem' },
                 fontWeight: chip.sx?.fontWeight || 600,
-                minWidth: '80px', // Ensure minimum width
+                minWidth: { xs: 'unset', md: '80px' },
+                px: { xs: 0.35, md: 0.75 },
                 ...chip.sx, // Apply the role colors
                 // Ensure the colors are applied with higher specificity
                 '&.MuiChip-root': {
@@ -171,14 +176,18 @@ const ChildCardHeader = memo(({
             child={child}
             userRole={userRole}
             onInviteTeamMember={onInviteTeamMember}
-            maxVisible={4}
+            maxVisible={isMobile ? 3 : 4}
+            sx={{
+              mt: { xs: 0.5, md: 1 },
+              p: { xs: 1, md: 1.5 },
+            }}
           />
         )}
 
         {(metricChips.length > 0 || timelineSummary.lastActivityTime || !hasEntriesToday) && (
-          <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+          <Box sx={{ mt: { xs: 0.75, md: 1 }, display: 'flex', flexDirection: 'column', gap: { xs: 0.5, md: 0.75 } }}>
             {metricChips.length > 0 && (
-              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+              <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
                 {metricChips.map((chip) => (
                   <Chip
                     key={chip.key}
@@ -186,7 +195,11 @@ const ChildCardHeader = memo(({
                     size="small"
                     color={chip.color}
                     variant={chip.variant}
-                    sx={chip.sx}
+                    sx={{
+                      height: { xs: 24, md: 26 },
+                      fontSize: { xs: '0.78rem', md: '0.82rem' },
+                      ...chip.sx,
+                    }}
                   />
                 ))}
               </Box>
@@ -196,7 +209,7 @@ const ChildCardHeader = memo(({
               <Typography
                 variant="body2"
                 color="text.secondary"
-                sx={{ fontSize: '0.82rem', fontWeight: 500 }}
+                sx={{ fontSize: { xs: '0.78rem', md: '0.82rem' }, fontWeight: 500, lineHeight: 1.25 }}
               >
                 No entries yet today — tap to log something
               </Typography>
@@ -206,7 +219,7 @@ const ChildCardHeader = memo(({
               <Typography
                 variant="caption"
                 color="text.secondary"
-                sx={{ display: 'block', fontSize: '0.78rem', fontWeight: 500 }}
+                sx={{ display: 'block', fontSize: { xs: '0.72rem', md: '0.78rem' }, fontWeight: 500, lineHeight: 1.2 }}
               >
                 Last activity at {timelineSummary.lastActivityTime}
               </Typography>
