@@ -14,6 +14,7 @@ import {
   IconButton,
   Popover
 } from '@mui/material';
+import { useMediaQuery, useTheme } from '@mui/material';
 import {
   Person as PersonIcon,
   Today as DateIcon,
@@ -47,6 +48,8 @@ const TimelineFilters = ({
   hideDateFilter = false,
   sx = {}
 }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [datePickerAnchor, setDatePickerAnchor] = useState(null);
   const [categoryMenuAnchor, setCategoryMenuAnchor] = useState(null);
   const [searchText, setSearchText] = useState(filters.searchText || '');
@@ -142,7 +145,23 @@ const TimelineFilters = ({
   if (compact) {
     // Compact mode for header display
     return (
-      <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap', ...sx }}>
+      <Box
+        sx={{
+          display: 'flex',
+          gap: 1,
+          alignItems: 'center',
+          flexWrap: isMobile ? 'nowrap' : 'wrap',
+          overflowX: isMobile ? 'auto' : 'visible',
+          overflowY: 'hidden',
+          pb: isMobile ? 0.25 : 0,
+          pr: 0.25,
+          scrollbarWidth: 'none',
+          '&::-webkit-scrollbar': {
+            display: 'none',
+          },
+          ...sx,
+        }}
+      >
         {/* Search Field */}
         <TextField
           size="small"
@@ -154,12 +173,15 @@ const TimelineFilters = ({
             sx: { height: 24, fontSize: '0.75rem' }
           }}
           sx={{
-            minWidth: 120,
+            minWidth: isMobile ? 180 : 120,
+            width: isMobile ? 180 : 'auto',
+            flex: '0 0 auto',
             '& .MuiOutlinedInput-root': {
-              height: 24,
+              height: isMobile ? 28 : 24,
+              borderRadius: isMobile ? 14 : undefined,
               '& input': {
                 py: 0,
-                fontSize: '0.75rem'
+                fontSize: isMobile ? '0.8rem' : '0.75rem'
               }
             }
           }}
@@ -174,7 +196,7 @@ const TimelineFilters = ({
               label={selectedDate?.toLocaleDateString() || 'Select Date'}
               onClick={handleDatePickerOpen}
               variant="outlined"
-              sx={{ fontSize: '0.7rem', height: 24 }}
+              sx={{ fontSize: isMobile ? '0.78rem' : '0.7rem', height: isMobile ? 30 : 24, flex: '0 0 auto' }}
             />
             
             <Popover
@@ -214,7 +236,7 @@ const TimelineFilters = ({
                 : [...remainingTypes, ...IMPORTANT_FILTER_VALUES],
             });
           }}
-          sx={{ fontSize: '0.7rem', height: 24 }}
+          sx={{ fontSize: isMobile ? '0.78rem' : '0.7rem', height: isMobile ? 30 : 24, flex: '0 0 auto' }}
         />
 
         <Chip
@@ -224,7 +246,7 @@ const TimelineFilters = ({
           onClick={handleCategoryMenuOpen}
           size="small"
           variant={selectedCategoryType ? 'filled' : 'outlined'}
-          sx={{ fontSize: '0.7rem', height: 24 }}
+          sx={{ fontSize: isMobile ? '0.78rem' : '0.7rem', height: isMobile ? 30 : 24, flex: '0 0 auto' }}
         />
 
         <Popover
@@ -253,10 +275,10 @@ const TimelineFilters = ({
           <IconButton
             size="small"
             onClick={clearAllFilters}
-            sx={{ width: 24, height: 24 }}
+            sx={{ width: isMobile ? 30 : 24, height: isMobile ? 30 : 24, flex: '0 0 auto' }}
             title="Clear all filters"
           >
-            <ClearIcon sx={{ fontSize: 14 }} />
+            <ClearIcon sx={{ fontSize: isMobile ? 16 : 14 }} />
           </IconButton>
         )}
       </Box>
