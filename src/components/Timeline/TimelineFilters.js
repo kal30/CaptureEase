@@ -53,6 +53,7 @@ const TimelineFilters = ({
   const [datePickerAnchor, setDatePickerAnchor] = useState(null);
   const [categoryMenuAnchor, setCategoryMenuAnchor] = useState(null);
   const [searchText, setSearchText] = useState(filters.searchText || '');
+  const [searchExpanded, setSearchExpanded] = useState(Boolean(filters.searchText));
 
   const IMPORTANT_FILTER_VALUES = ['incident', 'importantMoment'];
   const CATEGORY_FILTER_VALUES = ['behavior', 'milestone', 'sleep', 'food', 'mood', 'health', 'journal'];
@@ -97,6 +98,7 @@ const TimelineFilters = ({
 
   const clearAllFilters = () => {
     setSearchText('');
+    setSearchExpanded(false);
     onFiltersChange({});
   };
 
@@ -155,6 +157,10 @@ const TimelineFilters = ({
           overflowY: 'hidden',
           pb: isMobile ? 0.25 : 0,
           pr: 0.25,
+          position: isMobile ? 'sticky' : 'static',
+          top: 0,
+          zIndex: 2,
+          backgroundColor: isMobile ? 'background.paper' : 'transparent',
           scrollbarWidth: 'none',
           '&::-webkit-scrollbar': {
             display: 'none',
@@ -162,30 +168,82 @@ const TimelineFilters = ({
           ...sx,
         }}
       >
-        {/* Search Field */}
-        <TextField
-          size="small"
-          placeholder="Search entries..."
-          value={searchText}
-          onChange={handleSearchChange}
-          InputProps={{
-            startAdornment: <SearchIcon sx={{ fontSize: 16, mr: 0.5, color: 'text.secondary' }} />,
-            sx: { height: 24, fontSize: '0.75rem' }
-          }}
-          sx={{
-            minWidth: isMobile ? 180 : 120,
-            width: isMobile ? 180 : 'auto',
-            flex: '0 0 auto',
-            '& .MuiOutlinedInput-root': {
-              height: isMobile ? 28 : 24,
-              borderRadius: isMobile ? 14 : undefined,
-              '& input': {
-                py: 0,
-                fontSize: isMobile ? '0.8rem' : '0.75rem'
+        {isMobile ? (
+          searchExpanded || searchText ? (
+            <TextField
+              size="small"
+              placeholder="Search entries..."
+              value={searchText}
+              onChange={handleSearchChange}
+              InputProps={{
+                startAdornment: <SearchIcon sx={{ fontSize: 16, mr: 0.5, color: 'text.secondary' }} />,
+                endAdornment: (
+                  <IconButton
+                    size="small"
+                    onClick={() => {
+                      setSearchExpanded(false);
+                      setSearchText('');
+                      onFiltersChange({
+                        ...filters,
+                        searchText: undefined,
+                      });
+                    }}
+                    sx={{ mr: -0.5 }}
+                  >
+                    <ClearIcon sx={{ fontSize: 15 }} />
+                  </IconButton>
+                ),
+                sx: { height: 24, fontSize: '0.75rem' }
+              }}
+              sx={{
+                minWidth: 170,
+                width: 170,
+                flex: '0 0 auto',
+                '& .MuiOutlinedInput-root': {
+                  height: 30,
+                  borderRadius: 15,
+                  '& input': {
+                    py: 0,
+                    fontSize: '0.8rem'
+                  }
+                }
+              }}
+            />
+          ) : (
+            <Chip
+              size="small"
+              icon={<SearchIcon sx={{ fontSize: 14 }} />}
+              label="Search"
+              onClick={() => setSearchExpanded(true)}
+              variant="outlined"
+              sx={{ fontSize: '0.78rem', height: 30, flex: '0 0 auto' }}
+            />
+          )
+        ) : (
+          <TextField
+            size="small"
+            placeholder="Search entries..."
+            value={searchText}
+            onChange={handleSearchChange}
+            InputProps={{
+              startAdornment: <SearchIcon sx={{ fontSize: 16, mr: 0.5, color: 'text.secondary' }} />,
+              sx: { height: 24, fontSize: '0.75rem' }
+            }}
+            sx={{
+              minWidth: 120,
+              width: 'auto',
+              flex: '0 0 auto',
+              '& .MuiOutlinedInput-root': {
+                height: isMobile ? 28 : 24,
+                borderRadius: isMobile ? 14 : undefined,
+                '& input': {
+                  py: 0,
+                  fontSize: isMobile ? '0.8rem' : '0.75rem'
+                }
               }
-            }
-          }}
-        />
+            }}
+          />
+        )}
 
         {/* Date Picker */}
         {!hideDateFilter && (
@@ -240,7 +298,7 @@ const TimelineFilters = ({
         />
 
         <Chip
-          label="All"
+          label={selectedCategoryType ? categoryFilterOptions.find((option) => option.value === selectedCategoryType)?.label || 'All' : 'All'}
           deleteIcon={<ArrowDropDownIcon />}
           onDelete={handleCategoryMenuOpen}
           onClick={handleCategoryMenuOpen}

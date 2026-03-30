@@ -164,7 +164,7 @@ const UnifiedTimeline = ({
           tabIndex={onEmptyStateClick ? 0 : undefined}
           sx={{
             textAlign: "center",
-            py: 6,
+            py: 3.5,
             px: 2,
             borderRadius: 2,
             cursor: onEmptyStateClick ? "pointer" : "default",
@@ -186,25 +186,25 @@ const UnifiedTimeline = ({
         >
           <Box
             sx={{
-              width: 64,
-              height: 64,
+              width: 48,
+              height: 48,
               borderRadius: 2,
               display: "inline-flex",
               alignItems: "center",
               justifyContent: "center",
               backgroundColor: "rgba(148, 163, 184, 0.12)",
               color: "text.disabled",
-              mb: 2,
-              fontSize: "1.8rem",
+              mb: 1,
+              fontSize: "1.35rem",
               fontWeight: 700,
             }}
           >
             +
           </Box>
-          <Typography variant="h6" color="text.secondary" gutterBottom>
+          <Typography variant="body1" sx={{ fontWeight: 700 }} color="text.secondary" gutterBottom>
             No entries yet today
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.78rem" }}>
             {Object.keys(filters).length > 0
               ? "Try adjusting your filters or select a different date"
               : "Tap to log something"}

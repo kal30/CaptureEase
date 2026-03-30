@@ -10,7 +10,6 @@ import {
   ListItemText,
   ListItemAvatar,
   Avatar,
-  Button,
   Chip,
   Popover,
   useMediaQuery,
@@ -112,6 +111,17 @@ const TimelineWidget = ({
     onQuickEntry?.(child, 'quick_note');
   };
 
+  const getMobileDateStrip = () => {
+    const days = [];
+    const baseDate = new Date(selectedDate);
+    for (let offset = -3; offset <= 3; offset += 1) {
+      const date = new Date(baseDate);
+      date.setDate(baseDate.getDate() + offset);
+      days.push(date);
+    }
+    return days;
+  };
+
 
   // Render recent entries list
   const renderRecentEntries = () => {
@@ -146,7 +156,7 @@ const TimelineWidget = ({
             },
           }}
         >
-          <TimelineIcon sx={{ fontSize: 32, color: 'text.disabled', mb: 1 }} />
+          <TimelineIcon sx={{ fontSize: 24, color: 'text.disabled', mb: 0.5 }} />
           <Typography variant="body2" color="text.secondary">
             No recent activity
           </Typography>
@@ -208,8 +218,17 @@ const TimelineWidget = ({
   };
 
   const renderMobileTimelineContent = () => (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-      <Box onClick={(e) => e.stopPropagation()}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+      <Box
+        onClick={(e) => e.stopPropagation()}
+        sx={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 2,
+          backgroundColor: 'background.paper',
+          pt: 0.25,
+        }}
+      >
         <TimelineFilters
           filters={timelineFilters}
           onFiltersChange={setTimelineFilters}
@@ -225,51 +244,51 @@ const TimelineWidget = ({
         sx={{
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 1,
-          flexWrap: 'wrap',
-          p: 1,
-          borderRadius: 1.5,
-          border: '1px solid',
-          borderColor: 'divider',
-          bgcolor: 'background.default',
+          gap: 0.75,
+          overflowX: 'auto',
+          pb: 0.5,
+          scrollbarWidth: 'none',
+          '&::-webkit-scrollbar': {
+            display: 'none',
+          },
         }}
       >
-        <Chip
-          icon={<CalendarIcon sx={{ fontSize: 16 }} />}
-          label={selectedDate.toLocaleDateString('en-US', {
-            weekday: 'short',
-            month: 'short',
-            day: 'numeric',
-          })}
-          variant="outlined"
-          sx={{
-            height: 30,
-            fontSize: '0.78rem',
-            fontWeight: 600,
-            maxWidth: '100%',
-          }}
-        />
+        {getMobileDateStrip().map((date) => {
+          const isSelected = date.toDateString() === selectedDate.toDateString();
+          return (
+            <Chip
+              key={date.toISOString()}
+              label={`${date.toLocaleDateString('en-US', { weekday: 'short' })} ${date.getDate()}`}
+              onClick={() => handleMobileDateChange(date)}
+              variant={isSelected ? 'filled' : 'outlined'}
+              color={isSelected ? 'primary' : 'default'}
+              sx={{
+                height: 30,
+                fontSize: '0.76rem',
+                fontWeight: 700,
+                flex: '0 0 auto',
+              }}
+            />
+          );
+        })}
 
-        <Button
+        <IconButton
           size="small"
-          variant="text"
-          startIcon={<CalendarIcon sx={{ fontSize: 18 }} />}
           onClick={(event) => {
             event.stopPropagation();
             setMobileCalendarAnchor(event.currentTarget);
           }}
           sx={{
-            minHeight: 32,
-            px: 1,
-            fontSize: '0.78rem',
-            fontWeight: 700,
-            textTransform: 'none',
-            whiteSpace: 'nowrap',
+            width: 30,
+            height: 30,
+            flex: '0 0 auto',
+            border: '1px solid',
+            borderColor: 'divider',
+            backgroundColor: 'background.default',
           }}
         >
-          Open Calendar
-        </Button>
+          <CalendarIcon sx={{ fontSize: 16 }} />
+        </IconButton>
       </Box>
 
       <UnifiedTimeline 

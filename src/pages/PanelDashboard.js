@@ -116,7 +116,7 @@ const PanelDashboard = () => {
   }
 
   return (
-    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+    <Container maxWidth="xl" sx={{ mt: { xs: 2, md: 4 }, mb: { xs: 3, md: 4 } }}>
       {hook.children.length === 0 ? (
         <Box
           sx={{

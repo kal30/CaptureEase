@@ -182,10 +182,10 @@ const QuickEntrySection = ({
       sx={{
         display: "flex",
         alignItems: "center",
-        gap: 1.25,
+        gap: { xs: 0.75, md: 1.25 },
         px: { xs: 0, md: 2 },
         width: { xs: "100%", md: "auto" },
-        justifyContent: { xs: "center", md: "flex-start" },
+        justifyContent: { xs: "space-between", md: "flex-start" },
       }}
     >
       <Button
@@ -194,17 +194,18 @@ const QuickEntrySection = ({
         onMouseEnter={() => handleQuickEntryHover(primaryAction.key)}
         onMouseLeave={handleQuickEntryLeave}
         sx={{
-          minHeight: 42,
-          px: 2,
-          borderRadius: '12px',
+          minHeight: { xs: 38, md: 42 },
+          px: { xs: 2.2, md: 2 },
+          borderRadius: { xs: '14px', md: '12px' },
           textTransform: 'none',
           fontWeight: 700,
-          fontSize: '0.95rem',
+          fontSize: { xs: '0.9rem', md: '0.95rem' },
           color: '#ffffff',
           background: 'linear-gradient(135deg, #4caf50 0%, #2e7d32 100%)',
           boxShadow: (hoveredAction === primaryAction.key || externalHoveredAction === primaryAction.key)
             ? '0 8px 18px rgba(76, 175, 80, 0.28)'
             : '0 4px 10px rgba(76, 175, 80, 0.18)',
+          flex: { xs: 1, md: 'unset' },
           '&:hover': {
             background: 'linear-gradient(135deg, #43a047 0%, #1f6a28 100%)',
             boxShadow: '0 10px 20px rgba(76, 175, 80, 0.3)',
@@ -219,9 +220,9 @@ const QuickEntrySection = ({
           size="medium"
           onClick={handleMenuOpen}
           sx={{
-            width: 42,
-            height: 42,
-            borderRadius: '12px',
+            width: { xs: 38, md: 42 },
+            height: { xs: 38, md: 42 },
+            borderRadius: { xs: '12px', md: '12px' },
             border: '1px solid rgba(8, 31, 92, 0.14)',
             backgroundColor: '#ffffff',
             color: '#102d72',

@@ -76,7 +76,7 @@ const ChildCardHeader = memo(({
   ].filter(Boolean);
 
   return (
-    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: { xs: 1.25, md: 2 }, ...sx }}>
+    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: { xs: 1, md: 2 }, ...sx }}>
       {!showCompactMobileIdentity && (
         <ChildAvatar
           child={child}
@@ -94,7 +94,7 @@ const ChildCardHeader = memo(({
               justifyContent: 'flex-end',
               alignItems: 'center',
               gap: 0.35,
-              mb: 0.25,
+              mb: 0.35,
             }}
           >
             <ChildManagementMenu
@@ -193,6 +193,7 @@ const ChildCardHeader = memo(({
           <MedicalInfoDisplay
             diagnosis={child.diagnosis || (child.concerns && child.concerns[0]?.label) || (child.conditions && child.conditions[0])}
             allergies={child.medicalProfile?.foodAllergies}
+            compact={showCompactMobileIdentity}
           />
         )}
 
@@ -202,16 +203,17 @@ const ChildCardHeader = memo(({
             child={child}
             userRole={userRole}
             onInviteTeamMember={onInviteTeamMember}
-            maxVisible={isMobile ? 3 : 4}
+            maxVisible={showCompactMobileIdentity ? 2 : isMobile ? 3 : 4}
+            compactMobile={showCompactMobileIdentity}
             sx={{
-              mt: { xs: 0.5, md: 1 },
-              p: { xs: 1, md: 1.5 },
+              mt: { xs: 0.35, md: 1 },
+              p: showCompactMobileIdentity ? 0 : { xs: 0.9, md: 1.5 },
             }}
           />
         )}
 
         {(metricChips.length > 0 || timelineSummary.lastActivityTime || !hasEntriesToday) && (
-          <Box sx={{ mt: { xs: 0.75, md: 1 }, display: 'flex', flexDirection: 'column', gap: { xs: 0.5, md: 0.75 } }}>
+          <Box sx={{ mt: { xs: 0.5, md: 1 }, display: 'flex', flexDirection: 'column', gap: { xs: 0.35, md: 0.75 } }}>
             {metricChips.length > 0 && (
               <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
                 {metricChips.map((chip) => (

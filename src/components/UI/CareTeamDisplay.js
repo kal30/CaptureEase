@@ -1,10 +1,11 @@
-// Removed unused React import
-import { IconButton } from "@mui/material";
+import React, { useState } from 'react';
+import { Box, IconButton, Paper, Popover, Typography } from "@mui/material";
 import {
   LocalHospital as HospitalIcon,
   Add as AddIcon,
+  Close as CloseIcon,
 } from "@mui/icons-material";
-import { useTheme } from "@mui/material/styles";
+import { alpha, useTheme } from "@mui/material/styles";
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useTranslation } from 'react-i18next';
 import { auth } from '../../services/firebase';
@@ -26,11 +27,15 @@ const CareTeamDisplay = ({
   userRole,
   onInviteTeamMember,
   maxVisible = 2,
+  compactMobile = false,
   sx = {},
 }) => {
   const theme = useTheme();
   const [user] = useAuthState(auth);
   const { t } = useTranslation('terms');
+  const [anchorEl, setAnchorEl] = useState(null);
+  const teamLabel = t('care_team');
+  const open = Boolean(anchorEl);
 
   // Collect and sort all team members - CLEAN VERSION
   const getAllMembers = () => {
@@ -98,6 +103,15 @@ const CareTeamDisplay = ({
     />
   );
 
+  const handleMoreClick = (event) => {
+    event.stopPropagation();
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
   // Invite button component
   const inviteButton = canInvite ? (
     <IconButton
@@ -122,6 +136,97 @@ const CareTeamDisplay = ({
       <AddIcon sx={{ fontSize: 12, color: "white" }} />
     </IconButton>
   ) : null;
+
+  if (compactMobile) {
+    const visibleMembers = members.slice(0, maxVisible);
+    const hiddenCount = Math.max(0, members.length - maxVisible);
+
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 0.75,
+          flexWrap: 'nowrap',
+          overflow: 'hidden',
+          ...sx,
+        }}
+      >
+        <HospitalIcon sx={{ color: theme.palette.secondary.main, fontSize: 15 }} />
+        <Typography
+          variant="body2"
+          sx={{
+            fontSize: '0.78rem',
+            color: theme.palette.text.primary,
+            fontWeight: 700,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {teamLabel}
+        </Typography>
+
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.45, minWidth: 0, overflow: 'hidden' }}>
+          {visibleMembers.map((member, index) => renderMember(member, index))}
+          {hiddenCount > 0 && (
+            <Box
+              onClick={handleMoreClick}
+              sx={{
+                width: 24,
+                height: 24,
+                minWidth: 24,
+                borderRadius: '50%',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                bgcolor: alpha(theme.palette.primary.main, 0.1),
+                color: theme.palette.primary.main,
+                border: `1px solid ${alpha(theme.palette.primary.main, 0.18)}`,
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
+              +{hiddenCount}
+            </Box>
+          )}
+          {inviteButton}
+        </Box>
+
+        <Popover
+          open={open}
+          anchorEl={anchorEl}
+          onClose={handleClose}
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'left',
+          }}
+          transformOrigin={{
+            vertical: 'top',
+            horizontal: 'left',
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Paper sx={{ p: 2, maxWidth: 300, maxHeight: 400, overflow: 'auto' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                {teamLabel} ({members.length})
+              </Typography>
+              <IconButton size="small" onClick={handleClose}>
+                <CloseIcon fontSize="small" />
+              </IconButton>
+            </Box>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              {members.map((member, index) => (
+                <Box key={index}>
+                  {renderExpandedMember(member, index)}
+                </Box>
+              ))}
+            </Box>
+          </Paper>
+        </Popover>
+      </Box>
+    );
+  }
 
   return (
     <ProgressiveDisclosure
