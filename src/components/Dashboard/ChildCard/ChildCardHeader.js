@@ -44,6 +44,12 @@ const ChildCardHeader = memo(({
   const showCompactMobileIdentity = compactIdentityOnMobile && isMobile;
   const allChips = useChildCardChips(userRole, completedToday);
   const hasEntriesToday = (timelineSummary.todayCount || 0) > 0;
+  const shouldShowMedicalInfo = Boolean(
+    child.diagnosis ||
+    child.concerns ||
+    child.conditions ||
+    child.medicalProfile?.foodAllergies?.length > 0
+  );
   const metricChips = [
     hasEntriesToday
       ? {
@@ -189,7 +195,7 @@ const ChildCardHeader = memo(({
           </>
         )}
 
-        {(child.diagnosis || child.concerns || child.conditions || child.medicalProfile?.foodAllergies?.length > 0) && (
+        {shouldShowMedicalInfo && (
           <MedicalInfoDisplay
             diagnosis={child.diagnosis || (child.concerns && child.concerns[0]?.label) || (child.conditions && child.conditions[0])}
             allergies={child.medicalProfile?.foodAllergies}
@@ -197,57 +203,102 @@ const ChildCardHeader = memo(({
           />
         )}
 
-        {/* Care Team */}
-        {child.users && (child.users.care_partners?.length > 0 || child.users.caregivers?.length > 0 || child.users.therapists?.length > 0) && (
-          <CareTeamDisplay
-            child={child}
-            userRole={userRole}
-            onInviteTeamMember={onInviteTeamMember}
-            maxVisible={showCompactMobileIdentity ? 2 : isMobile ? 3 : 4}
-            compactMobile={showCompactMobileIdentity}
-            sx={{
-              mt: { xs: 0.35, md: 1 },
-              p: showCompactMobileIdentity ? 0 : { xs: 0.9, md: 1.5 },
-            }}
-          />
-        )}
-
         {(metricChips.length > 0 || timelineSummary.lastActivityTime || !hasEntriesToday) && (
-          <Box sx={{ mt: { xs: 0.5, md: 1 }, display: 'flex', flexDirection: 'column', gap: { xs: 0.35, md: 0.75 } }}>
-            {metricChips.length > 0 && (
-              <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
-                {metricChips.map((chip) => (
+          <Box sx={{ mt: { xs: 0.45, md: 1 }, display: 'flex', flexDirection: 'column', gap: { xs: 0.35, md: 0.75 } }}>
+            {showCompactMobileIdentity ? (
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 1,
+                }}
+              >
+                {child.users && (child.users.care_partners?.length > 0 || child.users.caregivers?.length > 0 || child.users.therapists?.length > 0 || child.users?.care_owner) ? (
+                  <CareTeamDisplay
+                    child={child}
+                    userRole={userRole}
+                    onInviteTeamMember={onInviteTeamMember}
+                    maxVisible={2}
+                    compactMobile={true}
+                    sx={{ mt: 0, p: 0, minWidth: 0, flex: 1 }}
+                  />
+                ) : (
+                  <Box />
+                )}
+
+                {metricChips.find((chip) => chip.key === 'streak') && (
                   <Chip
-                    key={chip.key}
-                    label={chip.label}
+                    label={metricChips.find((chip) => chip.key === 'streak').label}
                     size="small"
-                    color={chip.color}
-                    variant={chip.variant}
+                    color="success"
+                    variant="outlined"
                     sx={{
-                      height: { xs: 24, md: 26 },
-                      fontSize: { xs: '0.78rem', md: '0.82rem' },
-                      ...chip.sx,
+                      height: 22,
+                      fontSize: '0.72rem',
+                      fontWeight: 700,
+                      flex: '0 0 auto',
                     }}
                   />
-                ))}
+                )}
               </Box>
-            )}
+            ) : (
+              <>
+                {child.users && (child.users.care_partners?.length > 0 || child.users.caregivers?.length > 0 || child.users.therapists?.length > 0) && (
+                  <CareTeamDisplay
+                    child={child}
+                    userRole={userRole}
+                    onInviteTeamMember={onInviteTeamMember}
+                    maxVisible={isMobile ? 3 : 4}
+                    compactMobile={false}
+                    sx={{
+                      mt: { xs: 0.35, md: 1 },
+                      p: { xs: 0.9, md: 1.5 },
+                    }}
+                  />
+                )}
 
-            {!hasEntriesToday && (
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ fontSize: { xs: '0.78rem', md: '0.82rem' }, fontWeight: 500, lineHeight: 1.25 }}
-              >
-                No entries yet today — tap to log something
-              </Typography>
+                {metricChips.length > 0 && (
+                  <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
+                    {metricChips.map((chip) => (
+                      <Chip
+                        key={chip.key}
+                        label={chip.label}
+                        size="small"
+                        color={chip.color}
+                        variant={chip.variant}
+                        sx={{
+                          height: { xs: 24, md: 26 },
+                          fontSize: { xs: '0.78rem', md: '0.82rem' },
+                          ...chip.sx,
+                        }}
+                      />
+                    ))}
+                  </Box>
+                )}
+
+                {!hasEntriesToday && (
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ fontSize: { xs: '0.78rem', md: '0.82rem' }, fontWeight: 500, lineHeight: 1.25 }}
+                  >
+                    No entries yet today — tap to log something
+                  </Typography>
+                )}
+              </>
             )}
 
             {timelineSummary.lastActivityTime && (
               <Typography
                 variant="caption"
                 color="text.secondary"
-                sx={{ display: 'block', fontSize: { xs: '0.72rem', md: '0.78rem' }, fontWeight: 500, lineHeight: 1.2 }}
+                sx={{
+                  display: 'block',
+                  fontSize: { xs: showCompactMobileIdentity ? '0.7rem' : '0.72rem', md: '0.78rem' },
+                  fontWeight: 500,
+                  lineHeight: 1.2
+                }}
               >
                 Last activity at {timelineSummary.lastActivityTime}
               </Typography>

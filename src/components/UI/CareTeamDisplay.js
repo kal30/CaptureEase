@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, IconButton, Paper, Popover, Typography } from "@mui/material";
+import { Avatar, Box, IconButton, Paper, Popover, Typography } from "@mui/material";
 import {
   LocalHospital as HospitalIcon,
   Add as AddIcon,
@@ -12,6 +12,16 @@ import { auth } from '../../services/firebase';
 import { USER_ROLES } from "../../constants/roles";
 import ProgressiveDisclosure from "./ProgressiveDisclosure";
 import MemberChip, { sortMembersByPriority } from "./MemberChip";
+
+const getMemberAvatarColor = (role, t) => {
+  const colors = {
+    [t('owner_one')]: "#8B5CF6",
+    [t('partner_one')]: "#45B7D1",
+    [t('caregiver_one')]: "#4ECDC4",
+    [t('therapist_one')]: "#FF6B6B",
+  };
+  return colors[role] || "#94A3B8";
+};
 
 /**
  * CareTeamDisplay - Smart care team component with progressive disclosure
@@ -112,6 +122,21 @@ const CareTeamDisplay = ({
     setAnchorEl(null);
   };
 
+  const getMemberLabel = (member) => {
+    const rawDisplayName = member.name || member.displayName || member.email || t('team_member_one');
+    return rawDisplayName;
+  };
+
+  const getMemberInitials = (member) => {
+    const label = getMemberLabel(member);
+    return label
+      .split(' ')
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase())
+      .join('') || '•';
+  };
+
   // Invite button component
   const inviteButton = canInvite ? (
     <IconButton
@@ -146,17 +171,16 @@ const CareTeamDisplay = ({
         sx={{
           display: 'flex',
           alignItems: 'center',
-          gap: 0.75,
+          gap: 0.65,
           flexWrap: 'nowrap',
           overflow: 'hidden',
           ...sx,
         }}
       >
-        <HospitalIcon sx={{ color: theme.palette.secondary.main, fontSize: 15 }} />
         <Typography
           variant="body2"
           sx={{
-            fontSize: '0.78rem',
+            fontSize: '0.75rem',
             color: theme.palette.text.primary,
             fontWeight: 700,
             whiteSpace: 'nowrap',
@@ -165,8 +189,32 @@ const CareTeamDisplay = ({
           {teamLabel}
         </Typography>
 
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.45, minWidth: 0, overflow: 'hidden' }}>
-          {visibleMembers.map((member, index) => renderMember(member, index))}
+        <Box sx={{ display: 'flex', alignItems: 'center', minWidth: 0, overflow: 'visible', ml: 0.15 }}>
+          {visibleMembers.map((member, index) => {
+            const avatarColor = getMemberAvatarColor(member.role, t);
+            return (
+              <Avatar
+                key={member.userId || member.uid || index}
+                src={member.profilePhoto || member.photoURL || member.avatarUrl}
+                onClick={handleMoreClick}
+                sx={{
+                  width: 24,
+                  height: 24,
+                  ml: index === 0 ? 0 : -0.55,
+                  fontSize: '0.66rem',
+                  fontWeight: 700,
+                  border: '2px solid #fff',
+                  bgcolor: alpha(avatarColor, 0.92),
+                  color: '#fff',
+                  cursor: 'pointer',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+                }}
+                title={getMemberLabel(member)}
+              >
+                {!member.profilePhoto && !member.photoURL && getMemberInitials(member)}
+              </Avatar>
+            );
+          })}
           {hiddenCount > 0 && (
             <Box
               onClick={handleMoreClick}
@@ -174,16 +222,18 @@ const CareTeamDisplay = ({
                 width: 24,
                 height: 24,
                 minWidth: 24,
+                ml: -0.55,
                 borderRadius: '50%',
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                bgcolor: alpha(theme.palette.primary.main, 0.1),
-                color: theme.palette.primary.main,
-                border: `1px solid ${alpha(theme.palette.primary.main, 0.18)}`,
+                bgcolor: '#ffffff',
+                color: theme.palette.text.secondary,
+                border: `1px solid ${alpha(theme.palette.text.primary, 0.12)}`,
                 fontSize: '0.72rem',
                 fontWeight: 700,
                 cursor: 'pointer',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
               }}
             >
               +{hiddenCount}

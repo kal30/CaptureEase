@@ -25,6 +25,7 @@ const ChildCardActions = ({
   status,
   userRole,
   completedToday,
+  helperText,
   onQuickEntry,
   onDailyReport,
   hoveredQuickAction,
@@ -63,6 +64,7 @@ const ChildCardActions = ({
         status={status}
         userRole={userRole}
         completedToday={completedToday}
+        helperText={helperText}
         onQuickEntry={onQuickEntry}
         onDailyReport={onDailyReport}
         onHoverAction={handleQuickActionHover}

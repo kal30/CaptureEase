@@ -75,6 +75,7 @@ const ChildCard = ({
             status={status}
             userRole={userRole}
             completedToday={completedToday}
+            helperText={!(timelineSummary.todayCount > 0) ? 'No entries yet today — tap to log' : ''}
             onQuickEntry={onQuickEntry}
             onDailyReport={onDailyReport}
             onMessages={onMessages}

@@ -31,9 +31,69 @@ const MedicalInfoDisplay = ({
   const hasMoreAllergies = sortedAllergies.length > maxVisible;
   const visibleAllergies = sortedAllergies.slice(0, maxVisible);
   const allergyRemainingCount = sortedAllergies.length - maxVisible;
+  const diagnosisLabel = diagnosis?.label || diagnosis || 'N/A';
+  const allergyLabel = sortedAllergies.length > 0
+    ? visibleAllergies.map(getAllergyLabel).filter(Boolean).join(', ') || 'N/A'
+    : 'N/A';
+
+  if (compact) {
+    return (
+      <Box sx={{ mb: 0.5, mt: 0.1 }}>
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{
+            fontSize: '0.75rem',
+            fontWeight: 600,
+            lineHeight: 1.25,
+            letterSpacing: '-0.01em',
+          }}
+        >
+          {diagnosisLabel}
+          <Box component="span" sx={{ mx: 0.65, color: 'text.disabled' }}>
+            •
+          </Box>
+          {allergyLabel}
+          {hasMoreAllergies && (
+            <Box
+              component="span"
+              onClick={() => setShowAllAllergies(!showAllAllergies)}
+              sx={{
+                color: 'primary.main',
+                cursor: 'pointer',
+                fontWeight: 700,
+                fontSize: '0.75rem',
+                ml: 0.35,
+                '&:hover': { textDecoration: 'underline' }
+              }}
+            >
+              +{allergyRemainingCount}
+            </Box>
+          )}
+        </Typography>
+
+        <Collapse in={showAllAllergies}>
+          <Box sx={{
+            display: 'flex',
+            gap: 0.5,
+            flexWrap: 'wrap',
+            mt: 0.5,
+          }}>
+            {sortedAllergies.slice(maxVisible).map((allergy, index) => (
+              <AllergyChip
+                key={`additional-${index}`}
+                allergy={allergy}
+                variant="compact"
+              />
+            ))}
+          </Box>
+        </Collapse>
+      </Box>
+    );
+  }
 
   return (
-    <Box sx={{ mb: compact ? 0.5 : 1, mt: compact ? 0.25 : 0.5 }}>
+    <Box sx={{ mb: 1, mt: 0.5 }}>
       <Box
         sx={{
           display: 'flex',
@@ -81,7 +141,7 @@ const MedicalInfoDisplay = ({
             Allergies
           </Typography>
           <Typography component="span" sx={{ fontSize: compact ? '0.75rem' : '0.82rem', color: 'text.secondary' }}>
-            {sortedAllergies.length > 0 ? visibleAllergies.map(getAllergyLabel).filter(Boolean).join(', ') || 'N/A' : 'N/A'}
+            {allergyLabel}
           </Typography>
           {hasMoreAllergies && (
             <Box
