@@ -301,6 +301,7 @@ const TimelineWidget = ({
         open={Boolean(mobileCalendarAnchor)}
         anchorEl={mobileCalendarAnchor}
         onClose={() => setMobileCalendarAnchor(null)}
+        disableScrollLock
         anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
         transformOrigin={{ vertical: 'top', horizontal: 'left' }}
         disableAutoFocus

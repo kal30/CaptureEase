@@ -259,6 +259,7 @@ const TimelineFilters = ({
               open={Boolean(datePickerAnchor)}
               anchorEl={datePickerAnchor}
               onClose={handleDatePickerClose}
+              disableScrollLock
               anchorOrigin={{
                 vertical: 'bottom',
                 horizontal: 'left',
@@ -309,6 +310,7 @@ const TimelineFilters = ({
           open={Boolean(categoryMenuAnchor)}
           anchorEl={categoryMenuAnchor}
           onClose={handleCategoryMenuClose}
+          disableScrollLock
           anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
           transformOrigin={{ vertical: 'top', horizontal: 'left' }}
         >

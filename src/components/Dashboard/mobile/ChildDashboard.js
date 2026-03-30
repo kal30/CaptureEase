@@ -258,6 +258,8 @@ const ChildDashboard = ({
         anchorEl={switcherAnchor}
         open={Boolean(switcherAnchor)}
         onClose={() => setSwitcherAnchor(null)}
+        disableScrollLock
+        keepMounted
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
