@@ -1,14 +1,12 @@
 import React, { useMemo, useState } from 'react';
 import {
   Avatar,
-  Backdrop,
   Box,
   Button,
   Fab,
   Menu,
   MenuItem,
   Typography,
-  Zoom,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -168,14 +166,17 @@ const ChildDashboard = ({
         hidePrimaryAction={true}
       />
 
-      <Backdrop
-        open={fabOpen}
-        onClick={() => setFabOpen(false)}
-        sx={{
-          zIndex: 1190,
-          backgroundColor: 'rgba(7, 12, 25, 0.22)',
-        }}
-      />
+      {fabOpen ? (
+        <Box
+          onClick={() => setFabOpen(false)}
+          sx={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 1190,
+            backgroundColor: 'rgba(7, 12, 25, 0.14)',
+          }}
+        />
+      ) : null}
 
       <Box
         sx={{
@@ -189,50 +190,46 @@ const ChildDashboard = ({
           gap: 1.1,
         }}
       >
-        {fabActions.map((action, index) => (
-          <Zoom
-            key={action.key}
-            in={fabOpen}
-            style={{ transitionDelay: fabOpen ? `${index * 45}ms` : '0ms' }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Box
-                sx={{
-                  px: 1.1,
-                  py: 0.6,
-                  borderRadius: 999,
-                  bgcolor: 'rgba(15, 23, 42, 0.84)',
-                  color: '#fff',
-                  fontSize: '0.88rem',
-                  fontWeight: 700,
-                  lineHeight: 1,
-                  boxShadow: '0 8px 18px rgba(15, 23, 42, 0.18)',
-                }}
-              >
-                {action.label}
-              </Box>
-              <Fab
-                size="medium"
-                aria-label={action.label}
-                onClick={() => handleFabAction(action)}
-                sx={{
-                  width: 52,
-                  height: 52,
-                  minHeight: 52,
-                  bgcolor: action.color,
-                  color: '#FFFFFF',
-                  boxShadow: '0 10px 22px rgba(15, 23, 42, 0.2)',
-                  '&:hover': {
+        {fabOpen
+          ? fabActions.map((action) => (
+              <Box key={action.key} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box
+                  sx={{
+                    px: 1.1,
+                    py: 0.6,
+                    borderRadius: 999,
+                    bgcolor: 'rgba(15, 23, 42, 0.84)',
+                    color: '#fff',
+                    fontSize: '0.88rem',
+                    fontWeight: 700,
+                    lineHeight: 1,
+                    boxShadow: '0 8px 18px rgba(15, 23, 42, 0.18)',
+                  }}
+                >
+                  {action.label}
+                </Box>
+                <Fab
+                  size="medium"
+                  aria-label={action.label}
+                  onClick={() => handleFabAction(action)}
+                  sx={{
+                    width: 52,
+                    height: 52,
+                    minHeight: 52,
                     bgcolor: action.color,
-                    filter: 'brightness(0.94)',
-                  },
-                }}
-              >
-                {action.icon}
-              </Fab>
-            </Box>
-          </Zoom>
-        ))}
+                    color: '#FFFFFF',
+                    boxShadow: '0 10px 22px rgba(15, 23, 42, 0.2)',
+                    '&:hover': {
+                      bgcolor: action.color,
+                      filter: 'brightness(0.94)',
+                    },
+                  }}
+                >
+                  {action.icon}
+                </Fab>
+              </Box>
+            ))
+          : null}
 
         <Fab
           aria-label={fabOpen ? `Close actions for ${child.name}` : `Open actions for ${child.name}`}
@@ -260,6 +257,7 @@ const ChildDashboard = ({
         onClose={() => setSwitcherAnchor(null)}
         disableScrollLock
         keepMounted
+        transitionDuration={0}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
