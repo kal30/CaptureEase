@@ -56,7 +56,7 @@ const getActivityStreak = (entries = []) => {
   return streak;
 };
 
-export const usePanelDashboard = () => {
+export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
   const theme = useTheme();
   const navigate = useNavigate();
   const [user] = useAuthState(auth);
@@ -152,8 +152,11 @@ export const usePanelDashboard = () => {
     const entriesByChild = {};
     const timelineSummaryByChild = {};
     const incidentsByChild = {};
+    const subscribedChildren = activeChildOnly && currentChildId
+      ? children.filter((child) => child.id === currentChildId)
+      : children;
 
-    children.forEach((child) => {
+    subscribedChildren.forEach((child) => {
       // Fetch timeline entries
       const timelineUnsubscribe = getTimelineEntries(child.id, (entries) => {
         const todayStart = new Date();
@@ -219,7 +222,7 @@ export const usePanelDashboard = () => {
         if (unsub) unsub();
       });
     };
-  }, [children]);
+  }, [children, currentChildId, activeChildOnly]);
 
   // Listen for follow-up reminders
   useEffect(() => {

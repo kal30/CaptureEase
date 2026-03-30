@@ -32,7 +32,7 @@ import { DashboardViewProvider } from "../components/Dashboard/shared/DashboardV
 const PanelDashboard = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const hook = usePanelDashboard();
+  const hook = usePanelDashboard({ activeChildOnly: isMobile });
   const actionGroups = getActionGroups(hook.theme);
 
   if (hook.loading) {
