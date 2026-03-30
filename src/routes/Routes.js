@@ -1,5 +1,6 @@
 import React from "react";
-import { Box } from "@mui/material";
+import { Box, useMediaQuery } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 import BreadcrumbsComponent from "../components/UI/BreadcrumbsComponent";
 import Login from "../pages/Login";
@@ -33,11 +34,14 @@ import InviteSuccessPage from "../pages/InviteSuccessPage";
 
 const AppRoutes = () => {
   const location = useLocation();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const isLandingPage = location.pathname === "/";
+  const shouldShowBreadcrumbs = !isLandingPage && !isMobile;
 
   return (
     <>
-      {!isLandingPage && (
+      {shouldShowBreadcrumbs && (
         <Box
           sx={{
             display: "flex",

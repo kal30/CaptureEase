@@ -157,10 +157,8 @@ const TimelineFilters = ({
           overflowY: 'hidden',
           pb: isMobile ? 0.25 : 0,
           pr: 0.25,
-          position: isMobile ? 'sticky' : 'static',
-          top: 0,
-          zIndex: 2,
-          backgroundColor: isMobile ? 'background.paper' : 'transparent',
+          position: 'static',
+          backgroundColor: 'transparent',
           scrollbarWidth: 'none',
           '&::-webkit-scrollbar': {
             display: 'none',

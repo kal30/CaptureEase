@@ -1,7 +1,10 @@
 import { Link as RouterLink } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { getAuth } from "firebase/auth";
 import { useEffect, useState } from "react";
-import { AppBar, Toolbar, Button, Box, Container } from "@mui/material";
+import { AppBar, Toolbar, Button, Box, Container, Skeleton } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
+import { useMediaQuery } from "@mui/material";
 import { useRole } from "../../contexts/RoleContext";
 import NavButton from "./NavButton";
 import DashboardIcon from "@mui/icons-material/Dashboard";
@@ -23,9 +26,13 @@ import {
 
 const Navbar = () => {
   const auth = getAuth();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const location = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useState(() => !!auth.currentUser);
-  const [authReady, setAuthReady] = useState(() => !!auth.currentUser);
+  const [authReady, setAuthReady] = useState(false);
   const { childrenWithAccess } = useRole();
+  const isDashboardRoute = location.pathname.startsWith("/dashboard");
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -69,7 +76,7 @@ const Navbar = () => {
                 navLinksContainerStyles(theme, isLoggedIn, colorScheme)
               }
             >
-              {authReady && isLoggedIn && (
+              {authReady && isLoggedIn && !isMobile && (
                 <>
                   <NavButton
                     text="Dashboard"
@@ -99,7 +106,8 @@ const Navbar = () => {
 
             {/* Auth Buttons or Avatar - Mobile optimized */}
             <Box sx={authButtonsContainerStyles}>
-              {authReady && isLoggedIn ? (
+              {authReady ? (
+                isLoggedIn ? (
                 <AvatarMenu user={auth.currentUser} />
               ) : (
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -125,6 +133,16 @@ const Navbar = () => {
                     Get Started Free
                   </Button>
                 </Box>
+                )
+              ) : isDashboardRoute ? (
+                <Skeleton
+                  variant="circular"
+                  width={40}
+                  height={40}
+                  sx={{ bgcolor: "rgba(255,255,255,0.2)" }}
+                />
+              ) : (
+                <Box sx={{ width: 40, height: 40 }} />
               )}
             </Box>
           </Container>

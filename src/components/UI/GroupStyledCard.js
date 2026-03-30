@@ -32,7 +32,7 @@ const GroupStyledCard = ({
       borderRadius: 1,
       overflow: 'hidden',
       cursor: onClick ? 'pointer' : 'default',
-      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+      transition: 'background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease',
       position: 'relative'
     };
 
@@ -43,8 +43,7 @@ const GroupStyledCard = ({
           borderColor: alpha(theme.palette.primary.main, 0.4),
           backgroundColor: alpha(theme.palette.primary.main, 0.03),
           '&:hover': onClick ? {
-            transform: 'translateY(-2px)',
-            boxShadow: `0 8px 32px ${alpha(theme.palette.primary.main, 0.2)}`
+            boxShadow: `0 6px 20px ${alpha(theme.palette.primary.main, 0.14)}`
           } : {},
           ...(isExpanded && {
             borderColor: alpha(theme.palette.primary.main, 0.6),
@@ -63,8 +62,7 @@ const GroupStyledCard = ({
           borderColor: alpha(familyColor, 0.4),
           backgroundColor: alpha(familyColor, 0.03),
           '&:hover': onClick ? {
-            transform: 'translateY(-2px)',
-            boxShadow: `0 8px 32px ${alpha(familyColor, 0.2)}`
+            boxShadow: `0 6px 20px ${alpha(familyColor, 0.14)}`
           } : {},
           ...(isExpanded && {
             borderColor: alpha(familyColor, 0.6),
@@ -83,8 +81,7 @@ const GroupStyledCard = ({
           borderColor: alpha(professionalColor, 0.4),
           backgroundColor: alpha(professionalColor, 0.03),
           '&:hover': onClick ? {
-            transform: 'translateY(-2px)',
-            boxShadow: `0 8px 32px ${alpha(professionalColor, 0.2)}`
+            boxShadow: `0 6px 20px ${alpha(professionalColor, 0.14)}`
           } : {},
           ...(isExpanded && {
             borderColor: alpha(professionalColor, 0.6),
@@ -102,8 +99,7 @@ const GroupStyledCard = ({
           borderColor: alpha(theme.palette.grey[300], 0.4),
           backgroundColor: theme.palette.background.paper,
           '&:hover': onClick ? {
-            transform: 'translateY(-2px)',
-            boxShadow: theme.shadows[4]
+            boxShadow: theme.shadows[3]
           } : {}
         };
     }

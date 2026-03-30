@@ -1,15 +1,21 @@
 import React, { useMemo, useState } from 'react';
 import {
   Avatar,
+  Backdrop,
   Box,
   Button,
+  Fab,
   Menu,
   MenuItem,
   Typography,
+  Zoom,
 } from '@mui/material';
 import {
   Add as AddIcon,
   ArrowBack as ArrowBackIcon,
+  AssignmentOutlined as AssignmentOutlinedIcon,
+  Close as CloseIcon,
+  Edit as EditIcon,
   KeyboardArrowDown as KeyboardArrowDownIcon,
 } from '@mui/icons-material';
 import ChildCard from '../ChildCard';
@@ -33,6 +39,7 @@ const ChildDashboard = ({
   onAddChildClick,
 }) => {
   const [switcherAnchor, setSwitcherAnchor] = useState(null);
+  const [fabOpen, setFabOpen] = useState(false);
   const accent = getChildAccent(child?.id);
   const otherChildren = useMemo(
     () => children.filter((item) => item.id !== child?.id),
@@ -42,6 +49,28 @@ const ChildDashboard = ({
   if (!child) {
     return null;
   }
+
+  const fabActions = [
+    {
+      key: 'therapy-prep',
+      label: 'Therapy Prep',
+      icon: <AssignmentOutlinedIcon sx={{ fontSize: 22 }} />,
+      color: '#8B5CF6',
+      onClick: () => onDailyReport?.(child),
+    },
+    {
+      key: 'quick-note',
+      label: 'Quick Note',
+      icon: <EditIcon sx={{ fontSize: 22 }} />,
+      color: '#1B5E20',
+      onClick: () => onQuickEntry(child, 'quick_note'),
+    },
+  ];
+
+  const handleFabAction = (action) => {
+    setFabOpen(false);
+    action.onClick();
+  };
 
   return (
     <Box sx={{ px: 1.5, pb: 3 }}>
@@ -135,7 +164,95 @@ const ChildDashboard = ({
         onDailyReport={onDailyReport}
         onMessages={onMessages}
         compactIdentityOnMobile={true}
+        disableCollapse={true}
+        hidePrimaryAction={true}
       />
+
+      <Backdrop
+        open={fabOpen}
+        onClick={() => setFabOpen(false)}
+        sx={{
+          zIndex: 1190,
+          backgroundColor: 'rgba(7, 12, 25, 0.22)',
+        }}
+      />
+
+      <Box
+        sx={{
+          position: 'fixed',
+          right: 20,
+          bottom: 24,
+          zIndex: 1200,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-end',
+          gap: 1.1,
+        }}
+      >
+        {fabActions.map((action, index) => (
+          <Zoom
+            key={action.key}
+            in={fabOpen}
+            style={{ transitionDelay: fabOpen ? `${index * 45}ms` : '0ms' }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Box
+                sx={{
+                  px: 1.1,
+                  py: 0.6,
+                  borderRadius: 999,
+                  bgcolor: 'rgba(15, 23, 42, 0.84)',
+                  color: '#fff',
+                  fontSize: '0.88rem',
+                  fontWeight: 700,
+                  lineHeight: 1,
+                  boxShadow: '0 8px 18px rgba(15, 23, 42, 0.18)',
+                }}
+              >
+                {action.label}
+              </Box>
+              <Fab
+                size="medium"
+                aria-label={action.label}
+                onClick={() => handleFabAction(action)}
+                sx={{
+                  width: 52,
+                  height: 52,
+                  minHeight: 52,
+                  bgcolor: action.color,
+                  color: '#FFFFFF',
+                  boxShadow: '0 10px 22px rgba(15, 23, 42, 0.2)',
+                  '&:hover': {
+                    bgcolor: action.color,
+                    filter: 'brightness(0.94)',
+                  },
+                }}
+              >
+                {action.icon}
+              </Fab>
+            </Box>
+          </Zoom>
+        ))}
+
+        <Fab
+          aria-label={fabOpen ? `Close actions for ${child.name}` : `Open actions for ${child.name}`}
+          onClick={() => setFabOpen((open) => !open)}
+          sx={{
+            width: 60,
+            height: 60,
+            minHeight: 60,
+            bgcolor: '#1B5E20',
+            color: '#FFFFFF',
+            boxShadow: '0 12px 24px rgba(27, 94, 32, 0.28)',
+            '&:hover': {
+              bgcolor: '#154A19',
+              boxShadow: '0 14px 28px rgba(27, 94, 32, 0.32)',
+            },
+          }}
+        >
+          {fabOpen ? <CloseIcon sx={{ fontSize: 30 }} /> : <AddIcon sx={{ fontSize: 30 }} />}
+        </Fab>
+      </Box>
 
       <Menu
         anchorEl={switcherAnchor}

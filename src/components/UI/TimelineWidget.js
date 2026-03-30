@@ -222,10 +222,6 @@ const TimelineWidget = ({
       <Box
         onClick={(e) => e.stopPropagation()}
         sx={{
-          position: 'sticky',
-          top: 0,
-          zIndex: 2,
-          backgroundColor: 'background.paper',
           pt: 0.25,
         }}
       >

@@ -20,6 +20,7 @@ import { TimelineWidget } from '../../UI';
 const ChildCardContent = ({
   child,
   isExpanded,
+  disableCollapse = false,
   recentEntries = [],
   incidents = [],
   status = {},
@@ -27,31 +28,30 @@ const ChildCardContent = ({
   sx = {}
 }) => {
   const theme = useTheme();
+  const content = (
+    <Box
+      sx={{
+        p: 2,
+        borderTop: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
+      }}
+    >
+      <TimelineWidget
+        child={child}
+        entries={recentEntries}
+        incidents={incidents}
+        dailyCareStatus={status}
+        onQuickEntry={onQuickEntry}
+        defaultExpanded={false}
+        expanded={isExpanded}
+        variant="full"
+        showUnifiedLog={true}
+      />
+    </Box>
+  );
 
   return (
     <Box sx={sx}>
-      {/* Expandable Timeline Content */}
-      <Collapse in={isExpanded}>
-        <Box
-          sx={{
-            p: 2,
-            borderTop: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
-          }}
-        >
-          {/* Timeline Widget - Enhanced Recent Activity with Progress Visualization */}
-          <TimelineWidget
-            child={child}
-            entries={recentEntries}
-            incidents={incidents}
-            dailyCareStatus={status}
-            onQuickEntry={onQuickEntry}
-            defaultExpanded={false}
-            expanded={isExpanded}
-            variant="full"
-            showUnifiedLog={true}
-          />
-        </Box>
-      </Collapse>
+      {disableCollapse ? content : <Collapse in={isExpanded}>{content}</Collapse>}
     </Box>
   );
 };

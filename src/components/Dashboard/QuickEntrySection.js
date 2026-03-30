@@ -28,6 +28,7 @@ const QuickEntrySection = ({
   userRole,
   completedToday,
   helperText = '',
+  hidePrimaryAction = false,
   onQuickEntry,
   onDailyReport,
   onHoverAction,
@@ -186,86 +187,132 @@ const QuickEntrySection = ({
         gap: { xs: 0.75, md: 1.25 },
         px: { xs: 0, md: 2 },
         width: { xs: "100%", md: "auto" },
-        justifyContent: { xs: "space-between", md: "flex-start" },
+        justifyContent: { xs: hidePrimaryAction ? "flex-end" : "space-between", md: "flex-start" },
         flexDirection: { xs: 'column', md: 'row' },
       }}
     >
-      <Box sx={{ width: { xs: '100%', md: 'auto' } }}>
-        {helperText && (
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            sx={{
-              display: { xs: 'block', md: 'none' },
-              textAlign: 'center',
-              fontSize: '0.75rem',
-              fontWeight: 500,
-              lineHeight: 1.2,
-              mb: 0.5,
-            }}
-          >
-            {helperText}
-          </Typography>
-        )}
-
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'stretch',
-            gap: { xs: 0.65, md: 0.9 },
-            width: { xs: '100%', md: 'auto' },
-          }}
-        >
-          <Button
-            variant="contained"
-            onClick={(e) => handleQuickEntryClick(primaryAction, e)}
-            onMouseEnter={() => handleQuickEntryHover(primaryAction.key)}
-            onMouseLeave={handleQuickEntryLeave}
-            sx={{
-              minHeight: { xs: 36, md: 42 },
-              px: { xs: 2, md: 2 },
-              borderRadius: { xs: '14px', md: '12px' },
-              textTransform: 'none',
-              fontWeight: 700,
-              fontSize: { xs: '0.88rem', md: '0.95rem' },
-              color: '#ffffff',
-              background: 'linear-gradient(135deg, #4caf50 0%, #2e7d32 100%)',
-              boxShadow: (hoveredAction === primaryAction.key || externalHoveredAction === primaryAction.key)
-                ? '0 8px 18px rgba(76, 175, 80, 0.28)'
-                : '0 4px 10px rgba(76, 175, 80, 0.18)',
-              flex: 1,
-              '&:hover': {
-                background: 'linear-gradient(135deg, #43a047 0%, #1f6a28 100%)',
-                boxShadow: '0 10px 20px rgba(76, 175, 80, 0.3)',
-              },
-            }}
-          >
-            {`+ ${primaryAction.label}`}
-          </Button>
-
-          <Tooltip title="More actions" arrow placement="top">
-            <IconButton
-              size="medium"
-              onClick={handleMenuOpen}
+      {!hidePrimaryAction && (
+        <Box sx={{ width: { xs: '100%', md: 'auto' } }}>
+          {helperText && (
+            <Typography
+              variant="caption"
+              color="text.secondary"
               sx={{
-                width: { xs: 36, md: 42 },
-                minWidth: { xs: 36, md: 42 },
-                height: { xs: 36, md: 42 },
-                borderRadius: { xs: '14px', md: '12px' },
-                border: '1px solid rgba(8, 31, 92, 0.14)',
-                backgroundColor: '#ffffff',
-                color: '#102d72',
-                '&:hover': {
-                  backgroundColor: '#f6f8fc',
-                },
-                transition: "all 0.2s ease",
+                display: { xs: 'block', md: 'none' },
+                textAlign: 'center',
+                fontSize: '0.75rem',
+                fontWeight: 500,
+                lineHeight: 1.2,
+                mb: 0.5,
               }}
             >
-              <MoreHorizIcon sx={{ fontSize: 20 }} />
-            </IconButton>
-          </Tooltip>
+              {helperText}
+            </Typography>
+          )}
+
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'stretch',
+              gap: { xs: 0.65, md: 0.9 },
+              width: { xs: '100%', md: 'auto' },
+            }}
+          >
+            <Button
+              variant="contained"
+              onClick={(e) => handleQuickEntryClick(primaryAction, e)}
+              onMouseEnter={() => handleQuickEntryHover(primaryAction.key)}
+              onMouseLeave={handleQuickEntryLeave}
+              sx={{
+                minHeight: { xs: 36, md: 42 },
+                px: { xs: 2, md: 2 },
+                borderRadius: { xs: '14px', md: '12px' },
+                textTransform: 'none',
+                fontWeight: 700,
+                fontSize: { xs: '0.88rem', md: '0.95rem' },
+                color: '#ffffff',
+                background: 'linear-gradient(135deg, #4caf50 0%, #2e7d32 100%)',
+                boxShadow: (hoveredAction === primaryAction.key || externalHoveredAction === primaryAction.key)
+                  ? '0 8px 18px rgba(76, 175, 80, 0.28)'
+                  : '0 4px 10px rgba(76, 175, 80, 0.18)',
+                flex: 1,
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #43a047 0%, #1f6a28 100%)',
+                  boxShadow: '0 10px 20px rgba(76, 175, 80, 0.3)',
+                },
+              }}
+            >
+              {`+ ${primaryAction.label}`}
+            </Button>
+
+            <Tooltip title="More actions" arrow placement="top">
+              <IconButton
+                size="medium"
+                onClick={handleMenuOpen}
+                sx={{
+                  width: { xs: 36, md: 42 },
+                  minWidth: { xs: 36, md: 42 },
+                  height: { xs: 36, md: 42 },
+                  borderRadius: { xs: '14px', md: '12px' },
+                  border: '1px solid rgba(8, 31, 92, 0.14)',
+                  backgroundColor: '#ffffff',
+                  color: '#102d72',
+                  '&:hover': {
+                    backgroundColor: '#f6f8fc',
+                  },
+                  transition: "all 0.2s ease",
+                }}
+              >
+                <MoreHorizIcon sx={{ fontSize: 20 }} />
+              </IconButton>
+            </Tooltip>
+          </Box>
         </Box>
-      </Box>
+      )}
+
+      {hidePrimaryAction && (
+        <Box sx={{ width: '100%' }}>
+          {helperText && (
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{
+                display: { xs: 'block', md: 'none' },
+                textAlign: 'center',
+                fontSize: '0.75rem',
+                fontWeight: 500,
+                lineHeight: 1.2,
+                mb: 0.5,
+              }}
+            >
+              {helperText}
+            </Typography>
+          )}
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <Tooltip title="More actions" arrow placement="top">
+              <IconButton
+                size="medium"
+                onClick={handleMenuOpen}
+                sx={{
+                  width: 36,
+                  minWidth: 36,
+                  height: 36,
+                  borderRadius: '14px',
+                  border: '1px solid rgba(8, 31, 92, 0.14)',
+                  backgroundColor: '#ffffff',
+                  color: '#102d72',
+                  '&:hover': {
+                    backgroundColor: '#f6f8fc',
+                  },
+                  transition: "all 0.2s ease",
+                }}
+              >
+                <MoreHorizIcon sx={{ fontSize: 20 }} />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        </Box>
+      )}
 
       <Menu
         anchorEl={menuAnchorEl}

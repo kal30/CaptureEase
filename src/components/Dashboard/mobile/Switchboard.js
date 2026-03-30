@@ -6,7 +6,7 @@ import { getChildAccent } from '../shared/childAccent';
 const Switchboard = ({ children = [], onSelectChild, onAddChild }) => (
   <Box
     sx={{
-      minHeight: 'calc(100vh - 120px)',
+      minHeight: { xs: 'auto', md: 'calc(100vh - 120px)' },
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'center',
@@ -64,14 +64,10 @@ const Switchboard = ({ children = [], onSelectChild, onAddChild }) => (
                 border: '1px solid',
                 borderColor: accent.border,
                 bgcolor: accent.surface,
-                boxShadow: '0 18px 36px rgba(15, 23, 42, 0.05)',
-                transition: 'transform 0.18s ease, box-shadow 0.18s ease',
+                boxShadow: '0 10px 22px rgba(15, 23, 42, 0.04)',
+                transition: 'box-shadow 0.18s ease, border-color 0.18s ease',
                 '&:hover': {
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 20px 40px rgba(15, 23, 42, 0.08)',
-                },
-                '&:active': {
-                  transform: 'scale(0.97)',
+                  boxShadow: '0 14px 28px rgba(15, 23, 42, 0.06)',
                 },
               }}
             >

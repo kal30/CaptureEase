@@ -1,11 +1,9 @@
 // BreadcrumbsComponent.js
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Breadcrumbs, Link, Typography, Box, Container } from "@mui/material";
 import { useLocation, Link as RouterLink } from "react-router-dom";
 import HomeIcon from "@mui/icons-material/Home";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { auth } from "../../services/firebase";
 import {
   containerStyles as breadcrumbsContainer,
   listStyles as breadcrumbsList,
@@ -18,16 +16,19 @@ import {
 
 const BreadcrumbsComponent = () => {
   const location = useLocation();
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  const isLoggedIn = !!user;
+  const isAuthenticatedRoute =
+    location.pathname.startsWith("/dashboard") ||
+    location.pathname.startsWith("/care-team") ||
+    location.pathname.startsWith("/daily-activities") ||
+    location.pathname.startsWith("/health-info") ||
+    location.pathname.startsWith("/therapy-notes") ||
+    location.pathname.startsWith("/templates") ||
+    location.pathname.startsWith("/medical") ||
+    location.pathname.startsWith("/profile") ||
+    location.pathname.startsWith("/messages") ||
+    location.pathname.startsWith("/admin") ||
+    location.pathname.startsWith("/invite") ||
+    location.pathname.startsWith("/accept-invite");
 
   const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -54,7 +55,7 @@ const BreadcrumbsComponent = () => {
   const breadcrumbsItems = [];
 
   // Handle first crumb based on login status
-  if (isLoggedIn) {
+  if (isAuthenticatedRoute) {
     // Always include the Dashboard link if not on the dashboard
     if (location.pathname !== "/dashboard") {
       breadcrumbsItems.push(

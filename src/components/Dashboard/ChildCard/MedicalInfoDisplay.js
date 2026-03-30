@@ -37,40 +37,96 @@ const MedicalInfoDisplay = ({
     : 'N/A';
 
   if (compact) {
+    const compactChipSx = {
+      display: 'inline-flex',
+      alignItems: 'center',
+      px: 0.75,
+      py: 0.28,
+      borderRadius: 999,
+      fontSize: '0.72rem',
+      fontWeight: 700,
+      lineHeight: 1,
+      whiteSpace: 'nowrap',
+      border: '1px solid',
+    };
+
     return (
-      <Box sx={{ mb: 0.5, mt: 0.1 }}>
-        <Typography
-          variant="body2"
-          color="text.secondary"
+      <Box sx={{ mb: 0.45, mt: 0.1 }}>
+        <Box
           sx={{
-            fontSize: '0.75rem',
-            fontWeight: 600,
-            lineHeight: 1.25,
-            letterSpacing: '-0.01em',
+            display: 'flex',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: 0.65,
           }}
         >
-          {diagnosisLabel}
-          <Box component="span" sx={{ mx: 0.65, color: 'text.disabled' }}>
-            •
+          <Box
+            component="span"
+            sx={{
+              ...compactChipSx,
+              color: '#B42318',
+              borderColor: 'rgba(180, 35, 24, 0.28)',
+              backgroundColor: 'rgba(254, 228, 226, 0.85)',
+            }}
+          >
+            Allergies
           </Box>
-          {allergyLabel}
+          <Typography
+            variant="body2"
+            sx={{
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              color: 'text.secondary',
+              lineHeight: 1.2,
+            }}
+          >
+            {allergyLabel}
+          </Typography>
+
+          <Box
+            component="span"
+            sx={{
+              ...compactChipSx,
+              color: '#7A2E0B',
+              borderColor: 'rgba(122, 46, 11, 0.2)',
+              backgroundColor: 'rgba(255, 244, 229, 0.92)',
+            }}
+          >
+            Issues
+          </Box>
+          <Typography
+            variant="body2"
+            sx={{
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              color: 'text.secondary',
+              lineHeight: 1.2,
+            }}
+          >
+            {diagnosisLabel}
+          </Typography>
+
           {hasMoreAllergies && (
-            <Box
-              component="span"
+            <Typography
+              component="button"
+              type="button"
               onClick={() => setShowAllAllergies(!showAllAllergies)}
               sx={{
+                p: 0,
+                border: 0,
+                background: 'transparent',
                 color: 'primary.main',
                 cursor: 'pointer',
                 fontWeight: 700,
                 fontSize: '0.75rem',
-                ml: 0.35,
+                ml: 0.1,
                 '&:hover': { textDecoration: 'underline' }
               }}
             >
               +{allergyRemainingCount}
-            </Box>
+            </Typography>
           )}
-        </Typography>
+        </Box>
 
         <Collapse in={showAllAllergies}>
           <Box sx={{

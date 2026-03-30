@@ -80,6 +80,7 @@ export class ErrorBoundary extends React.Component {
     if (this.state.hasError) {
       return (
         <div style={{ padding: "20px", textAlign: "center" }}>
+          {/* TODO: Replace this fallback with a shared branded error screen used for route, network, and runtime failures. */}
           <h2>Something went wrong</h2>
           <p>We're sorry, but something unexpected happened.</p>
           <button onClick={() => window.location.reload()}>Reload Page</button>

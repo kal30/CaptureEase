@@ -24,6 +24,8 @@ const ChildCard = ({
   onDailyReport,
   onMessages,
   compactIdentityOnMobile = false,
+  disableCollapse = false,
+  hidePrimaryAction = false,
 }) => {
   // Business logic hook
   const {
@@ -76,6 +78,7 @@ const ChildCard = ({
             userRole={userRole}
             completedToday={completedToday}
             helperText={!(timelineSummary.todayCount > 0) ? 'No entries yet today — tap to log' : ''}
+            hidePrimaryAction={hidePrimaryAction}
             onQuickEntry={onQuickEntry}
             onDailyReport={onDailyReport}
             onMessages={onMessages}
@@ -95,6 +98,7 @@ const ChildCard = ({
           child={child}
           groupType={groupType}
           isExpanded={isExpanded}
+          disableCollapse={disableCollapse}
           recentEntries={recentEntries}
           incidents={incidents}
           status={status}
