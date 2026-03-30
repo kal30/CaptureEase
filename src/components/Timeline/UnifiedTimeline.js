@@ -5,6 +5,7 @@ import {
   Stack,
   CircularProgress,
   Alert,
+  Skeleton,
 } from "@mui/material";
 import { getEntryTypeMeta, mapLegacyType, ENTRY_TYPE } from "../../constants/timeline";
 import { useTheme } from "@mui/material/styles";
@@ -69,6 +70,7 @@ const UnifiedTimeline = ({
     selectedDate,
     filters
   );
+  const mobileTimelineMinHeight = { xs: 300, md: 'auto' };
 
   // Note: entries are already pre-filtered; grouping by period is optional and not used here.
 
@@ -76,8 +78,41 @@ const UnifiedTimeline = ({
   // Loading state
   if (loading) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-        <CircularProgress />
+      <Box
+        sx={{
+          minHeight: mobileTimelineMinHeight,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "flex-start",
+          gap: 1.1,
+          pt: 1,
+        }}
+      >
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 1 }}>
+          <CircularProgress size={24} />
+        </Box>
+        {[0, 1, 2].map((item) => (
+          <Box
+            key={item}
+            sx={{
+              display: 'flex',
+              gap: 1,
+              alignItems: 'flex-start',
+            }}
+          >
+            <Skeleton
+              variant="circular"
+              width={20}
+              height={20}
+              sx={{ flex: '0 0 auto', mt: 1.5 }}
+            />
+            <Skeleton
+              variant="rounded"
+              height={92}
+              sx={{ flex: 1, borderRadius: 2 }}
+            />
+          </Box>
+        ))}
       </Box>
     );
   }
@@ -163,6 +198,7 @@ const UnifiedTimeline = ({
           role={onEmptyStateClick ? "button" : undefined}
           tabIndex={onEmptyStateClick ? 0 : undefined}
           sx={{
+            minHeight: mobileTimelineMinHeight,
             textAlign: "center",
             py: 3.5,
             px: 2,
@@ -216,6 +252,7 @@ const UnifiedTimeline = ({
           sx={{
             position: "relative",
             mt: 2,
+            minHeight: mobileTimelineMinHeight,
             maxHeight: { xs: 420, md: 520 },
             overflowY: 'auto',
             pr: 0.5,
