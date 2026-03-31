@@ -43,6 +43,10 @@ export const getTherapyNotes = async (childId, selectedDate) => {
     }));
     
   } catch (error) {
+    if (error?.code === 'permission-denied') {
+      return [];
+    }
+
     console.error('Error fetching therapy notes:', error);
     // Fallback query without orderBy if index missing
     try {
@@ -66,6 +70,10 @@ export const getTherapyNotes = async (childId, selectedDate) => {
       // Sort in memory if index not available
       return entries.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
     } catch (fallbackError) {
+      if (fallbackError?.code === 'permission-denied') {
+        return [];
+      }
+
       console.error('Error with fallback therapy notes query:', fallbackError);
       return [];
     }

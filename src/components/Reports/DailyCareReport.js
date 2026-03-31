@@ -4,6 +4,7 @@ import {
   Box,
   Button,
   Chip,
+  Collapse,
   Dialog,
   DialogContent,
   DialogTitle,
@@ -16,6 +17,8 @@ import {
 import CloseIcon from "@mui/icons-material/Close";
 import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ShareIcon from "@mui/icons-material/Share";
 import { alpha, useTheme } from "@mui/material/styles";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -28,6 +31,11 @@ const RANGE_PRESET = {
   WEEK: "week",
   MONTH: "month",
   CUSTOM: "custom",
+};
+
+const GROUP_MODE = {
+  DATE: "date",
+  ACTIVITY: "activity",
 };
 
 const CATEGORY_META = {
@@ -135,6 +143,17 @@ const getLoggedByName = (entry) => {
   return String(value).trim();
 };
 
+const getInitials = (name = "") => {
+  const parts = String(name)
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if (!parts.length) return "";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0] || ""}${parts[parts.length - 1][0] || ""}`.toUpperCase();
+};
+
 const isLowSignalEntry = (entry) => {
   if (entry.type === "daily_care") {
     return true;
@@ -170,6 +189,68 @@ const getCategoryColors = (entry) => {
 
   return CATEGORY_COLORS[entry.type] || CATEGORY_COLORS.log;
 };
+
+const getSectionHeaderSx = (theme) => ({
+  fontWeight: 900,
+  fontSize: "0.92rem",
+  letterSpacing: 0.45,
+});
+
+const getDateHeaderSx = () => ({
+  fontWeight: 900,
+  fontSize: "1.08rem",
+  letterSpacing: 0.15,
+  mb: 0.9,
+});
+
+const getLoggerBadgeSx = (theme) => ({
+  width: 22,
+  height: 22,
+  borderRadius: "50%",
+  bgcolor: alpha(theme.palette.text.primary, 0.08),
+  color: "text.secondary",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  fontSize: "0.65rem",
+  fontWeight: 800,
+});
+
+const getMetaDateSx = () => ({
+  fontSize: "0.86rem",
+  fontWeight: 700,
+  letterSpacing: 0.15,
+  color: "text.secondary",
+  fontFamily: '"Avenir Next", "Inter", sans-serif',
+});
+
+const getMetaTimeSx = (theme) => ({
+  fontSize: "0.78rem",
+  fontWeight: 600,
+  color: alpha(theme.palette.text.secondary, 0.82),
+  ml: 0.35,
+});
+
+const getCategoryPillSx = (colors) => ({
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 0.65,
+  px: 0.95,
+  py: 0.34,
+  borderRadius: 999,
+  bgcolor: colors.bg,
+  color: colors.text,
+  border: `1px solid ${colors.border}`,
+});
+
+const getCategoryPillTextSx = () => ({
+  fontSize: "0.86rem",
+  fontWeight: 900,
+  color: "inherit",
+  lineHeight: 1.1,
+  display: "flex",
+  alignItems: "center",
+});
 
 const buildCategorySections = (entries) => {
   const grouped = entries.reduce((acc, entry) => {
@@ -244,6 +325,8 @@ const DailyCareReport = ({ open, onClose, child, childId, childName, onLogSometh
   const [customStartDate, setCustomStartDate] = useState(() => getWeekRange().start);
   const [customEndDate, setCustomEndDate] = useState(() => getWeekRange().end);
   const [entries, setEntries] = useState([]);
+  const [groupMode, setGroupMode] = useState(GROUP_MODE.DATE);
+  const [collapsedSections, setCollapsedSections] = useState({});
 
   const activeRange = useMemo(() => {
     if (rangePreset === RANGE_PRESET.MONTH) return getMonthRange();
@@ -263,11 +346,6 @@ const DailyCareReport = ({ open, onClose, child, childId, childName, onLogSometh
       .filter((entry) => !isLowSignalEntry(entry));
   }, [entries, rangeEnd, rangeStart]);
 
-  const dayCount = useMemo(() => {
-    return Math.floor((startOfDay(rangeEnd) - startOfDay(rangeStart)) / MS_PER_DAY) + 1;
-  }, [rangeEnd, rangeStart]);
-
-  const groupMode = dayCount > 14 ? "date" : "category";
   const categorySections = useMemo(() => buildCategorySections(filteredEntries), [filteredEntries]);
   const dateSections = useMemo(() => buildDateSections(filteredEntries), [filteredEntries]);
   const peopleLoggedCount = useMemo(() => {
@@ -358,101 +436,170 @@ const DailyCareReport = ({ open, onClose, child, childId, childName, onLogSometh
     }
   };
 
-  const renderCategorySections = () => (
-    <Stack spacing={3}>
-      {categorySections.map((section) => (
-        <Box key={section.label}>
-          <Box
-            sx={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 0.75,
-              px: 1.1,
-              py: 0.6,
-              borderRadius: 999,
-              bgcolor: getCategoryColors(section.items[0]).bg,
-              color: getCategoryColors(section.items[0]).text,
-              border: `1px solid ${getCategoryColors(section.items[0]).border}`,
-              mb: 1,
-            }}
-          >
-            <Typography variant="h6" sx={{ fontWeight: 900, fontSize: "1.08rem", letterSpacing: 0.5, color: "inherit" }}>
-              {section.emoji} {section.label} · {section.items.length} {section.items.length === 1 ? "entry" : "entries"}
-            </Typography>
-          </Box>
-          <Box sx={{ height: 1, bgcolor: alpha(theme.palette.text.primary, 0.14), mb: 1.5 }} />
-          <Stack spacing={0}>
-            {section.items.map((entry, index) => (
-              <Box
-                key={entry.id}
-                sx={{
-                  py: 1,
-                }}
-              >
-                <Typography variant="body1" sx={{ color: "text.primary" }}>
-                  {formatCompactDate(toEntryDate(entry.timestamp))} · {getMeaningfulSummary(entry)}
-                  {getLoggedByName(entry) ? (
-                    <Box
-                      component="span"
-                      sx={{
-                        ml: 0.75,
-                        fontSize: "0.82rem",
-                        fontWeight: 600,
-                        color: "primary.main",
-                      }}
-                    >
-                      · {getLoggedByName(entry)}
-                    </Box>
-                  ) : null}
-                </Typography>
-              </Box>
-            ))}
-          </Stack>
-        </Box>
-      ))}
-    </Stack>
-  );
+  const toggleSection = (sectionLabel) => {
+    setCollapsedSections((current) => ({
+      ...current,
+      [sectionLabel]: !current[sectionLabel],
+    }));
+  };
 
   const renderDateSections = () => (
     <Stack spacing={3}>
       {dateSections.map((section) => (
         <Box key={section.date.toISOString()}>
-          <Typography variant="h6" sx={{ fontWeight: 800, mb: 1 }}>
-            {section.date.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}
+          <Typography variant="h6" sx={getDateHeaderSx()}>
+            {section.date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
           </Typography>
           <Box sx={{ height: 1, bgcolor: alpha(theme.palette.text.primary, 0.14), mb: 1.5 }} />
-          <Stack spacing={0}>
-            {section.items.map((entry, index) => {
+          <Stack spacing={1.2}>
+            {section.items.map((entry) => {
               const meta = getCategoryMeta(entry);
+              const colors = getCategoryColors(entry);
+              const loggerInitials = getInitials(getLoggedByName(entry));
+              const entryTime = toEntryDate(entry.timestamp).toLocaleTimeString([], {
+                hour: "numeric",
+                minute: "2-digit",
+              });
               return (
                 <Box
                   key={entry.id}
                   sx={{
-                    py: 1,
+                    py: 1.1,
+                    px: 1,
+                    borderRadius: 2,
+                    bgcolor: entry.type === "milestone" ? alpha(theme.palette.success.light, 0.12) : "transparent",
                   }}
                 >
-                  <Typography variant="body1" sx={{ color: "text.primary" }}>
-                    {meta.emoji} {meta.label} · {getMeaningfulSummary(entry)}
-                    {getLoggedByName(entry) ? (
-                      <Box
-                        component="span"
-                        sx={{
-                          ml: 0.75,
-                          fontSize: "0.82rem",
-                          fontWeight: 600,
-                          color: "primary.main",
-                        }}
-                      >
-                        · {getLoggedByName(entry)}
+                  <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 1.5 }}>
+                    <Box sx={{ minWidth: 0, flex: 1 }}>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.8, flexWrap: "wrap", mb: 0.35 }}>
+                        <Box sx={getCategoryPillSx(colors)}>
+                          <Typography sx={getCategoryPillTextSx()}>
+                            {meta.emoji} {meta.label}
+                          </Typography>
+                        </Box>
+                        <Typography variant="caption" sx={{ color: "text.secondary", fontWeight: 600 }}>
+                          {entryTime}
+                        </Typography>
+                      </Box>
+                      <Typography variant="body1" sx={{ color: "text.primary", fontWeight: 500, lineHeight: 1.5 }}>
+                        {getMeaningfulSummary(entry)}
+                      </Typography>
+                    </Box>
+
+                    {loggerInitials ? (
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.6, flexShrink: 0, pt: 0.15 }}>
+                        <Box sx={getLoggerBadgeSx(theme)}>
+                          {loggerInitials}
+                        </Box>
                       </Box>
                     ) : null}
-                  </Typography>
+                  </Box>
                 </Box>
               );
             })}
           </Stack>
         </Box>
       ))}
+    </Stack>
+  );
+
+  const renderCategorySections = () => (
+    <Stack spacing={2}>
+      {categorySections.map((section) => {
+        const colors = getCategoryColors(section.items[0]);
+        const isCollapsed = !!collapsedSections[section.label];
+
+        return (
+          <Paper
+            key={section.label}
+            elevation={0}
+            sx={{
+              borderRadius: 3,
+              border: `1px solid ${alpha(colors.border, 0.28)}`,
+              bgcolor: alpha(colors.border, 0.045),
+              borderLeft: `5px solid ${colors.border}`,
+              overflow: "hidden",
+            }}
+          >
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 1,
+                px: 2,
+                py: 1.3,
+              }}
+            >
+              <Box sx={{ minWidth: 0 }}>
+                <Typography
+                  variant="subtitle1"
+                  sx={{
+                    ...getSectionHeaderSx(theme),
+                    color: colors.text,
+                  }}
+                >
+                  {section.emoji} {section.label} ({section.items.length} {section.items.length === 1 ? "log" : "logs"} this week)
+                </Typography>
+              </Box>
+              <IconButton size="small" onClick={() => toggleSection(section.label)}>
+                {isCollapsed ? <ExpandMoreIcon /> : <ExpandLessIcon />}
+              </IconButton>
+            </Box>
+
+            <Collapse in={!isCollapsed}>
+              <Stack spacing={1.2} sx={{ px: 2, pb: 1.5 }}>
+                {section.items.map((entry) => {
+                  const loggerInitials = getInitials(getLoggedByName(entry));
+                  const entryDate = toEntryDate(entry.timestamp);
+                  const isWinRow = entry.type === "milestone";
+                  return (
+                    <Box
+                      key={entry.id}
+                      sx={{
+                        py: 1,
+                        px: 1,
+                        borderTop: "1px solid",
+                        borderColor: alpha(colors.border, 0.16),
+                        borderRadius: 2,
+                        bgcolor: isWinRow ? alpha(theme.palette.success.light, 0.16) : "transparent",
+                        boxShadow: isWinRow ? `inset 0 0 0 1px ${alpha(theme.palette.success.main, 0.18)}` : "none",
+                      }}
+                    >
+                      <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 1.5 }}>
+                        <Typography variant="body1" sx={{ color: "text.primary", fontWeight: 500, lineHeight: 1.5, minWidth: 0, flex: 1 }}>
+                          <Box
+                            component="span"
+                            sx={getMetaDateSx()}
+                          >
+                            {formatCompactDate(entryDate)}
+                            <Box
+                              component="span"
+                              sx={getMetaTimeSx(theme)}
+                            >
+                              · {entryDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                            </Box>
+                          </Box>
+                          {" - "}
+                          {getMeaningfulSummary(entry)}
+                        </Typography>
+                        {loggerInitials ? (
+                          <Box sx={{ display: "flex", alignItems: "center", gap: 0.55, flexShrink: 0 }}>
+                            <Box sx={getLoggerBadgeSx(theme)}>
+                              {loggerInitials}
+                            </Box>
+                          </Box>
+                        ) : null}
+                      </Box>
+                    </Box>
+                  );
+                })}
+              </Stack>
+            </Collapse>
+          </Paper>
+        );
+      })}
     </Stack>
   );
 
@@ -597,17 +744,60 @@ const DailyCareReport = ({ open, onClose, child, childId, childName, onLogSometh
                   </Box>
                 </Box>
 
-                <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700 }}>
-                  Grouped by {groupMode === "category" ? "Category" : "Date"}
-                </Typography>
+                <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1 }}>
+                  <Chip
+                    label="📅 By Date"
+                    clickable
+                    color={groupMode === GROUP_MODE.DATE ? "primary" : "default"}
+                    variant={groupMode === GROUP_MODE.DATE ? "filled" : "outlined"}
+                    onClick={() => setGroupMode(GROUP_MODE.DATE)}
+                  />
+                  <Chip
+                    label="🧊 By Activity"
+                    clickable
+                    color={groupMode === GROUP_MODE.ACTIVITY ? "primary" : "default"}
+                    variant={groupMode === GROUP_MODE.ACTIVITY ? "filled" : "outlined"}
+                    onClick={() => setGroupMode(GROUP_MODE.ACTIVITY)}
+                  />
+                </Stack>
 
-                {groupMode === "category" ? renderCategorySections() : renderDateSections()}
+                {groupMode === GROUP_MODE.DATE ? renderDateSections() : renderCategorySections()}
 
-                <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1, pt: 1 }}>
-                  <Button variant="outlined" startIcon={<ContentCopyIcon />} onClick={handleCopy}>
+                <Stack
+                  direction={{ xs: "column", sm: "row" }}
+                  spacing={1}
+                  sx={{
+                    flexWrap: "nowrap",
+                    gap: 1,
+                    pt: 0.5,
+                  }}
+                >
+                  <Button
+                    variant="outlined"
+                    startIcon={<ContentCopyIcon />}
+                    onClick={handleCopy}
+                    fullWidth
+                    sx={{
+                      minHeight: 38,
+                      borderColor: alpha(theme.palette.primary.main, 0.38),
+                      color: "primary.main",
+                      bgcolor: "#fff",
+                    }}
+                  >
                     Copy
                   </Button>
-                  <Button variant="outlined" startIcon={<ShareIcon />} onClick={handleShare}>
+                  <Button
+                    variant="outlined"
+                    startIcon={<ShareIcon />}
+                    onClick={handleShare}
+                    fullWidth
+                    sx={{
+                      minHeight: 38,
+                      borderColor: alpha(theme.palette.primary.main, 0.38),
+                      color: "primary.main",
+                      bgcolor: "#fff",
+                    }}
+                  >
                     Share with Care Team
                   </Button>
                 </Stack>

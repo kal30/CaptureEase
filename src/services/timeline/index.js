@@ -1,7 +1,6 @@
 import { getIncidents, getGroupedIncidents } from './incidentDataService';
 import { getJournalEntries, getDailyLogEntries } from './journalDataService';
 import { getDailyHabits } from './habitDataService';
-import { getTherapyNotes } from './therapyNotesDataService';
 
 /**
  * Main Timeline Service - Orchestrates data fetching from all timeline sources
@@ -23,13 +22,11 @@ export const getTimelineData = async (childId, selectedDate) => {
     const [
       groupedIncidents,
       journalEntries,
-      dailyHabits,
-      therapyNotes
+      dailyHabits
     ] = await Promise.all([
       getGroupedIncidents(childId, selectedDate),
       getJournalEntries(childId, selectedDate),
-      getDailyHabits(childId, selectedDate),
-      getTherapyNotes(childId, selectedDate)
+      getDailyHabits(childId, selectedDate)
     ]);
 
     return {
@@ -37,8 +34,8 @@ export const getTimelineData = async (childId, selectedDate) => {
       journalEntries,
       dailyLogEntries: [], // Empty to avoid duplicates - journalEntries contains the dailyLogs data
       dailyHabits,
-      therapyNotes, // NEW: 4th timeline entry type
-      totalEntries: groupedIncidents.length + journalEntries.length + dailyHabits.length + therapyNotes.length
+      therapyNotes: [],
+      totalEntries: groupedIncidents.length + journalEntries.length + dailyHabits.length
     };
   } catch (error) {
     console.error('Error fetching timeline data:', error);
@@ -70,8 +67,7 @@ export const getCombinedTimelineEntries = async (childId, selectedDate) => {
       ...data.incidents, // These are now grouped incidents with follow-ups
       ...data.journalEntries, // Contains dailyLogs data
       // ...data.dailyLogEntries, // Skip to avoid duplicates
-      ...data.dailyHabits,
-      ...data.therapyNotes // NEW: Include therapy notes in combined view
+      ...data.dailyHabits
     ];
     
     // Sort by timestamp (newest first)
@@ -90,5 +86,4 @@ export const getCombinedTimelineEntries = async (childId, selectedDate) => {
 export { getIncidents, getGroupedIncidents } from './incidentDataService';
 export { getJournalEntries, getDailyLogEntries } from './journalDataService';
 export { getDailyHabits } from './habitDataService';
-export { getTherapyNotes } from './therapyNotesDataService'; // NEW: Export therapy notes service
 export { getDayDateRange } from './dateUtils';

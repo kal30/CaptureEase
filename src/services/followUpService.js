@@ -170,8 +170,21 @@ export const requestPermissionManually = async () => {
 };
 
 // Initialize notifications for existing pending follow-ups
+let initializedFollowUpNotificationKey = null;
+
 export const initializeNotificationsForPendingFollowUps = async (childrenData) => {
   try {
+    const notificationKey = (childrenData || [])
+      .map((child) => child.id)
+      .sort()
+      .join('|');
+
+    if (!notificationKey || initializedFollowUpNotificationKey === notificationKey) {
+      return;
+    }
+
+    initializedFollowUpNotificationKey = notificationKey;
+
     // Check current permission status
     console.log('🔔 Current notification permission:', Notification.permission);
     

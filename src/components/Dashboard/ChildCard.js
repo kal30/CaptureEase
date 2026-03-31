@@ -7,6 +7,7 @@ import ChildCardContent from './ChildCard/ChildCardContent';
 import ChildCardActions from './ChildCard/ChildCardActions';
 import PendingFollowUpModal from './PendingFollowUpModal';
 import { useChildCardLogic } from '../../hooks/useChildCardLogic';
+import { trackRenderDebug, useMountDebug } from '../../utils/renderDebug';
 
 const ChildCard = ({
   child,
@@ -26,7 +27,16 @@ const ChildCard = ({
   compactIdentityOnMobile = false,
   disableCollapse = false,
   hidePrimaryAction = false,
+  collapseSummaryOnMobile = false,
 }) => {
+  useMountDebug('ChildCard');
+  trackRenderDebug('ChildCard', {
+    childId: child?.id || 'none',
+    isExpanded,
+    recentEntries: recentEntries.length,
+    incidents: incidents.length,
+    todayCount: timelineSummary.todayCount || 0,
+  });
   // Business logic hook
   const {
     userRole,
@@ -67,6 +77,7 @@ const ChildCard = ({
             onDailyReport={onDailyReport}
             onNotificationClick={handleNotificationClick}
             compactIdentityOnMobile={compactIdentityOnMobile}
+            collapseSummaryOnMobile={collapseSummaryOnMobile}
             sx={{ flex: 1, minWidth: 0 }}
           />
 
@@ -107,12 +118,14 @@ const ChildCard = ({
       </GroupStyledCard>
 
       {/* Follow-up Modal */}
-      <PendingFollowUpModal
-        open={showFollowUpModal}
-        onClose={handleFollowUpModalClose}
-        childId={child.id}
-        childName={child.name}
-      />
+      {showFollowUpModal ? (
+        <PendingFollowUpModal
+          open={showFollowUpModal}
+          onClose={handleFollowUpModalClose}
+          childId={child.id}
+          childName={child.name}
+        />
+      ) : null}
     </>
   );
 };

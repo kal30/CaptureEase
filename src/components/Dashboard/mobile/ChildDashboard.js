@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Avatar,
   Box,
@@ -18,6 +18,7 @@ import {
 } from '@mui/icons-material';
 import ChildCard from '../ChildCard';
 import { getChildAccent } from '../shared/childAccent';
+import { trackRenderDebug, useMountDebug } from '../../../utils/renderDebug';
 
 const ChildDashboard = ({
   child,
@@ -38,11 +39,30 @@ const ChildDashboard = ({
 }) => {
   const [switcherAnchor, setSwitcherAnchor] = useState(null);
   const [fabOpen, setFabOpen] = useState(false);
+  const [summaryCollapsed, setSummaryCollapsed] = useState(false);
+  useMountDebug('ChildDashboard');
+  trackRenderDebug('ChildDashboard', {
+    childId: child?.id || 'none',
+    fabOpen,
+    switcherOpen: Boolean(switcherAnchor),
+    childCount: children.length,
+  });
   const accent = getChildAccent(child?.id);
   const otherChildren = useMemo(
     () => children.filter((item) => item.id !== child?.id),
     [children, child?.id]
   );
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const nextCollapsed = window.scrollY > 100;
+      setSummaryCollapsed((current) => (current !== nextCollapsed ? nextCollapsed : current));
+    };
+
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   if (!child) {
     return null;
@@ -164,6 +184,7 @@ const ChildDashboard = ({
         compactIdentityOnMobile={true}
         disableCollapse={true}
         hidePrimaryAction={true}
+        collapseSummaryOnMobile={summaryCollapsed}
       />
 
       {fabOpen ? (
@@ -256,6 +277,7 @@ const ChildDashboard = ({
         open={Boolean(switcherAnchor)}
         onClose={() => setSwitcherAnchor(null)}
         disableScrollLock
+        disablePortal
         keepMounted
         transitionDuration={0}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}

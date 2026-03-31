@@ -9,6 +9,7 @@ import { getTodayHabitStatus } from '../services/habitService';
 export const useDailyCareStatus = (children = []) => {
   const [completionStatus, setCompletionStatus] = useState({});
   const [loading, setLoading] = useState(true);
+  const childIdsKey = (children || []).map((child) => child.id).join('|');
 
   useEffect(() => {
     const fetchCompletionStatus = async () => {
@@ -74,7 +75,11 @@ export const useDailyCareStatus = (children = []) => {
           };
         });
 
-        setCompletionStatus(statusMap);
+        setCompletionStatus((current) => {
+          const currentSerialized = JSON.stringify(current);
+          const nextSerialized = JSON.stringify(statusMap);
+          return currentSerialized === nextSerialized ? current : statusMap;
+        });
       } catch (error) {
         console.error('Error processing completion status:', error);
       } finally {
@@ -83,7 +88,7 @@ export const useDailyCareStatus = (children = []) => {
     };
 
     fetchCompletionStatus();
-  }, [children]);
+  }, [childIdsKey]);
 
   // Helper function to get status for a specific child
   const getChildStatus = (childId) => {

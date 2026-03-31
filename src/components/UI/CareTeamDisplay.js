@@ -146,19 +146,19 @@ const CareTeamDisplay = ({
         onInviteTeamMember?.(child.id);
       }}
       sx={{
-        width: 20,
-        height: 20,
+        width: compactMobile ? 22 : 20,
+        height: compactMobile ? 22 : 20,
         ml: 0.5,
-        bgcolor: theme.palette.primary.main,
-        border: `1px solid ${theme.palette.primary.main}`,
+        bgcolor: '#ffffff',
+        border: `1px solid ${alpha(theme.palette.primary.main, 0.32)}`,
         "&:hover": {
-          bgcolor: theme.palette.primary.dark,
-          transform: "scale(1.1)",
-          boxShadow: `0 2px 8px ${theme.palette.primary.main}40`,
+          bgcolor: alpha(theme.palette.primary.main, 0.08),
+          transform: "scale(1.05)",
+          boxShadow: `0 2px 8px ${theme.palette.primary.main}18`,
         },
       }}
     >
-      <AddIcon sx={{ fontSize: 12, color: "white" }} />
+      <AddIcon sx={{ fontSize: 12, color: theme.palette.primary.main }} />
     </IconButton>
   ) : null;
 

@@ -24,6 +24,7 @@ import { alpha, useTheme } from '@mui/material/styles';
 import MiniCalendar from './MiniCalendar';
 import { UnifiedTimeline, TimelineFilters } from '../Timeline';
 import { useTimelineProgress } from '../../hooks/useTimelineProgress';
+import { trackRenderDebug, useMountDebug } from '../../utils/renderDebug';
 
 /**
  * TimelineWidget - Self-contained timeline component with progress visualization and unified daily log
@@ -49,6 +50,7 @@ const TimelineWidget = ({
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  useMountDebug('TimelineWidget');
   const [expanded, setExpanded] = useState(defaultExpanded);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [mobileCalendarAnchor, setMobileCalendarAnchor] = useState(null);
@@ -58,6 +60,13 @@ const TimelineWidget = ({
   const childSpecificEntries = entries;
   
   const timeline = useTimelineProgress(childSpecificEntries, dailyCareStatus);
+  trackRenderDebug('TimelineWidget', {
+    childId: child?.id || 'none',
+    expanded,
+    selectedDate: selectedDate.toDateString(),
+    entries: entries.length,
+    recentEntries: timeline.recentEntries.length,
+  });
 
   useEffect(() => {
     if (typeof controlledExpanded === 'boolean') {
@@ -238,6 +247,13 @@ const TimelineWidget = ({
 
       <Box
         sx={{
+          mt: 0.35,
+          px: 0.35,
+          py: 0.5,
+          borderRadius: 2.5,
+          bgcolor: 'rgba(15, 23, 42, 0.03)',
+          border: '1px solid',
+          borderColor: 'rgba(148, 163, 184, 0.16)',
           display: 'flex',
           alignItems: 'center',
           gap: 0.75,
@@ -263,6 +279,9 @@ const TimelineWidget = ({
                 fontSize: '0.76rem',
                 fontWeight: 700,
                 flex: '0 0 auto',
+                bgcolor: isSelected ? 'primary.main' : 'rgba(255,255,255,0.78)',
+                color: isSelected ? '#fff' : 'text.secondary',
+                borderColor: isSelected ? 'primary.main' : 'rgba(148, 163, 184, 0.24)',
               }}
             />
           );
@@ -302,6 +321,7 @@ const TimelineWidget = ({
         anchorEl={mobileCalendarAnchor}
         onClose={() => setMobileCalendarAnchor(null)}
         disableScrollLock
+        disablePortal
         anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
         transformOrigin={{ vertical: 'top', horizontal: 'left' }}
         disableAutoFocus
@@ -337,7 +357,7 @@ const TimelineWidget = ({
           <MiniCalendar
             entries={childSpecificEntries}
             onDayClick={handleDayClick}
-            currentMonth={new Date()}
+            currentMonth={selectedDate}
           />
         </Box>
         
@@ -467,7 +487,7 @@ const TimelineWidget = ({
                     <MiniCalendar
                       entries={childSpecificEntries}
                       onDayClick={handleDayClick}
-                      currentMonth={new Date()}
+                      currentMonth={selectedDate}
                       selectedDate={selectedDate}
                     />
                   </Box>

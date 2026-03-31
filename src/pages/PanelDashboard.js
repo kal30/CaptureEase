@@ -28,12 +28,21 @@ import PatternSuggestionModal from "../components/Dashboard/PatternSuggestionMod
 import DailyHabitsModal from "../components/Dashboard/DailyHabitsModal";
 import DailyCareReport from "../components/Reports/DailyCareReport";
 import { DashboardViewProvider } from "../components/Dashboard/shared/DashboardViewContext";
+import RenderDebugOverlay from "../components/Dashboard/shared/RenderDebugOverlay";
+import { trackRenderDebug, useMountDebug } from "../utils/renderDebug";
 
 const PanelDashboard = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const hook = usePanelDashboard({ activeChildOnly: isMobile });
   const actionGroups = getActionGroups(hook.theme);
+  useMountDebug('PanelDashboard');
+  trackRenderDebug('PanelDashboard', {
+    isMobile,
+    loading: hook.loading,
+    childCount: hook.children.length,
+    currentChildId: hook.currentChildId || 'none',
+  });
 
   if (hook.loading) {
     return (
@@ -117,6 +126,7 @@ const PanelDashboard = () => {
 
   return (
     <Container maxWidth="xl" sx={{ mt: { xs: 2, md: 4 }, mb: { xs: 3, md: 4 } }}>
+      <RenderDebugOverlay />
       {hook.children.length === 0 ? (
         <Box
           sx={{

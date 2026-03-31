@@ -8,6 +8,7 @@ const TimelineItem = ({
   ariaLabel,
   isFirst = false,
   isLast = false,
+  isNested = false,
   cardBackground = '#ffffff',
   cardBorderColor = 'rgba(148, 163, 184, 0.18)',
 }) => (
@@ -16,7 +17,7 @@ const TimelineItem = ({
       <Box
         sx={{
           position: 'absolute',
-          left: { xs: 16, md: 19 },
+          left: { xs: 18, md: 21 },
           top: 0,
           height: { xs: 8, md: 12 },
           width: { xs: 3, md: 4 },
@@ -30,10 +31,10 @@ const TimelineItem = ({
       <Box
         sx={{
           position: 'absolute',
-          left: { xs: 10, md: 12 },
-          top: 0,
-          width: { xs: 14, md: 18 },
-          height: { xs: 14, md: 18 },
+          left: { xs: 11, md: 13 },
+          top: { xs: 4, md: 6 },
+          width: { xs: 16, md: 20 },
+          height: { xs: 16, md: 20 },
           borderRadius: '50%',
           bgcolor: color,
           border: { xs: '2px solid', md: '3px solid' },
@@ -52,8 +53,8 @@ const TimelineItem = ({
       <Box
         sx={{
           position: 'absolute',
-          left: { xs: 16, md: 19 },
-          top: { xs: 14, md: 18 },
+          left: { xs: 18, md: 21 },
+          top: { xs: 20, md: 26 },
           bottom: 0,
           width: { xs: 3, md: 4 },
           borderRadius: 999,
@@ -65,13 +66,14 @@ const TimelineItem = ({
 
     <Box
       sx={{
-        ml: { xs: 4.25, md: 5.5 },
+        ml: { xs: isNested ? 5.05 : 4.7, md: isNested ? 6.1 : 5.7 },
         px: { xs: 1.1, md: 1.5 },
         py: { xs: 0.9, md: 1.25 },
         bgcolor: cardBackground,
         borderRadius: 1,
         border: `1px solid ${cardBorderColor}`,
         boxShadow: { xs: '0 3px 10px rgba(15, 23, 42, 0.035)', md: '0 6px 16px rgba(15, 23, 42, 0.045)' },
+        position: 'relative',
       }}
     >
       {children}

@@ -23,6 +23,7 @@ import TherapyNoteDetails from "./parts/TherapyNoteDetails";
 import EntryHeader from "./parts/EntryHeader";
 import TimelineItem from "./parts/TimelineItem";
 import { CATEGORY_COLORS } from "../../constants/categoryColors";
+import { trackRenderDebug, useMountDebug } from "../../utils/renderDebug";
 
 /**
  * UnifiedTimeline - Main unified timeline component
@@ -44,6 +45,7 @@ const UnifiedTimeline = ({
   showFilters = true,
   showDaySummary = true,
 }) => {
+  useMountDebug('UnifiedTimeline');
   const resolveCategoryColor = (entry) => {
     if (entry.isImportantMoment) {
       return CATEGORY_COLORS.importantMoment;
@@ -70,6 +72,12 @@ const UnifiedTimeline = ({
     selectedDate,
     filters
   );
+  trackRenderDebug('UnifiedTimeline', {
+    childId: child?.id || 'none',
+    loading,
+    entryCount: entries.length,
+    selectedDate: selectedDate?.toDateString?.() || 'n/a',
+  });
   const mobileTimelineMinHeight = { xs: 300, md: 'auto' };
 
   // Note: entries are already pre-filtered; grouping by period is optional and not used here.
@@ -268,12 +276,17 @@ const UnifiedTimeline = ({
           {/* Timeline Entries */}
           <Stack spacing={0} role="list">
             {entries.map((entry, entryIndex) => {
-
               const timestamp = new Date(entry.timestamp);
               const timeString = timestamp.toLocaleTimeString([], {
                 hour: "2-digit",
                 minute: "2-digit",
               });
+              const previousEntry = entryIndex > 0 ? entries[entryIndex - 1] : null;
+              const previousDate = previousEntry ? new Date(previousEntry.timestamp) : null;
+              const isNestedWithPrevious = previousDate
+                ? previousDate.getHours() === timestamp.getHours() &&
+                  previousDate.getMinutes() === timestamp.getMinutes()
+                : false;
 
               // Determine timeline type purely based on collection
               let typeForTimeline;
@@ -306,6 +319,7 @@ const UnifiedTimeline = ({
                   ariaLabel={`${entryLabel} at ${timeString}`}
                   isFirst={entryIndex === 0}
                   isLast={entryIndex === entries.length - 1}
+                  isNested={isNestedWithPrevious}
                   cardBackground={entry.isImportantMoment ? CATEGORY_COLORS.importantMoment.bg : '#ffffff'}
                   cardBorderColor={entry.isImportantMoment ? CATEGORY_COLORS.importantMoment.border : 'rgba(148, 163, 184, 0.18)'}
                 >

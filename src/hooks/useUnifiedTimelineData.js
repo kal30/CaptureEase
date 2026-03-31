@@ -105,7 +105,7 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
     };
 
     fetchAllData();
-  }, [childId, selectedDate, filters]);
+  }, [childId, selectedDate]);
 
   useEffect(() => {
     if (!childId || !selectedDate) {

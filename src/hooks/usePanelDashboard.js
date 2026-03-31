@@ -56,6 +56,40 @@ const getActivityStreak = (entries = []) => {
   return streak;
 };
 
+const serializeEntriesByChild = (entriesByChild = {}) => {
+  const normalized = Object.keys(entriesByChild)
+    .sort()
+    .reduce((acc, childId) => {
+      acc[childId] = (entriesByChild[childId] || []).map((entry) => ({
+        id: entry.id,
+        timestamp: toEntryDate(entry.timestamp).getTime(),
+        type: entry.type,
+        collection: entry.collection || null,
+      }));
+      return acc;
+    }, {});
+
+  return JSON.stringify(normalized);
+};
+
+const serializeSummaryByChild = (summaryByChild = {}) => {
+  const normalized = Object.keys(summaryByChild)
+    .sort()
+    .reduce((acc, childId) => {
+      const summary = summaryByChild[childId] || {};
+      acc[childId] = {
+        totalEntries: summary.totalEntries || 0,
+        todayCount: summary.todayCount || 0,
+        weekCount: summary.weekCount || 0,
+        activityStreak: summary.activityStreak || 0,
+        lastActivityTime: summary.lastActivityTime || null,
+      };
+      return acc;
+    }, {});
+
+  return JSON.stringify(normalized);
+};
+
 export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
   const theme = useTheme();
   const navigate = useNavigate();
@@ -110,6 +144,8 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
   const [dailyHabitsInitialCategoryId, setDailyHabitsInitialCategoryId] = useState(null);
   const [showCareReportModal, setShowCareReportModal] = useState(false);
   const [careReportChild, setCareReportChild] = useState(null);
+  const childrenAccessKey = (childrenWithAccess || []).map((child) => child.id).join('|');
+  const childIdsKey = (children || []).map((child) => child.id).join('|');
 
   useEffect(() => {
     // Start SW quick response listener once on mount
@@ -120,10 +156,11 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
     const loadChildren = async () => {
       try {
         const childrenWithRoles = childrenWithAccess || [];
-        setChildren(childrenWithRoles);
-        if (childrenWithRoles.length > 0 && !currentChildId) {
-          setCurrentChildId(childrenWithRoles[0].id);
-        }
+        setChildren((current) => {
+          const currentKey = (current || []).map((child) => child.id).join('|');
+          const nextKey = (childrenWithRoles || []).map((child) => child.id).join('|');
+          return currentKey === nextKey ? current : childrenWithRoles;
+        });
 
         // Initialize notifications for pending follow-ups
         if (childrenWithRoles.length > 0) {
@@ -145,7 +182,13 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
     };
 
     loadChildren();
-  }, [roleLoading, childrenWithAccess, currentChildId, setCurrentChildId]);
+  }, [roleLoading, childrenAccessKey, childrenWithAccess]);
+
+  useEffect(() => {
+    if (!currentChildId && children.length > 0) {
+      setCurrentChildId(children[0].id);
+    }
+  }, [currentChildId, children, setCurrentChildId]);
 
   useEffect(() => {
     const unsubscribes = [];
@@ -196,8 +239,14 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
           activityStreak: getActivityStreak(entries),
           lastActivityTime: todaysEntries[0] ? formatTimeForSummary(todaysEntries[0].timestamp) : null,
         };
-        setRecentEntries({ ...entriesByChild });
-        setTimelineSummary({ ...timelineSummaryByChild });
+        setRecentEntries((current) => {
+          const next = { ...entriesByChild };
+          return serializeEntriesByChild(current) === serializeEntriesByChild(next) ? current : next;
+        });
+        setTimelineSummary((current) => {
+          const next = { ...timelineSummaryByChild };
+          return serializeSummaryByChild(current) === serializeSummaryByChild(next) ? current : next;
+        });
       });
 
       // Fetch incidents (for unified daily log)
@@ -222,7 +271,7 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
         if (unsub) unsub();
       });
     };
-  }, [children, currentChildId, activeChildOnly]);
+  }, [childIdsKey, currentChildId, activeChildOnly]);
 
   // Listen for follow-up reminders
   useEffect(() => {

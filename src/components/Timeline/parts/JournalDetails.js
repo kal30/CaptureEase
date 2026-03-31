@@ -69,7 +69,51 @@ const JournalDetails = ({ entry }) => {
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, position: 'relative', pt: canEdit && !isEditing ? 2.5 : 0 }}>
+      {!isEditing && canEdit && (
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 0,
+            right: 0,
+            display: 'flex',
+            gap: 0.1,
+            opacity: { xs: 0.72, md: 0.4 },
+            transition: 'opacity 0.18s ease',
+            '.timeline-entry-card:hover &': {
+              opacity: 1,
+            },
+          }}
+        >
+          <Tooltip title="Edit entry">
+            <IconButton
+              size="small"
+              onClick={() => setIsEditing(true)}
+              sx={{
+                p: { xs: 0.2, md: 0.3 },
+                color: 'text.secondary',
+                '&:hover': { color: 'primary.main', bgcolor: 'transparent' },
+              }}
+            >
+              <EditIcon sx={{ fontSize: { xs: 16, md: 17 } }} />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Delete entry">
+            <IconButton
+              size="small"
+              onClick={handleDelete}
+              sx={{
+                p: { xs: 0.2, md: 0.3 },
+                color: 'text.secondary',
+                '&:hover': { color: 'error.main', bgcolor: 'transparent' },
+              }}
+            >
+              <DeleteIcon sx={{ fontSize: { xs: 16, md: 17 } }} />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      )}
+
       {entry.text && (
         isEditing ? (
           <Box sx={{ mb: 0.75 }}>
@@ -150,20 +194,6 @@ const JournalDetails = ({ entry }) => {
         </Box>
       )}
 
-      {!isEditing && canEdit && (
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.15, mt: 0 }}>
-          <Tooltip title="Edit entry">
-            <IconButton size="small" onClick={() => setIsEditing(true)} sx={{ p: { xs: 0.35, md: 0.5 } }}>
-              <EditIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Delete entry">
-            <IconButton size="small" color="error" onClick={handleDelete} sx={{ p: { xs: 0.35, md: 0.5 } }}>
-              <DeleteIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      )}
     </Box>
   );
 };

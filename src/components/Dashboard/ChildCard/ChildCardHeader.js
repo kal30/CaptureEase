@@ -1,13 +1,13 @@
-import React, { memo } from 'react';
+import React, { memo, useMemo } from 'react';
 import { Box, Chip } from '@mui/material';
 import Typography from '@mui/material/Typography';
 import { useMediaQuery, useTheme } from '@mui/material';
 import ChildAvatar from '../../UI/ChildAvatar';
-import ChildNotificationBadge from '../../UI/ChildNotificationBadge';
 import CareTeamDisplay from '../../UI/CareTeamDisplay';
 import ChildManagementMenu from '../ChildManagementMenu';
 import MedicalInfoDisplay from './MedicalInfoDisplay';
-import useChildCardChips from '../../../hooks/useChildCardChips';
+import { ROLE_DISPLAY, USER_ROLES } from '../../../constants/roles';
+import { getRoleColor, getRoleColorAlpha } from '../../../assets/theme/roleColors';
 
 /**
  * ChildCardHeader - Header section of child card with avatar, basic info, and actions
@@ -37,12 +37,37 @@ const ChildCardHeader = memo(({
   onDailyReport,
   onNotificationClick,
   compactIdentityOnMobile = false,
+  collapseSummaryOnMobile = false,
   sx = {}
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const showCompactMobileIdentity = compactIdentityOnMobile && isMobile;
-  const allChips = useChildCardChips(userRole, completedToday);
+  const showCollapsedSummaryLine = showCompactMobileIdentity && collapseSummaryOnMobile;
+  const roleChip = useMemo(() => {
+    if (!userRole) {
+      return null;
+    }
+
+    const roleMap = {
+      [USER_ROLES.CARE_OWNER]: 'careOwner',
+      [USER_ROLES.CARE_PARTNER]: 'carePartner',
+      [USER_ROLES.CAREGIVER]: 'caregiver',
+      [USER_ROLES.THERAPIST]: 'therapist',
+    };
+
+    const roleKey = roleMap[userRole] || 'careOwner';
+    return {
+      label: ROLE_DISPLAY[userRole]?.label || userRole,
+      variant: 'filled',
+      sx: {
+        fontWeight: 600,
+        backgroundColor: getRoleColorAlpha(roleKey, 'primary', 0.1),
+        color: getRoleColor(roleKey, 'primary'),
+        border: `1px solid ${getRoleColorAlpha(roleKey, 'primary', 0.3)}`,
+      },
+    };
+  }, [userRole]);
   const hasEntriesToday = (timelineSummary.todayCount || 0) > 0;
   const shouldShowMedicalInfo = Boolean(
     child.diagnosis ||
@@ -112,13 +137,6 @@ const ChildCardHeader = memo(({
               onInviteTeamMember={onInviteTeamMember}
               onDailyReport={onDailyReport}
             />
-            <ChildNotificationBadge
-              childId={child.id}
-              onClick={onNotificationClick}
-              size="small"
-              color="error"
-              showIcon={true}
-            />
           </Box>
         ) : (
           <>
@@ -151,13 +169,6 @@ const ChildCardHeader = memo(({
                 onDailyReport={onDailyReport}
               />
 
-              <ChildNotificationBadge
-                childId={child.id}
-                onClick={onNotificationClick}
-                size="small"
-                color="error"
-                showIcon={true}
-              />
             </Box>
 
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: { xs: 0.25, md: 0.5 }, flexWrap: 'wrap' }}>
@@ -169,33 +180,48 @@ const ChildCardHeader = memo(({
                 Age {child.age}
               </Typography>
 
-              {allChips.map((chip, index) => (
+              {roleChip ? (
                 <Chip
-                  key={index}
-                  label={chip.label}
+                  key="role-chip"
+                  label={roleChip.label}
                   size="small"
-                  variant={chip.variant || 'outlined'}
-                  color={chip.sx ? undefined : (chip.color || 'default')}
+                  variant={roleChip.variant || 'outlined'}
+                  color={undefined}
                   sx={{
                     height: { xs: 22, md: 24 },
                     fontSize: { xs: '0.68rem', md: '0.75rem' },
-                    fontWeight: chip.sx?.fontWeight || 600,
+                    fontWeight: roleChip.sx?.fontWeight || 600,
                     minWidth: { xs: 'unset', md: '80px' },
                     px: { xs: 0.35, md: 0.75 },
-                    ...chip.sx,
+                    ...roleChip.sx,
                     '&.MuiChip-root': {
-                      backgroundColor: chip.sx?.backgroundColor,
-                      color: chip.sx?.color,
-                      border: chip.sx?.border,
+                      backgroundColor: roleChip.sx?.backgroundColor,
+                      color: roleChip.sx?.color,
+                      border: roleChip.sx?.border,
                     }
                   }}
                 />
-              ))}
+              ) : null}
             </Box>
           </>
         )}
 
-        {shouldShowMedicalInfo && (
+        {showCollapsedSummaryLine ? (
+          <Typography
+            variant="caption"
+            sx={{
+              display: 'block',
+              fontSize: '0.76rem',
+              color: 'text.secondary',
+              fontWeight: 600,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
+            {[child.diagnosis || (child.concerns && child.concerns[0]?.label) || (child.conditions && child.conditions[0]), child.medicalProfile?.foodAllergies?.join(', ')].filter(Boolean).join(' • ')}
+          </Typography>
+        ) : shouldShowMedicalInfo && (
           <MedicalInfoDisplay
             diagnosis={child.diagnosis || (child.concerns && child.concerns[0]?.label) || (child.conditions && child.conditions[0])}
             allergies={child.medicalProfile?.foodAllergies}
@@ -203,7 +229,7 @@ const ChildCardHeader = memo(({
           />
         )}
 
-        {(metricChips.length > 0 || timelineSummary.lastActivityTime || !hasEntriesToday) && (
+        {!showCollapsedSummaryLine && (metricChips.length > 0 || timelineSummary.lastActivityTime || !hasEntriesToday) && (
           <Box sx={{ mt: { xs: 0.45, md: 1 }, display: 'flex', flexDirection: 'column', gap: { xs: 0.35, md: 0.75 } }}>
             {showCompactMobileIdentity ? (
               <Box

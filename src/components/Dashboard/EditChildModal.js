@@ -205,7 +205,9 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
 
   // Security check - only parents can edit
   if (!canEdit) {
-    console.warn('EditChildModal: User does not have permission to edit child details');
+    if (open) {
+      console.warn('EditChildModal: User does not have permission to edit child details');
+    }
     return null;
   }
 

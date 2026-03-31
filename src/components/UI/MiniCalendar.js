@@ -3,6 +3,9 @@ import { Box, Typography, useMediaQuery, useTheme } from '@mui/material';
 import MonthNavigationControls from './MonthNavigationControls';
 import { useSwipeGesture } from '../../hooks/useSwipeGesture';
 
+const toMonthStart = (date) => new Date(date.getFullYear(), date.getMonth(), 1);
+const getMonthKey = (date) => `${date.getFullYear()}-${date.getMonth()}`;
+
 /**
  * MiniCalendar - Full month calendar view showing activity dots
  * KISS principle: Simple, focused, single responsibility
@@ -17,25 +20,35 @@ import { useSwipeGesture } from '../../hooks/useSwipeGesture';
 const MiniCalendar = ({
   entries = [],
   onDayClick,
-  currentMonth: initialMonth = new Date(),
+  currentMonth,
   selectedDate = null
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const initialMonthKey = currentMonth
+    ? getMonthKey(currentMonth)
+    : null;
+  const normalizedInitialMonth = useMemo(
+    () => toMonthStart(currentMonth || new Date()),
+    [initialMonthKey]
+  );
+  const selectedMonth = useMemo(
+    () => (selectedDate ? toMonthStart(selectedDate) : null),
+    [selectedDate]
+  );
   
   // State for current displayed month
-  const [displayMonth, setDisplayMonth] = useState(initialMonth);
+  const [displayMonth, setDisplayMonth] = useState(normalizedInitialMonth);
   
   // Update display month when currentMonth prop changes or when selectedDate is in different month
   React.useEffect(() => {
-    if (selectedDate) {
-      // If selectedDate is from different month, update displayMonth to show that month
-      const selectedMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
-      setDisplayMonth(selectedMonth);
-    } else {
-      setDisplayMonth(initialMonth);
-    }
-  }, [initialMonth, selectedDate]);
+    const nextMonth = selectedMonth || normalizedInitialMonth;
+    setDisplayMonth((currentMonth) => {
+      return getMonthKey(currentMonth) === getMonthKey(nextMonth)
+        ? currentMonth
+        : nextMonth;
+    });
+  }, [normalizedInitialMonth, selectedMonth]);
 
   // Month navigation handlers
   const goToPreviousMonth = () => {
@@ -111,7 +124,7 @@ const MiniCalendar = ({
       days, 
       monthName: monthToDisplay.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
     };
-  }, [entries, displayMonth]);
+  }, [entries, displayMonth, selectedDate]);
 
   const handleDayClick = (e, dayData) => {
     // Allow clicking on any current month day that is today or in the past

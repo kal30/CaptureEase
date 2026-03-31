@@ -1,6 +1,5 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState } from 'react';
 import { useRole } from '../contexts/RoleContext';
-import { useNotificationBadges } from './useNotificationBadges';
 
 /**
  * useChildCardLogic - Business logic hook for ChildCard component
@@ -23,30 +22,12 @@ export const useChildCardLogic = (child, recentEntries = [], incidents = []) => 
   const [hoveredQuickAction, setHoveredQuickAction] = useState(null);
   const [showFollowUpModal, setShowFollowUpModal] = useState(false);
 
-  // Memoized child IDs array to prevent infinite renders
-  const childrenIds = useMemo(() => [child.id], [child.id]);
-
-  // Notification badges data
-  const {
-    getPendingCountForChild,
-    getOverdueFollowUps,
-    getUpcomingFollowUps
-  } = useNotificationBadges(childrenIds);
-
   // Role and permission data
   const userRole = getUserRoleForChild ? getUserRoleForChild(child.id) : null;
   const canAddData = canAddDataForChild ? canAddDataForChild(child.id) : true;
-
-  // Notification data
-  const pendingCount = getPendingCountForChild(child.id);
-  const overdueFollowUps = useMemo(() => 
-    getOverdueFollowUps().filter(incident => incident.childId === child.id),
-    [getOverdueFollowUps, child.id]
-  );
-  const upcomingFollowUps = useMemo(() => 
-    getUpcomingFollowUps().filter(incident => incident.childId === child.id),
-    [getUpcomingFollowUps, child.id]
-  );
+  const pendingCount = 0;
+  const overdueFollowUps = [];
+  const upcomingFollowUps = [];
 
   // Computed state
   const completedToday = false; // Removed mood/sleep completion tracking

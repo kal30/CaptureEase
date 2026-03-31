@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 const DashboardViewContext = createContext(null);
 
@@ -8,22 +8,19 @@ export const DashboardViewProvider = ({
   initialActiveChildId = null,
   onActiveChildChange,
 }) => {
+  const childOptionsKey = useMemo(
+    () => childOptions.map((child) => child.id).join('|'),
+    [childOptions]
+  );
+  const firstChildId = childOptions[0]?.id || null;
   const [activeChildId, setActiveChildId] = useState(initialActiveChildId || childOptions[0]?.id || null);
   const [mobileView, setMobileView] = useState(childOptions.length === 1 ? 'child' : 'switchboard');
-
-  useEffect(() => {
-    if (initialActiveChildId && initialActiveChildId !== activeChildId) {
-      const exists = childOptions.some((child) => child.id === initialActiveChildId);
-      if (exists) {
-        setActiveChildId(initialActiveChildId);
-      }
-    }
-  }, [activeChildId, childOptions, initialActiveChildId]);
+  const lastSyncedChildIdRef = useRef(null);
 
   useEffect(() => {
     if (!childOptions.length) {
-      setActiveChildId(null);
-      setMobileView('switchboard');
+      setActiveChildId((current) => (current !== null ? null : current));
+      setMobileView((current) => (current !== 'switchboard' ? 'switchboard' : current));
       return;
     }
 
@@ -31,17 +28,18 @@ export const DashboardViewProvider = ({
     if (!hasActiveChild) {
       const nextChildId = initialActiveChildId && childOptions.some((child) => child.id === initialActiveChildId)
         ? initialActiveChildId
-        : childOptions[0].id;
-      setActiveChildId(nextChildId);
+        : firstChildId;
+      setActiveChildId((current) => (current !== nextChildId ? nextChildId : current));
     }
 
     if (childOptions.length === 1) {
-      setMobileView('child');
+      setMobileView((current) => (current !== 'child' ? 'child' : current));
     }
-  }, [activeChildId, childOptions, initialActiveChildId]);
+  }, [activeChildId, childOptions.length, childOptionsKey, firstChildId, initialActiveChildId]);
 
   useEffect(() => {
-    if (activeChildId) {
+    if (activeChildId && lastSyncedChildIdRef.current !== activeChildId) {
+      lastSyncedChildIdRef.current = activeChildId;
       onActiveChildChange?.(activeChildId);
     }
   }, [activeChildId, onActiveChildChange]);
