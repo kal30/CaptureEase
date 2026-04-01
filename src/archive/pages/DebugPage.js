@@ -7,9 +7,9 @@ import {
   Divider
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import UserChecker from '../components/Debug/UserChecker';
-import DataCleaner from '../components/Debug/DataCleaner';
-import RoleUpdater from '../components/Debug/RoleUpdater';
+import UserChecker from '../../components/Debug/UserChecker';
+import DataCleaner from '../../components/Debug/DataCleaner';
+import RoleUpdater from '../../components/Debug/RoleUpdater';
 
 const DebugPage = () => {
   const theme = useTheme();

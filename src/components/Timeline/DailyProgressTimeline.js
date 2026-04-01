@@ -26,7 +26,7 @@ import { useTimelineProgress } from '../../hooks/useTimelineProgress';
 import { useUnifiedDailyLog } from '../../hooks/useUnifiedDailyLog';
 
 /**
- * RefactoredTimelineWidget - Cleaner, modular timeline component
+ * DailyProgressTimeline - Cleaner, modular timeline component
  * Broken down from 560-line monolithic component into focused pieces
  * 
  * @param {Object} props
@@ -38,7 +38,7 @@ import { useUnifiedDailyLog } from '../../hooks/useUnifiedDailyLog';
  * @param {string} props.variant - Display variant: 'compact', 'full'
  * @param {boolean} props.showUnifiedLog - Whether to show enhanced daily log (default: true)
  */
-const RefactoredTimelineWidget = ({
+const DailyProgressTimeline = ({
   child,
   entries = [],
   incidents = [],
@@ -251,4 +251,4 @@ const RefactoredTimelineWidget = ({
   );
 };
 
-export default RefactoredTimelineWidget;
+export default DailyProgressTimeline;
