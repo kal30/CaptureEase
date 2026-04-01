@@ -7,15 +7,27 @@ import {
 import { useRole } from '../contexts/RoleContext';
 import { USER_ROLES } from '../constants/roles';
 import { CATEGORY_COLORS } from '../constants/categoryColors';
+import { getCustomCategories, getIncidentTypeConfig } from '../services/incidentService';
+import { HABIT_TYPES } from '../constants/habitTypes';
 
 const QUICK_NOTE_CATEGORY_META = {
-  behavior: { type: 'behavior', timelineType: 'behavior', titlePrefix: 'Behavior', color: '#D32F2F' },
-  health: { type: 'health', timelineType: 'health', titlePrefix: 'Health', color: '#00796B' },
-  mood: { type: 'mood', timelineType: 'mood', titlePrefix: 'Mood', color: '#F57F17' },
-  sleep: { type: 'sleep', timelineType: 'sleep', titlePrefix: 'Sleep', color: '#1A237E' },
-  food: { type: 'food', timelineType: 'food', titlePrefix: 'Food', color: '#E65100' },
-  milestone: { type: 'milestone', timelineType: 'milestone', titlePrefix: 'Win', color: '#2E7D32' },
-  log: { type: 'journal', timelineType: 'journal', titlePrefix: 'Daily Log' }
+  behavior: { type: 'behavior', timelineType: 'behavior', titlePrefix: 'Behavior', color: '#D32F2F', icon: '🌋' },
+  health: { type: 'health', timelineType: 'health', titlePrefix: 'Health', color: '#00796B', icon: '💊' },
+  mood: { type: 'mood', timelineType: 'mood', titlePrefix: 'Mood', color: '#F57F17', icon: '😰' },
+  sleep: { type: 'sleep', timelineType: 'sleep', titlePrefix: 'Sleep', color: '#1A237E', icon: '😴' },
+  food: { type: 'food', timelineType: 'food', titlePrefix: 'Food', color: '#E65100', icon: '🍽️' },
+  milestone: { type: 'milestone', timelineType: 'milestone', titlePrefix: 'Win', color: '#2E7D32', icon: '⭐' },
+  log: { type: 'journal', timelineType: 'journal', titlePrefix: 'Daily Log', color: '#64748B', icon: '📝' }
+};
+
+const HABIT_CATEGORY_ICON_MAP = {
+  mood: '🙂',
+  sleep: '😴',
+  nutrition: '🍎',
+  progress: '📈',
+  diaper: '🧷',
+  medication: '💊',
+  other: '📝',
 };
 
 const getEntryUser = (entry) => ({
@@ -45,6 +57,7 @@ const getQuickNoteMeta = (entry) => {
       timelineType: 'importantMoment',
       titlePrefix: 'Important Moment',
       color: CATEGORY_COLORS.importantMoment.dot,
+      icon: '⭐',
     };
   }
 
@@ -64,6 +77,7 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
   const { getUserRoleForChild } = useRole();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [customCategories, setCustomCategories] = useState({});
   const [rawEntries, setRawEntries] = useState({
     incidents: [],
     journals: [],
@@ -108,6 +122,35 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
   }, [childId, selectedDate]);
 
   useEffect(() => {
+    if (!childId) {
+      setCustomCategories({});
+      return;
+    }
+
+    let isMounted = true;
+
+    const fetchCustomIncidentCategories = async () => {
+      try {
+        const categories = await getCustomCategories(childId);
+        if (isMounted) {
+          setCustomCategories(categories || {});
+        }
+      } catch (categoryError) {
+        console.error('Error fetching custom incident categories:', categoryError);
+        if (isMounted) {
+          setCustomCategories({});
+        }
+      }
+    };
+
+    fetchCustomIncidentCategories();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [childId]);
+
+  useEffect(() => {
     if (!childId || !selectedDate) {
       return undefined;
     }
@@ -138,6 +181,7 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
         title: getQuickJournalTitle(entry, categoryMeta),
         titlePrefix: categoryMeta.titlePrefix,
         color: categoryMeta.color,
+        categoryIcon: categoryMeta.icon,
         isImportantMoment: !!entry.importantMoment,
         ...getEntryUser(entry),
       };
@@ -183,36 +227,44 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
     // Transform raw data into unified entry format
     const transformedEntries = [
       // Transform incidents (from incidents collection) - includes grouped incidents with follow-ups
-      ...childFilteredEntries.incidents.map(incident => ({
-        id: incident.id,
-        type: 'incident',
-        collection: 'incidents',
-        timestamp: incident.timestamp,
-        // Follow-up related fields (for grouped incidents)
-        isGroupedIncident: incident.isGroupedIncident,
-        followUps: incident.followUps,
-        totalFollowUps: incident.totalFollowUps,
-        // Include legacy follow-up fields
-        effectiveness: incident.effectiveness,
-        followUpNotes: incident.followUpNotes,
-        followUpCompleted: incident.followUpCompleted,
-        // Include follow-up response arrays from new system
-        followUpResponses: incident.followUpResponses,
-        lastFollowUpResponse: incident.lastFollowUpResponse,
-        // Include all incident fields
-        incidentType: incident.type,
-        severity: incident.severity,
-        remedy: incident.remedy,
-        notes: incident.notes,
-        description: incident.description,
-        summary: incident.summary,
-        triggers: incident.triggers,
-        duration: incident.duration,
-        interventions: incident.interventions,
-        mediaAttachments: incident.mediaAttachments,
-        mediaURL: incident.mediaURL,
-        ...getEntryUser(incident),
-      })),
+      ...childFilteredEntries.incidents.map(incident => {
+        const incidentConfig = getIncidentTypeConfig(incident.type, customCategories);
+
+        return {
+          id: incident.id,
+          type: 'incident',
+          collection: 'incidents',
+          timestamp: incident.timestamp,
+          incidentCategoryId: incidentConfig?.id || incident.type || 'other',
+          incidentCategoryLabel: incidentConfig?.label || incident.customIncidentName || incident.type || 'Other',
+          incidentCategoryColor: incidentConfig?.color || '#6B7280',
+          incidentCategoryIcon: incidentConfig?.emoji || '📝',
+          // Follow-up related fields (for grouped incidents)
+          isGroupedIncident: incident.isGroupedIncident,
+          followUps: incident.followUps,
+          totalFollowUps: incident.totalFollowUps,
+          // Include legacy follow-up fields
+          effectiveness: incident.effectiveness,
+          followUpNotes: incident.followUpNotes,
+          followUpCompleted: incident.followUpCompleted,
+          // Include follow-up response arrays from new system
+          followUpResponses: incident.followUpResponses,
+          lastFollowUpResponse: incident.lastFollowUpResponse,
+          // Include all incident fields
+          incidentType: incident.type,
+          severity: incident.severity,
+          remedy: incident.remedy,
+          notes: incident.notes,
+          description: incident.description,
+          summary: incident.summary,
+          triggers: incident.triggers,
+          duration: incident.duration,
+          interventions: incident.interventions,
+          mediaAttachments: incident.mediaAttachments,
+          mediaURL: incident.mediaURL,
+          ...getEntryUser(incident),
+        };
+      }),
       
       // Transform journal entries (from dailyLogs - avoid duplicates by using journals data only)
       ...childFilteredEntries.journals.map(journal => {
@@ -230,6 +282,7 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
             ? 'Important Moment'
             : (journal.titlePrefix || categoryMeta.titlePrefix || 'Daily Log'),
           color: categoryMeta.color,
+          categoryIcon: categoryMeta.icon,
           text: journal.text,
           tags: journal.tags,
           mediaURL: journal.mediaURL,
@@ -243,18 +296,24 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
       }),
       
       // Transform daily habits (from dailyCare collection)
-      ...childFilteredEntries.dailyHabits.map(habit => ({
-        id: habit.id,
-        type: 'dailyHabit',
-        collection: 'dailyCare',
-        timestamp: habit.timestamp?.toDate ? habit.timestamp.toDate() : new Date(habit.timestamp),
-        categoryId: habit.categoryId,
-        categoryLabel: habit.categoryLabel,
-        level: habit.level,
-        notes: habit.notes,
-        mediaUrls: habit.mediaUrls,
-        ...getEntryUser(habit),
-      })),
+      ...childFilteredEntries.dailyHabits.map(habit => {
+        const habitType = Object.values(HABIT_TYPES).find(({ id }) => id === habit.categoryId);
+
+        return {
+          id: habit.id,
+          type: 'dailyHabit',
+          collection: 'dailyCare',
+          timestamp: habit.timestamp?.toDate ? habit.timestamp.toDate() : new Date(habit.timestamp),
+          categoryId: habit.categoryId,
+          categoryLabel: habit.categoryLabel || habitType?.label || 'Daily Habit',
+          categoryColor: habitType?.color || '#64748B',
+          categoryIcon: HABIT_CATEGORY_ICON_MAP[habit.categoryId] || '📝',
+          level: habit.level,
+          notes: habit.notes,
+          mediaUrls: habit.mediaUrls,
+          ...getEntryUser(habit),
+        };
+      }),
 
       // Transform therapy notes (Professional entries from therapyNotes collection)
       ...childFilteredEntries.therapyNotes.map(note => ({
@@ -364,7 +423,7 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
         summary: enhancedSummary
       };
     }
-  }, [rawEntries, filters, childId, userRole]);
+  }, [rawEntries, filters, childId, userRole, customCategories]);
 
   return {
     entries: processedData.entries,

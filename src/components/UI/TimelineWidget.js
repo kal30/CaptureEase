@@ -46,10 +46,12 @@ const TimelineWidget = ({
   defaultExpanded = false,
   expanded: controlledExpanded,
   variant = 'full',
-  showUnifiedLog = true
+  showUnifiedLog = true,
+  forceMobileLayout = false,
 }) => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isMobileBreakpoint = useMediaQuery(theme.breakpoints.down('md'));
+  const isMobile = forceMobileLayout || isMobileBreakpoint;
   useMountDebug('TimelineWidget');
   const [expanded, setExpanded] = useState(defaultExpanded);
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -120,15 +122,22 @@ const TimelineWidget = ({
     onQuickEntry?.(child, 'quick_note');
   };
 
-  const getMobileDateStrip = () => {
-    const days = [];
-    const baseDate = new Date(selectedDate);
-    for (let offset = -3; offset <= 3; offset += 1) {
-      const date = new Date(baseDate);
-      date.setDate(baseDate.getDate() + offset);
-      days.push(date);
+  const getMobileDateLabel = () => {
+    const today = new Date();
+    const isToday =
+      today.getFullYear() === selectedDate.getFullYear() &&
+      today.getMonth() === selectedDate.getMonth() &&
+      today.getDate() === selectedDate.getDate();
+
+    if (isToday) {
+      return 'Today';
     }
-    return days;
+
+    return selectedDate.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+    });
   };
 
 
@@ -229,81 +238,90 @@ const TimelineWidget = ({
   const renderMobileTimelineContent = () => (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
       <Box
-        onClick={(e) => e.stopPropagation()}
         sx={{
-          pt: 0.25,
-        }}
-      >
-        <TimelineFilters
-          filters={timelineFilters}
-          onFiltersChange={setTimelineFilters}
-          selectedDate={selectedDate}
-          onDateChange={(date) => setSelectedDate(date)}
-          summary={{}}
-          compact={true}
-          hideDateFilter={true}
-        />
-      </Box>
-
-      <Box
-        sx={{
-          mt: 0.35,
           px: 0.35,
-          py: 0.5,
-          borderRadius: 2.5,
+          py: 0.45,
+          borderRadius: 1,
           bgcolor: 'rgba(15, 23, 42, 0.03)',
           border: '1px solid',
           borderColor: 'rgba(148, 163, 184, 0.16)',
           display: 'flex',
           alignItems: 'center',
           gap: 0.75,
-          overflowX: 'auto',
-          pb: 0.5,
+          mb: 0.1,
           scrollbarWidth: 'none',
           '&::-webkit-scrollbar': {
             display: 'none',
           },
         }}
       >
-        {getMobileDateStrip().map((date) => {
-          const isSelected = date.toDateString() === selectedDate.toDateString();
-          return (
-            <Chip
-              key={date.toISOString()}
-              label={`${date.toLocaleDateString('en-US', { weekday: 'short' })} ${date.getDate()}`}
-              onClick={() => handleMobileDateChange(date)}
-              variant={isSelected ? 'filled' : 'outlined'}
-              color={isSelected ? 'primary' : 'default'}
-              sx={{
-                height: 30,
-                fontSize: '0.76rem',
-                fontWeight: 700,
-                flex: '0 0 auto',
-                bgcolor: isSelected ? 'primary.main' : 'rgba(255,255,255,0.78)',
-                color: isSelected ? '#fff' : 'text.secondary',
-                borderColor: isSelected ? 'primary.main' : 'rgba(148, 163, 184, 0.24)',
-              }}
-            />
-          );
-        })}
-
-        <IconButton
-          size="small"
-          onClick={(event) => {
-            event.stopPropagation();
-            setMobileCalendarAnchor(event.currentTarget);
-          }}
+        <Box
+          onClick={(e) => e.stopPropagation()}
           sx={{
-            width: 30,
-            height: 30,
-            flex: '0 0 auto',
-            border: '1px solid',
-            borderColor: 'divider',
-            backgroundColor: 'background.default',
+            display: 'flex',
+            gap: 0.75,
+            flexShrink: 0,
+            minWidth: 'fit-content',
           }}
         >
-          <CalendarIcon sx={{ fontSize: 16 }} />
-        </IconButton>
+          <TimelineFilters
+            filters={timelineFilters}
+            onFiltersChange={setTimelineFilters}
+            selectedDate={selectedDate}
+            onDateChange={(date) => setSelectedDate(date)}
+            summary={{}}
+            compact={true}
+            mobileLayout={true}
+            hideDateFilter={true}
+          />
+        </Box>
+
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 0.75,
+            flexShrink: 1,
+            minWidth: 0,
+            pb: 0.35,
+          }}
+        >
+          <Chip
+            label={getMobileDateLabel()}
+            onClick={(event) => {
+              event.stopPropagation();
+              setMobileCalendarAnchor(event.currentTarget);
+            }}
+            variant="filled"
+            color="primary"
+            sx={{
+              height: 30,
+              fontSize: '0.76rem',
+              fontWeight: 700,
+              flex: '0 0 auto',
+              bgcolor: 'primary.main',
+              color: '#fff',
+              borderRadius: 0.75,
+            }}
+          />
+          <IconButton
+            size="small"
+            onClick={(event) => {
+              event.stopPropagation();
+              setMobileCalendarAnchor(event.currentTarget);
+            }}
+            sx={{
+              width: 30,
+              height: 30,
+              flex: '0 0 auto',
+              border: '1px solid',
+              borderColor: 'divider',
+              backgroundColor: 'background.default',
+            }}
+          >
+            <CalendarIcon sx={{ fontSize: 16 }} />
+          </IconButton>
+        </Box>
       </Box>
 
       <UnifiedTimeline 
@@ -314,6 +332,7 @@ const TimelineWidget = ({
         onEmptyStateClick={handleEmptyStateClick}
         showFilters={false}
         showDaySummary={false}
+        mobileTimeLayout={true}
       />
 
       <Popover
@@ -321,7 +340,6 @@ const TimelineWidget = ({
         anchorEl={mobileCalendarAnchor}
         onClose={() => setMobileCalendarAnchor(null)}
         disableScrollLock
-        disablePortal
         anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
         transformOrigin={{ vertical: 'top', horizontal: 'left' }}
         disableAutoFocus

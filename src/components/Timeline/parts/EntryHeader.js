@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Typography } from '@mui/material';
+import { Avatar, Box, Typography } from '@mui/material';
 
 // EntryHeader renders the label + time + optional user, with configurable time formatting.
 // Preferred order of time rendering:
@@ -9,16 +9,16 @@ import { Box, Typography } from '@mui/material';
 const EntryHeader = ({
   entryLabel,
   entryColor,
+  labelBackground,
+  labelTextColor,
   loggedByUser,
-  badgeLabel,
-  badgeBg,
-  badgeColor,
   // time display (choose one of the below approaches)
   timeString,
   time, // Date instance
   timeFormatter, // (date: Date) => string
   locale, // e.g., 'en-US'
   timeOptions, // Intl.DateTimeFormatOptions
+  hideTime = false,
 }) => {
   const safeLocale = locale || (typeof navigator !== 'undefined' ? navigator.language : 'en-US');
 
@@ -33,43 +33,63 @@ const EntryHeader = ({
     return null;
   }, [timeString, time, timeFormatter, safeLocale, timeOptions]);
 
+  const loggerInitials = React.useMemo(() => {
+    if (!loggedByUser) return null;
+    return String(loggedByUser)
+      .split(/[\s@._-]+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase())
+      .join('')
+      .slice(0, 2);
+  }, [loggedByUser]);
+
   return (
-    <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: { xs: 0.75, md: 1 }, mb: { xs: 0.15, md: 0.25 } }}>
+    <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: { xs: 0.75, md: 1 }, mb: { xs: 0.75, md: 0.85 }, pr: { xs: 4.5, md: 5 } }}>
       <Box sx={{ minWidth: 0 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.6, md: 1 }, flexWrap: 'wrap' }}>
-          <Typography variant="body2" sx={{ fontWeight: 700, color: entryColor, lineHeight: 1.15, fontSize: { xs: '0.92rem', md: '0.875rem' } }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.6, md: 0.75 }, flexWrap: 'wrap' }}>
+          <Box
+            sx={{
+              px: { xs: 0.85, md: 0.95 },
+              py: { xs: 0.35, md: 0.38 },
+              borderRadius: 0.35,
+              bgcolor: labelBackground || entryColor,
+              color: labelTextColor || '#FFFFFF',
+              fontSize: { xs: '0.78rem', md: '0.8rem' },
+              fontWeight: 800,
+              lineHeight: 1.1,
+              display: 'inline-flex',
+              alignItems: 'center',
+            }}
+          >
             {entryLabel}
-          </Typography>
-          {badgeLabel ? (
-            <Box
-              sx={{
-                px: { xs: 0.6, md: 0.8 },
-                py: { xs: 0.15, md: 0.2 },
-                borderRadius: 999,
-                bgcolor: badgeBg || '#f5f5f5',
-                color: badgeColor || '#555555',
-                fontSize: { xs: '0.62rem', md: '0.68rem' },
-                fontWeight: 800,
-                lineHeight: 1.2,
-              }}
-            >
-              {badgeLabel}
-            </Box>
-          ) : null}
+          </Box>
         </Box>
-        {computedTime && (
+        {computedTime && !hideTime && (
           <Typography
             variant="caption"
-            sx={{ color: 'text.secondary', fontSize: { xs: '0.66rem', md: '0.7rem' }, fontWeight: 500, lineHeight: 1.05 }}
+            sx={{ color: 'text.secondary', fontSize: { xs: '0.66rem', md: '0.7rem' }, fontWeight: 500, lineHeight: 1.05, mt: 0.25 }}
           >
             {computedTime}
           </Typography>
         )}
       </Box>
-      {loggedByUser && (
-        <Typography variant="caption" sx={{ color: 'text.secondary', flexShrink: 0, fontSize: { xs: '0.68rem', md: '0.75rem' }, lineHeight: 1.15 }}>
-          Logged by {loggedByUser}
-        </Typography>
+      {loggedByUser && loggerInitials && (
+        <Avatar
+          sx={{
+            width: { xs: 24, md: 26 },
+            height: { xs: 24, md: 26 },
+            flexShrink: 0,
+            fontSize: { xs: '0.68rem', md: '0.72rem' },
+            fontWeight: 800,
+            bgcolor: 'rgba(255, 255, 255, 0.82)',
+            color: 'text.secondary',
+            border: '1px solid rgba(203, 213, 225, 0.8)',
+          }}
+          title={loggedByUser}
+        >
+          {loggerInitials}
+        </Avatar>
       )}
     </Box>
   );

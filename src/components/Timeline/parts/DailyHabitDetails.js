@@ -5,12 +5,6 @@ import { getHabitScale } from '../../../constants/habitTypes';
 const DailyHabitDetails = ({ entry }) => {
   return (
     <Box>
-      {entry.categoryLabel && (
-        <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
-          {entry.categoryLabel}
-        </Typography>
-      )}
-
       {entry.level && entry.categoryId && (() => {
         const habitScale = getHabitScale(entry.categoryId);
         const levelInfo = habitScale[entry.level];

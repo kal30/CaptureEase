@@ -3,31 +3,32 @@ import { Box, Typography } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
 import { getSeverityMeta } from '../../../services/incidentService';
 import { getSeverityColor } from '../utils/colors';
-import { getIncidentDisplayInfo } from '../../../constants/uiDisplayConstants';
 
 const IncidentDetails = ({ entry }) => {
-  // Get centralized display info
-  const incidentDisplay = getIncidentDisplayInfo();
-  
   const theme = useTheme();
   
   // Check if this is a follow-up entry
   const isFollowUp = entry.type === 'followUp';
+  const primaryText = isFollowUp
+    ? (entry.notes || entry.resolution || 'Follow-up logged')
+    : (entry.description || entry.notes || entry.summary || entry.customIncidentName || 'Incident logged');
+  const secondaryText = !isFollowUp && entry.description && entry.notes && entry.description !== entry.notes
+    ? entry.notes
+    : !isFollowUp && entry.summary && ![entry.description, entry.notes].includes(entry.summary)
+      ? entry.summary
+      : null;
 
   return (
     <Box>
       {/* Main incident description or follow-up notes */}
       <Typography variant="body2" sx={{ color: 'text.primary', mb: 1, lineHeight: 1.5, fontWeight: 600 }}>
-        {isFollowUp 
-          ? (entry.notes || entry.resolution || 'Follow-up logged') 
-          : (entry.customIncidentName || entry.incidentType || entry.type || incidentDisplay.label)
-        }
+        {primaryText}
       </Typography>
 
       {/* Show description/notes for incidents - try multiple field names */}
-      {!isFollowUp && (entry.description || entry.notes || entry.summary) && (
+      {secondaryText && (
         <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1, lineHeight: 1.4 }}>
-          {entry.description || entry.notes || entry.summary}
+          {secondaryText}
         </Typography>
       )}
 

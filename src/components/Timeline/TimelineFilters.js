@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import {
   Box,
+  Button,
   ToggleButton,
   FormControl,
   InputLabel,
@@ -45,6 +46,7 @@ const TimelineFilters = ({
   onDateChange,
   summary: _summary = {},
   compact = false,
+  mobileLayout = false,
   hideDateFilter = false,
   sx = {}
 }) => {
@@ -55,7 +57,7 @@ const TimelineFilters = ({
   const [searchText, setSearchText] = useState(filters.searchText || '');
   const [searchExpanded, setSearchExpanded] = useState(Boolean(filters.searchText));
 
-  const IMPORTANT_FILTER_VALUES = ['incident', 'importantMoment'];
+  const IMPORTANT_FILTER_VALUES = ['importantMoment'];
   const CATEGORY_FILTER_VALUES = ['behavior', 'milestone', 'sleep', 'food', 'mood', 'health', 'journal'];
 
   const categoryFilterOptions = [
@@ -129,8 +131,22 @@ const TimelineFilters = ({
     handleCategoryMenuClose();
   };
 
+  const clearEntryTypeFilters = () => {
+    onFiltersChange({
+      ...filters,
+      entryTypes: undefined,
+    });
+    handleCategoryMenuClose();
+  };
+
   const importantMomentsSelected = IMPORTANT_FILTER_VALUES.some((value) => filters.entryTypes?.includes(value));
   const selectedCategoryType = (filters.entryTypes || []).find((type) => CATEGORY_FILTER_VALUES.includes(type));
+  const selectedCategoryOption = categoryFilterOptions.find((option) => option.value === selectedCategoryType);
+  const filterTriggerLabel = selectedCategoryOption
+    ? `${selectedCategoryOption.icon} ${selectedCategoryOption.label}`
+    : importantMomentsSelected
+      ? '⭐ Important'
+      : 'Filters';
 
   // User role options - CLEAN VERSION
   const userRoleOptions = [
@@ -143,6 +159,7 @@ const TimelineFilters = ({
   const activeFiltersCount = Object.keys(filters).filter(key => 
     key !== 'selectedDate' && filters[key]?.length > 0
   ).length;
+  const useCompactMobileLayout = compact && (mobileLayout || isMobile);
 
   if (compact) {
     // Compact mode for header display
@@ -152,10 +169,10 @@ const TimelineFilters = ({
           display: 'flex',
           gap: 1,
           alignItems: 'center',
-          flexWrap: isMobile ? 'nowrap' : 'wrap',
-          overflowX: isMobile ? 'auto' : 'visible',
+          flexWrap: useCompactMobileLayout ? 'nowrap' : 'wrap',
+          overflowX: useCompactMobileLayout ? 'auto' : 'visible',
           overflowY: 'hidden',
-          pb: isMobile ? 0.25 : 0,
+          pb: useCompactMobileLayout ? 0.25 : 0,
           pr: 0.25,
           position: 'static',
           backgroundColor: 'transparent',
@@ -166,7 +183,7 @@ const TimelineFilters = ({
           ...sx,
         }}
       >
-        {isMobile ? (
+        {useCompactMobileLayout ? (
           searchExpanded || searchText ? (
             <TextField
               size="small"
@@ -197,25 +214,53 @@ const TimelineFilters = ({
                 minWidth: 170,
                 width: 170,
                 flex: '0 0 auto',
+                contain: 'none',
+                transform: 'none',
+                willChange: 'auto',
                 '& .MuiOutlinedInput-root': {
-                  height: 30,
-                  borderRadius: 15,
+                  height: 24,
+                  borderRadius: 6,
+                  contain: 'none',
+                  transform: 'none',
+                  willChange: 'auto',
+                  backgroundColor: '#fff',
                   '& input': {
                     py: 0,
-                    fontSize: '0.8rem'
+                    fontSize: '0.8rem',
+                    color: theme.palette.text.primary,
+                    WebkitTextFillColor: theme.palette.text.primary,
+                  },
+                  '& .MuiSvgIcon-root': {
+                    color: theme.palette.text.secondary,
                   }
                 }
               }}
             />
           ) : (
-            <Chip
-              size="small"
-              icon={<SearchIcon sx={{ fontSize: 14 }} />}
-              label="Search"
+            <Button
+              startIcon={<SearchIcon sx={{ fontSize: 16 }} />}
               onClick={() => setSearchExpanded(true)}
               variant="outlined"
-              sx={{ fontSize: '0.78rem', height: 30, flex: '0 0 auto' }}
-            />
+              sx={{
+                height: 24,
+                px: 1,
+                minWidth: 'auto',
+                flex: '0 0 auto',
+                borderRadius: 0.5,
+                textTransform: 'none',
+                fontSize: '0.82rem',
+                fontWeight: 700,
+                color: 'text.primary',
+                borderColor: 'divider',
+                backgroundColor: '#fff',
+                boxShadow: 'none',
+                contain: 'none',
+                transform: 'none',
+                willChange: 'auto',
+              }}
+            >
+              Search
+            </Button>
           )
         ) : (
           <TextField
@@ -252,7 +297,7 @@ const TimelineFilters = ({
               label={selectedDate?.toLocaleDateString() || 'Select Date'}
               onClick={handleDatePickerOpen}
               variant="outlined"
-              sx={{ fontSize: isMobile ? '0.78rem' : '0.7rem', height: isMobile ? 30 : 24, flex: '0 0 auto' }}
+              sx={{ fontSize: useCompactMobileLayout ? '0.78rem' : '0.7rem', height: useCompactMobileLayout ? 30 : 24, flex: '0 0 auto' }}
             />
             
             <Popover
@@ -279,46 +324,60 @@ const TimelineFilters = ({
           </>
         )}
 
-        <Chip
-          label="⭐ Important Moments"
-          size="small"
-          variant={importantMomentsSelected ? 'filled' : 'outlined'}
-          color={importantMomentsSelected ? 'secondary' : 'default'}
-          onClick={() => {
-            const currentTypes = filters.entryTypes || [];
-            const remainingTypes = currentTypes.filter((type) => !IMPORTANT_FILTER_VALUES.includes(type));
-            onFiltersChange({
-              ...filters,
-              entryTypes: importantMomentsSelected
-                ? (remainingTypes.length > 0 ? remainingTypes : undefined)
-                : [...remainingTypes, ...IMPORTANT_FILTER_VALUES],
-            });
-          }}
-          sx={{ fontSize: isMobile ? '0.78rem' : '0.7rem', height: isMobile ? 30 : 24, flex: '0 0 auto' }}
-        />
-
-        <Chip
-          label={selectedCategoryType ? categoryFilterOptions.find((option) => option.value === selectedCategoryType)?.label || 'All' : 'All'}
-          deleteIcon={<ArrowDropDownIcon />}
-          onDelete={handleCategoryMenuOpen}
+        <Button
+          endIcon={<ArrowDropDownIcon />}
           onClick={handleCategoryMenuOpen}
-          size="small"
-          variant={selectedCategoryType ? 'filled' : 'outlined'}
-          sx={{ fontSize: isMobile ? '0.78rem' : '0.7rem', height: isMobile ? 30 : 24, flex: '0 0 auto' }}
-        />
+          variant={selectedCategoryType || importantMomentsSelected ? 'contained' : 'outlined'}
+          color={selectedCategoryType || importantMomentsSelected ? 'primary' : 'inherit'}
+          sx={{
+            fontSize: useCompactMobileLayout ? '0.78rem' : '0.7rem',
+            height: useCompactMobileLayout ? 24 : 24,
+            flex: '0 0 auto',
+            px: 1,
+            minWidth: 'auto',
+            borderRadius: useCompactMobileLayout ? 0.5 : undefined,
+            textTransform: 'none',
+            fontWeight: 700,
+            color: selectedCategoryType || importantMomentsSelected ? undefined : 'text.primary',
+            borderColor: selectedCategoryType || importantMomentsSelected ? undefined : 'divider',
+            backgroundColor: selectedCategoryType || importantMomentsSelected ? undefined : '#fff',
+            boxShadow: 'none',
+            contain: 'none',
+            transform: 'none',
+            willChange: 'auto',
+          }}
+        >
+          {filterTriggerLabel}
+        </Button>
 
         <Popover
           open={Boolean(categoryMenuAnchor)}
           anchorEl={categoryMenuAnchor}
           onClose={handleCategoryMenuClose}
           disableScrollLock
-          disablePortal
           anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
           transformOrigin={{ vertical: 'top', horizontal: 'left' }}
         >
-          <Box sx={{ p: 1, minWidth: 180 }}>
-            <MenuItem onClick={() => setCategoryTypeFilter(undefined)}>
+          <Box sx={{ p: 0.75, minWidth: 180 }}>
+            <MenuItem onClick={clearEntryTypeFilters}>
               <Typography sx={{ fontSize: '0.9rem', fontWeight: 600 }}>All entries</Typography>
+            </MenuItem>
+            <Divider sx={{ my: 0.5 }} />
+            <MenuItem
+              onClick={() => {
+                const currentTypes = filters.entryTypes || [];
+                const remainingTypes = currentTypes.filter((type) => !IMPORTANT_FILTER_VALUES.includes(type));
+                onFiltersChange({
+                  ...filters,
+                  entryTypes: importantMomentsSelected
+                    ? (remainingTypes.length > 0 ? remainingTypes : undefined)
+                    : [...remainingTypes, ...IMPORTANT_FILTER_VALUES],
+                });
+                handleCategoryMenuClose();
+              }}
+            >
+              <Typography sx={{ mr: 1, fontSize: '1rem' }}>⭐</Typography>
+              <Typography sx={{ fontSize: '0.9rem', fontWeight: 600 }}>Important Moments</Typography>
             </MenuItem>
             <Divider sx={{ my: 0.5 }} />
             {categoryFilterOptions.map((option) => (
@@ -335,10 +394,10 @@ const TimelineFilters = ({
           <IconButton
             size="small"
             onClick={clearAllFilters}
-            sx={{ width: isMobile ? 30 : 24, height: isMobile ? 30 : 24, flex: '0 0 auto' }}
+            sx={{ width: useCompactMobileLayout ? 30 : 24, height: useCompactMobileLayout ? 30 : 24, flex: '0 0 auto' }}
             title="Clear all filters"
           >
-            <ClearIcon sx={{ fontSize: isMobile ? 16 : 14 }} />
+            <ClearIcon sx={{ fontSize: useCompactMobileLayout ? 16 : 14 }} />
           </IconButton>
         )}
       </Box>
