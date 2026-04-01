@@ -60,7 +60,7 @@ const RefactoredTimelineWidget = ({
     bgcolor: 'background.paper',
     border: '1px solid',
     borderColor: 'timeline.border',
-    borderRadius: { xs: 2, md: 2 },
+    borderRadius: { xs: 0.35, md: 0.35 },
     overflow: 'hidden',
     transition: 'box-shadow 0.2s ease',
     '&:hover': {

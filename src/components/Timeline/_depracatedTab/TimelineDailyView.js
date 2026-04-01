@@ -38,7 +38,7 @@ const TimelineDailyView = ({
 
     return (
       <Stack spacing={1} sx={{ maxHeight: 400, overflowY: 'auto' }}>
-        <Box sx={{ mb: 2, p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
+        <Box sx={{ mb: 2, p: 2, bgcolor: 'background.default', borderRadius: 0.35 }}>
           <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
             {selectedDate.toDateString()}
           </Typography>
@@ -127,7 +127,7 @@ const TimelineDailyView = ({
             flex: { xs: 'none', md: '0 0 280px' },
             order: { xs: 2, md: 1 }
           }}>
-            <Paper elevation={0} sx={{ p: 1, border: '1px solid', borderColor: 'divider' }}>
+            <Paper elevation={0} sx={{ p: 1, border: '1px solid', borderColor: 'divider', borderRadius: 0.35 }}>
               <MiniCalendar
                 entries={entries}
                 onDayClick={onDayClick}

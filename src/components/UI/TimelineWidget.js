@@ -81,7 +81,7 @@ const TimelineWidget = ({
     bgcolor: 'background.paper',
     border: '1px solid',
     borderColor: 'timeline.border',
-    borderRadius: { xs: 2, md: 2 },
+    borderRadius: { xs: 0.35, md: 0.35 },
     overflow: 'hidden',
     transition: 'box-shadow 0.2s ease',
     '&:hover': {
@@ -160,7 +160,7 @@ const TimelineWidget = ({
             textAlign: 'center',
             py: 3,
             px: 2,
-            borderRadius: 2,
+            borderRadius: 0.35,
             cursor: 'pointer',
             transition: 'background-color 0.2s ease, box-shadow 0.2s ease',
             '&:hover': {
@@ -192,7 +192,7 @@ const TimelineWidget = ({
             key={`${entry.type}-${entry.id}`}
             className={`timeline-widget__entry timeline-widget__entry--${entry.type}`}
             sx={{
-              borderRadius: 2.5,
+              borderRadius: 0.35,
               mb: index < timeline.recentEntries.length - 1 ? 1 : 0,
               bgcolor: '#ffffff',
               border: `1px solid ${alpha(entry.color, 0.14)}`,
@@ -238,14 +238,15 @@ const TimelineWidget = ({
   const renderMobileTimelineContent = () => (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
       <Box
-        sx={{
-          px: 0.35,
-          py: 0.45,
-          borderRadius: 1,
-          bgcolor: 'rgba(15, 23, 42, 0.03)',
-          border: '1px solid',
-          borderColor: 'rgba(148, 163, 184, 0.16)',
-          display: 'flex',
+          sx={{
+            pl: 0.8,
+            pr: 0.55,
+            py: 0.45,
+            borderRadius: 0.35,
+            bgcolor: 'rgba(255, 255, 255, 0.82)',
+            border: '1px solid',
+            borderColor: 'rgba(148, 163, 184, 0.12)',
+            display: 'flex',
           alignItems: 'center',
           gap: 0.75,
           mb: 0.1,
@@ -283,7 +284,6 @@ const TimelineWidget = ({
             gap: 0.75,
             flexShrink: 1,
             minWidth: 0,
-            pb: 0.35,
           }}
         >
           <Chip
@@ -301,7 +301,10 @@ const TimelineWidget = ({
               flex: '0 0 auto',
               bgcolor: 'primary.main',
               color: '#fff',
-              borderRadius: 0.75,
+              borderRadius: 0.35,
+              '& .MuiChip-label': {
+                px: 1.2,
+              },
             }}
           />
           <IconButton
@@ -316,7 +319,8 @@ const TimelineWidget = ({
               flex: '0 0 auto',
               border: '1px solid',
               borderColor: 'divider',
-              backgroundColor: 'background.default',
+              backgroundColor: '#fff',
+              borderRadius: 0.35,
             }}
           >
             <CalendarIcon sx={{ fontSize: 16 }} />

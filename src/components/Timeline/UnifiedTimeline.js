@@ -387,7 +387,7 @@ const UnifiedTimeline = ({
             <Skeleton
               variant="rounded"
               height={78}
-              sx={{ flex: 1, borderRadius: 2 }}
+              sx={{ flex: 1, borderRadius: 0.5 }}
             />
           </Box>
         ))}
@@ -423,7 +423,7 @@ const UnifiedTimeline = ({
             mb: 2,
             p: 2,
             bgcolor: "background.default",
-            borderRadius: 1,
+            borderRadius: 0.5,
             border: "1px solid",
             borderColor: "divider",
           }}
@@ -479,10 +479,10 @@ const UnifiedTimeline = ({
               tabIndex={onEmptyStateClick ? 0 : undefined}
               sx={{
                 p: 2,
-                borderRadius: 3,
+                borderRadius: 0.35,
                 background: 'linear-gradient(135deg, rgba(255,255,255,0.96) 0%, rgba(245,247,255,0.94) 100%)',
                 border: '1px solid rgba(214, 225, 247, 0.9)',
-                boxShadow: '0 14px 28px rgba(15, 23, 42, 0.045)',
+                boxShadow: 'none',
                 textAlign: 'center',
                 cursor: onEmptyStateClick ? 'pointer' : 'default',
               }}
@@ -505,7 +505,7 @@ const UnifiedTimeline = ({
                     sx={{
                       px: 1.05,
                       py: 0.58,
-                      borderRadius: 1,
+                      borderRadius: 0.35,
                       border: '1px solid rgba(203, 213, 225, 0.9)',
                       backgroundColor: '#fff',
                       fontSize: '0.82rem',
@@ -537,10 +537,10 @@ const UnifiedTimeline = ({
               sx={{
                 minHeight: 92,
                 p: 2,
-                borderRadius: 3,
+                borderRadius: 0.35,
                 backgroundColor: '#fff',
                 border: '1px solid rgba(214, 225, 247, 0.9)',
-                boxShadow: '0 14px 28px rgba(15, 23, 42, 0.04)',
+                boxShadow: 'none',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -573,7 +573,7 @@ const UnifiedTimeline = ({
               textAlign: "center",
               py: 2.25,
               px: 2,
-              borderRadius: 2,
+              borderRadius: 0.35,
               cursor: onEmptyStateClick ? "pointer" : "default",
               transition: "background-color 0.2s ease, box-shadow 0.2s ease",
               "&:hover": onEmptyStateClick
@@ -595,7 +595,7 @@ const UnifiedTimeline = ({
               sx={{
                 width: 48,
                 height: 48,
-                borderRadius: 2,
+                borderRadius: 0.35,
                 display: "inline-flex",
                 alignItems: "center",
                 justifyContent: "center",

@@ -45,7 +45,7 @@ const TimelineFullModal = ({
           maxHeight: '90vh',
           width: 800,
           overflow: 'hidden',
-          borderRadius: 2,
+          borderRadius: 0.35,
           display: 'flex',
           flexDirection: 'column'
         }}

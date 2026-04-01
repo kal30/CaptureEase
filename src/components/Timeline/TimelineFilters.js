@@ -160,6 +160,7 @@ const TimelineFilters = ({
     key !== 'selectedDate' && filters[key]?.length > 0
   ).length;
   const useCompactMobileLayout = compact && (mobileLayout || isMobile);
+  const mobileControlHeight = 30;
 
   if (compact) {
     // Compact mode for header display
@@ -208,22 +209,33 @@ const TimelineFilters = ({
                     <ClearIcon sx={{ fontSize: 15 }} />
                   </IconButton>
                 ),
-                sx: { height: 24, fontSize: '0.75rem' }
+                sx: { height: mobileControlHeight, fontSize: '0.78rem' }
               }}
               sx={{
                 minWidth: 170,
-                width: 170,
-                flex: '0 0 auto',
+                width: 'auto',
+                flex: '1 1 220px',
+                mr: 0.5,
                 contain: 'none',
                 transform: 'none',
                 willChange: 'auto',
+                '& .MuiInputBase-root': {
+                  borderRadius: '0 !important',
+                },
                 '& .MuiOutlinedInput-root': {
-                  height: 24,
-                  borderRadius: 6,
+                  height: mobileControlHeight,
+                  borderRadius: '0 !important',
                   contain: 'none',
                   transform: 'none',
                   willChange: 'auto',
                   backgroundColor: '#fff',
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderRadius: '0 !important',
+                  },
+                  '& .MuiInputBase-input': {
+                    height: '100%',
+                    boxSizing: 'border-box',
+                  },
                   '& input': {
                     py: 0,
                     fontSize: '0.8rem',
@@ -242,11 +254,13 @@ const TimelineFilters = ({
               onClick={() => setSearchExpanded(true)}
               variant="outlined"
               sx={{
-                height: 24,
-                px: 1,
+                height: mobileControlHeight,
+                px: 1.2,
+                pl: 1.2,
                 minWidth: 'auto',
-                flex: '0 0 auto',
-                borderRadius: 0.5,
+                flex: '1 1 220px',
+                mr: 0.5,
+                borderRadius: 0.35,
                 textTransform: 'none',
                 fontSize: '0.82rem',
                 fontWeight: 700,
@@ -276,9 +290,15 @@ const TimelineFilters = ({
               minWidth: 120,
               width: 'auto',
               flex: '0 0 auto',
+              '& .MuiInputBase-root': {
+                borderRadius: '0 !important',
+              },
               '& .MuiOutlinedInput-root': {
                 height: isMobile ? 28 : 24,
-                borderRadius: isMobile ? 14 : undefined,
+                borderRadius: '0 !important',
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderRadius: '0 !important',
+                },
                 '& input': {
                   py: 0,
                   fontSize: isMobile ? '0.8rem' : '0.75rem'
@@ -297,7 +317,7 @@ const TimelineFilters = ({
               label={selectedDate?.toLocaleDateString() || 'Select Date'}
               onClick={handleDatePickerOpen}
               variant="outlined"
-              sx={{ fontSize: useCompactMobileLayout ? '0.78rem' : '0.7rem', height: useCompactMobileLayout ? 30 : 24, flex: '0 0 auto' }}
+              sx={{ fontSize: useCompactMobileLayout ? '0.78rem' : '0.7rem', height: useCompactMobileLayout ? 30 : 24, flex: '0 0 auto', borderRadius: 0.35 }}
             />
             
             <Popover
@@ -331,11 +351,11 @@ const TimelineFilters = ({
           color={selectedCategoryType || importantMomentsSelected ? 'primary' : 'inherit'}
           sx={{
             fontSize: useCompactMobileLayout ? '0.78rem' : '0.7rem',
-            height: useCompactMobileLayout ? 24 : 24,
+            height: useCompactMobileLayout ? mobileControlHeight : 24,
             flex: '0 0 auto',
-            px: 1,
+            px: useCompactMobileLayout ? 1.2 : 1,
             minWidth: 'auto',
-            borderRadius: useCompactMobileLayout ? 0.5 : undefined,
+            borderRadius: useCompactMobileLayout ? 0.35 : undefined,
             textTransform: 'none',
             fontWeight: 700,
             color: selectedCategoryType || importantMomentsSelected ? undefined : 'text.primary',
@@ -394,7 +414,7 @@ const TimelineFilters = ({
           <IconButton
             size="small"
             onClick={clearAllFilters}
-            sx={{ width: useCompactMobileLayout ? 30 : 24, height: useCompactMobileLayout ? 30 : 24, flex: '0 0 auto' }}
+            sx={{ width: useCompactMobileLayout ? 30 : 24, height: useCompactMobileLayout ? 30 : 24, flex: '0 0 auto', borderRadius: 0.35 }}
             title="Clear all filters"
           >
             <ClearIcon sx={{ fontSize: useCompactMobileLayout ? 16 : 14 }} />
@@ -406,7 +426,7 @@ const TimelineFilters = ({
 
   // Full mode for main timeline display
   return (
-    <Paper variant="outlined" sx={{ p: 2, mb: 2, ...sx }}>
+    <Paper variant="outlined" sx={{ p: 2, mb: 2, borderRadius: 0.35, ...sx }}>
       <Box sx={{ mb: 2 }}>
         <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
           Timeline Filters
@@ -444,6 +464,7 @@ const TimelineFilters = ({
             textTransform: 'none',
             border: '1px solid',
             borderColor: 'divider',
+            borderRadius: 0.35,
             '&.Mui-selected': {
               bgcolor: 'secondary.50',
               borderColor: 'secondary.main',
@@ -494,7 +515,7 @@ const TimelineFilters = ({
           InputProps={{
             startAdornment: <DateIcon sx={{ fontSize: 16, mr: 0.5 }} />
           }}
-          sx={{ minWidth: 160 }}
+          sx={{ minWidth: 160, '& .MuiOutlinedInput-root': { borderRadius: 0.35 } }}
         />
       </Box>
 
