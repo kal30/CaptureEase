@@ -12,6 +12,11 @@ import { USER_ROLES, PERMISSIONS } from '../constants/roles';
 
 const RoleContext = createContext({});
 
+const normalizeChildPhoto = (child) => ({
+  ...child,
+  profilePhoto: child?.profilePhoto || child?.photoURL || child?.avatarUrl || null,
+});
+
 export const useRole = () => {
   const context = useContext(RoleContext);
   if (!context) {
@@ -51,7 +56,7 @@ export const RoleProvider = ({ children }) => {
           childrenWithRoles.map(populateChildTeamMembers)
         );
         
-        setChildrenWithAccess(childrenWithTeamDetails);
+        setChildrenWithAccess(childrenWithTeamDetails.map(normalizeChildPhoto));
 
         // Build role, permission, and display info mappings
         const roleMap = {};
@@ -121,13 +126,16 @@ export const RoleProvider = ({ children }) => {
     
     try {
       const childrenWithRoles = await getChildrenWithRoles();
-      setChildrenWithAccess(childrenWithRoles);
+      const childrenWithTeamDetails = await Promise.all(
+        childrenWithRoles.map(populateChildTeamMembers)
+      );
+      setChildrenWithAccess(childrenWithTeamDetails.map(normalizeChildPhoto));
 
       const roleMap = {};
       const permissionMap = {};
       const displayInfoMap = {};
 
-      for (const child of childrenWithRoles) {
+      for (const child of childrenWithTeamDetails) {
         roleMap[child.id] = child.userRole;
         permissionMap[child.id] = child.permissions || [];
         

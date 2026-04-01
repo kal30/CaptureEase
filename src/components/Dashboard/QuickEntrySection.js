@@ -10,7 +10,6 @@ import {
   ListItemText,
 } from '@mui/material';
 import {
-  AssignmentOutlined as AssignmentOutlinedIcon,
   MoreHoriz as MoreHorizIcon,
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
@@ -79,11 +78,6 @@ const QuickEntrySection = ({
   const handleQuickEntryLeave = () => {
     setHoveredAction(null);
     onLeaveAction?.(child.id);
-  };
-
-  const handleDailyReportClick = (e) => {
-    e.stopPropagation();
-    onDailyReport?.(child);
   };
 
   const handleMenuOpen = (e) => {
@@ -334,15 +328,6 @@ const QuickEntrySection = ({
             <ListItemText primary={action.label} secondary={action.description} />
           </MenuItem>
         ))}
-        <MenuItem
-          onClick={(e) => {
-            handleMenuClose();
-            handleDailyReportClick(e);
-          }}
-        >
-          <AssignmentOutlinedIcon sx={{ mr: 1.5, fontSize: 18, color: theme.palette.dailyCare.dark }} />
-          <ListItemText primary="Therapy Prep" secondary="Prepare notes for therapy and specialist visits" />
-        </MenuItem>
       </Menu>
     </Box>
   );

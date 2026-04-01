@@ -217,6 +217,7 @@ const ChildCardHeader = memo(({
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
+              mb: 0.25,
             }}
           >
             {[child.diagnosis || (child.concerns && child.concerns[0]?.label) || (child.conditions && child.conditions[0]), child.medicalProfile?.foodAllergies?.join(', ')].filter(Boolean).join(' • ')}
@@ -230,7 +231,7 @@ const ChildCardHeader = memo(({
         )}
 
         {!showCollapsedSummaryLine && (metricChips.length > 0 || timelineSummary.lastActivityTime || !hasEntriesToday) && (
-          <Box sx={{ mt: { xs: 0.45, md: 1 }, display: 'flex', flexDirection: 'column', gap: { xs: 0.35, md: 0.75 } }}>
+          <Box sx={{ mt: { xs: 0.3, md: 1 }, display: 'flex', flexDirection: 'column', gap: { xs: 0.25, md: 0.75 } }}>
             {showCompactMobileIdentity ? (
               <Box
                 sx={{
@@ -264,6 +265,7 @@ const ChildCardHeader = memo(({
                       fontSize: '0.72rem',
                       fontWeight: 700,
                       flex: '0 0 auto',
+                      ml: 0.5,
                     }}
                   />
                 )}
@@ -323,7 +325,8 @@ const ChildCardHeader = memo(({
                   display: 'block',
                   fontSize: { xs: showCompactMobileIdentity ? '0.7rem' : '0.72rem', md: '0.78rem' },
                   fontWeight: 500,
-                  lineHeight: 1.2
+                  lineHeight: 1.2,
+                  pt: showCompactMobileIdentity ? 0.15 : 0,
                 }}
               >
                 Last activity at {timelineSummary.lastActivityTime}

@@ -21,9 +21,9 @@ export const childCardHeaderStyles = (theme, userRole) => {
   const baseHex = roleHex[userRole] || roleHex.default;
   return {
     display: "flex",
-    alignItems: "center",
-    gap: 2,
-    p: 2,
+    alignItems: "flex-start",
+    gap: theme.spacing(1.25),
+    p: { xs: 1.25, md: 2 },
     flexWrap: { xs: "wrap", md: "nowrap" },
     minHeight: { xs: "auto", md: 100 },
     background: makeSoftGradientFromHex(theme, baseHex),

@@ -18,6 +18,7 @@ import {
   LocalOffer as LocalOfferIcon,
   ExpandMore as ExpandMoreIcon,
   Description as DescriptionIcon,
+  KeyboardVoice as KeyboardVoiceIcon,
 } from '@mui/icons-material';
 import StyledButton from '../UI/StyledButton';
 import { db, auth } from '../../services/firebase';
@@ -258,34 +259,47 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
           </IconButton>
         </Box>
 
-        <TextField
-          fullWidth
-          multiline
-          minRows={5}
-          value={noteText}
-          onChange={(e) => setNoteText(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.ctrlKey && e.key === 'Enter') {
-              e.preventDefault();
-              if (noteText.trim() && !saving) saveQuickNote();
-            }
-          }}
-          placeholder={notePlaceholder}
-          sx={{
-            mb: 2,
-            '& .MuiOutlinedInput-root': {
-              borderRadius: '14px',
-              fontSize: '1rem',
-              color: '#48484b',
-              '& fieldset': { borderColor: '#c7d2f4', borderWidth: 3 },
-            },
-            '& .MuiInputBase-input::placeholder': {
-              color: '#86888e',
-              opacity: 0.75,
-              fontSize: '1rem',
-            }
-          }}
-        />
+        <Box sx={{ mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.7 }}>
+            <Typography sx={{ fontSize: '0.84rem', fontWeight: 700, color: '#51607a' }}>
+              Your note
+            </Typography>
+            <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.45, color: '#6b7280' }}>
+              <KeyboardVoiceIcon sx={{ fontSize: 16 }} />
+              <Typography sx={{ fontSize: '0.76rem', fontWeight: 600 }}>
+                Use your keyboard mic to dictate
+              </Typography>
+            </Box>
+          </Box>
+
+          <TextField
+            fullWidth
+            multiline
+            minRows={5}
+            value={noteText}
+            onChange={(e) => setNoteText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.ctrlKey && e.key === 'Enter') {
+                e.preventDefault();
+                if (noteText.trim() && !saving) saveQuickNote();
+              }
+            }}
+            placeholder={notePlaceholder}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: '14px',
+                fontSize: '1rem',
+                color: '#48484b',
+                '& fieldset': { borderColor: '#c7d2f4', borderWidth: 3 },
+              },
+              '& .MuiInputBase-input::placeholder': {
+                color: '#86888e',
+                opacity: 0.75,
+                fontSize: '1rem',
+              }
+            }}
+          />
+        </Box>
 
         <input
           ref={photoInputRef}

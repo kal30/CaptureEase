@@ -33,12 +33,14 @@ import { trackRenderDebug, useMountDebug } from "../utils/renderDebug";
 
 const PanelDashboard = () => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isDesktop = useMediaQuery(theme.breakpoints.up('xl'));
+  const isMobile = !isDesktop;
   const hook = usePanelDashboard({ activeChildOnly: isMobile });
   const actionGroups = getActionGroups(hook.theme);
   useMountDebug('PanelDashboard');
   trackRenderDebug('PanelDashboard', {
     isMobile,
+    isDesktop,
     loading: hook.loading,
     childCount: hook.children.length,
     currentChildId: hook.currentChildId || 'none',

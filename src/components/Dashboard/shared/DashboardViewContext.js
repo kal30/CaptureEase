@@ -14,7 +14,7 @@ export const DashboardViewProvider = ({
   );
   const firstChildId = childOptions[0]?.id || null;
   const [activeChildId, setActiveChildId] = useState(initialActiveChildId || childOptions[0]?.id || null);
-  const [mobileView, setMobileView] = useState(childOptions.length === 1 ? 'child' : 'switchboard');
+  const [mobileView, setMobileView] = useState(childOptions.length > 0 ? 'child' : 'switchboard');
   const lastSyncedChildIdRef = useRef(null);
 
   useEffect(() => {

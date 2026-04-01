@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { Box, Typography, useMediaQuery, useTheme } from '@mui/material';
 import MonthNavigationControls from './MonthNavigationControls';
 import { useSwipeGesture } from '../../hooks/useSwipeGesture';
@@ -32,23 +32,23 @@ const MiniCalendar = ({
     () => toMonthStart(currentMonth || new Date()),
     [initialMonthKey]
   );
-  const selectedMonth = useMemo(
-    () => (selectedDate ? toMonthStart(selectedDate) : null),
-    [selectedDate]
-  );
-  
   // State for current displayed month
   const [displayMonth, setDisplayMonth] = useState(normalizedInitialMonth);
+  const lastControlledMonthKeyRef = useRef(initialMonthKey);
   
-  // Update display month when currentMonth prop changes or when selectedDate is in different month
+  // Only sync from the controlled month when the parent month actually changes.
+  // Do not sync from selectedDate, or month navigation in the popover gets reset.
   React.useEffect(() => {
-    const nextMonth = selectedMonth || normalizedInitialMonth;
-    setDisplayMonth((currentMonth) => {
-      return getMonthKey(currentMonth) === getMonthKey(nextMonth)
-        ? currentMonth
-        : nextMonth;
-    });
-  }, [normalizedInitialMonth, selectedMonth]);
+    const nextMonthKey = currentMonth ? getMonthKey(currentMonth) : null;
+    if (nextMonthKey && nextMonthKey !== lastControlledMonthKeyRef.current) {
+      lastControlledMonthKeyRef.current = nextMonthKey;
+      setDisplayMonth((currentDisplayMonth) => {
+        return getMonthKey(currentDisplayMonth) === nextMonthKey
+          ? currentDisplayMonth
+          : toMonthStart(currentMonth);
+      });
+    }
+  }, [currentMonth]);
 
   // Month navigation handlers
   const goToPreviousMonth = () => {
@@ -205,7 +205,7 @@ const MiniCalendar = ({
         currentMonth={displayMonth}
         onPreviousMonth={goToPreviousMonth}
         onNextMonth={goToNextMonth}
-        showControls={!isMobile}
+        showControls={true}
       />
 
       {/* Calendar Container */}

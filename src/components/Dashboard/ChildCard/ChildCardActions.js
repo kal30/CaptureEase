@@ -59,20 +59,60 @@ const ChildCardActions = ({
         ...sx 
       }}
     >
-      {/* Quick Entry Section with Therapy Prep */}
-      <QuickEntrySection
-        child={child}
-        status={status}
-        userRole={userRole}
-        completedToday={completedToday}
-        helperText={helperText}
-        hidePrimaryAction={hidePrimaryAction}
-        onQuickEntry={onQuickEntry}
-        onDailyReport={onDailyReport}
-        onHoverAction={handleQuickActionHover}
-        onLeaveAction={handleQuickActionLeave}
-        externalHoveredAction={hoveredQuickAction}
-      />
+      {!hidePrimaryAction ? (
+        <QuickEntrySection
+          child={child}
+          status={status}
+          userRole={userRole}
+          completedToday={completedToday}
+          helperText={helperText}
+          hidePrimaryAction={hidePrimaryAction}
+          onQuickEntry={onQuickEntry}
+          onDailyReport={onDailyReport}
+          onHoverAction={handleQuickActionHover}
+          onLeaveAction={handleQuickActionLeave}
+          externalHoveredAction={hoveredQuickAction}
+        />
+      ) : (
+        <Box
+          sx={{
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'flex-start',
+            pt: 0.35,
+          }}
+        >
+          <Button
+            variant="outlined"
+            startIcon={<span aria-hidden="true">📝</span>}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDailyReport?.(child);
+            }}
+            sx={{
+              flex: 1,
+              justifyContent: 'flex-start',
+              minHeight: 36,
+              px: 1.25,
+              borderRadius: '14px',
+              textTransform: 'none',
+              fontSize: '0.84rem',
+              fontWeight: 700,
+              color: 'rgba(15, 23, 42, 0.82)',
+              borderColor: 'rgba(148, 163, 184, 0.28)',
+              backgroundColor: 'rgba(255,255,255,0.48)',
+              backdropFilter: 'blur(8px)',
+              '&:hover': {
+                borderColor: 'rgba(99, 102, 241, 0.35)',
+                backgroundColor: 'rgba(255,255,255,0.7)',
+              },
+            }}
+          >
+            Prep for Therapy
+          </Button>
+        </Box>
+      )}
 
       {/* Role-Specific Action Buttons */}
       <Box
@@ -80,11 +120,12 @@ const ChildCardActions = ({
           display: 'flex',
           alignItems: 'center',
           gap: 2,
-          alignSelf: 'stretch',
-          pt: { xs: 0, md: 0.5 },
-          width: { xs: '100%', md: 'auto' },
-          justifyContent: { xs: 'center', md: 'flex-end' },
-          order: { xs: 2, md: 0 }
+          alignSelf: hidePrimaryAction ? { xs: 'flex-start', md: 'stretch' } : 'stretch',
+          pt: { xs: hidePrimaryAction ? 0 : 0, md: 0.5 },
+          width: { xs: hidePrimaryAction ? 'auto' : '100%', md: 'auto' },
+          justifyContent: { xs: hidePrimaryAction ? 'flex-end' : 'center', md: 'flex-end' },
+          order: { xs: hidePrimaryAction ? 0 : 2, md: 0 },
+          ml: hidePrimaryAction ? 'auto' : 0,
         }}
       >
         {/* Action Buttons */}
@@ -94,7 +135,7 @@ const ChildCardActions = ({
             flexDirection: 'column',
             gap: 1,
             alignItems: 'center',
-            width: { xs: '100%', md: 'auto' }
+            width: { xs: hidePrimaryAction ? 'auto' : '100%', md: 'auto' }
           }}
         >
           {userRole === USER_ROLES.THERAPIST && (
