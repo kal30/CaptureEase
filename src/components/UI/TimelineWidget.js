@@ -400,6 +400,7 @@ const TimelineWidget = ({
     <>
       <Paper
         className={`timeline-widget timeline-widget--${variant}`}
+        id={`timeline-widget-${child?.id || 'default'}`}
         elevation={0}
         sx={widgetStyles}
         onClick={(e) => e.stopPropagation()}

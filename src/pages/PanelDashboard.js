@@ -63,6 +63,22 @@ const PanelDashboard = () => {
     }
   };
 
+  const handleViewImportedCalendar = (child) => {
+    const childId = child?.id || importInitialChildId;
+    requestAnimationFrame(() => {
+      document.getElementById(`timeline-widget-${childId}`)?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    });
+  };
+
+  const handleViewImportedPrep = (child) => {
+    if (child) {
+      hook.handleShowCareReport(child);
+    }
+  };
+
   const handleImportFileChange = async (event) => {
     const file = event.target.files?.[0];
     event.target.value = '';
@@ -380,9 +396,16 @@ const PanelDashboard = () => {
         entries={importRows}
         children={hook.children}
         initialChildId={importInitialChildId}
-        onImported={() => {
+        onImported={() => {}}
+        onViewCalendar={(child) => {
           setShowImportModal(false);
           setImportRows([]);
+          handleViewImportedCalendar(child);
+        }}
+        onViewPrepForTherapy={(child) => {
+          setShowImportModal(false);
+          setImportRows([]);
+          handleViewImportedPrep(child);
         }}
       />
 

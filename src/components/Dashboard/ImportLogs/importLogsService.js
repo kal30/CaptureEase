@@ -1,7 +1,7 @@
 import * as XLSX from 'xlsx';
 import * as mammoth from 'mammoth/mammoth.browser';
 import { httpsCallable } from 'firebase/functions';
-import { collection, doc, serverTimestamp, writeBatch } from 'firebase/firestore';
+import { collection, doc, getDocs, query, serverTimestamp, where, writeBatch } from 'firebase/firestore';
 import { db, functions } from '../../../services/firebase';
 const parseImportedLogsCallable = httpsCallable(functions, 'parseImportedLogs');
 
@@ -46,6 +46,96 @@ const parseDateForStorage = (value) => {
   }
 
   return new Date();
+};
+
+const normalizeComparableText = (value = '') => String(value || '')
+  .toLowerCase()
+  .replace(/https?:\/\/\S+/g, ' ')
+  .replace(/[^a-z0-9]+/g, ' ')
+  .replace(/\s+/g, ' ')
+  .trim();
+
+const getDateKey = (value) => {
+  const date = parseDateForStorage(value);
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+    return '';
+  }
+
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, '0'),
+    String(date.getDate()).padStart(2, '0'),
+  ].join('-');
+};
+
+export const fetchExistingLogsForChild = async (childId) => {
+  if (!childId) {
+    return [];
+  }
+
+  const snapshot = await getDocs(
+    query(
+      collection(db, 'dailyLogs'),
+      where('childId', '==', childId),
+      where('status', '==', 'active')
+    )
+  );
+
+  return snapshot.docs.map((snapshotDoc) => {
+    const data = snapshotDoc.data();
+    const timestamp = data.timestamp?.toDate?.()
+      || data.createdAt?.toDate?.()
+      || data.timestamp
+      || data.createdAt
+      || null;
+
+    return {
+      id: snapshotDoc.id,
+      childId: data.childId || childId,
+      category: data.category || 'other',
+      importance: data.importance === 'important' ? 'important' : 'normal',
+      note: data.text || data.note || data.content || '',
+      timestamp,
+      dateKey: getDateKey(timestamp),
+      normalizedNote: normalizeComparableText(data.text || data.note || data.content || ''),
+      normalizedCategory: String(data.category || 'other').toLowerCase(),
+    };
+  });
+};
+
+export const detectPossibleDuplicateImportRow = (row, existingLogs = []) => {
+  const rowDateKey = getDateKey(row.date);
+  const rowNote = normalizeComparableText(row.note);
+  const rowCategory = String(row.category || 'other').toLowerCase();
+
+  if (!rowNote || !existingLogs.length) {
+    return { matched: false, reason: '' };
+  }
+
+  for (const existing of existingLogs) {
+    const existingNote = existing.normalizedNote || normalizeComparableText(existing.note);
+    if (!existingNote) {
+      continue;
+    }
+
+    const categoryMatches = rowCategory === (existing.normalizedCategory || String(existing.category || 'other').toLowerCase());
+    const dateMatches = !rowDateKey || !existing.dateKey || rowDateKey === existing.dateKey;
+    const exactNoteMatch = rowNote === existingNote;
+    const noteContainsMatch = rowNote.length >= 12 && (
+      rowNote.includes(existingNote) ||
+      existingNote.includes(rowNote)
+    );
+
+    if (categoryMatches && dateMatches && (exactNoteMatch || noteContainsMatch)) {
+      return {
+        matched: true,
+        reason: exactNoteMatch ? 'Same date, category, and note' : 'Same date and similar note',
+        existingId: existing.id,
+      };
+    }
+  }
+
+  return { matched: false, reason: '' };
 };
 
 export const extractTextFromImportFile = async (file) => {
