@@ -3,6 +3,7 @@ const { defineSecret } = require("firebase-functions/params");
 const logger = require("firebase-functions/logger");
 const { Resend } = require("resend");
 const admin = require("firebase-admin");
+const { parseImportedLogsCore } = require("./importedLogsParser");
 
 // Initialize Firebase Admin (for server-side operations)
 if (!admin.apps.length) {
@@ -13,6 +14,7 @@ if (!admin.apps.length) {
 const RESEND_API_KEY = defineSecret("RESEND_API_KEY");
 const FROM_EMAIL = defineSecret("FROM_EMAIL");
 const SENDER_NAME = defineSecret("SENDER_NAME");
+const ANTHROPIC_API_KEY = defineSecret("ANTHROPIC_API_KEY");
 
 const escapeHtml = (value = "") =>
   String(value)
@@ -197,6 +199,27 @@ ${message}
 
   return { html, text };
 };
+
+exports.parseImportedLogs = onCall(
+  {
+    region: "us-central1",
+    secrets: [ANTHROPIC_API_KEY],
+  },
+  async (request) => {
+    try {
+      const { text } = request.data || {};
+      return await parseImportedLogsCore({
+        text,
+        fetchImpl: fetch,
+        apiKey: ANTHROPIC_API_KEY.value(),
+        logger,
+      });
+    } catch (error) {
+      logger.error("parseImportedLogs failed", error);
+      return { error: "We couldn't read that file. Try a simpler format." };
+    }
+  }
+);
 
 exports.sendInvitationEmail = onCall(
   {

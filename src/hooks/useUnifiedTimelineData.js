@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo } from 'react';
-import { getTimelineData } from '../services/timeline';
 import { 
   withTimelinePermissions,
   getCareOwnerTimelineView 
@@ -86,7 +85,7 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
   });
 
   // Get current user's role for this child
-  const userRole = getUserRoleForChild(childId);
+  const userRole = getUserRoleForChild?.(childId) || null;
 
   // Fetch all data when childId or selectedDate changes
   useEffect(() => {
@@ -100,6 +99,7 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
       setError(null);
 
       try {
+        const { getTimelineData } = await import('../services/timeline/index.js');
         // Use the new refactored timeline service
         const timelineData = await getTimelineData(childId, selectedDate);
 

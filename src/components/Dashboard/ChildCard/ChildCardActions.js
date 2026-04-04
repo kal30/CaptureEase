@@ -29,6 +29,7 @@ const ChildCardActions = ({
   hidePrimaryAction = false,
   onQuickEntry,
   onDailyReport,
+  onImportLogs,
   hoveredQuickAction,
   onHoverAction,
   onLeaveAction,
@@ -69,48 +70,50 @@ const ChildCardActions = ({
           hidePrimaryAction={hidePrimaryAction}
           onQuickEntry={onQuickEntry}
           onDailyReport={onDailyReport}
+          onImportLogs={onImportLogs}
           onHoverAction={handleQuickActionHover}
           onLeaveAction={handleQuickActionLeave}
           externalHoveredAction={hoveredQuickAction}
         />
       ) : (
-        <Box
-          sx={{
-            width: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'flex-start',
-            pt: 0.35,
-          }}
-        >
-          <Button
-            variant="outlined"
-            startIcon={<span aria-hidden="true">📝</span>}
-            onClick={(e) => {
-              e.stopPropagation();
-              onDailyReport?.(child);
-            }}
+          <Box
             sx={{
-              flex: 1,
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
               justifyContent: 'flex-start',
-              minHeight: 36,
-              px: 1.25,
-              borderRadius: '14px',
-              textTransform: 'none',
-              fontSize: '0.84rem',
-              fontWeight: 700,
-              color: 'rgba(15, 23, 42, 0.82)',
-              borderColor: 'rgba(148, 163, 184, 0.28)',
-              backgroundColor: 'rgba(255,255,255,0.48)',
-              backdropFilter: 'blur(8px)',
-              '&:hover': {
-                borderColor: 'rgba(99, 102, 241, 0.35)',
-                backgroundColor: 'rgba(255,255,255,0.7)',
-              },
+              pt: 0.35,
             }}
           >
-            Prep for Therapy
-          </Button>
+            <Button
+              variant="outlined"
+              startIcon={<span aria-hidden="true">📝</span>}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDailyReport?.(child);
+              }}
+              sx={{
+                flex: 1,
+                justifyContent: 'flex-start',
+                minHeight: 36,
+                px: 1.25,
+                borderRadius: 0.8,
+                textTransform: 'none',
+                fontSize: '0.84rem',
+                fontWeight: 700,
+                color: 'rgba(15, 23, 42, 0.82)',
+                borderColor: 'rgba(148, 163, 184, 0.18)',
+                background: 'linear-gradient(135deg, rgba(255,255,255,0.88) 0%, rgba(240,244,255,0.72) 100%)',
+                backdropFilter: 'blur(8px)',
+                boxShadow: '0 10px 24px rgba(15, 23, 42, 0.05)',
+                '&:hover': {
+                  borderColor: 'rgba(99, 102, 241, 0.28)',
+                  background: 'linear-gradient(135deg, rgba(255,255,255,0.96) 0%, rgba(236,242,255,0.82) 100%)',
+                },
+              }}
+            >
+              Prep for Therapy
+            </Button>
         </Box>
       )}
 

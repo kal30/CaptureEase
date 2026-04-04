@@ -107,7 +107,7 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
   ];
 
   useEffect(() => {
-    if (child) {
+    if (open && child) {
       setName(child.name || "");
       setAge(child.age || "");
       setPhotoURL(child.photoURL || null);
@@ -126,7 +126,7 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
       // Reset form hook state when child data loads
       childForm.reset();
     }
-  }, [child, childForm]);
+  }, [open, child?.id, childForm.reset]);
 
   // Handle modal close with form reset
   const handleClose = () => {

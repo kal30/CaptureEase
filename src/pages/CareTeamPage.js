@@ -27,7 +27,7 @@ const CareTeamPage = () => {
       if (!loading && childrenWithAccess.length > 0) {
         // Check if user has any Care Owner or Care Partner roles
         const hasOwnerOrPartner = childrenWithAccess.some(child => {
-          const role = getUserRoleForChild(child.id);
+          const role = getUserRoleForChild?.(child.id) || null;
           return role === USER_ROLES.CARE_OWNER || role === USER_ROLES.CARE_PARTNER;
         });
         
@@ -35,7 +35,7 @@ const CareTeamPage = () => {
         
         // Set highest role
         const isOwner = childrenWithAccess.some(child => 
-          getUserRoleForChild(child.id) === USER_ROLES.CARE_OWNER
+          getUserRoleForChild?.(child.id) === USER_ROLES.CARE_OWNER
         );
         setUserRole(isOwner ? USER_ROLES.CARE_OWNER : USER_ROLES.CARE_PARTNER);
 

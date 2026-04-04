@@ -32,7 +32,7 @@ export const usePermissions = (childId) => {
     };
   }
 
-  const userRole = getUserRoleForChild(childId);
+  const userRole = getUserRoleForChild?.(childId) || null;
   const displayInfo = getDisplayInfoForChild(childId);
 
   return {
@@ -42,24 +42,24 @@ export const usePermissions = (childId) => {
     loading,
 
     // Common permission checks
-    canAddData: canAddDataForChild(childId),
-    isReadOnly: isReadOnlyForChild(childId),
-    isPrimary: isPrimaryCaregiver(childId),
-    canInvite: canInviteOthers(childId),
-    canManage: canManageChild(childId),
+    canAddData: canAddDataForChild?.(childId) ?? false,
+    isReadOnly: isReadOnlyForChild?.(childId) ?? true,
+    isPrimary: isPrimaryCaregiver?.(childId) ?? false,
+    canInvite: canInviteOthers?.(childId) ?? false,
+    canManage: canManageChild?.(childId) ?? false,
 
     // Specific permissions
-    canAddDailyEntries: hasPermissionForChild(childId, PERMISSIONS.ADD_DAILY_LOGS),
-    canAddDailyHabits: hasPermissionForChild(childId, PERMISSIONS.ADD_DAILY_HABITS),
-    canAddDetailedEntries: hasPermissionForChild(childId, PERMISSIONS.ADD_DAILY_LOGS),
-    canAddMedicalEntries: hasPermissionForChild(childId, PERMISSIONS.ADD_DAILY_LOGS),
-    canEditProfile: hasPermissionForChild(childId, PERMISSIONS.EDIT_CHILD),
-    canViewTimeline: hasPermissionForChild(childId, PERMISSIONS.VIEW_ALL_LOGS),
-    canViewAnalytics: hasPermissionForChild(childId, PERMISSIONS.VIEW_ANALYTICS),
-    canExportData: hasPermissionForChild(childId, PERMISSIONS.EXPORT_REPORTS),
+    canAddDailyEntries: hasPermissionForChild?.(childId, PERMISSIONS.ADD_DAILY_LOGS) ?? false,
+    canAddDailyHabits: hasPermissionForChild?.(childId, PERMISSIONS.ADD_DAILY_HABITS) ?? false,
+    canAddDetailedEntries: hasPermissionForChild?.(childId, PERMISSIONS.ADD_DAILY_LOGS) ?? false,
+    canAddMedicalEntries: hasPermissionForChild?.(childId, PERMISSIONS.ADD_DAILY_LOGS) ?? false,
+    canEditProfile: hasPermissionForChild?.(childId, PERMISSIONS.EDIT_CHILD) ?? false,
+    canViewTimeline: hasPermissionForChild?.(childId, PERMISSIONS.VIEW_ALL_LOGS) ?? false,
+    canViewAnalytics: hasPermissionForChild?.(childId, PERMISSIONS.VIEW_ANALYTICS) ?? false,
+    canExportData: hasPermissionForChild?.(childId, PERMISSIONS.EXPORT_REPORTS) ?? false,
 
     // Generic permission checker
-    hasPermission: (permission) => hasPermissionForChild(childId, permission),
+    hasPermission: (permission) => hasPermissionForChild?.(childId, permission) ?? false,
 
     // Role checks
     isCaregiver: userRole === USER_ROLES.CAREGIVER || userRole === USER_ROLES.PRIMARY_CAREGIVER,

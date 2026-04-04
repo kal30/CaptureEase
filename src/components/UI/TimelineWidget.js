@@ -79,26 +79,26 @@ const TimelineWidget = ({
   // Component styles - mobile-first responsive
   const widgetStyles = {
     bgcolor: 'background.paper',
-    border: '1px solid',
-    borderColor: 'timeline.border',
-    borderRadius: { xs: 0.35, md: 0.35 },
+    border: 'none',
+    borderRadius: { xs: 0.6, md: 0.6 },
     overflow: 'hidden',
-    transition: 'box-shadow 0.2s ease',
+    boxShadow: '0 4px 20px rgba(15, 23, 42, 0.05)',
+    transition: 'box-shadow 0.2s ease, transform 0.2s ease',
     '&:hover': {
-      boxShadow: '0 2px 8px rgba(109, 40, 217, 0.1)'
+      boxShadow: '0 8px 28px rgba(15, 23, 42, 0.07)',
     }
   };
 
   const headerStyles = {
-    p: { xs: 1.5, md: 2 },
-    bgcolor: 'timeline.background',
+    p: { xs: 2, md: 3 },
+    bgcolor: 'rgba(248, 250, 252, 0.92)',
     borderBottom: expanded ? '1px solid' : 'none',
-    borderBottomColor: 'timeline.border',
-    cursor: 'pointer'
+    borderBottomColor: 'rgba(148, 163, 184, 0.16)',
+    cursor: 'pointer',
   };
 
   const contentStyles = {
-    p: { xs: 1.25, md: 1.5 }
+    p: { xs: 2, md: 3 }
   };
 
   const handleDayClick = (day, dayEntries, date) => {
@@ -428,7 +428,7 @@ const TimelineWidget = ({
                   <Typography
                     variant="subtitle2"
                     sx={{ 
-                      fontWeight: 600, 
+                      fontWeight: 700, 
                       color: 'text.primary',
                       fontSize: { xs: '0.9rem', md: '1rem' }
                     }}
@@ -442,6 +442,7 @@ const TimelineWidget = ({
                       fontSize: { xs: '0.7rem', md: '0.75rem' },
                       display: 'block',
                       lineHeight: 1.2
+                      ,color: '#6c757d'
                     }}
                   >
                     {selectedDate.toLocaleDateString('en-US', {

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useState } from "react";
 import {
   Box,
   Container,
@@ -8,6 +8,8 @@ import {
   Fade,
   Button,
   useMediaQuery,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 
@@ -26,6 +28,7 @@ import DailyReportModal from "../components/DailyCare/DailyReportModal";
 import { IncidentLoggingModal, IncidentFollowUpModal } from "../components/Dashboard/Incidents";
 import PatternSuggestionModal from "../components/Dashboard/PatternSuggestionModal";
 import DailyHabitsModal from "../components/Dashboard/DailyHabitsModal";
+import { ImportLogsModal, extractTextFromImportFile, parseImportedLogs } from "../components/Dashboard/ImportLogs";
 import DailyCareReport from "../components/Reports/DailyCareReport";
 import { DashboardViewProvider } from "../components/Dashboard/shared/DashboardViewContext";
 import RenderDebugOverlay from "../components/Dashboard/shared/RenderDebugOverlay";
@@ -37,6 +40,12 @@ const PanelDashboard = () => {
   const isMobile = !isDesktop;
   const hook = usePanelDashboard({ activeChildOnly: isMobile });
   const actionGroups = getActionGroups(hook.theme);
+  const importFileInputRef = useRef(null);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importRows, setImportRows] = useState([]);
+  const [importInitialChildId, setImportInitialChildId] = useState('');
+  const [importLoading, setImportLoading] = useState(false);
+  const [importError, setImportError] = useState('');
   useMountDebug('PanelDashboard');
   trackRenderDebug('PanelDashboard', {
     isMobile,
@@ -45,6 +54,47 @@ const PanelDashboard = () => {
     childCount: hook.children.length,
     currentChildId: hook.currentChildId || 'none',
   });
+
+  const handleImportLogsClick = (child) => {
+    setImportInitialChildId(child?.id || hook.currentChildId || hook.children[0]?.id || '');
+    if (importFileInputRef.current) {
+      importFileInputRef.current.value = '';
+      importFileInputRef.current.click();
+    }
+  };
+
+  const handleImportFileChange = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+
+    if (!file) {
+      return;
+    }
+
+    try {
+      setImportLoading(true);
+      setImportError('');
+
+      const extractedText = await extractTextFromImportFile(file);
+      const parsed = await parseImportedLogs(extractedText);
+
+      if (parsed?.error) {
+        throw new Error(parsed.error);
+      }
+
+      const entries = parsed?.entries || [];
+      if (!entries.length) {
+        throw new Error("We couldn't read that file. Try a simpler format.");
+      }
+
+      setImportRows(entries);
+      setShowImportModal(true);
+    } catch (error) {
+      setImportError(error.message || "We couldn't read that file. Try a simpler format.");
+    } finally {
+      setImportLoading(false);
+    }
+  };
 
   if (hook.loading) {
     return (
@@ -193,6 +243,7 @@ const PanelDashboard = () => {
               getUserRoleForChild={hook.getUserRoleForChild}
               USER_ROLES={hook.USER_ROLES}
               quickDataStatus={hook.quickDataStatus}
+              allEntries={hook.allEntries}
               recentEntries={hook.recentEntries}
               timelineSummary={hook.timelineSummary}
               incidents={hook.incidents}
@@ -201,6 +252,7 @@ const PanelDashboard = () => {
               onInviteTeamMember={hook.handleInviteTeamMember}
               onDailyReport={hook.handleShowCareReport}
               onMessages={hook.handleMessages}
+              onImportLogs={handleImportLogsClick}
               onAddChildClick={() => hook.setShowAddChildModal(true)}
             />
           ) : (
@@ -208,10 +260,19 @@ const PanelDashboard = () => {
               hook={hook}
               actionGroups={actionGroups}
               onAddChildClick={() => hook.setShowAddChildModal(true)}
+              onImportLogs={handleImportLogsClick}
             />
           )}
         </DashboardViewProvider>
       )}
+
+      <input
+        ref={importFileInputRef}
+        type="file"
+        accept=".xlsx,.docx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        onChange={handleImportFileChange}
+        style={{ display: 'none' }}
+      />
 
       {/* Modals */}
       <Modal
@@ -309,6 +370,58 @@ const PanelDashboard = () => {
           hook.handleQuickDataEntry(child, "quick_note");
         }}
       />
+
+      <ImportLogsModal
+        open={showImportModal}
+        onClose={() => {
+          setShowImportModal(false);
+          setImportRows([]);
+        }}
+        entries={importRows}
+        children={hook.children}
+        initialChildId={importInitialChildId}
+        onImported={() => {
+          setShowImportModal(false);
+          setImportRows([]);
+        }}
+      />
+
+      <Modal
+        open={importLoading}
+        sx={{ display: "flex", alignItems: "center", justifyContent: "center", p: 2 }}
+      >
+        <Box
+          sx={{
+            bgcolor: "background.paper",
+            border: "1px solid",
+            borderColor: "divider",
+            borderRadius: 2,
+            px: 3,
+            py: 3,
+            minWidth: 280,
+            textAlign: "center",
+          }}
+        >
+          <CircularProgress sx={{ mb: 2 }} />
+          <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>
+            Reading your logs…
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Extracting and parsing the file safely on your behalf.
+          </Typography>
+        </Box>
+      </Modal>
+
+      <Snackbar
+        open={Boolean(importError)}
+        autoHideDuration={6000}
+        onClose={() => setImportError('')}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert onClose={() => setImportError('')} severity="error" variant="filled" sx={{ width: '100%' }}>
+          {importError}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };

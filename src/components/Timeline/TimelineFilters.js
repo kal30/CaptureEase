@@ -260,17 +260,21 @@ const TimelineFilters = ({
                 minWidth: 'auto',
                 flex: '1 1 220px',
                 mr: 0.5,
-                borderRadius: 0.35,
+                borderRadius: 0.25,
                 textTransform: 'none',
                 fontSize: '0.82rem',
                 fontWeight: 700,
                 color: 'text.primary',
-                borderColor: 'divider',
-                backgroundColor: '#fff',
+                borderColor: 'rgba(148, 163, 184, 0.18)',
+                backgroundColor: '#f8f9fa',
                 boxShadow: 'none',
                 contain: 'none',
                 transform: 'none',
                 willChange: 'auto',
+                '&:hover': {
+                  backgroundColor: '#fff',
+                  borderColor: 'rgba(148, 163, 184, 0.32)',
+                },
               }}
             >
               Search
@@ -355,17 +359,21 @@ const TimelineFilters = ({
             flex: '0 0 auto',
             px: useCompactMobileLayout ? 1.2 : 1,
             minWidth: 'auto',
-            borderRadius: useCompactMobileLayout ? 0.35 : undefined,
+              borderRadius: useCompactMobileLayout ? 0.25 : undefined,
             textTransform: 'none',
             fontWeight: 700,
             color: selectedCategoryType || importantMomentsSelected ? undefined : 'text.primary',
-            borderColor: selectedCategoryType || importantMomentsSelected ? undefined : 'divider',
-            backgroundColor: selectedCategoryType || importantMomentsSelected ? undefined : '#fff',
+              borderColor: selectedCategoryType || importantMomentsSelected ? undefined : 'rgba(148, 163, 184, 0.18)',
+              backgroundColor: selectedCategoryType || importantMomentsSelected ? undefined : '#f8f9fa',
             boxShadow: 'none',
             contain: 'none',
             transform: 'none',
-            willChange: 'auto',
-          }}
+              willChange: 'auto',
+              '&:hover': {
+                backgroundColor: selectedCategoryType || importantMomentsSelected ? undefined : '#fff',
+                borderColor: selectedCategoryType || importantMomentsSelected ? undefined : 'rgba(148, 163, 184, 0.32)',
+              },
+            }}
         >
           {filterTriggerLabel}
         </Button>
@@ -414,7 +422,14 @@ const TimelineFilters = ({
           <IconButton
             size="small"
             onClick={clearAllFilters}
-            sx={{ width: useCompactMobileLayout ? 30 : 24, height: useCompactMobileLayout ? 30 : 24, flex: '0 0 auto', borderRadius: 0.35 }}
+            sx={{
+              width: useCompactMobileLayout ? 30 : 24,
+              height: useCompactMobileLayout ? 30 : 24,
+              flex: '0 0 auto',
+              borderRadius: 0.25,
+              backgroundColor: '#f8f9fa',
+              border: '1px solid rgba(148, 163, 184, 0.18)',
+            }}
             title="Clear all filters"
           >
             <ClearIcon sx={{ fontSize: useCompactMobileLayout ? 16 : 14 }} />

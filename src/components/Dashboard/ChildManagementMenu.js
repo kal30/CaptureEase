@@ -29,9 +29,10 @@ const ChildManagementMenu = ({
   const [menuAnchor, setMenuAnchor] = useState(null);
   const theme = useTheme();
 
-  // IRON-CLAD: Only Care Owner can manage children
-  const canManage = userRole === USER_ROLES.CARE_OWNER;
+  // Care owners can manage everything; care partners can edit basic child info.
+  const canManage = userRole === USER_ROLES.CARE_OWNER || userRole === USER_ROLES.CARE_PARTNER;
   const canInvite = userRole === USER_ROLES.CARE_OWNER; // Only Care Owner can invite
+  const canEdit = userRole === USER_ROLES.CARE_OWNER || userRole === USER_ROLES.CARE_PARTNER;
   
   if (!canManage) return null;
 
@@ -107,12 +108,14 @@ const ChildManagementMenu = ({
           }
         }}
       >
-        <MenuItem onClick={handleEditChild}>
-          <ListItemIcon>
-            <EditIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Edit Child Info</ListItemText>
-        </MenuItem>
+        {canEdit && (
+          <MenuItem onClick={handleEditChild}>
+            <ListItemIcon>
+              <EditIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Edit Child Info</ListItemText>
+          </MenuItem>
+        )}
         
         {canInvite && (
           <MenuItem onClick={handleInviteTeamMember}>

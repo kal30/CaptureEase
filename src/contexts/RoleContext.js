@@ -10,7 +10,26 @@ import {
 } from '../services/rolePermissionService';
 import { USER_ROLES, PERMISSIONS } from '../constants/roles';
 
-const RoleContext = createContext({});
+const defaultRoleContext = {
+  userRoles: {},
+  userPermissions: {},
+  userDisplayInfo: {},
+  childrenWithAccess: [],
+  loading: true,
+  getUserRoleForChild: () => null,
+  hasPermissionForChild: () => false,
+  canAddDataForChild: () => true,
+  isReadOnlyForChild: () => false,
+  getDisplayInfoForChild: () => null,
+  isPrimaryCaregiver: () => false,
+  canInviteOthers: () => false,
+  canManageChild: () => false,
+  refreshRoles: async () => {},
+  USER_ROLES,
+  PERMISSIONS,
+};
+
+const RoleContext = createContext(defaultRoleContext);
 
 const normalizeChildPhoto = (child) => ({
   ...child,

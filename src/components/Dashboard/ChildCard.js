@@ -24,6 +24,7 @@ const ChildCard = ({
   onInviteTeamMember,
   onDailyReport,
   onMessages,
+  onImportLogs,
   compactIdentityOnMobile = false,
   disableCollapse = false,
   hidePrimaryAction = false,
@@ -93,6 +94,7 @@ const ChildCard = ({
             onQuickEntry={onQuickEntry}
             onDailyReport={onDailyReport}
             onMessages={onMessages}
+            onImportLogs={onImportLogs}
             hoveredQuickAction={hoveredQuickAction}
             onHoverAction={handleQuickActionHover}
             onLeaveAction={handleQuickActionLeave}

@@ -119,7 +119,7 @@ const DailyProgressTimeline = ({
   };
 
   // Helper functions for entry display
-  const getEntryIcon = (entry) => {
+  const getEntryIcon = (_entry) => {
     // This would contain logic to return appropriate icons based on entry type
     // For now, returning null to use default
     return null;

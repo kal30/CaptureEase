@@ -10,7 +10,10 @@ import {
   IconButton,
   TextField,
   Button,
+  Menu,
+  MenuItem,
 } from "@mui/material";
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SaveIcon from '@mui/icons-material/Save';
@@ -119,7 +122,7 @@ const UnifiedTimeline = ({
   const { getUserRoleForChild } = useRole();
 
   // Get user role for this child
-  const userRole = getUserRoleForChild(child?.id);
+  const userRole = getUserRoleForChild?.(child?.id) || null;
 
   // Fetch unified timeline data
   const { entries, loading, error, summary } = useUnifiedTimelineData(
@@ -137,6 +140,8 @@ const UnifiedTimeline = ({
   const [editingEntryId, setEditingEntryId] = React.useState(null);
   const [editText, setEditText] = React.useState('');
   const [actionLoadingId, setActionLoadingId] = React.useState(null);
+  const [entryMenuAnchor, setEntryMenuAnchor] = React.useState(null);
+  const [entryMenuEntry, setEntryMenuEntry] = React.useState(null);
   const [localEntryUpdates, setLocalEntryUpdates] = React.useState({});
   const [deletedEntryIds, setDeletedEntryIds] = React.useState({});
   const currentUser = auth.currentUser;
@@ -150,6 +155,16 @@ const UnifiedTimeline = ({
   const handleStartEdit = React.useCallback((entry) => {
     setEditingEntryId(entry.id);
     setEditText(entry.text || '');
+  }, []);
+
+  const handleEntryMenuOpen = React.useCallback((event, entry) => {
+    setEntryMenuAnchor(event.currentTarget);
+    setEntryMenuEntry(entry);
+  }, []);
+
+  const handleEntryMenuClose = React.useCallback(() => {
+    setEntryMenuAnchor(null);
+    setEntryMenuEntry(null);
   }, []);
 
   const handleCancelEdit = React.useCallback(() => {
@@ -766,34 +781,20 @@ const UnifiedTimeline = ({
                         </Box>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.3, flexShrink: 0 }}>
                           {canEditMobileEntry ? (
-                            <>
-                              <IconButton
-                                size="small"
-                                onClick={() => handleStartEdit(entry)}
-                                disabled={Boolean(actionLoadingId)}
-                                sx={{
-                                  width: 24,
-                                  height: 24,
-                                  borderRadius: 0.5,
-                                  color: 'text.secondary',
-                                }}
-                              >
-                                <EditIcon sx={{ fontSize: 15 }} />
-                              </IconButton>
-                              <IconButton
-                                size="small"
-                                onClick={() => handleDeleteEntry(entry)}
-                                disabled={Boolean(actionLoadingId)}
-                                sx={{
-                                  width: 24,
-                                  height: 24,
-                                  borderRadius: 0.5,
-                                  color: '#DC2626',
-                                }}
-                              >
-                                <DeleteIcon sx={{ fontSize: 15 }} />
-                              </IconButton>
-                            </>
+                            <IconButton
+                              size="small"
+                              onClick={(event) => handleEntryMenuOpen(event, entry)}
+                              disabled={Boolean(actionLoadingId)}
+                              sx={{
+                                width: 26,
+                                height: 26,
+                                borderRadius: 0.35,
+                                color: 'text.secondary',
+                                backgroundColor: 'rgba(148, 163, 184, 0.08)',
+                              }}
+                            >
+                              <MoreVertIcon sx={{ fontSize: 16 }} />
+                            </IconButton>
                           ) : null}
                           {loggerInitials ? (
                             <Avatar
@@ -903,6 +904,28 @@ const UnifiedTimeline = ({
                   </Box>
                 );
               })}
+              <Menu
+                anchorEl={entryMenuAnchor}
+                open={Boolean(entryMenuAnchor)}
+                onClose={handleEntryMenuClose}
+                onClick={handleEntryMenuClose}
+              >
+                <MenuItem
+                  onClick={() => entryMenuEntry && handleStartEdit(entryMenuEntry)}
+                  disabled={!entryMenuEntry || Boolean(actionLoadingId)}
+                >
+                  <EditIcon sx={{ fontSize: 16, mr: 1, color: 'text.secondary' }} />
+                  Edit
+                </MenuItem>
+                <MenuItem
+                  onClick={() => entryMenuEntry && handleDeleteEntry(entryMenuEntry)}
+                  disabled={!entryMenuEntry || Boolean(actionLoadingId)}
+                  sx={{ color: '#DC2626' }}
+                >
+                  <DeleteIcon sx={{ fontSize: 16, mr: 1 }} />
+                  Delete
+                </MenuItem>
+              </Menu>
             </Stack>
           </Box>
         ) : (

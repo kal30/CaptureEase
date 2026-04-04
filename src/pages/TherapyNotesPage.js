@@ -48,7 +48,7 @@ const TherapyNotesPage = () => {
   const therapyStyles = createTherapyStyles(theme);
 
   // Check if user is therapist for this child
-  const userRole = getUserRoleForChild(currentChildId);
+  const userRole = getUserRoleForChild?.(currentChildId) || null;
   const isTherapist = userRole === USER_ROLES.THERAPIST;
 
   const pageTitle = childName ? `Therapy Notes - ${childName}` : "Therapy Notes";

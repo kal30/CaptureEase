@@ -7,11 +7,15 @@ import {
   Button,
   Menu,
   MenuItem,
+  ListItemIcon,
   ListItemText,
+  Divider,
 } from '@mui/material';
 import {
   MoreHoriz as MoreHorizIcon,
 } from '@mui/icons-material';
+import FileUploadIcon from '@mui/icons-material/FileUpload';
+import AutoAwesomeOutlinedIcon from '@mui/icons-material/AutoAwesomeOutlined';
 import { useTheme } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
 import { useChildContext } from '../../contexts/ChildContext';
@@ -30,6 +34,7 @@ const QuickEntrySection = ({
   hidePrimaryAction = false,
   onQuickEntry,
   onDailyReport,
+  onImportLogs,
   onHoverAction,
   onLeaveAction,
   externalHoveredAction, // Action being hovered from Daily Care section
@@ -87,6 +92,18 @@ const QuickEntrySection = ({
 
   const handleMenuClose = () => {
     setMenuAnchorEl(null);
+  };
+
+  const handlePrepForTherapy = (e) => {
+    e.stopPropagation();
+    handleMenuClose();
+    onDailyReport?.(child);
+  };
+
+  const handleImportPastLogs = (e) => {
+    e.stopPropagation();
+    handleMenuClose();
+    onImportLogs?.(child);
   };
 
   // Therapist-specific view with therapy notes access
@@ -212,32 +229,42 @@ const QuickEntrySection = ({
               width: { xs: '100%', md: 'auto' },
             }}
           >
-            <Button
-              variant="contained"
-              onClick={(e) => handleQuickEntryClick(primaryAction, e)}
-              onMouseEnter={() => handleQuickEntryHover(primaryAction.key)}
-              onMouseLeave={handleQuickEntryLeave}
+            <Box
               sx={{
-                minHeight: { xs: 36, md: 42 },
-                px: { xs: 2, md: 2 },
-                borderRadius: { xs: '14px', md: '12px' },
-                textTransform: 'none',
-                fontWeight: 700,
-                fontSize: { xs: '0.88rem', md: '0.95rem' },
-                color: '#ffffff',
-                background: 'linear-gradient(135deg, #4caf50 0%, #2e7d32 100%)',
-                boxShadow: (hoveredAction === primaryAction.key || externalHoveredAction === primaryAction.key)
-                  ? '0 8px 18px rgba(76, 175, 80, 0.28)'
-                  : '0 4px 10px rgba(76, 175, 80, 0.18)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'stretch',
+                gap: 0.25,
                 flex: 1,
-                '&:hover': {
-                  background: 'linear-gradient(135deg, #43a047 0%, #1f6a28 100%)',
-                  boxShadow: '0 10px 20px rgba(76, 175, 80, 0.3)',
-                },
               }}
             >
-              {`+ ${primaryAction.label}`}
-            </Button>
+              <Button
+                variant="contained"
+                onClick={(e) => handleQuickEntryClick(primaryAction, e)}
+                onMouseEnter={() => handleQuickEntryHover(primaryAction.key)}
+                onMouseLeave={handleQuickEntryLeave}
+                sx={{
+                  minHeight: { xs: 36, md: 42 },
+                  px: { xs: 2, md: 2 },
+                  borderRadius: { xs: '14px', md: '12px' },
+                  textTransform: 'none',
+                  fontWeight: 700,
+                  fontSize: { xs: '0.88rem', md: '0.95rem' },
+                  color: '#ffffff',
+                  background: 'linear-gradient(135deg, #4caf50 0%, #2e7d32 100%)',
+                  boxShadow: (hoveredAction === primaryAction.key || externalHoveredAction === primaryAction.key)
+                    ? '0 8px 18px rgba(76, 175, 80, 0.28)'
+                    : '0 4px 10px rgba(76, 175, 80, 0.18)',
+                  width: '100%',
+                  '&:hover': {
+                    background: 'linear-gradient(135deg, #43a047 0%, #1f6a28 100%)',
+                    boxShadow: '0 10px 20px rgba(76, 175, 80, 0.3)',
+                  },
+                }}
+              >
+                {`+ ${primaryAction.label}`}
+              </Button>
+            </Box>
 
             <Tooltip title="More actions" arrow placement="top">
               <IconButton
@@ -315,7 +342,35 @@ const QuickEntrySection = ({
         onClick={(e) => e.stopPropagation()}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-      >
+        >
+        {onDailyReport ? (
+          <MenuItem onClick={handlePrepForTherapy}>
+            <ListItemIcon>
+              <AutoAwesomeOutlinedIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText
+              primary="Prep for Therapy"
+              secondary="Review patterns and key moments before your session."
+            />
+          </MenuItem>
+        ) : null}
+
+        {onDailyReport && onImportLogs ? <Divider /> : null}
+
+        {onImportLogs ? (
+          <MenuItem onClick={handleImportPastLogs}>
+            <ListItemIcon>
+              <FileUploadIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText
+              primary="Import from a file"
+              secondary="Have past logs?"
+            />
+          </MenuItem>
+        ) : null}
+
+        {(onDailyReport || onImportLogs) ? <Divider /> : null}
+
         {secondaryActions.map((action) => (
           <MenuItem
             key={action.key}

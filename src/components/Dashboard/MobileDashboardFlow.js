@@ -9,6 +9,7 @@ const MobileDashboardFlow = ({
   getUserRoleForChild,
   USER_ROLES,
   quickDataStatus,
+  allEntries,
   recentEntries,
   timelineSummary,
   incidents,
@@ -18,6 +19,7 @@ const MobileDashboardFlow = ({
   onDailyReport,
   onMessages,
   onAddChildClick,
+  onImportLogs,
 }) => {
   const { activeChildId, mobileView, enterChild, goToSwitchboard } = useDashboardView();
   const activeChild = children.find((child) => child.id === activeChildId) || children[0] || null;
@@ -54,6 +56,7 @@ const MobileDashboardFlow = ({
       children={children}
       groupType={groupType}
       quickDataStatus={quickDataStatus}
+      allEntries={allEntries}
       recentEntries={recentEntries}
       timelineSummary={timelineSummary}
       incidents={incidents}
@@ -62,6 +65,7 @@ const MobileDashboardFlow = ({
       onInviteTeamMember={onInviteTeamMember}
       onDailyReport={onDailyReport}
       onMessages={onMessages}
+      onImportLogs={onImportLogs}
       onBack={children.length > 1 ? goToSwitchboard : undefined}
       onSwitchChild={enterChild}
       onAddChildClick={onAddChildClick}

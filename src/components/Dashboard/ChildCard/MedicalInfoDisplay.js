@@ -64,9 +64,9 @@ const MedicalInfoDisplay = ({
             component="span"
             sx={{
               ...compactChipSx,
-              color: '#B42318',
-              borderColor: 'rgba(180, 35, 24, 0.28)',
-              backgroundColor: 'rgba(254, 228, 226, 0.85)',
+              color: '#B45309',
+              borderColor: 'rgba(245, 158, 11, 0.18)',
+              backgroundColor: 'rgba(255, 244, 229, 0.88)',
             }}
           >
             Allergies
@@ -87,9 +87,9 @@ const MedicalInfoDisplay = ({
             component="span"
             sx={{
               ...compactChipSx,
-              color: '#7A2E0B',
-              borderColor: 'rgba(122, 46, 11, 0.2)',
-              backgroundColor: 'rgba(255, 244, 229, 0.92)',
+              color: '#92400E',
+              borderColor: 'rgba(245, 158, 11, 0.16)',
+              backgroundColor: 'rgba(255, 247, 237, 0.88)',
             }}
           >
             Issues
@@ -160,39 +160,39 @@ const MedicalInfoDisplay = ({
       >
         {diagnosis && (
           <Box
-            sx={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 0.45,
-              px: 0.75,
-              py: 0.35,
-              borderRadius: 999,
-              bgcolor: '#ffffffb8',
-              border: '1px solid',
-              borderColor: 'divider',
-            }}
-          >
-            <Typography component="span" sx={{ fontSize: compact ? '0.75rem' : '0.82rem', fontWeight: 700, color: 'text.primary' }}>
-              Issues
-            </Typography>
+              sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 0.45,
+                px: 0.75,
+                py: 0.35,
+                borderRadius: 999,
+                bgcolor: 'rgba(255, 247, 237, 0.9)',
+                border: '1px solid',
+                borderColor: 'rgba(245, 158, 11, 0.16)',
+              }}
+            >
+              <Typography component="span" sx={{ fontSize: compact ? '0.75rem' : '0.82rem', fontWeight: 700, color: 'text.primary' }}>
+                Issues
+              </Typography>
             <Typography component="span" sx={{ fontSize: compact ? '0.75rem' : '0.82rem', color: 'text.secondary' }}>
               {diagnosis?.label || diagnosis}
             </Typography>
           </Box>
         )}
         <Box
-          sx={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 0.45,
-            px: 0.75,
-            py: 0.35,
-            borderRadius: 999,
-            bgcolor: '#ffffffb8',
-            border: '1px solid',
-            borderColor: 'divider',
-          }}
-        >
+              sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 0.45,
+                px: 0.75,
+                py: 0.35,
+                borderRadius: 999,
+                bgcolor: 'rgba(255, 244, 229, 0.9)',
+                border: '1px solid',
+                borderColor: 'rgba(245, 158, 11, 0.16)',
+              }}
+            >
           <Typography component="span" sx={{ fontSize: compact ? '0.75rem' : '0.82rem', fontWeight: 700, color: 'text.primary' }}>
             Allergies
           </Typography>

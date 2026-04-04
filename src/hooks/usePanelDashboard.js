@@ -107,6 +107,7 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
 
   const [children, setChildren] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [allEntries, setAllEntries] = useState({});
   const [recentEntries, setRecentEntries] = useState({});
   const [timelineSummary, setTimelineSummary] = useState({});
   const [incidents, setIncidents] = useState({}); // Store incidents by child ID
@@ -156,11 +157,7 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
     const loadChildren = async () => {
       try {
         const childrenWithRoles = childrenWithAccess || [];
-        setChildren((current) => {
-          const currentKey = (current || []).map((child) => child.id).join('|');
-          const nextKey = (childrenWithRoles || []).map((child) => child.id).join('|');
-          return currentKey === nextKey ? current : childrenWithRoles;
-        });
+        setChildren(childrenWithRoles);
 
         // Initialize notifications for pending follow-ups
         if (childrenWithRoles.length > 0) {
@@ -193,6 +190,7 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
   useEffect(() => {
     const unsubscribes = [];
     const entriesByChild = {};
+    const allEntriesByChild = {};
     const timelineSummaryByChild = {};
     const incidentsByChild = {};
     const subscribedChildren = activeChildOnly && currentChildId
@@ -223,6 +221,7 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
           return !Number.isNaN(entryDate.getTime()) && entryDate >= weekAgo;
         });
 
+        const fullTimelineEntries = [...entries];
         const recentTimelineEntries = entries
           .filter((entry) => {
             const entryDate = toEntryDate(entry.timestamp);
@@ -231,6 +230,7 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
           .sort((a, b) => toEntryDate(b.timestamp) - toEntryDate(a.timestamp))
           .slice(0, 5);
 
+        allEntriesByChild[child.id] = fullTimelineEntries;
         entriesByChild[child.id] = recentTimelineEntries;
         timelineSummaryByChild[child.id] = {
           totalEntries: todaysEntries.length,
@@ -241,6 +241,10 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
         };
         setRecentEntries((current) => {
           const next = { ...entriesByChild };
+          return serializeEntriesByChild(current) === serializeEntriesByChild(next) ? current : next;
+        });
+        setAllEntries((current) => {
+          const next = { ...allEntriesByChild };
           return serializeEntriesByChild(current) === serializeEntriesByChild(next) ? current : next;
         });
         setTimelineSummary((current) => {
@@ -608,6 +612,7 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
     familyChildren,
     professionalChildren,
     quickDataStatus,
+    allEntries,
     recentEntries,
     timelineSummary,
     incidents,
