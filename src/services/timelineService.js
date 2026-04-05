@@ -1,23 +1,14 @@
 import { collection, onSnapshot, query, orderBy, where } from 'firebase/firestore';
 import { db } from './firebase';
-
-const NOTE_CATEGORY_META = {
-  behavior: { type: 'behavior', label: 'Behavior', icon: '🌋', color: '#D32F2F', entryGroup: 'dailyHabit' },
-  health: { type: 'health', label: 'Health', icon: '💊', color: '#00796B', entryGroup: 'dailyHabit' },
-  mood: { type: 'mood', label: 'Mood', icon: '😰', color: '#F57F17', entryGroup: 'dailyHabit' },
-  sleep: { type: 'sleep', label: 'Sleep', icon: '😴', color: '#1A237E', entryGroup: 'dailyHabit' },
-  food: { type: 'food', label: 'Food', icon: '🍽️', color: '#E65100', entryGroup: 'dailyHabit' },
-  milestone: { type: 'milestone', label: 'Win', icon: '⭐', color: '#2E7D32', entryGroup: 'dailyHabit' },
-  log: { type: 'log', label: 'Daily Log', icon: '📝', color: '#64748B', entryGroup: 'journal' }
-};
+import { LOG_TYPES, getTimelineMetaForCategory } from '../constants/logTypeRegistry';
 
 // Timeline entry types with their display configurations
 export const TIMELINE_TYPES = {
   DAILY_NOTE: {
     type: 'daily_note',
-    label: 'Daily Log',
-    icon: '📝',
-    color: '#64748B',
+    label: LOG_TYPES.log.displayLabel,
+    icon: LOG_TYPES.log.icon,
+    color: LOG_TYPES.log.palette.dot,
     entryGroup: 'journal',
     collection: 'dailyLogs',
     isRootCollection: true
@@ -32,33 +23,33 @@ export const TIMELINE_TYPES = {
   },
   BEHAVIOR: {
     type: 'behavior',
-    label: 'Behavior',
-    icon: '⚡',
-    color: '#FF9800', // Orange (UI should prefer theme)
+    label: LOG_TYPES.behavior.displayLabel,
+    icon: LOG_TYPES.behavior.icon,
+    color: LOG_TYPES.behavior.palette.dot,
     entryGroup: 'dailyHabit',
     collection: 'behaviors'
   },
   MOOD_LOG: {
     type: 'mood_log',
-    label: 'Mood Log',
-    icon: '😊',
-    color: '#E91E63', // Pink (UI should prefer theme)
+    label: LOG_TYPES.mood.displayLabel,
+    icon: LOG_TYPES.mood.icon,
+    color: LOG_TYPES.mood.palette.dot,
     entryGroup: 'dailyHabit',
     collection: 'moodLogs'
   },
   MEDICATION_LOG: {
     type: 'medication_log',
-    label: 'Medication Log',
-    icon: '💊',
-    color: '#FF5722', // Deep Orange (UI should prefer theme)
+    label: LOG_TYPES.medication.displayLabel,
+    icon: LOG_TYPES.medication.icon,
+    color: LOG_TYPES.medication.palette.dot,
     entryGroup: 'dailyHabit',
     collection: 'medicationLogs'
   },
   FOOD_LOG: {
     type: 'food_log',
-    label: 'Food Log',
-    icon: '🍎',
-    color: '#8BC34A', // Light Green (UI should prefer theme)
+    label: LOG_TYPES.food.displayLabel,
+    icon: LOG_TYPES.food.icon,
+    color: LOG_TYPES.food.palette.dot,
     entryGroup: 'dailyHabit',
     collection: 'foodLogs'
   },
@@ -72,9 +63,9 @@ export const TIMELINE_TYPES = {
   },
   SLEEP_LOG: {
     type: 'sleep_log',
-    label: 'Sleep Log',
-    icon: '😴',
-    color: '#673AB7', // Deep Purple (UI should prefer theme)
+    label: LOG_TYPES.sleep.displayLabel,
+    icon: LOG_TYPES.sleep.icon,
+    color: LOG_TYPES.sleep.palette.dot,
     entryGroup: 'dailyHabit',
     collection: 'sleepLogs'
   },
@@ -108,7 +99,7 @@ const normalizeTimelineEntry = (doc, type) => {
   const data = doc.data();
   const typeConfig = Object.values(TIMELINE_TYPES).find(t => t.type === type);
   const noteMeta = type === 'daily_note'
-    ? (NOTE_CATEGORY_META[data.category] || NOTE_CATEGORY_META.log)
+    ? getTimelineMetaForCategory(data.category)
     : null;
   
   // Extract common fields with fallbacks for different data structures
@@ -121,7 +112,9 @@ const normalizeTimelineEntry = (doc, type) => {
       // Daily notes from dailyLogs collection use 'text' field
       const noteText = data.text || data.note || data.content || data.description || '';
       // Generate title from first line of text (up to 50 chars) or use tags
-      if (data.tags && data.tags.length > 0) {
+      if (data.titlePrefix) {
+        title = data.titlePrefix;
+      } else if (data.tags && data.tags.length > 0) {
         title = `${noteMeta.label}: #${data.tags[0]}`;
       } else if (noteText) {
         const firstLine = noteText.split('\n')[0].trim();
@@ -149,6 +142,9 @@ const normalizeTimelineEntry = (doc, type) => {
       break;
     case 'daily_care':
       // Handle daily care entries (mood, sleep, food, safety)
+      if (data.actionType === 'sleep') {
+        return null;
+      }
       const actionType = data.actionType || 'Daily Care';
       const careData = data.data || {};
       title = `${actionType.charAt(0).toUpperCase() + actionType.slice(1)}: ${careData.value || careData.mood || careData.rating || 'Update'}`;
@@ -156,6 +152,9 @@ const normalizeTimelineEntry = (doc, type) => {
       break;
     case 'child_timeline':
       // Handle child timeline entries  
+      if (data.type === 'daily_sleep') {
+        return null;
+      }
       title = data.title || data.actionType || 'Timeline Entry';
       content = data.notes || data.content || data.description || '';
       break;
@@ -169,7 +168,9 @@ const normalizeTimelineEntry = (doc, type) => {
     childId: data.childId || null,
     type: noteMeta?.type || type,
     title,
+    titlePrefix: data.titlePrefix || noteMeta?.label || null,
     content,
+    notes: data.notes || data.bathroomDetails?.notes || data.description || null,
     timestamp,
     author: data.author || data.createdBy || data.userId || 'Unknown',
     ...(noteMeta || typeConfig),
@@ -223,9 +224,9 @@ export const getTimelineEntries = (childId, callback) => {
       }
 
       const unsubscribe = onSnapshot(q, (snapshot) => {
-        entriesByType[typeConfig.type] = snapshot.docs.map(doc =>
-          normalizeTimelineEntry(doc, typeConfig.type)
-        );
+        entriesByType[typeConfig.type] = snapshot.docs
+          .map(doc => normalizeTimelineEntry(doc, typeConfig.type))
+          .filter(Boolean);
         emitEntries();
       }, (error) => {
         console.error(`Error fetching ${typeConfig.collection}:`, error);

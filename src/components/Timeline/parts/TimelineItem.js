@@ -2,6 +2,7 @@ import React from 'react';
 import { Box } from '@mui/material';
 
 const TimelineItem = ({
+  entryId,
   color,
   icon,
   children,
@@ -16,6 +17,8 @@ const TimelineItem = ({
   cardBorderColor = 'rgba(148, 163, 184, 0.18)',
 }) => (
   <Box
+    id={entryId ? `timeline-entry-${entryId}` : undefined}
+    data-entry-id={entryId || undefined}
     sx={{
       position: 'relative',
       pb: 0,

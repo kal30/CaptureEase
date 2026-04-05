@@ -1,4 +1,4 @@
-import { db } from "./firebase";
+import { auth, db } from "./firebase";
 import {
   collection,
   addDoc,
@@ -8,12 +8,23 @@ import {
   doc,
   updateDoc,
   deleteDoc,
+  serverTimestamp,
 } from "firebase/firestore";
 
 // Add a new side effect for a medication
 export const addSideEffect = async (sideEffectData) => {
   try {
-    const docRef = await addDoc(collection(db, "sideEffects"), sideEffectData);
+    const currentUserId = auth.currentUser?.uid;
+    if (!currentUserId) {
+      throw new Error("You must be signed in to add a side effect.");
+    }
+
+    const docRef = await addDoc(collection(db, "sideEffects"), {
+      ...sideEffectData,
+      childId: sideEffectData.childId,
+      createdBy: sideEffectData.createdBy || currentUserId,
+      createdAt: sideEffectData.createdAt || serverTimestamp(),
+    });
     return docRef.id;
   } catch (e) {
     console.error("Error adding side effect: ", e);
@@ -22,10 +33,11 @@ export const addSideEffect = async (sideEffectData) => {
 };
 
 // Fetch all side effects for a specific medication
-export const fetchSideEffects = async (medicationId) => {
+export const fetchSideEffects = async (childId, medicationId) => {
   try {
     const q = query(
       collection(db, "sideEffects"),
+      where("childId", "==", childId),
       where("medicationId", "==", medicationId)
     );
     const querySnapshot = await getDocs(q);
@@ -44,7 +56,11 @@ export const fetchSideEffects = async (medicationId) => {
 export const updateSideEffect = async (sideEffectId, updatedData) => {
   try {
     const sideEffectRef = doc(db, "sideEffects", sideEffectId);
-    await updateDoc(sideEffectRef, updatedData);
+    await updateDoc(sideEffectRef, {
+      ...updatedData,
+      createdBy: updatedData.createdBy || auth.currentUser?.uid,
+      createdAt: updatedData.createdAt || serverTimestamp(),
+    });
   } catch (e) {
     console.error("Error updating side effect: ", e);
     throw e;

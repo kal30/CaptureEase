@@ -182,6 +182,45 @@ export const SLEEP_SCALE = {
   },
 };
 
+// Bathroom / Bristol-inspired stool consistency scale (1-7)
+export const BATHROOM_SCALE = {
+  1: {
+    label: 'Constipated',
+    color: '#D32F2F',
+    description: 'Hard pellets, very difficult to pass',
+  },
+  2: {
+    label: 'Hard',
+    color: '#F44336',
+    description: 'Dry, lumpy stool, constipation-leaning',
+  },
+  3: {
+    label: 'Normal',
+    color: '#FF9800',
+    description: 'Formed stool, typical consistency',
+  },
+  4: {
+    label: 'Normal',
+    color: '#FFC107',
+    description: 'Still formed, easy to pass',
+  },
+  5: {
+    label: 'Soft',
+    color: '#8BC34A',
+    description: 'Softer than usual but not watery',
+  },
+  6: {
+    label: 'Loose',
+    color: '#4CAF50',
+    description: 'Loose stool, not fully watery',
+  },
+  7: {
+    label: 'Watery',
+    color: '#1B5E20',
+    description: 'Very loose / diarrhea-like',
+  },
+};
+
 // Nutrition scale (1-10)
 export const NUTRITION_SCALE = {
   1: {
@@ -352,6 +391,8 @@ export const getHabitScale = (habitType) => {
       return MOOD_SCALE;
     case "sleep":
       return SLEEP_SCALE;
+    case "bathroom":
+      return BATHROOM_SCALE;
     case "nutrition":
       return NUTRITION_SCALE;
     case "progress":

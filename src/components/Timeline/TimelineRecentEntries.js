@@ -10,6 +10,7 @@ import {
   Chip
 } from '@mui/material';
 import { Timeline as TimelineIcon } from '@mui/icons-material';
+import { getLogTypeByCategory, getLogTypeByEntry } from '../../constants/logTypeRegistry';
 
 /**
  * TimelineRecentEntries - Displays recent timeline entries
@@ -43,6 +44,18 @@ const TimelineRecentEntries = ({
   return (
     <List className="timeline-widget__entries" dense>
       {entries.map((entry, index) => (
+        (() => {
+          const categoryType = getLogTypeByEntry(entry);
+          const categoryMeta = getLogTypeByCategory(categoryType.category || entry.category || entry.type);
+          const entryLabel = entry.titlePrefix
+            || entry.title
+            || entry.label
+            || categoryMeta.displayLabel
+            || categoryMeta.filterLabel
+            || entry.type;
+          const secondaryText = entry.notes || entry.content || entry.sleepDetails?.notes || entry.bathroomDetails?.notes || entry.description || entry.summary || '';
+
+          return (
         <ListItem
           key={`${entry.type}-${entry.id}`}
           className={`timeline-widget__entry timeline-widget__entry--${entry.type}`}
@@ -69,7 +82,7 @@ const TimelineRecentEntries = ({
             primary={
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                 <Typography variant="body2" component="span" sx={{ fontWeight: 500 }}>
-                  {entry.title || entry.type}
+                  {entryLabel}
                 </Typography>
                 {entry.priority === 'high' && (
                   <Chip 
@@ -86,7 +99,7 @@ const TimelineRecentEntries = ({
                 <Typography variant="caption" color="text.secondary">
                   {formatEntryTime ? formatEntryTime(entry.timestamp) : new Date(entry.timestamp).toLocaleTimeString()}
                 </Typography>
-                {entry.description && (
+                {secondaryText && (
                   <Typography 
                     variant="caption" 
                     color="text.secondary"
@@ -97,13 +110,15 @@ const TimelineRecentEntries = ({
                       flex: 1
                     }}
                   >
-                    {entry.description}
+                    {secondaryText}
                   </Typography>
                 )}
               </Box>
             }
           />
         </ListItem>
+          );
+        })()
       ))}
     </List>
   );

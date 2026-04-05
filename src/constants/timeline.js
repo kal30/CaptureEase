@@ -1,5 +1,6 @@
 // Theme-driven timeline type metadata and helpers
 import { getIncidentDisplayInfo, getJournalDisplayInfo, getDailyHabitsDisplayInfo } from './uiDisplayConstants';
+import { LOG_TYPES, SPECIAL_FILTER_TYPES } from './logTypeRegistry';
 
 // Dynamic function to get entry types with centralized labels
 export const getEntryTypes = () => {
@@ -28,44 +29,50 @@ export const getEntryTypes = () => {
     },
     importantMoment: {
       key: 'importantMoment',
-      label: 'Important Moment',
-      icon: '⭐',
+      label: SPECIAL_FILTER_TYPES.importantMoment.label,
+      icon: SPECIAL_FILTER_TYPES.importantMoment.icon,
       paletteKey: 'timeline.entries.journal',
     },
     behavior: {
       key: 'behavior',
-      label: 'Behavior',
-      icon: '🌋',
+      label: LOG_TYPES.behavior.displayLabel,
+      icon: LOG_TYPES.behavior.icon,
       paletteKey: 'timeline.entries.behavior',
     },
     health: {
       key: 'health',
-      label: 'Health',
-      icon: '💊',
+      label: LOG_TYPES.health.displayLabel,
+      icon: LOG_TYPES.health.icon,
       paletteKey: 'timeline.entries.health',
     },
     mood: {
       key: 'mood',
-      label: 'Mood',
-      icon: '😰',
+      label: LOG_TYPES.mood.displayLabel,
+      icon: LOG_TYPES.mood.icon,
       paletteKey: 'timeline.entries.mood',
     },
     sleep: {
       key: 'sleep',
-      label: 'Sleep',
-      icon: '😴',
+      label: LOG_TYPES.sleep.displayLabel,
+      icon: LOG_TYPES.sleep.icon,
       paletteKey: 'timeline.entries.sleep',
     },
     food: {
       key: 'food',
-      label: 'Food',
-      icon: '🍽️',
+      label: LOG_TYPES.food.displayLabel,
+      icon: LOG_TYPES.food.icon,
       paletteKey: 'timeline.entries.food',
+    },
+    bathroom: {
+      key: 'bathroom',
+      label: LOG_TYPES.bathroom.displayLabel,
+      icon: LOG_TYPES.bathroom.icon,
+      paletteKey: 'timeline.entries.health',
     },
     milestone: {
       key: 'milestone',
-      label: 'Win',
-      icon: '⭐',
+      label: LOG_TYPES.milestone.displayLabel,
+      icon: LOG_TYPES.milestone.icon,
       paletteKey: 'timeline.entries.milestone',
     },
     therapyNote: {
@@ -120,7 +127,7 @@ export const mapLegacyType = (type) => {
   if (type === 'followUp') return 'incident'; // Follow-ups should display as incidents
   if (type === 'journal') return 'journal'; // dailyLogs collection = journal entries
   if (type === 'importantMoment') return 'importantMoment';
-  if (['behavior', 'health', 'mood', 'sleep', 'food', 'milestone', 'log'].includes(type)) {
+  if (Object.keys(LOG_TYPES).includes(type)) {
     return type === 'log' ? 'journal' : type;
   }
   if (type === 'dailyHabit') return 'dailyHabit'; // dailyCare collection = daily habits

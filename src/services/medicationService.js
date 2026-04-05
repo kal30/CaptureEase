@@ -1,4 +1,4 @@
-import { db } from "./firebase";
+import { auth, db } from "./firebase";
 import {
   collection,
   addDoc,
@@ -8,12 +8,23 @@ import {
   doc,
   updateDoc,
   deleteDoc,
+  serverTimestamp,
 } from "firebase/firestore";
 
 // Add a new medication for a child
 export const addMedication = async (medicationData) => {
   try {
-    const docRef = await addDoc(collection(db, "medications"), medicationData);
+    const currentUserId = auth.currentUser?.uid;
+    if (!currentUserId) {
+      throw new Error("You must be signed in to add a medication.");
+    }
+
+    const docRef = await addDoc(collection(db, "medications"), {
+      ...medicationData,
+      createdBy: medicationData.createdBy || currentUserId,
+      createdAt: medicationData.createdAt || serverTimestamp(),
+      isArchived: medicationData.isArchived ?? false,
+    });
     return docRef.id;
   } catch (e) {
     console.error("Error adding medication: ", e);

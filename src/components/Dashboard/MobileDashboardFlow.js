@@ -13,10 +13,18 @@ const MobileDashboardFlow = ({
   recentEntries,
   timelineSummary,
   incidents,
+  showSleepLogSheet = false,
+  showFoodLogSheet = false,
+  showBathroomLogSheet = false,
   onQuickEntry,
   onEditChild,
   onInviteTeamMember,
   onDailyReport,
+  onTrack,
+  onOpenSleepLog,
+  onOpenFoodLog,
+  onOpenBathroomLog,
+  onOpenMedicalLog,
   onMessages,
   onAddChildClick,
   onImportLogs,
@@ -64,8 +72,14 @@ const MobileDashboardFlow = ({
       onEditChild={onEditChild}
       onInviteTeamMember={onInviteTeamMember}
       onDailyReport={onDailyReport}
+      onTrack={onTrack}
+      onOpenSleepLog={onOpenSleepLog}
+      onOpenFoodLog={onOpenFoodLog}
+      onOpenBathroomLog={onOpenBathroomLog}
+      onOpenMedicalLog={onOpenMedicalLog}
       onMessages={onMessages}
       onImportLogs={onImportLogs}
+      pauseScrollCollapse={showSleepLogSheet || showFoodLogSheet || showBathroomLogSheet}
       onBack={children.length > 1 ? goToSwitchboard : undefined}
       onSwitchChild={enterChild}
       onAddChildClick={onAddChildClick}

@@ -15,61 +15,72 @@ import {
 } from '@mui/material';
 import {
   Close as CloseIcon,
+  AccessTime as AccessTimeIcon,
   LocalOffer as LocalOfferIcon,
   ExpandMore as ExpandMoreIcon,
   Description as DescriptionIcon,
   KeyboardVoice as KeyboardVoiceIcon,
 } from '@mui/icons-material';
 import StyledButton from '../UI/StyledButton';
+import RichTextInput from '../UI/RichTextInput';
 import { db, auth } from '../../services/firebase';
 import { collection, addDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { uploadIncidentMedia } from '../Dashboard/Incidents/Media/mediaUploadService';
 import { CATEGORY_COLORS } from '../../constants/categoryColors';
-import { classifyQuickNoteCategory, QUICK_TAG_CATEGORY_MAP } from '../../utils/quickNoteClassification';
+import {
+  classifyQuickNoteCategory,
+  QUICK_TAG_CATEGORY_MAP,
+} from '../../utils/quickNoteClassification';
+import {
+  getQuickTagGroups,
+  getQuickTagPlaceholder,
+} from '../../constants/logTypeRegistry';
 
-const QUICK_TAG_PLACEHOLDERS = {
-  meltdown: 'What triggered it? How long did it last?',
-  medication: 'Which medication? Any reaction?',
-  sleep: 'What happened? How many hours?',
-  food: 'What did they eat or refuse?',
-  anxiety: 'What caused it? How did they respond?',
-  win: 'What happened? Celebrate it!',
+const getTimeInputValue = (date = new Date()) =>
+  new Date(date).toTimeString().slice(0, 5);
+
+const formatTimeLabel = (timeValue) => {
+  if (!timeValue) return 'Now';
+  const [hoursRaw, minutesRaw] = timeValue.split(':');
+  const hours = Number(hoursRaw);
+  const minutes = Number(minutesRaw);
+  if (Number.isNaN(hours) || Number.isNaN(minutes)) return 'Now';
+  const displayHours = hours % 12 || 12;
+  const suffix = hours >= 12 ? 'PM' : 'AM';
+  return `${displayHours}:${String(minutes).padStart(2, '0')} ${suffix}`;
 };
 
-const QUICK_TAG_GROUPS = [
-  {
-    items: [
-      { key: 'meltdown', label: 'Meltdown', icon: <Box component="span" sx={{ fontSize: '1.1rem' }}>🌋</Box> },
-      { key: 'win', label: 'Win', icon: <Box component="span" sx={{ fontSize: '1.1rem' }}>⭐</Box> },
-      { key: 'sleep', label: 'Sleep', icon: <Box component="span" sx={{ fontSize: '1.1rem' }}>😴</Box> },
-    ]
-  },
-  {
-    items: [
-      { key: 'food', label: 'Food', icon: <Box component="span" sx={{ fontSize: '1.1rem' }}>🍽️</Box> },
-      { key: 'anxiety', label: 'Anxiety', icon: <Box component="span" sx={{ fontSize: '1.1rem' }}>😰</Box> },
-      { key: 'medication', label: 'Medication', icon: <Box component="span" sx={{ fontSize: '1.1rem' }}>💊</Box> },
-    ]
+const buildTimestampWithTime = (dateValue, timeValue) => {
+  const timestamp = new Date(dateValue);
+  if (timeValue) {
+    const [hours, minutes] = timeValue.split(':').map((value) => Number(value));
+    if (!Number.isNaN(hours) && !Number.isNaN(minutes)) {
+      timestamp.setHours(hours, minutes, 0, 0);
+    }
   }
-];
+  return timestamp;
+};
 
 const QuickCheckIn = ({ child, onComplete, onSkip }) => {
   const [user] = useAuthState(auth);
 
   const [noteText, setNoteText] = useState('');
+  const [selectedTime, setSelectedTime] = useState(() => getTimeInputValue());
   const [showQuickTags, setShowQuickTags] = useState(false);
-  const [selectedTag, setSelectedTag] = useState(null);
+  const [selectedTags, setSelectedTags] = useState([]);
   const [importantMoment, setImportantMoment] = useState(false);
   const [saving, setSaving] = useState(false);
   const [selectedPhotoFile, setSelectedPhotoFile] = useState(null);
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState('');
   const photoInputRef = useRef(null);
+  const timeInputRef = useRef(null);
   const quickTagTouchStartYRef = useRef(null);
 
   const selectedTagCategory = useMemo(() => {
-    return selectedTag ? QUICK_TAG_CATEGORY_MAP[selectedTag] || null : null;
-  }, [selectedTag]);
+    const primaryTag = selectedTags[0];
+    return primaryTag ? QUICK_TAG_CATEGORY_MAP[primaryTag] || null : null;
+  }, [selectedTags]);
 
   const autoCategory = useMemo(() => {
     return classifyQuickNoteCategory(noteText);
@@ -77,19 +88,22 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
 
   const resolvedCategory = selectedTagCategory || autoCategory;
 
-  const combinedTags = useMemo(() => (selectedTag ? [selectedTag] : []), [selectedTag]);
+  const combinedTags = useMemo(() => selectedTags, [selectedTags]);
 
-  const notePlaceholder = selectedTag
-    ? QUICK_TAG_PLACEHOLDERS[selectedTag]
+  const notePlaceholder = selectedTags.length === 1
+    ? getQuickTagPlaceholder(selectedTags[0])
     : "Just write what happened — we'll figure out the rest.";
 
   const toggleQuickTag = (tagKey) => {
-    setSelectedTag((prev) => (prev === tagKey ? null : tagKey));
+    setSelectedTags((prev) => (
+      prev.includes(tagKey)
+        ? prev.filter((key) => key !== tagKey)
+        : [...prev, tagKey]
+    ));
   };
 
   const handleQuickTagSelect = (tagKey) => {
     toggleQuickTag(tagKey);
-    setShowQuickTags(false);
   };
 
   const closeQuickTags = () => {
@@ -138,12 +152,23 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
     event.target.value = '';
   };
 
+  const handleTimePickerOpen = () => {
+    const input = timeInputRef.current;
+    if (!input) return;
+    if (typeof input.showPicker === 'function') {
+      input.showPicker();
+    } else {
+      input.click();
+    }
+  };
+
   const saveQuickNote = async () => {
     const text = noteText.trim();
     if (!text) return;
 
     setSaving(true);
     try {
+      const timestamp = buildTimestampWithTime(new Date(), selectedTime);
       const optimisticEntry = {
         childId: child.id,
         text,
@@ -151,7 +176,7 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
         category: resolvedCategory,
         tags: combinedTags,
         importantMoment,
-        timestamp: new Date(),
+        timestamp,
         authorId: user?.uid,
         authorName: user?.displayName || user?.email?.split('@')[0] || 'User',
         authorEmail: user?.email,
@@ -162,7 +187,7 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
         createdBy: user?.uid,
         createdAt: serverTimestamp(),
         ...optimisticEntry,
-        entryDate: new Date().toDateString(),
+        entryDate: timestamp.toDateString(),
       });
 
       let mediaUrls = [];
@@ -190,12 +215,12 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
         },
       }));
 
-      onComplete?.({
+        onComplete?.({
         text,
         tags: combinedTags,
         importantMoment,
         category: resolvedCategory,
-        timestamp: new Date(),
+        timestamp,
         ...(mediaUrls.length > 0 && { mediaUrls }),
       });
       setSelectedPhotoFile(null);
@@ -260,10 +285,38 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
         </Box>
 
         <Box sx={{ mb: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.7 }}>
-            <Typography sx={{ fontSize: '0.84rem', fontWeight: 700, color: '#51607a' }}>
-              Your note
-            </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 0.5, mb: 0.7, flexWrap: 'wrap' }}>
+            <Button
+              variant="outlined"
+              onClick={handleTimePickerOpen}
+              startIcon={<AccessTimeIcon sx={{ fontSize: 16 }} />}
+              endIcon={<ExpandMoreIcon sx={{ fontSize: 18 }} />}
+              sx={{
+                minHeight: 32,
+                px: 1,
+                py: 0.25,
+                borderRadius: '10px',
+                textTransform: 'none',
+                fontWeight: 800,
+                fontSize: '0.84rem',
+                color: '#334155',
+                borderColor: '#cfd8e3',
+                bgcolor: '#ffffff',
+                boxShadow: '0 1px 4px rgba(15, 23, 42, 0.04)',
+                '&:hover': {
+                  bgcolor: '#f8fafc',
+                  borderColor: '#b8c2d1',
+                },
+                '& .MuiButton-startIcon': {
+                  mr: 0.35,
+                },
+                '& .MuiButton-endIcon': {
+                  ml: 0.25,
+                },
+              }}
+            >
+              {formatTimeLabel(selectedTime)}
+            </Button>
             <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.45, color: '#6b7280' }}>
               <KeyboardVoiceIcon sx={{ fontSize: 16 }} />
               <Typography sx={{ fontSize: '0.76rem', fontWeight: 600 }}>
@@ -272,33 +325,61 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
             </Box>
           </Box>
 
-          <TextField
-            fullWidth
-            multiline
-            minRows={5}
-            value={noteText}
-            onChange={(e) => setNoteText(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.ctrlKey && e.key === 'Enter') {
-                e.preventDefault();
-                if (noteText.trim() && !saving) saveQuickNote();
-              }
+          <input
+            ref={timeInputRef}
+            type="time"
+            value={selectedTime}
+            onChange={(e) => setSelectedTime(e.target.value)}
+            style={{
+              position: 'absolute',
+              width: 1,
+              height: 1,
+              opacity: 0,
+              pointerEvents: 'none',
             }}
-            placeholder={notePlaceholder}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: '14px',
-                fontSize: '1rem',
-                color: '#48484b',
-                '& fieldset': { borderColor: '#c7d2f4', borderWidth: 3 },
-              },
-              '& .MuiInputBase-input::placeholder': {
-                color: '#86888e',
-                opacity: 0.75,
-                fontSize: '1rem',
-              }
-            }}
+            aria-hidden="true"
+            tabIndex={-1}
           />
+
+          <RichTextInput
+            placeholder={notePlaceholder}
+            hidePhotoButton
+            onDataChange={(data) => setNoteText(data?.text || '')}
+          />
+
+          {selectedTags.length > 0 && (
+            <Box
+              sx={{
+                mt: 1,
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: 0.75,
+              }}
+            >
+              {selectedTags.map((tag) => {
+                const categoryKey = QUICK_TAG_CATEGORY_MAP[tag] || 'log';
+                const categoryColors = CATEGORY_COLORS[categoryKey] || CATEGORY_COLORS.log;
+                return (
+                  <Chip
+                    key={tag}
+                    label={tag}
+                    onDelete={() => toggleQuickTag(tag)}
+                    sx={{
+                      borderRadius: '999px',
+                      bgcolor: categoryColors.bg,
+                      color: categoryColors.text,
+                      border: `1px solid ${categoryColors.border}`,
+                      fontWeight: 700,
+                      '& .MuiChip-deleteIcon': {
+                        color: categoryColors.text,
+                        fontSize: 16,
+                      },
+                    }}
+                  />
+                );
+              })}
+            </Box>
+          )}
         </Box>
 
         <input
@@ -311,34 +392,14 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
         />
 
         <Box sx={{ mb: 2, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1 }}>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, width: '100%' }}>
-            <Button
-              variant="outlined"
-              onClick={() => photoInputRef.current?.click()}
-              sx={{
-                minHeight: 44,
-                borderRadius: '10px',
-                textTransform: 'none',
-                fontWeight: 700,
-                fontSize: '0.98rem',
-                color: '#2f3441',
-                borderColor: '#d7dbe2',
-                bgcolor: '#f1f3f6',
-                px: 2.2,
-                py: 0.85,
-                flex: { xs: 1, sm: '0 0 auto' },
-                '&:hover': {
-                  bgcolor: '#e6eaf0',
-                  borderColor: '#c8ced8',
-                },
-              }}
-            >
-              <Box component="span" sx={{ fontSize: '1.2rem', mr: 0.9, lineHeight: 1 }}>
-                📷
-              </Box>
-              Add Photo or Video
-            </Button>
-
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', sm: 'repeat(2, minmax(0, 1fr))' },
+              gap: 1,
+              width: '100%',
+            }}
+          >
             <Button
               variant="outlined"
               onClick={() => setImportantMoment((prev) => !prev)}
@@ -347,23 +408,63 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
                 borderRadius: '10px',
                 textTransform: 'none',
                 fontWeight: 800,
-                fontSize: '0.95rem',
-                color: importantMoment ? '#8A5A00' : '#4b5563',
-                borderColor: importantMoment ? '#F4B400' : '#d7dbe2',
-                bgcolor: importantMoment ? '#FFFBF0' : '#f1f3f6',
-                px: 1.8,
+                fontSize: '0.92rem',
+                color: '#4b5563',
+                borderColor: '#d7dbe2',
+                bgcolor: '#f1f3f6',
+                px: 1.2,
                 py: 0.85,
-                flex: { xs: 1, sm: '0 0 auto' },
+                width: '100%',
+                minWidth: 0,
                 '&:hover': {
-                  bgcolor: importantMoment ? '#FFF4CC' : '#e6eaf0',
-                  borderColor: importantMoment ? '#E0A800' : '#c8ced8',
+                  bgcolor: '#e6eaf0',
+                  borderColor: '#c8ced8',
                 },
               }}
             >
-              <Box component="span" sx={{ fontSize: '1.1rem', mr: 0.75, lineHeight: 1 }}>
+              <Box component="span" sx={{ fontSize: '1.1rem', mr: 0.55, lineHeight: 1 }}>
                 ⭐
               </Box>
-              {importantMoment ? 'Important Moment On' : 'Flag Important'}
+              <Box component="span" sx={{ lineHeight: 1, whiteSpace: 'nowrap' }}>
+                {importantMoment ? 'Important On' : 'Flag Important'}
+              </Box>
+            </Button>
+
+            <Button
+              variant="outlined"
+              startIcon={<LocalOfferIcon sx={{ color: '#102d72' }} />}
+              endIcon={<ExpandMoreIcon sx={{ transform: showQuickTags ? 'rotate(180deg)' : 'none', transition: 'all 0.2s', color: '#102d72' }} />}
+              onClick={() => setShowQuickTags((prev) => !prev)}
+              sx={{
+                minHeight: 44,
+                borderRadius: '10px',
+                borderColor: '#d7dbe2',
+                color: '#4b5563',
+                px: 1.1,
+                py: 0.8,
+                width: '100%',
+                minWidth: 0,
+                textTransform: 'none',
+                fontSize: '0.9rem',
+                fontWeight: 700,
+                bgcolor: '#f1f3f6',
+                '&:hover': {
+                  bgcolor: '#e6eaf0',
+                  borderColor: '#c8ced8',
+                },
+                '& .MuiButton-startIcon': {
+                  mr: 0.35,
+                },
+                '& .MuiButton-endIcon': {
+                  ml: 0.35,
+                },
+              }}
+            >
+              {selectedTags.length > 0
+                ? selectedTags.length === 1
+                  ? `Tags: ${selectedTags[0]}`
+                  : `Tags (${selectedTags.length})`
+                : 'Add context to your note'}
             </Button>
           </Box>
 
@@ -382,31 +483,6 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
             />
           ) : null}
         </Box>
-
-        <Button
-          variant="outlined"
-          startIcon={<LocalOfferIcon sx={{ color: '#102d72' }} />}
-          endIcon={<ExpandMoreIcon sx={{ transform: showQuickTags ? 'rotate(180deg)' : 'none', transition: 'all 0.2s', color: '#102d72' }} />}
-          onClick={() => setShowQuickTags((prev) => !prev)}
-          sx={{
-            borderRadius: '10px',
-            borderColor: '#102d72',
-            color: '#102d72',
-            px: 2.5,
-            py: 0.8,
-            textTransform: 'none',
-            fontSize: '1rem',
-            fontWeight: 700,
-            mb: 1.5,
-            bgcolor: '#f1f5ff',
-            '&:hover': {
-              bgcolor: '#e7eeff',
-              borderColor: '#102d72',
-            },
-          }}
-        >
-          {selectedTag ? `Quick tags: ${selectedTag}` : 'Quick tags'}
-        </Button>
 
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
@@ -527,9 +603,9 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
                 </Typography>
 
                 <Stack spacing={1} sx={{ width: '100%' }}>
-                  {QUICK_TAG_GROUPS.map((group, groupIndex) => (
-                    <Box
-                      key={groupIndex}
+                {getQuickTagGroups().map((group, groupIndex) => (
+                  <Box
+                    key={groupIndex}
                       sx={{
                         display: 'grid',
                         gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, minmax(0, 140px))' },
@@ -538,13 +614,13 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
                       }}
                     >
                       {group.items.map((item) => {
-                        const selected = selectedTag === item.key;
+                        const selected = selectedTags.includes(item.key);
                         const categoryKey = QUICK_TAG_CATEGORY_MAP[item.key] || 'log';
                         const categoryColors = CATEGORY_COLORS[categoryKey] || CATEGORY_COLORS.log;
                         return (
                           <Chip
                             key={item.key}
-                            icon={item.icon}
+                            icon={<Box component="span" sx={{ fontSize: '1.1rem' }}>{item.icon}</Box>}
                             label={selected ? `✓ ${item.label}` : item.label}
                             onClick={() => handleQuickTagSelect(item.key)}
                             sx={{
@@ -587,6 +663,22 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
                     </Box>
                   ))}
                 </Stack>
+
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1.5 }}>
+                  <Button
+                    variant="contained"
+                    onClick={closeQuickTags}
+                    sx={{
+                      textTransform: 'none',
+                      borderRadius: '10px',
+                      px: 2,
+                      bgcolor: '#102d72',
+                      '&:hover': { bgcolor: '#0b255d' },
+                    }}
+                  >
+                    Done
+                  </Button>
+                </Box>
               </Box>
             </Box>
           </Box>

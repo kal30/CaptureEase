@@ -8,23 +8,15 @@ import { USER_ROLES } from '../constants/roles';
 import { CATEGORY_COLORS } from '../constants/categoryColors';
 import { getCustomCategories, getIncidentTypeConfig } from '../services/incidentService';
 import { HABIT_TYPES } from '../constants/habitTypes';
-
-const QUICK_NOTE_CATEGORY_META = {
-  behavior: { type: 'behavior', timelineType: 'behavior', titlePrefix: 'Behavior', color: '#D32F2F', icon: '🌋' },
-  health: { type: 'health', timelineType: 'health', titlePrefix: 'Health', color: '#00796B', icon: '💊' },
-  mood: { type: 'mood', timelineType: 'mood', titlePrefix: 'Mood', color: '#F57F17', icon: '😰' },
-  sleep: { type: 'sleep', timelineType: 'sleep', titlePrefix: 'Sleep', color: '#1A237E', icon: '😴' },
-  food: { type: 'food', timelineType: 'food', titlePrefix: 'Food', color: '#E65100', icon: '🍽️' },
-  milestone: { type: 'milestone', timelineType: 'milestone', titlePrefix: 'Win', color: '#2E7D32', icon: '⭐' },
-  log: { type: 'journal', timelineType: 'journal', titlePrefix: 'Daily Log', color: '#64748B', icon: '📝' }
-};
+import { LOG_TYPES, getLogTypeByEntry, getTimelineMetaForCategory, SPECIAL_FILTER_TYPES } from '../constants/logTypeRegistry';
 
 const HABIT_CATEGORY_ICON_MAP = {
   mood: '🙂',
   sleep: '😴',
   nutrition: '🍎',
   progress: '📈',
-  diaper: '🧷',
+  diaper: '🚽',
+  bathroom: '🚽',
   medication: '💊',
   other: '📝',
 };
@@ -54,13 +46,13 @@ const getQuickNoteMeta = (entry) => {
     return {
       type: 'importantMoment',
       timelineType: 'importantMoment',
-      titlePrefix: 'Important Moment',
+      titlePrefix: SPECIAL_FILTER_TYPES.importantMoment.titlePrefix,
       color: CATEGORY_COLORS.importantMoment.dot,
-      icon: '⭐',
+      icon: SPECIAL_FILTER_TYPES.importantMoment.icon,
     };
   }
 
-  return QUICK_NOTE_CATEGORY_META[entry.category] || QUICK_NOTE_CATEGORY_META.log;
+  return getTimelineMetaForCategory(entry.category, { importantMoment: !!entry.importantMoment });
 };
 
 /**
@@ -268,7 +260,9 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
       
       // Transform journal entries (from dailyLogs - avoid duplicates by using journals data only)
       ...childFilteredEntries.journals.map(journal => {
-        const categoryMeta = getQuickNoteMeta(journal);
+        const categoryType = getLogTypeByEntry(journal);
+        const categoryMeta = getTimelineMetaForCategory(categoryType.category, { importantMoment: !!journal.importantMoment });
+        const notesText = journal.notes || journal.sleepDetails?.notes || journal.bathroomDetails?.notes || null;
 
         return {
           id: journal.id,
@@ -277,18 +271,21 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
           collection: 'dailyLogs',
           childId: journal.childId,
           timestamp: journal.timestamp?.toDate ? journal.timestamp.toDate() : new Date(journal.timestamp),
-          category: journal.category || 'log',
+          category: categoryType.category,
           title: journal.importantMoment
             ? 'Important Moment'
-            : (journal.titlePrefix || categoryMeta.titlePrefix || 'Daily Log'),
+            : (journal.titlePrefix || journal.title || categoryMeta.titlePrefix || LOG_TYPES.log.displayLabel),
+          titlePrefix: journal.titlePrefix || categoryMeta.titlePrefix || null,
           color: categoryMeta.color,
           categoryIcon: categoryMeta.icon,
           text: journal.text,
+          content: notesText || journal.text || null,
           tags: journal.tags,
           mediaURL: journal.mediaURL,
           mediaType: journal.mediaType,
           mediaUrls: journal.mediaUrls,
           voiceMemoURL: journal.voiceMemoURL,
+          notes: notesText,
           importantMoment: !!journal.importantMoment,
           isImportantMoment: !!journal.importantMoment,
           ...getEntryUser(journal),
@@ -364,11 +361,18 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
       const searchTerm = filters.searchText.toLowerCase().trim();
       filteredEntries = filteredEntries.filter(entry => {
         const searchableText = [
+          entry.text,
           entry.description,
           entry.summary,
           entry.content,
           entry.notes,
+          entry.note,
           entry.title,
+          entry.categoryLabel,
+          entry.categoryId,
+          entry.category,
+          entry.incidentCategoryLabel,
+          entry.incidentType,
           entry.resolution,
           ...(entry.triggers || []),
           ...(entry.interventions || []),

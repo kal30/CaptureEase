@@ -1,3 +1,5 @@
+export { QUICK_TAG_CATEGORY_MAP } from '../constants/logTypeRegistry';
+
 const CATEGORY_KEYWORDS = {
   milestone: [
     'win', 'milestone', 'progress', 'achievement', 'success', 'did it',
@@ -9,6 +11,8 @@ const CATEGORY_KEYWORDS = {
     'fever', 'doctor', 'sick', 'ill', 'medicine', 'medication', 'meds', 'dose',
     'clinic', 'pain', 'rash', 'cough', 'vomit', 'threw up', 'nausea', 'headache',
     'hospital', 'urgent care', 'appointment', 'therapy', 'therapist',
+    'sensory', 'overload', 'overwhelmed', 'loud', 'lights', 'texture', 'textures',
+    'crowd', 'crowds',
   ],
   food: [
     'ate', 'eating', 'food', 'meal', 'snack', 'lunch', 'dinner', 'breakfast',
@@ -48,13 +52,4 @@ export const classifyQuickNoteCategory = (inputText = '') => {
   }
 
   return 'log';
-};
-
-export const QUICK_TAG_CATEGORY_MAP = {
-  meltdown: 'behavior',
-  medication: 'health',
-  sleep: 'sleep',
-  win: 'milestone',
-  food: 'food',
-  anxiety: 'mood',
 };

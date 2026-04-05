@@ -1,32 +1,35 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Button, List, ListItem, ListItemText, Modal, TextField, IconButton, Autocomplete, Grid, FormControlLabel, Checkbox } from '@mui/material';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { Box, Typography, Button, List, ListItem, ListItemText, Modal, Dialog, DialogTitle, DialogContent, DialogActions, TextField, IconButton, Autocomplete, Grid, FormControlLabel, Checkbox, Snackbar, Alert, Menu, MenuItem, ListItemIcon, Divider } from '@mui/material';
 import { useTheme } from '@mui/material/styles'; // Import useTheme
 import ArchiveIcon from '@mui/icons-material/Archive';
 import UnarchiveIcon from '@mui/icons-material/Unarchive';
-import Rating from '../../components/UI/Rating';
+import MedicationOutlinedIcon from '@mui/icons-material/MedicationOutlined';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import AddCommentOutlinedIcon from '@mui/icons-material/AddCommentOutlined';
+import { auth, db } from '../../services/firebase';
 import { addMedication, fetchMedications, updateMedication, deleteMedication } from '../../services/medicationService';
 import { searchMedications } from '../../services/drugService';
 import { addSideEffect, fetchSideEffects, updateSideEffect, deleteSideEffect } from '../../services/sideEffectService';
+import BulkMedicationLogDialog from './components/BulkMedicationLogDialog';
+import MedicationSideEffectDialog from './components/MedicationSideEffectDialog';
 
-const style = {
-  position: 'absolute',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  width: 800,
-  bgcolor: 'background.paper',
-  border: '2px solid #000',
-  boxShadow: 24,
-  p: 2,
-};
-
-const MedicationsLogTab = ({ childId }) => {
+const MedicationsLogTab = ({ childId, childName }) => {
   const theme = useTheme(); // Get theme object
+  const [user] = useAuthState(auth);
   const [medications, setMedications] = useState([]);
   const [editingMedicationId, setEditingMedicationId] = useState(null);
+  const [showForm, setShowForm] = useState(false);
+  const [showBulkLogDialog, setShowBulkLogDialog] = useState(false);
+  const [recentlySavedMedicationId, setRecentlySavedMedicationId] = useState(null);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [showSnackbar, setShowSnackbar] = useState(false);
+  const [menuAnchorEl, setMenuAnchorEl] = useState(null);
+  const [menuMedication, setMenuMedication] = useState(null);
   const [medicationForm, setMedicationForm] = useState({
     name: '',
     dosage: '',
@@ -36,6 +39,12 @@ const MedicationsLogTab = ({ childId }) => {
     notes: '',
   });
   const [medicationSuggestions, setMedicationSuggestions] = useState([]);
+  const [doseModalMedication, setDoseModalMedication] = useState(null);
+  const [doseForm, setDoseForm] = useState({
+    date: new Date().toISOString().split('T')[0],
+    timeGiven: new Date().toTimeString().slice(0, 5),
+    notes: '',
+  });
 
   const [openAddSideEffectModal, setOpenAddSideEffectModal] = useState(false);
   const [currentSideEffectMedicationId, setCurrentSideEffectMedicationId] = useState(null);
@@ -43,32 +52,83 @@ const MedicationsLogTab = ({ childId }) => {
   const [sideEffectForm, setSideEffectForm] = useState({
     date: '',
     description: '',
+    notes: '',
     severity: 0,
     duration: '',
+    timeOfDay: '',
   });
 
   
 
   const [showArchived, setShowArchived] = useState(false);
+  const activeMedications = medications.filter((med) => !med.isArchived);
 
   useEffect(() => {
     const loadMedications = async () => {
       const fetchedMedications = await fetchMedications(childId, showArchived);
-      setMedications(fetchedMedications || []);
+      const medicationsWithSideEffects = await Promise.all(
+        (fetchedMedications || []).map(async (med) => ({
+          ...med,
+          sideEffects: await fetchSideEffects(childId, med.id),
+        }))
+      );
+      setMedications(medicationsWithSideEffects);
     };
     loadMedications();
   }, [childId, showArchived]);
 
-  const handleMedicationSearch = async (event, value) => {
-    if (value && value.length > 2) {
-      const suggestions = await searchMedications(value);
-      setMedicationSuggestions(suggestions || []);
-    } else {
-      setMedicationSuggestions([]);
+  useEffect(() => {
+    if (!recentlySavedMedicationId) {
+      return undefined;
     }
+
+    const timer = window.setTimeout(() => {
+      setRecentlySavedMedicationId(null);
+    }, 2400);
+
+    return () => window.clearTimeout(timer);
+  }, [recentlySavedMedicationId]);
+
+  const getCurrentTimeValue = () => new Date().toTimeString().slice(0, 5);
+
+  const getTodayDateValue = () => new Date().toISOString().split('T')[0];
+
+  const buildTimestampFromDateAndTime = (dateValue, timeValue) => {
+    const [year, month, day] = (dateValue || getTodayDateValue()).split('-').map((value) => Number(value));
+    const [hours, minutes] = (timeValue || getCurrentTimeValue()).split(':').map((value) => Number(value));
+
+    if ([year, month, day, hours, minutes].some((value) => Number.isNaN(value))) {
+      return new Date();
+    }
+
+    return new Date(year, month - 1, day, hours, minutes, 0, 0);
   };
 
-  const handleEditMedication = (med) => {
+  const handleOpenNewMedicationForm = () => {
+    setDoseModalMedication(null);
+    setShowForm(true);
+    setEditingMedicationId(null);
+    setMedicationForm({
+      name: '',
+      dosage: '',
+      frequency: '',
+      startDate: '',
+      prescribingDoctor: '',
+      notes: '',
+    });
+  };
+
+  const handleOpenBulkLogDialog = () => {
+    setShowBulkLogDialog(true);
+  };
+
+  const handleCloseBulkLogDialog = () => {
+    setShowBulkLogDialog(false);
+  };
+
+  const handleOpenEditMedicationForm = (med) => {
+    setDoseModalMedication(null);
+    setShowForm(true);
     setEditingMedicationId(med.id);
     setMedicationForm({
       name: med.name,
@@ -80,8 +140,10 @@ const MedicationsLogTab = ({ childId }) => {
     });
   };
 
-  const handleCancelEdit = () => {
+  const handleCloseMedicationForm = () => {
+    setShowForm(false);
     setEditingMedicationId(null);
+    setDoseModalMedication(null);
     setMedicationForm({
       name: '',
       dosage: '',
@@ -90,6 +152,15 @@ const MedicationsLogTab = ({ childId }) => {
       prescribingDoctor: '',
       notes: '',
     });
+  };
+
+  const handleMedicationSearch = async (event, value) => {
+    if (value && value.length > 2) {
+      const suggestions = await searchMedications(value);
+      setMedicationSuggestions(suggestions || []);
+    } else {
+      setMedicationSuggestions([]);
+    }
   };
 
   const handleMedicationFormChange = (e) => {
@@ -108,12 +179,60 @@ const MedicationsLogTab = ({ childId }) => {
           med.id === editingMedicationId ? { ...med, ...medicationForm } : med
         )
       );
-      handleCancelEdit();
+      handleCloseMedicationForm();
     } else {
-      const newMedicationId = await addMedication({ ...medicationForm, childId });
+      const newMedicationId = await addMedication({
+        ...medicationForm,
+        childId,
+        createdBy: user?.uid,
+        createdAt: serverTimestamp(),
+        isArchived: false,
+      });
+      const startedAt = new Date();
+      const milestoneText = `Started ${medicationForm.name} ${medicationForm.dosage || ''}`.trim();
+      const milestoneRef = await addDoc(collection(db, 'dailyLogs'), {
+        childId,
+        createdBy: user?.uid,
+        createdAt: serverTimestamp(),
+        text: milestoneText,
+        status: 'active',
+        category: 'milestone',
+        tags: ['medication', 'new-medication'],
+        timestamp: startedAt,
+        entryDate: startedAt.toDateString(),
+        authorId: user?.uid,
+        authorName: user?.displayName || user?.email?.split('@')[0] || 'User',
+        authorEmail: user?.email,
+        source: 'medication_started',
+      });
+      window.dispatchEvent(new CustomEvent('captureez:timeline-entry-created', {
+        detail: {
+          id: milestoneRef.id,
+          collection: 'dailyLogs',
+          childId,
+          text: milestoneText,
+          status: 'active',
+          category: 'milestone',
+          tags: ['medication', 'new-medication'],
+          timestamp: startedAt,
+          entryDate: startedAt.toDateString(),
+          authorId: user?.uid,
+          authorName: user?.displayName || user?.email?.split('@')[0] || 'User',
+          authorEmail: user?.email,
+          source: 'medication_started',
+        },
+      }));
       setMedications((prevMedications) => [
         ...prevMedications,
-        { id: newMedicationId, ...medicationForm, childId, isArchived: false, sideEffects: [] },
+        {
+          id: newMedicationId,
+          ...medicationForm,
+          childId,
+          createdBy: user?.uid,
+          createdAt: new Date(),
+          isArchived: false,
+          sideEffects: [],
+        },
       ]);
       setMedicationForm({
         name: '',
@@ -123,7 +242,64 @@ const MedicationsLogTab = ({ childId }) => {
         prescribingDoctor: '',
         notes: '',
       });
+      setRecentlySavedMedicationId(newMedicationId);
+      setSnackbarMessage(`${medicationForm.name || 'Medication'} saved`);
+      setShowSnackbar(true);
+      handleCloseMedicationForm();
     }
+  };
+
+  const handleOpenDoseForm = (medicationId) => {
+    const medication = medications.find((med) => med.id === medicationId) || null;
+    setDoseModalMedication(medication);
+    setDoseForm({
+      date: getTodayDateValue(),
+      timeGiven: getCurrentTimeValue(),
+      notes: '',
+    });
+  };
+
+  const handleCloseDoseForm = () => {
+    setDoseModalMedication(null);
+    setDoseForm({
+      date: getTodayDateValue(),
+      timeGiven: getCurrentTimeValue(),
+      notes: '',
+    });
+  };
+
+  const handleDoseFormChange = (e) => {
+    const { name, value } = e.target;
+    setDoseForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleLogDose = async (medication) => {
+    const doseTimestamp = buildTimestampFromDateAndTime(doseForm.date, doseForm.timeGiven);
+    const doseNotes = doseForm.notes.trim();
+    const medicationText = `Gave ${medication.name} ${medication.dosage || ''}`.trim();
+
+    const docData = {
+      childId,
+      createdBy: user?.uid,
+      createdAt: serverTimestamp(),
+      text: medicationText,
+      status: 'active',
+      category: 'medication',
+      timestamp: doseTimestamp,
+      entryDate: doseTimestamp.toDateString(),
+      authorId: user?.uid,
+      authorName: user?.displayName || user?.email?.split('@')[0] || 'User',
+      authorEmail: user?.email,
+      notes: doseNotes,
+      source: 'medication_log',
+    };
+
+    await addDoc(collection(db, 'dailyLogs'), docData);
+
+    handleCloseDoseForm();
   };
 
   const handleDeleteMedication = async (medicationId) => {
@@ -149,18 +325,23 @@ const MedicationsLogTab = ({ childId }) => {
       setSideEffectForm({
         date: sideEffect.date,
         description: sideEffect.description,
+        notes: sideEffect.notes || '',
         severity: sideEffect.severity,
         duration: sideEffect.duration,
         timeOfDay: sideEffect.timeOfDay || '',
       });
     } else {
       setEditingSideEffectId(null);
+      const now = new Date();
+      const pad = (n) => String(n).padStart(2, '0');
+      const defaultDateTime = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
       setSideEffectForm({
-        date: new Date().toISOString().split('T')[0], // Default to today's date
+        date: defaultDateTime.slice(0, 10),
         description: '',
+        notes: '',
         severity: 0,
         duration: '',
-        timeOfDay: '',
+        timeOfDay: defaultDateTime.slice(11, 16),
       });
     }
     setOpenAddSideEffectModal(true);
@@ -192,6 +373,7 @@ const MedicationsLogTab = ({ childId }) => {
     setSideEffectForm({
       date: sideEffect.date,
       description: sideEffect.description,
+      notes: sideEffect.notes || '',
       severity: sideEffect.severity,
       duration: sideEffect.duration,
       timeOfDay: sideEffect.timeOfDay || '',
@@ -204,13 +386,21 @@ const MedicationsLogTab = ({ childId }) => {
       alert('Please select a medication for the side effect.');
       return;
     }
+    const currentMedication = medications.find((med) => med.id === currentSideEffectMedicationId) || null;
+    const sideEffectPayload = {
+      ...sideEffectForm,
+      medicationId: currentSideEffectMedicationId,
+      childId: currentMedication?.childId || childId,
+      createdBy: user?.uid,
+      createdAt: serverTimestamp(),
+    };
     if (editingSideEffectId) {
-      await updateSideEffect(editingSideEffectId, { ...sideEffectForm, medicationId: currentSideEffectMedicationId });
+      await updateSideEffect(editingSideEffectId, sideEffectPayload);
     } else {
-      await addSideEffect({ ...sideEffectForm, medicationId: currentSideEffectMedicationId });
+      await addSideEffect(sideEffectPayload);
     }
     // Refresh side effects for the expanded medication
-    const fetchedSideEffects = await fetchSideEffects(currentSideEffectMedicationId);
+    const fetchedSideEffects = await fetchSideEffects(childId, currentSideEffectMedicationId);
     setMedications((prevMedications) =>
       prevMedications.map((med) =>
         med.id === currentSideEffectMedicationId ? { ...med, sideEffects: fetchedSideEffects } : med
@@ -222,7 +412,7 @@ const MedicationsLogTab = ({ childId }) => {
   const handleDeleteSideEffect = async (sideEffectId, medicationId) => {
     if (window.confirm('Are you sure you want to delete this side effect?')) {
       await deleteSideEffect(sideEffectId);
-      const fetchedSideEffects = await fetchSideEffects(medicationId);
+      const fetchedSideEffects = await fetchSideEffects(childId, medicationId);
       setMedications((prevMedications) =>
         prevMedications.map((med) =>
           med.id === medicationId ? { ...med, sideEffects: fetchedSideEffects } : med
@@ -231,37 +421,54 @@ const MedicationsLogTab = ({ childId }) => {
     }
   };
 
+  const handleMenuOpen = (event, medication) => {
+    setMenuAnchorEl(event.currentTarget);
+    setMenuMedication(medication);
+  };
+
+  const handleMenuClose = () => {
+    setMenuAnchorEl(null);
+    setMenuMedication(null);
+  };
+
   return (
     <Box>
       <Typography variant="h6" gutterBottom>Medications</Typography>
 
       <Box sx={{ mb: 2, display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-        <FormControlLabel
-          control={<Checkbox checked={showArchived} onChange={(e) => setShowArchived(e.target.checked)} />}
-          label="Show Archived"
-          sx={{ whiteSpace: 'nowrap', display: 'flex', alignItems: 'center' }}
-        />
+        {activeMedications.length > 0 ? (
+          <Button
+            variant="outlined"
+            startIcon={<MedicationOutlinedIcon />}
+            onClick={handleOpenBulkLogDialog}
+          >
+            Log all medications for today
+          </Button>
+        ) : null}
         <Button
           variant="contained"
           startIcon={<AddIcon />}
-          onClick={() => handleOpenAddSideEffectModal(null)} // Pass null to indicate new side effect from main view
-        >
-          Add Side Effect
-        </Button>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleCancelEdit}
+          onClick={handleOpenNewMedicationForm}
         >
           Add New Medication
         </Button>
       </Box>
 
-      <Box sx={{ mb: 3, p: 2, borderRadius: '8px', boxShadow: 1, maxWidth: 1200, mx: 'auto' }}>
-        <Typography variant="subtitle1" gutterBottom>
-          {editingMedicationId ? 'Edit Medication' : 'Add New Medication'}
-        </Typography>
-        <Grid container spacing={2}>
+      {showForm || editingMedicationId ? (
+        <Box sx={{ mb: 3, p: 2, borderRadius: 2, boxShadow: 1, border: '1px solid', borderColor: showForm ? 'primary.main' : 'divider', maxWidth: 1200, mx: 'auto' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+              {editingMedicationId ? 'Edit Medication' : 'Add New Medication'}
+            </Typography>
+            <Button
+              variant="outlined"
+              onClick={showForm || editingMedicationId ? handleCloseMedicationForm : handleOpenNewMedicationForm}
+            >
+              {showForm || editingMedicationId ? 'Done' : 'Add New Medication'}
+            </Button>
+          </Box>
+          <Box sx={{ mt: 2 }}>
+          <Grid container spacing={2}>
           <Grid item xs={12} sm={12} sx={{ width: '100%' }}>
             <Autocomplete
               freeSolo
@@ -291,7 +498,6 @@ const MedicationsLogTab = ({ childId }) => {
           <Grid item xs={12}>
             <TextField
               margin="normal"
-              required
               fullWidth
               id="dosage"
               label="Dosage"
@@ -303,7 +509,6 @@ const MedicationsLogTab = ({ childId }) => {
           <Grid item xs={12}>
             <TextField
               margin="normal"
-              required
               fullWidth
               id="frequency"
               label="Frequency"
@@ -354,203 +559,344 @@ const MedicationsLogTab = ({ childId }) => {
             />
           </Grid>
         </Grid>
-        <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
-          <Button
-            type="submit"
-            variant="contained"
-            onClick={handleMedicationSubmit}
-          >
-            {editingMedicationId ? 'Update Medication' : 'Add Medication'}
-          </Button>
-          {editingMedicationId ? (
+          <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
             <Button
-              variant="outlined"
-              onClick={handleCancelEdit}
+              type="submit"
+              variant="contained"
+              onClick={handleMedicationSubmit}
             >
-              Cancel
+              {editingMedicationId ? 'Update Medication' : 'Add Medication'}
             </Button>
-          ) : (
-            <Button
-              variant="outlined"
-              onClick={handleCancelEdit}
-            >
-              Done
-            </Button>
-          )}
+            {editingMedicationId ? (
+              <Button
+                variant="outlined"
+                onClick={handleCloseMedicationForm}
+              >
+                Cancel
+              </Button>
+            ) : (
+              <Button
+                variant="outlined"
+                onClick={handleCloseMedicationForm}
+              >
+                Done
+              </Button>
+            )}
+          </Box>
+          </Box>
         </Box>
-      </Box>
+      ) : null}
 
-      <List>
-        {medications.map((med) => (
-          <React.Fragment key={med.id}>
-            <ListItem
-              sx={{ opacity: med.isArchived ? 0.6 : 1 }}
-              secondaryAction={
-                <>
-                  <IconButton edge="end" aria-label="archive" onClick={() => handleArchiveMedication(med.id, !med.isArchived)}>
-                    {med.isArchived ? <UnarchiveIcon /> : <ArchiveIcon />}
-                  </IconButton>
-                  <IconButton edge="end" aria-label="edit" onClick={() => handleEditMedication(med)}>
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton edge="end" aria-label="delete" onClick={() => handleDeleteMedication(med.id)}>
-                    <DeleteIcon />
-                  </IconButton>
-                </>
-              }
-            >
-              <ListItemText
-                primary={<Typography variant="subtitle1" component="span" sx={{ fontWeight: 'bold', mb: 3, color: theme.palette.primary.main }}>{med.name}</Typography>}
-                secondary={
-                  <Box sx={{ mt: 1 }}>
-                    <Typography variant="body2" color="text.primary"><strong>Dosage:</strong> {med.dosage}</Typography>
-                    <Typography variant="body2" color="text.primary"><strong>Frequency:</strong> {med.frequency}</Typography>
-                    <Typography variant="body2" color="text.primary"><strong>Doctor:</strong> {med.prescribingDoctor}</Typography>
-                    {med.startDate && <Typography variant="body2" color="text.primary"><strong>Start Date:</strong> {med.startDate}</Typography>}
-                    {med.notes && <Typography variant="body2" color="text.primary"><strong>Notes:</strong> {med.notes}</Typography>}
+      {medications.length > 0 ? (
+        <List>
+          {medications.map((med) => (
+            <React.Fragment key={med.id}>
+              <ListItem
+                sx={{
+                  opacity: med.isArchived ? 0.6 : 1,
+                  mb: 1.5,
+                  borderRadius: 2,
+                  border: '1px solid',
+                  borderColor: recentlySavedMedicationId === med.id ? 'primary.main' : 'divider',
+                  bgcolor: recentlySavedMedicationId === med.id ? 'rgba(25, 118, 210, 0.04)' : 'background.paper',
+                  boxShadow: recentlySavedMedicationId === med.id ? '0 8px 20px rgba(25, 118, 210, 0.12)' : 'none',
+                }}
+                secondaryAction={
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={() => handleOpenDoseForm(med.id)}
+                      sx={{
+                        borderRadius: 0,
+                        textTransform: 'none',
+                        fontWeight: 600,
+                        borderWidth: '1.5px',
+                      }}
+                    >
+                      Log dose
+                    </Button>
+                    <IconButton
+                      edge="end"
+                      aria-label="more"
+                      onClick={(event) => handleMenuOpen(event, med)}
+                    >
+                      <MoreVertIcon />
+                    </IconButton>
                   </Box>
                 }
-              />
-            </ListItem>
-            <Box sx={{ p: 2, bgcolor: '#E0F2F1', borderRadius: '8px', mt: 2 }}>
-              <Typography variant="subtitle1" sx={{ mt: 0 }}>Side Effects:</Typography>
-              
-              <List dense>
-                {med.sideEffects && med.sideEffects.length > 0 ? (
-                  med.sideEffects.map((se) => (
-                    <ListItem
-                      key={se.id}
-                      secondaryAction={
-                        <>
-                          <IconButton edge="end" aria-label="edit" onClick={() => handleEditSideEffect(se, med.id)}>
-                            <EditIcon />
-                          </IconButton>
-                          <IconButton edge="end" aria-label="delete" onClick={() => handleDeleteSideEffect(se.id, med.id)}>
-                            <DeleteIcon />
-                          </IconButton>
-                        </>
-                      }
-                    >
-                      <ListItemText
-                        primary={`${se.date}: ${se.description}`}
-                        secondary={
-                          <Box>
-                            <Typography variant="body2" color="text.secondary">Duration: {se.duration}</Typography>
-                            <Typography variant="body2" color="text.secondary">Severity: {se.severity}</Typography>
-                          </Box>
+              >
+                <ListItemText
+                  primary={<Typography variant="subtitle1" component="span" sx={{ fontWeight: 'bold', mb: 3, color: theme.palette.primary.main }}>{med.name}</Typography>}
+                  secondary={
+                    <Box sx={{ mt: 1 }}>
+                      <Typography variant="body2" color="text.primary"><strong>Dosage:</strong> {med.dosage}</Typography>
+                      <Typography variant="body2" color="text.primary"><strong>Frequency:</strong> {med.frequency}</Typography>
+                      <Typography variant="body2" color="text.primary"><strong>Doctor:</strong> {med.prescribingDoctor}</Typography>
+                      {med.startDate && <Typography variant="body2" color="text.primary"><strong>Start Date:</strong> {med.startDate}</Typography>}
+                      {med.notes && <Typography variant="body2" color="text.primary"><strong>Notes:</strong> {med.notes}</Typography>}
+                    </Box>
+                  }
+                />
+              </ListItem>
+              <Box sx={{ px: 2, pb: 2, mt: -1 }}>
+                <Typography variant="subtitle2" sx={{ mb: 1, color: 'text.secondary' }}>Side effects</Typography>
+                
+                <List dense>
+                  {med.sideEffects && med.sideEffects.length > 0 ? (
+                    med.sideEffects.map((se) => (
+                      <ListItem
+                        key={se.id}
+                        secondaryAction={
+                          <>
+                            <IconButton edge="end" aria-label="edit" onClick={() => handleEditSideEffect(se, med.id)}>
+                              <EditIcon />
+                            </IconButton>
+                            <IconButton edge="end" aria-label="delete" onClick={() => handleDeleteSideEffect(se.id, med.id)}>
+                              <DeleteIcon />
+                            </IconButton>
+                          </>
                         }
-                      />
-                    </ListItem>
-                  ))
-                ) : (
-                  <Typography variant="body2" color="textSecondary">No side effects recorded.</Typography>
-                )}
-              </List>
-            </Box>
-          </React.Fragment>
-        ))}
-      </List>
-
-      {/* Add Side Effect Modal */}
-      <Modal
-        open={openAddSideEffectModal}
-        onClose={handleCloseAddSideEffectModal}
-        aria-labelledby="add-side-effect-title"
-        aria-describedby="add-side-effect-description"
-      >
-        <Box sx={style}>
-          <Typography id="add-side-effect-title" variant="h6" component="h2">
-            Add Side Effect
+                      >
+                        <ListItemText
+                          primary={`${new Date(se.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}: ${se.description}`}
+                          secondary={
+                            <Box>
+                              <Typography variant="body2" color="text.secondary">Duration: {se.duration}</Typography>
+                              <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
+                                <Box
+                                  sx={{
+                                    width: 12,
+                                    height: 12,
+                                    borderRadius: '50%',
+                                    bgcolor: ['','#4caf50','#8bc34a','#ffc107','#ff9800','#f44336'][se.severity] || '#ccc',
+                                  }}
+                                />
+                                <Typography variant="body2" color="text.secondary">
+                                  Severity {se.severity}
+                                </Typography>
+                              </Box>
+                            </Box>
+                          }
+                        />
+                      </ListItem>
+                    ))
+                  ) : (
+                    <Typography variant="body2" color="textSecondary">No side effects recorded.</Typography>
+                  )}
+                </List>
+              </Box>
+            </React.Fragment>
+          ))}
+        </List>
+      ) : !showForm ? (
+        <Box
+          sx={{
+            minHeight: 220,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            color: 'text.secondary',
+            px: 2,
+          }}
+        >
+          <Typography variant="body1">
+            No medications added yet. Tap the button above to add one.
           </Typography>
+        </Box>
+      ) : null}
+
+      {medications.length > 0 ? (
+        <Box sx={{ mt: 2 }}>
+          <FormControlLabel
+            control={<Checkbox checked={showArchived} onChange={(e) => setShowArchived(e.target.checked)} />}
+            label="Show Archived"
+            sx={{ whiteSpace: 'nowrap', display: 'flex', alignItems: 'center' }}
+          />
+        </Box>
+      ) : null}
+
+      <Dialog
+        open={Boolean(doseModalMedication)}
+        onClose={handleCloseDoseForm}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle>
+          {doseModalMedication
+            ? `Log dose — ${doseModalMedication.name.charAt(0).toUpperCase() + doseModalMedication.name.slice(1)}`
+            : 'Log dose'}
+          {doseModalMedication ? (
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+              {doseModalMedication.dosage}
+              {doseModalMedication.frequency ? ` · ${doseModalMedication.frequency}` : ''}
+            </Typography>
+          ) : null}
+        </DialogTitle>
+        <DialogContent dividers>
           <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <Autocomplete
-                options={medications}
-                getOptionLabel={(option) => option.name}
-                value={medications.find(med => med.id === currentSideEffectMedicationId) || null}
-                onChange={(event, newValue) => {
-                  setCurrentSideEffectMedicationId(newValue ? newValue.id : null);
-                }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    margin="normal"
-                    required
-                    fullWidth
-                    label="Select Medication"
-                  />
-                )}
-              />
-            </Grid>
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6}>
               <TextField
-                margin="normal"
-                required
                 fullWidth
-                id="sideEffectDate"
+                type="date"
                 label="Date"
                 name="date"
-                type="date"
-                InputLabelProps={{
-                  shrink: true,
-                }}
-                value={sideEffectForm.date}
-                onChange={handleSideEffectFormChange}
+                InputLabelProps={{ shrink: true }}
+                value={doseForm.date}
+                onChange={handleDoseFormChange}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
-                margin="normal"
-                required
                 fullWidth
-                id="sideEffectDescription"
-                label="Description"
-                name="description"
-                multiline
-                rows={2}
-                value={sideEffectForm.description}
-                onChange={handleSideEffectFormChange}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <Rating
-                severity={sideEffectForm.severity}
-                setSeverity={(newValue) => handleSideEffectSeverityChange(null, newValue)}
+                type="time"
+                label="Time"
+                name="timeGiven"
+                InputLabelProps={{ shrink: true }}
+                value={doseForm.timeGiven}
+                onChange={handleDoseFormChange}
               />
             </Grid>
             <Grid item xs={12}>
               <TextField
-                margin="normal"
                 fullWidth
-                id="sideEffectDuration"
-                label="Duration (e.g., 2 hours, all day)"
-                name="duration"
-                value={sideEffectForm.duration}
-                onChange={handleSideEffectFormChange}
+                label="Notes"
+                name="notes"
+                placeholder="e.g. gave with food, refused half dose"
+                multiline
+                rows={2}
+                value={doseForm.notes}
+                onChange={handleDoseFormChange}
               />
             </Grid>
           </Grid>
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            sx={{ mt: 3, mb: 2 }}
-            onClick={handleAddSideEffectSubmit}
-          >
-            {editingSideEffectId ? 'Update Side Effect' : 'Add Side Effect'}
+        </DialogContent>
+        <DialogActions sx={{ px: 3, py: 2 }}>
+          <Button variant="outlined" onClick={handleCloseDoseForm}>
+            Cancel
           </Button>
-          {editingSideEffectId && (
-            <Button
-              fullWidth
-              variant="outlined"
-              sx={{ mb: 2 }}
-              onClick={handleCloseAddSideEffectModal}
-            >
-              Cancel
-            </Button>
-          )}
-        </Box>
-      </Modal>
+          <Button
+            variant="contained"
+            onClick={() => handleLogDose(doseModalMedication)}
+            disabled={!doseModalMedication}
+          >
+            Save dose
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <BulkMedicationLogDialog
+        open={showBulkLogDialog}
+        childId={childId}
+        childName={childName}
+        medications={activeMedications}
+        user={user}
+        onClose={handleCloseBulkLogDialog}
+        onSaved={() => {
+          handleCloseBulkLogDialog();
+        }}
+      />
+
+      {/* Add Side Effect Modal */}
+      <MedicationSideEffectDialog
+        open={openAddSideEffectModal}
+        medications={medications}
+        medicationId={currentSideEffectMedicationId}
+        setMedicationId={setCurrentSideEffectMedicationId}
+        sideEffectForm={sideEffectForm}
+        onChange={handleSideEffectFormChange}
+        onSeverityChange={(newValue) => handleSideEffectSeverityChange(null, newValue)}
+        onSubmit={handleAddSideEffectSubmit}
+        onClose={handleCloseAddSideEffectModal}
+        editingSideEffectId={editingSideEffectId}
+      />
+
+      <Menu
+        anchorEl={menuAnchorEl}
+        open={Boolean(menuAnchorEl)}
+        onClose={handleMenuClose}
+        onClick={(e) => e.stopPropagation()}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <MenuItem
+          onClick={(e) => {
+            e.stopPropagation();
+            const medication = menuMedication;
+            handleMenuClose();
+            if (medication) {
+              handleOpenAddSideEffectModal(medication.id);
+            }
+          }}
+        >
+          <ListItemIcon>
+            <AddCommentOutlinedIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText primary="Add Side Effect" />
+        </MenuItem>
+
+        {menuMedication ? (
+          <MenuItem
+            onClick={(e) => {
+              e.stopPropagation();
+              const medication = menuMedication;
+              handleMenuClose();
+              handleArchiveMedication(medication.id, !medication.isArchived);
+            }}
+          >
+            <ListItemIcon>
+              {menuMedication.isArchived ? <UnarchiveIcon fontSize="small" /> : <ArchiveIcon fontSize="small" />}
+            </ListItemIcon>
+            <ListItemText primary={menuMedication.isArchived ? 'Unarchive' : 'Archive'} />
+          </MenuItem>
+        ) : null}
+
+        {menuMedication ? <Divider /> : null}
+
+        <MenuItem
+          onClick={(e) => {
+            e.stopPropagation();
+            const medication = menuMedication;
+            handleMenuClose();
+            if (medication) {
+              handleOpenEditMedicationForm(medication);
+            }
+          }}
+        >
+          <ListItemIcon>
+            <EditIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText primary="Edit" />
+        </MenuItem>
+
+        <MenuItem
+          onClick={(e) => {
+            e.stopPropagation();
+            const medication = menuMedication;
+            handleMenuClose();
+            if (medication) {
+              handleDeleteMedication(medication.id);
+            }
+          }}
+        >
+          <ListItemIcon>
+            <DeleteIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText primary="Delete" />
+        </MenuItem>
+      </Menu>
+
+      <Snackbar
+        open={showSnackbar}
+        autoHideDuration={2200}
+        onClose={() => setShowSnackbar(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="success" variant="filled" onClose={() => setShowSnackbar(false)} sx={{ width: '100%' }}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

@@ -18,6 +18,9 @@ const ChildGroup = ({
   onEditChild,
   onInviteTeamMember,
   onDailyReport,
+  onTrack,
+  onOpenFoodLog,
+  onOpenMedicalLog,
   onImportLogs,
   onMessages,
   getActionGroups,
@@ -50,6 +53,9 @@ const ChildGroup = ({
             onEditChild={onEditChild}
             onInviteTeamMember={onInviteTeamMember}
             onDailyReport={onDailyReport}
+            onTrack={onTrack}
+            onOpenFoodLog={onOpenFoodLog}
+            onOpenMedicalLog={onOpenMedicalLog}
             onImportLogs={onImportLogs}
             onMessages={onMessages}
             getActionGroups={getActionGroups}

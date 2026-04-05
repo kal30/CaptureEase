@@ -3,7 +3,6 @@ import {
   Box,
   Typography,
   TextField,
-  Container,
   Paper,
   Alert,
   Divider,
@@ -91,9 +90,16 @@ const Login = () => {
         <Typography
           component="h1"
           variant="h5"
-          sx={{ mb: 3, fontWeight: "bold", color: "primary.main" }}
+          sx={{ mb: 1.5, fontWeight: "bold", color: "primary.main" }}
         >
           Sign In to CaptureEz
+        </Typography>
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{ mb: 2.5, textAlign: "center" }}
+        >
+          Use Google for the fastest sign-in, or email and password below.
         </Typography>
         {successMessage && (
           <Alert severity="success" sx={{ width: "100%", mb: 2 }}>
@@ -105,11 +111,15 @@ const Login = () => {
             {error}
           </Alert>
         )}
+        <Box sx={{ width: "100%", mb: 2 }}>
+          <GoogleAuth buttonText="Continue with Google" />
+        </Box>
+        <Divider sx={{ width: "100%", my: 2 }}>or use email</Divider>
         <Box
           component="form"
           onSubmit={handleLogin}
           noValidate
-          sx={{ mt: 1, width: "100%" }}
+          sx={{ width: "100%" }}
         >
           <TextField
             margin="normal"
@@ -151,8 +161,6 @@ const Login = () => {
             Sign In
           </EnhancedLoadingButton>
         </Box>
-        <Divider sx={{ width: "100%", my: 2 }}>OR</Divider>
-        <GoogleAuth buttonText="Sign In with Google" />
         <Box sx={{ mt: 2 }}>
           <Link
             to="/register"

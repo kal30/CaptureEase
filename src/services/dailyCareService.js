@@ -13,6 +13,20 @@ import {
 } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
+const formatSleepIssue = (value) => {
+  const issueLabels = {
+    difficulty_falling_asleep: 'Hard to fall asleep',
+    frequent_waking: 'Woke often',
+    early_waking: 'Woke early',
+    nightmares: 'Nightmares',
+    night_terrors: 'Night terrors',
+    none: 'No disturbances',
+  };
+
+  if (!value) return '';
+  return issueLabels[value] || String(value).replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
+};
+
 // Save a daily care entry
 export const saveDailyCareEntry = async (entryData) => {
   try {
@@ -45,16 +59,55 @@ export const saveDailyCareEntry = async (entryData) => {
 
     // Save to daily care collection
     const docRef = await addDoc(collection(db, "dailyCare"), entry);
+
+    if (actionType === 'sleep') {
+      const sleepIssues = Array.isArray(data?.sleepIssues)
+        ? data.sleepIssues.filter((issue) => issue && issue !== 'none')
+        : data?.sleepIssues
+          ? [data.sleepIssues].filter((issue) => issue && issue !== 'none')
+          : [];
+      const disturbanceText = sleepIssues.length > 0
+        ? sleepIssues.map(formatSleepIssue).filter(Boolean).join(', ')
+        : 'No disturbances';
+      const sleepText = `Slept ${data?.sleepDuration || 0} hours — ${disturbanceText}`.trim();
+      const sleepTimestamp = entryData.timestamp ? new Date(entryData.timestamp) : new Date();
+
+      await addDoc(collection(db, "dailyLogs"), {
+        childId,
+        createdBy: currentUser.uid,
+        createdAt: serverTimestamp(),
+        text: sleepText,
+        status: 'active',
+        category: 'sleep',
+        tags: ['sleep'],
+        timestamp: sleepTimestamp,
+        entryDate: sleepTimestamp.toDateString(),
+        authorId: currentUser.uid,
+        authorName: currentUser.displayName || currentUser.email?.split('@')[0] || 'User',
+        authorEmail: currentUser.email,
+        source: 'sleep_log',
+        sleepDetails: {
+          bedtime: data?.bedtime || null,
+          wakeTime: data?.wakeTime || null,
+          durationHours: data?.sleepDuration || null,
+          disturbances: Array.isArray(data?.sleepIssues) ? data.sleepIssues : (data?.sleepIssues ? [data.sleepIssues] : []),
+          quality: data?.sleepQuality || null,
+          notes: data?.notes || null,
+        }
+      });
+    }
     
     // Also save to child's timeline for historical tracking
-    await addDoc(collection(db, "children", childId, "timeline"), {
-      type: `daily_${actionType}`,
-      title: getActionTitle(actionType),
-      data: data,
-      timestamp: serverTimestamp(),
-      category: 'daily_care',
-      importance: 'normal',
-    });
+    if (actionType !== 'sleep') {
+      await addDoc(collection(db, "children", childId, "timeline"), {
+        type: `daily_${actionType}`,
+        title: getActionTitle(actionType),
+        data: data,
+        timestamp: serverTimestamp(),
+        category: 'daily_care',
+        importance: 'normal',
+      });
+    }
 
     console.log(`${actionType} entry saved successfully with ID:`, docRef.id);
     return docRef.id;

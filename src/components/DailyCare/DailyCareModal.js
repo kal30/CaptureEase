@@ -13,6 +13,7 @@ import {
   Fade,
   LinearProgress,
   Alert,
+  useMediaQuery,
 } from '@mui/material';
 import {
   Close as CloseIcon,
@@ -24,28 +25,76 @@ import { getDailyCareConfig } from './dailyCareConfig';
 import { saveDailyCareEntry } from '../../services/dailyCareService';
 import { useAsyncForm } from '../../hooks/useAsyncForm';
 
-const modalStyle = {
-  position: 'absolute',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  width: '90%',
-  maxWidth: 500,
-  bgcolor: 'background.paper',
-  borderRadius: 3,
-  boxShadow: 24,
-  p: 4,
-  maxHeight: '90vh',
-  overflow: 'auto',
+const getDefaultFormData = (fields = []) => fields.reduce((acc, field) => {
+  if (field.defaultValue !== undefined) {
+    acc[field.key] = field.defaultValue;
+  }
+  return acc;
+}, {});
+
+const calculateSleepDuration = (bedtime, wakeTime) => {
+  if (!bedtime || !wakeTime) {
+    return null;
+  }
+
+  const [bedHour, bedMinute] = bedtime.split(':').map(Number);
+  const [wakeHour, wakeMinute] = wakeTime.split(':').map(Number);
+
+  if ([bedHour, bedMinute, wakeHour, wakeMinute].some(Number.isNaN)) {
+    return null;
+  }
+
+  const start = new Date();
+  start.setHours(bedHour, bedMinute, 0, 0);
+
+  const end = new Date();
+  end.setHours(wakeHour, wakeMinute, 0, 0);
+
+  if (end <= start) {
+    end.setDate(end.getDate() + 1);
+  }
+
+  const hours = (end - start) / (1000 * 60 * 60);
+  return Number.isFinite(hours) ? Number(hours.toFixed(1)) : null;
 };
 
 const DailyCareModal = ({ open, onClose, child, actionType, onComplete }) => {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({});
 
   // Get configuration for the specific action type
   const config = getDailyCareConfig(actionType, child);
+  const modalStyle = isMobile
+    ? {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: '100%',
+        bgcolor: 'background.paper',
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        boxShadow: 24,
+        p: 3,
+        maxHeight: '88vh',
+        overflow: 'auto',
+      }
+    : {
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: '90%',
+        maxWidth: 500,
+        bgcolor: 'background.paper',
+        borderRadius: 3,
+        boxShadow: 24,
+        p: 4,
+        maxHeight: '90vh',
+        overflow: 'auto',
+      };
 
   // Use async form hook for daily care entry submission
   const careForm = useAsyncForm({
@@ -67,14 +116,14 @@ const DailyCareModal = ({ open, onClose, child, actionType, onComplete }) => {
   useEffect(() => {
     // Reset form when action type changes
     setCurrentStep(0);
-    setFormData({});
+    setFormData(getDefaultFormData(config?.fields || []));
     careForm.reset();
   }, [actionType, open]); // Remove careForm from dependencies to prevent infinite loop
 
   // Define handleClose first to avoid circular dependency
   const handleClose = () => {
     setCurrentStep(0);
-    setFormData({});
+    setFormData(getDefaultFormData(config?.fields || []));
     careForm.reset();
     onClose();
   };
@@ -110,10 +159,18 @@ const DailyCareModal = ({ open, onClose, child, actionType, onComplete }) => {
       // Save the data
       careForm.submitForm(
         async () => {
+          const sleepDuration = actionType === 'sleep'
+            ? calculateSleepDuration(formData.bedtime, formData.wakeTime)
+            : null;
           const entryData = {
             childId: child.id,
             actionType,
-            data: formData,
+            data: actionType === 'sleep'
+              ? {
+                  ...formData,
+                  sleepDuration: sleepDuration ?? formData.sleepDuration ?? null,
+                }
+              : formData,
             timestamp: new Date(),
             completedBy: 'current_user', // TODO: Get from auth context
           };
@@ -174,7 +231,7 @@ const DailyCareModal = ({ open, onClose, child, actionType, onComplete }) => {
 
       case 'chips':
         return (
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 2 }}>
+          <Box sx={{ display: 'flex', flexWrap: currentField.wrap === false ? 'nowrap' : 'wrap', gap: 1, mt: 2, overflowX: currentField.wrap === false ? 'auto' : 'visible', pb: currentField.wrap === false ? 0.5 : 0 }}>
             {currentField.options?.map((option) => {
               const isSelected = currentField.multiple 
                 ? value?.includes(option.value)
@@ -248,6 +305,25 @@ const DailyCareModal = ({ open, onClose, child, actionType, onComplete }) => {
             sx={{ mt: 2 }}
           />
         );
+
+      case 'display': {
+        const sleepDuration = calculateSleepDuration(formData.bedtime, formData.wakeTime);
+        return (
+          <Box
+            sx={{
+              bgcolor: 'primary.light',
+              borderRadius: 2,
+              p: 1.5,
+              textAlign: 'center',
+              mt: 2,
+            }}
+          >
+            <Typography variant="body2" sx={{ fontWeight: 700, color: 'primary.dark' }}>
+              {sleepDuration !== null ? `${sleepDuration.toFixed(1)} hours` : 'Select bedtime and wake time'}
+            </Typography>
+          </Box>
+        );
+      }
 
       default:
         return null;

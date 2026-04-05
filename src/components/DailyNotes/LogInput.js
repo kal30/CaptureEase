@@ -4,6 +4,7 @@ import {
   Button,
   CircularProgress,
   Chip,
+  TextField,
   Typography,
 } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
@@ -25,6 +26,7 @@ const LogInput = ({ childId, selectedDate = new Date() }) => {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [selectedPhotoFile, setSelectedPhotoFile] = useState(null);
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState("");
+  const [selectedTime, setSelectedTime] = useState(() => new Date().toTimeString().slice(0, 5));
   const [user] = useAuthState(auth);
   const photoInputRef = useRef(null);
   const noteText = richTextData?.text || "";
@@ -90,6 +92,17 @@ const LogInput = ({ childId, selectedDate = new Date() }) => {
     setTimeout(() => setTemplateText(""), 100);
   };
 
+  const buildTimestampWithTime = (dateValue, timeValue) => {
+    const timestamp = new Date(dateValue);
+    if (timeValue) {
+      const [hours, minutes] = timeValue.split(":").map((value) => Number(value));
+      if (!Number.isNaN(hours) && !Number.isNaN(minutes)) {
+        timestamp.setHours(hours, minutes, 0, 0);
+      }
+    }
+    return timestamp;
+  };
+
   useEffect(() => {
     if (!selectedPhotoFile) {
       setPhotoPreviewUrl("");
@@ -131,10 +144,7 @@ const LogInput = ({ childId, selectedDate = new Date() }) => {
 
     try {
       // Create timestamp for the selected date
-      const entryTimestamp = new Date(selectedDate);
-      // Set to current time but keep the selected date
-      const now = new Date();
-      entryTimestamp.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
+      const entryTimestamp = buildTimestampWithTime(selectedDate, selectedTime);
 
       const docData = {
         // Required fields for Firestore rules
@@ -150,7 +160,7 @@ const LogInput = ({ childId, selectedDate = new Date() }) => {
 
         // Timestamp fields for UI
         timestamp: entryTimestamp, // Use selected date with current time
-        entryDate: selectedDate.toDateString(), // Store the selected date for filtering
+        entryDate: entryTimestamp.toDateString(), // Store the selected date for filtering
 
         // Author info (keeping for UI display)
         authorId: user?.uid,
@@ -264,6 +274,26 @@ const LogInput = ({ childId, selectedDate = new Date() }) => {
         onChange={handlePhotoSelect}
       />
       <Box sx={{ mt: 2, display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, flexWrap: 'wrap' }}>
+          <Typography sx={{ fontSize: '0.84rem', fontWeight: 700, color: '#51607a' }}>
+            Time
+          </Typography>
+          <TextField
+            type="time"
+            size="small"
+            value={selectedTime}
+            onChange={(e) => setSelectedTime(e.target.value)}
+            sx={{
+              width: 150,
+              '& .MuiOutlinedInput-root': {
+                borderRadius: '12px',
+                bgcolor: '#ffffff',
+                '& fieldset': { borderColor: '#d7dbe2' },
+              },
+            }}
+          />
+        </Box>
+
         <Button
           variant="outlined"
           onClick={() => photoInputRef.current?.click()}

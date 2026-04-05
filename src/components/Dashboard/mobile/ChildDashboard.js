@@ -29,6 +29,7 @@ import TimelineWidget from '../../UI/TimelineWidget';
 import CareTeamDisplay from '../../UI/CareTeamDisplay';
 import ChildManagementMenu from '../ChildManagementMenu';
 import { getChildAccent } from '../shared/childAccent';
+import { getTrackLogTypes } from '../../../constants/logTypeRegistry';
 import { useRole } from '../../../contexts/RoleContext';
 import { trackRenderDebug, useMountDebug } from '../../../utils/renderDebug';
 
@@ -74,10 +75,15 @@ const ChildDashboard = ({
   recentEntries = {},
   timelineSummary = {},
   incidents = {},
+  pauseScrollCollapse = false,
   onQuickEntry,
   onEditChild,
   onInviteTeamMember,
   onDailyReport,
+  onTrack,
+  onOpenSleepLog,
+  onOpenFoodLog,
+  onOpenMedicalLog,
   onMessages,
   onImportLogs,
   onBack,
@@ -105,29 +111,15 @@ const ChildDashboard = ({
   );
 
   useEffect(() => {
-    if (!isMobileViewport || typeof window === 'undefined') {
+    if (!isMobileViewport || pauseScrollCollapse || typeof window === 'undefined') {
       setIsCollapsed(false);
       return undefined;
     }
 
-    const updateCollapsedState = () => {
-      const y = window.scrollY || 0;
-      if (y <= 0) {
-        setIsCollapsed(false);
-        return;
-      }
-      if (y > 80) {
-        setIsCollapsed(true);
-      }
-    };
-
-    updateCollapsedState();
-    window.addEventListener('scroll', updateCollapsedState, { passive: true });
-
-    return () => {
-      window.removeEventListener('scroll', updateCollapsedState);
-    };
-  }, [isMobileViewport]);
+    // Keep the hero expanded by default to avoid scroll-driven reflow/jitter.
+    setIsCollapsed(false);
+    return undefined;
+  }, [isMobileViewport, pauseScrollCollapse]);
 
   if (!child) {
     return null;
@@ -143,6 +135,13 @@ const ChildDashboard = ({
   const userRole = getUserRoleForChild?.(child.id) || null;
   const canAddData = canAddDataForChild?.(child.id) ?? false;
   const switcherWidth = switcherAnchor?.clientWidth || 220;
+  const trackItems = getTrackLogTypes().map((item) => ({
+    key: item.category,
+    label: item.trackLabel,
+    emoji: item.icon,
+    palette: item.palette,
+    action: item.category === 'medication' ? 'medical' : item.category,
+  }));
 
   const handleRevealDashboard = () => {
     if (typeof window === 'undefined') {
@@ -572,6 +571,101 @@ const ChildDashboard = ({
                     </Box>
                   </Button>
                   </Box>
+
+                  <Box
+                    sx={{
+                      width: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 0.35,
+                    }}
+                  >
+                  <Box
+                    sx={{
+                      width: '100%',
+                      maxWidth: '100%',
+                      overflowX: 'auto',
+                      overflowY: 'hidden',
+                      WebkitOverflowScrolling: 'touch',
+                      scrollbarWidth: 'none',
+                      '&::-webkit-scrollbar': {
+                        display: 'none',
+                      },
+                      pb: 0.2,
+                      pr: 0,
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        display: 'inline-flex',
+                        width: 'max-content',
+                        maxWidth: 'none',
+                        alignItems: 'center',
+                        gap: 0.35,
+                        bgcolor: 'rgba(248, 250, 252, 0.72)',
+                        borderRadius: 1.25,
+                        px: 0.35,
+                        py: 0.65,
+                        boxSizing: 'border-box',
+                      }}
+                    >
+                      {trackItems.map((item) => (
+                        <Button
+                          key={item.key}
+                          variant="outlined"
+                          onClick={(e) => {
+                          e.stopPropagation();
+                          if (item.action === 'medical') {
+                            onOpenMedicalLog?.(child);
+                            return;
+                          }
+                          if (item.key === 'sleep') {
+                            onOpenSleepLog?.(child);
+                            return;
+                          }
+                          if (item.key === 'food') {
+                            onOpenFoodLog?.(child);
+                            return;
+                          }
+                          onTrack?.(child, item.key);
+                          }}
+                          sx={{
+                            minHeight: 54,
+                            height: 54,
+                            flex: '0 0 auto',
+                            minWidth: 154,
+                            width: 'auto',
+                            px: 2.05,
+                            borderRadius: 0.55,
+                            textTransform: 'none',
+                            fontWeight: 900,
+                            fontSize: '0.86rem',
+                            color: item.palette?.text || 'text.primary',
+                            backgroundColor: item.palette?.bg || 'rgba(255,255,255,0.96)',
+                            borderColor: item.palette?.border || 'rgba(100, 116, 139, 0.12)',
+                            boxShadow: 'none',
+                            whiteSpace: 'nowrap',
+                            flexShrink: 0,
+                            backdropFilter: 'blur(6px)',
+                            letterSpacing: '0.005em',
+                            '&:hover': {
+                              backgroundColor: item.palette?.bg || 'rgba(255,255,255,1)',
+                              borderColor: item.palette?.border || 'rgba(100, 116, 139, 0.22)',
+                              boxShadow: 'none',
+                            },
+                          }}
+                          >
+                          <Box component="span" sx={{ mr: 0.45, fontSize: '1.05rem', lineHeight: 1 }}>
+                            {item.emoji}
+                          </Box>
+                          <Box component="span" sx={{ fontWeight: 900 }}>
+                            {item.label}
+                          </Box>
+                        </Button>
+                      ))}
+                    </Box>
+                  </Box>
+                </Box>
                 </Box>
               ) : null}
             </Box>

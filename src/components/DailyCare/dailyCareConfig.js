@@ -46,66 +46,6 @@ export const getDailyCareConfig = (actionType, child) => {
       ]
     },
 
-    sleep: {
-      title: 'Detailed Sleep Quality',
-      icon: '😴',
-      description: `Comprehensive sleep pattern tracking for ${child?.name}`,
-      fields: [
-        {
-          key: 'bedtime',
-          label: 'What time did they go to bed?',
-          type: 'time',
-          required: true,
-        },
-        {
-          key: 'sleepDuration',
-          label: 'How many hours did they sleep?',
-          type: 'number',
-          min: 0,
-          max: 24,
-          placeholder: '8.5',
-          required: true,
-        },
-        {
-          key: 'sleepQuality',
-          label: 'Sleep Quality',
-          description: 'How well did they sleep?',
-          type: 'scale',
-          min: 1,
-          max: 5,
-          labels: ['😴 Very restless', '😔 Restless', '😐 Okay', '🙂 Good', '😊 Excellent'],
-          required: true,
-          defaultValue: 3,
-        },
-        {
-          key: 'sleepIssues',
-          label: 'Any sleep challenges?',
-          description: 'Select all that happened',
-          type: 'chips',
-          multiple: true,
-          options: [
-            { label: 'Hard to fall asleep', value: 'difficulty_falling_asleep', emoji: '😟' },
-            { label: 'Woke up often', value: 'frequent_waking', emoji: '😵' },
-            { label: 'Early waking', value: 'early_waking', emoji: '🌅' },
-            { label: 'Nightmares', value: 'nightmares', emoji: '😨' },
-            { label: 'Night terrors', value: 'night_terrors', emoji: '😱' },
-            { label: 'No issues', value: 'none', emoji: '✅' },
-          ],
-          required: false,
-        },
-        {
-          key: 'notes',
-          label: 'Sleep Notes',
-          description: 'Any other observations about their sleep?',
-          type: 'text',
-          multiline: true,
-          rows: 2,
-          placeholder: 'e.g., needed extra comfort, slept through the night...',
-          required: false,
-        }
-      ]
-    },
-
     energy: {
       title: 'Detailed Energy Level',
       icon: '⚡',

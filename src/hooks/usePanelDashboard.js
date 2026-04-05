@@ -9,16 +9,7 @@ import { useRole } from "../contexts/RoleContext";
 import { useDailyCareStatus } from "./useDailyCareStatus";
 import { listenForFollowUps, initializeNotificationsForPendingFollowUps, processQuickResponses, startQuickResponseListener } from "../services/followUpService";
 import { analyzeOtherIncidentPatterns, getIncidents } from "../services/incidentService";
-
-const QUICK_NOTE_CATEGORY_META = {
-  behavior: { type: 'behavior', label: 'Behavior', icon: '🌋', color: '#D32F2F' },
-  health: { type: 'health', label: 'Health', icon: '💊', color: '#00796B' },
-  mood: { type: 'mood', label: 'Mood', icon: '😰', color: '#F57F17' },
-  sleep: { type: 'sleep', label: 'Sleep', icon: '😴', color: '#1A237E' },
-  food: { type: 'food', label: 'Food', icon: '🍽️', color: '#E65100' },
-  milestone: { type: 'milestone', label: 'Win', icon: '⭐', color: '#2E7D32' },
-  log: { type: 'log', label: 'Daily Log', icon: '📝', color: '#64748B' },
-};
+import { getTimelineMetaForCategory } from "../constants/logTypeRegistry";
 
 const toEntryDate = (timestamp) => timestamp?.toDate?.() || new Date(timestamp);
 
@@ -131,6 +122,12 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
   const [showDailyCareModal, setShowDailyCareModal] = useState(false);
   const [dailyCareAction, setDailyCareAction] = useState(null);
   const [dailyCareChild, setDailyCareChild] = useState(null);
+  const [showSleepLogSheet, setShowSleepLogSheet] = useState(false);
+  const [sleepLogChild, setSleepLogChild] = useState(null);
+  const [showFoodLogSheet, setShowFoodLogSheet] = useState(false);
+  const [foodLogChild, setFoodLogChild] = useState(null);
+  const [showBathroomLogSheet, setShowBathroomLogSheet] = useState(false);
+  const [bathroomLogChild, setBathroomLogChild] = useState(null);
   const [showDailyReportModal, setShowDailyReportModal] = useState(false);
   const [dailyReportChild, setDailyReportChild] = useState(null);
   const [showIncidentModal, setShowIncidentModal] = useState(false);
@@ -277,6 +274,103 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
     };
   }, [childIdsKey, currentChildId, activeChildOnly]);
 
+  useEffect(() => {
+    if (!children.length) {
+      return undefined;
+    }
+
+    const handleTimelineEntryCreated = (event) => {
+      const entry = event?.detail;
+      if (!entry || entry.collection !== 'dailyLogs' || !entry.childId) {
+        return;
+      }
+
+      const entryTimestamp = toEntryDate(entry.timestamp);
+      if (Number.isNaN(entryTimestamp.getTime())) {
+        return;
+      }
+
+      const meta = getTimelineMetaForCategory(entry.category, { importantMoment: !!entry.importantMoment });
+      const optimisticEntry = {
+        id: entry.id || `local-${Date.now()}`,
+        childId: entry.childId,
+        type: meta.type,
+        timelineType: meta.type,
+        collection: 'dailyLogs',
+        category: entry.category || 'log',
+        title: entry.title || entry.titlePrefix || entry.text || meta.label,
+        content: entry.text || entry.content || '',
+        text: entry.text || entry.content || '',
+        notes: entry.notes || entry.bathroomDetails?.notes || null,
+        timestamp: entryTimestamp,
+        icon: meta.icon,
+        color: meta.color,
+        tags: entry.tags || [],
+        importantMoment: !!entry.importantMoment,
+        author: entry.authorName || entry.author || entry.loggedByUser || entry.authorEmail || 'Unknown',
+        loggedByUser: entry.authorName || entry.author || entry.loggedByUser || entry.authorEmail || 'Unknown',
+        userRole: entry.authorRole || null,
+        userId: entry.authorId || entry.createdBy || null,
+      };
+
+      setRecentEntries((current) => {
+        const currentEntries = current[entry.childId] || [];
+        const nextEntries = [
+          optimisticEntry,
+          ...currentEntries.filter((item) => item.id !== optimisticEntry.id),
+        ]
+          .sort((a, b) => toEntryDate(b.timestamp) - toEntryDate(a.timestamp))
+          .slice(0, 5);
+
+        return {
+          ...current,
+          [entry.childId]: nextEntries,
+        };
+      });
+
+      setAllEntries((current) => {
+        const currentEntries = current[entry.childId] || [];
+        const nextEntries = [
+          optimisticEntry,
+          ...currentEntries.filter((item) => item.id !== optimisticEntry.id),
+        ].sort((a, b) => toEntryDate(b.timestamp) - toEntryDate(a.timestamp));
+
+        return {
+          ...current,
+          [entry.childId]: nextEntries,
+        };
+      });
+
+      setTimelineSummary((current) => {
+        const childSummary = current[entry.childId] || {};
+        const childEntries = (allEntries[entry.childId] || []).length > 0
+          ? [optimisticEntry, ...(allEntries[entry.childId] || []).filter((item) => item.id !== optimisticEntry.id)]
+          : [optimisticEntry];
+        const todaysEntries = childEntries.filter((item) => {
+          const dayEntryDate = toEntryDate(item.timestamp);
+          const todayStart = new Date();
+          todayStart.setHours(0, 0, 0, 0);
+          return !Number.isNaN(dayEntryDate.getTime()) && dayEntryDate >= todayStart;
+        });
+
+        return {
+          ...current,
+          [entry.childId]: {
+            ...childSummary,
+            totalEntries: Math.max(childSummary.totalEntries || 0, todaysEntries.length),
+            todayCount: Math.max(childSummary.todayCount || 0, todaysEntries.length),
+            weekCount: Math.max(childSummary.weekCount || 0, childEntries.length),
+            activityStreak: Math.max(childSummary.activityStreak || 0, 1),
+            lastActivityTime: formatTimeForSummary(entryTimestamp),
+          },
+        };
+      });
+    };
+
+    window.addEventListener('captureez:timeline-entry-created', handleTimelineEntryCreated);
+    return () => window.removeEventListener('captureez:timeline-entry-created', handleTimelineEntryCreated);
+  }, [children, allEntries]);
+
   // Listen for follow-up reminders
   useEffect(() => {
     if (children.length === 0) return;
@@ -306,10 +400,16 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
 
     setCurrentChildId(child.id);
 
-    if (type === "mood" || type === "sleep") {
+    if (type === "mood") {
       setDailyCareAction(type);
       setDailyCareChild(child);
       setShowDailyCareModal(true);
+      return;
+    }
+
+    if (type === "sleep") {
+      setSleepLogChild(child);
+      setShowSleepLogSheet(true);
       return;
     }
 
@@ -352,16 +452,17 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
 
   const handleQuickEntryComplete = (entry) => {
     if (selectedChild && entry?.text) {
-      const meta = QUICK_NOTE_CATEGORY_META[entry.category] || QUICK_NOTE_CATEGORY_META.log;
+      const meta = getTimelineMetaForCategory(entry.category, { importantMoment: !!entry.importantMoment });
       const optimisticEntry = {
         id: `local-${Date.now()}`,
         childId: selectedChild.id,
         type: meta.type,
         timelineType: meta.type,
         category: entry.category || 'log',
-        title: meta.label,
+        title: entry.title || entry.titlePrefix || meta.label,
         content: entry.text,
         text: entry.text,
+        notes: entry.notes || entry.bathroomDetails?.notes || null,
         timestamp: entry.timestamp || new Date(),
         icon: meta.icon,
         color: meta.color,
@@ -452,7 +553,28 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
     setDailyCareChild(null);
   };
 
+  const handleCloseSleepLogSheet = () => {
+    setShowSleepLogSheet(false);
+    setSleepLogChild(null);
+  };
+
+  const handleCloseFoodLogSheet = () => {
+    setShowFoodLogSheet(false);
+    setFoodLogChild(null);
+  };
+
+  const handleCloseBathroomLogSheet = () => {
+    setShowBathroomLogSheet(false);
+    setBathroomLogChild(null);
+  };
+
   const handleDailyReportEdit = (actionType) => {
+    if (actionType === 'sleep') {
+      setSleepLogChild(dailyReportChild);
+      setShowSleepLogSheet(true);
+      return;
+    }
+
     setDailyCareAction(actionType);
     setDailyCareChild(dailyReportChild);
     setShowDailyCareModal(true);
@@ -531,6 +653,75 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
     setShowCareReportModal(true);
   };
 
+  const handleOpenMedicalLog = (child) => {
+    if (!child) {
+      return;
+    }
+
+    setCurrentChildId(child.id);
+    navigate('/medical');
+  };
+
+  const handleOpenSleepLog = (child) => {
+    if (!child || !canAddDataForChild?.(child.id)) {
+      return;
+    }
+
+    setCurrentChildId(child.id);
+    setSleepLogChild(child);
+    setShowSleepLogSheet(true);
+  };
+
+  const handleTrack = (child, initialCategoryId = null) => {
+    if (!child || !canAddDataForChild?.(child.id)) {
+      return;
+    }
+
+    setCurrentChildId(child.id);
+
+    if (initialCategoryId === 'sleep') {
+      setSleepLogChild(child);
+      setShowSleepLogSheet(true);
+      return;
+    }
+
+    if (initialCategoryId === 'food') {
+      setFoodLogChild(child);
+      setShowFoodLogSheet(true);
+      return;
+    }
+
+    if (initialCategoryId === 'bathroom' || initialCategoryId === 'diaper') {
+      setBathroomLogChild(child);
+      setShowBathroomLogSheet(true);
+      return;
+    }
+
+    setDailyHabitsChild(child);
+    setDailyHabitsInitialCategoryId(initialCategoryId || null);
+    setShowDailyHabitsModal(true);
+  };
+
+  const handleOpenFoodLog = (child) => {
+    if (!child || !canAddDataForChild?.(child.id)) {
+      return;
+    }
+
+    setCurrentChildId(child.id);
+    setFoodLogChild(child);
+    setShowFoodLogSheet(true);
+  };
+
+  const handleOpenBathroomLog = (child) => {
+    if (!child || !canAddDataForChild?.(child.id)) {
+      return;
+    }
+
+    setCurrentChildId(child.id);
+    setBathroomLogChild(child);
+    setShowBathroomLogSheet(true);
+  };
+
   const handleMessages = (child) => {
     // Navigate to messages page with child context
     setCurrentChildId(child.id);
@@ -540,7 +731,13 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
   const handleGroupActionClick = (action, child) => {
     setCurrentChildId(child.id);
 
-    if (["mood", "sleep", "food_health", "safety"].includes(action.key)) {
+    if (action.key === "sleep") {
+      setSleepLogChild(child);
+      setShowSleepLogSheet(true);
+      return;
+    }
+
+    if (["mood", "food_health", "safety"].includes(action.key)) {
       setDailyCareAction(action.key);
       setDailyCareChild(child);
       setShowDailyCareModal(true);
@@ -625,6 +822,12 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
     showDailyCareModal,
     dailyCareAction,
     dailyCareChild,
+    showSleepLogSheet,
+    sleepLogChild,
+    showFoodLogSheet,
+    foodLogChild,
+    showBathroomLogSheet,
+    bathroomLogChild,
     showDailyReportModal,
     dailyReportChild,
     showIncidentModal,
@@ -663,6 +866,9 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
     setSelectedChildForEdit,
     handleEditChildSuccess,
     handleCloseDailyCareModal,
+    handleCloseSleepLogSheet,
+    handleCloseFoodLogSheet,
+    handleCloseBathroomLogSheet,
     handleDailyCareComplete,
     handleCloseDailyReportModal,
     handleDailyReportEdit,
@@ -672,6 +878,11 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
     handleCreateCustomCategories,
     setShowDailyHabitsModal,
     handleCloseDailyHabitsModal,
+    handleTrack,
+    handleOpenSleepLog,
+    handleOpenFoodLog,
+    handleOpenBathroomLog,
+    handleOpenMedicalLog,
     handleShowCareReport,
     handleCloseCareReportModal,
     showCareReportModal,

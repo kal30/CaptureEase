@@ -420,7 +420,8 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
                     {...params}
                     label="Current Medications"
                     variant="outlined"
-                    helperText="List any current medications and dosages"
+                    placeholder="Quick summary for profile context — use Medical Log for detailed dose tracking"
+                    helperText="Quick summary for profile context — use Medical Log for detailed dose tracking"
                     sx={{ mb: 3 }}
                   />
                 )}

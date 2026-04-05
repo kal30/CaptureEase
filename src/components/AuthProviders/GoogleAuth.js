@@ -4,7 +4,7 @@ import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "../../services/firebase";
 import { useNavigate, useLocation } from "react-router-dom";
 import { handlePostAuthRedirect } from "../../services/auth/navigation";
-import { Box, Button, Typography, Container } from "@mui/material";
+import { Box, Button } from "@mui/material";
 import GoogleIcon from "@mui/icons-material/Google"; // Import Google Icon
 
 const GoogleAuth = ({ buttonText }) => {
@@ -55,46 +55,38 @@ const GoogleAuth = ({ buttonText }) => {
   };
 
   return (
-    <Container maxWidth="xs">
-      <Box
+    <Box sx={{ width: "100%" }}>
+      <Button
+        fullWidth
+        variant="contained"
+        startIcon={<GoogleIcon />}
+        onClick={handleGoogleLogin}
         sx={{
-          marginTop: 8,
+          backgroundColor: "white",
+          color: "#757575",
+          border: "1px solid #dadce0",
+          padding: "12px 24px",
+          textTransform: "none",
+          fontSize: "16px",
+          fontWeight: 500,
           display: "flex",
-          flexDirection: "column",
           alignItems: "center",
+          justifyContent: "center",
+          borderRadius: "8px",
+          boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+          "&:hover": {
+            backgroundColor: "#f8f9fa",
+            boxShadow: "0 4px 8px rgba(0,0,0,0.15)",
+            border: "1px solid #c6c6c6"
+          },
+          "&:active": {
+            backgroundColor: "#f1f3f4"
+          }
         }}
       >
-
-        <Button
-          variant="contained"
-          startIcon={<GoogleIcon />}
-          onClick={handleGoogleLogin}
-          sx={{
-            backgroundColor: "white",
-            color: "#757575",
-            border: "1px solid #dadce0",
-            padding: "12px 24px",
-            textTransform: "none",
-            fontSize: "16px",
-            fontWeight: 500,
-            display: "flex",
-            alignItems: "center",
-            borderRadius: "8px",
-            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-            "&:hover": { 
-              backgroundColor: "#f8f9fa",
-              boxShadow: "0 4px 8px rgba(0,0,0,0.15)",
-              border: "1px solid #c6c6c6"
-            },
-            "&:active": {
-              backgroundColor: "#f1f3f4"
-            }
-          }}
-        >
-          {buttonText} {/* Use custom button text */}
-        </Button>
-      </Box>
-    </Container>
+        {buttonText}
+      </Button>
+    </Box>
   );
 };
 

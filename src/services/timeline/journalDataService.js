@@ -1,4 +1,4 @@
-import { 
+import {
   collection, 
   query, 
   where, 
@@ -7,18 +7,13 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { getDayDateRange, isWithinDateRange } from './dateUtils';
-
-const JOURNAL_CATEGORY_META = {
-  behavior: { type: 'behavior', timelineType: 'behavior', titlePrefix: 'Behavior', color: '#D32F2F' },
-  health: { type: 'health', timelineType: 'health', titlePrefix: 'Health', color: '#00796B' },
-  mood: { type: 'mood', timelineType: 'mood', titlePrefix: 'Mood', color: '#F57F17' },
-  sleep: { type: 'sleep', timelineType: 'sleep', titlePrefix: 'Sleep', color: '#1A237E' },
-  food: { type: 'food', timelineType: 'food', titlePrefix: 'Food', color: '#E65100' },
-  milestone: { type: 'milestone', timelineType: 'milestone', titlePrefix: 'Win', color: '#2E7D32' },
-  log: { type: 'journal', timelineType: 'journal', titlePrefix: 'Daily Log' }
-};
+import { getLogTypeByEntry, getTimelineMetaForCategory } from '../../constants/logTypeRegistry';
 
 const buildJournalTitle = (data, categoryMeta) => {
+  if (data.titlePrefix?.trim()) {
+    return data.titlePrefix.trim();
+  }
+
   if (data.title?.trim()) {
     return data.title.trim();
   }
@@ -42,18 +37,25 @@ const buildJournalTitle = (data, categoryMeta) => {
 
 const mapJournalEntry = (doc) => {
   const data = doc.data();
-  const categoryMeta = JOURNAL_CATEGORY_META[data.category] || JOURNAL_CATEGORY_META.log;
+  const categoryType = getLogTypeByEntry(data);
+  const categoryMeta = getTimelineMetaForCategory(categoryType.category);
+  const notesText = data.notes || data.sleepDetails?.notes || data.bathroomDetails?.notes || data.content || data.text || null;
 
   return {
     id: doc.id,
     ...data,
     timestamp: data.timestamp?.toDate() || new Date(data.createdAt),
+    category: categoryType.category,
     type: categoryMeta.type,
     timelineType: categoryMeta.timelineType,
     collection: 'dailyLogs',
     title: buildJournalTitle(data, categoryMeta),
     titlePrefix: categoryMeta.titlePrefix,
-    color: categoryMeta.color
+    label: categoryMeta.label,
+    icon: categoryMeta.icon,
+    color: categoryMeta.color,
+    content: notesText,
+    notes: notesText,
   };
 };
 

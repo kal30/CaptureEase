@@ -380,7 +380,10 @@ service cloud.firestore {
       allow create: if isAuthenticated() && 
         request.resource.data.childId != null && 
         hasChildAccess(request.auth.uid, request.resource.data.childId) &&
-        !(hasChildRoleForRequest('therapists')) &&
+        (
+          !(hasChildRoleForRequest('therapists')) ||
+          request.resource.data.category in ['medication','food','bathroom','health']
+        ) &&
         request.resource.data.keys().hasAll(['createdBy', 'createdAt', 'childId', 'type']) &&
         request.resource.data.type is string &&
         request.resource.data.type.size() > 0;
@@ -404,7 +407,10 @@ service cloud.firestore {
       allow create: if isAuthenticated() && 
         request.resource.data.childId != null && 
         hasChildAccess(request.auth.uid, request.resource.data.childId) &&
-        !(hasChildRoleForRequest('therapists')) &&
+        (
+          !(hasChildRoleForRequest('therapists')) ||
+          request.resource.data.category in ['medication','food','bathroom','health']
+        ) &&
         request.resource.data.keys().hasAll(['createdBy', 'createdAt', 'childId', 'text']) &&
         request.resource.data.text is string &&
         request.resource.data.text.size() > 0 &&
@@ -413,7 +419,7 @@ service cloud.firestore {
         request.resource.data.status == 'active' &&
         // Optional fields validation
         (!('tags' in request.resource.data) || request.resource.data.tags is list) &&
-        (!('category' in request.resource.data) || request.resource.data.category in ['mealtime','mood','sleep','milestone','challenge','medical_note']);
+        (!('category' in request.resource.data) || request.resource.data.category in ['mealtime','mood','sleep','milestone','challenge','medical_note','medication','food','bathroom','health']);
       
       // READ: All roles with child access (child must be active)
       allow read: if isAuthenticated() && 
@@ -447,7 +453,7 @@ service cloud.firestore {
           request.resource.data.text.size() <= 10000)) &&
         // Optional fields validation for updates
         (!('tags' in request.resource.data) || request.resource.data.tags is list) &&
-        (!('category' in request.resource.data) || request.resource.data.category in ['mealtime','mood','sleep','milestone','challenge','medical_note']);
+        (!('category' in request.resource.data) || request.resource.data.category in ['mealtime','mood','sleep','milestone','challenge','medical_note','medication','food','bathroom','health']);
     }
     
     match /journal_entries/{entryId} {
@@ -508,9 +514,22 @@ service cloud.firestore {
     
     // Daily logs 
     match /dailyLogs/{logId} {
-      // CREATE: Owner, Care Partners, Caregivers (NOT Therapists)
-      allow create: if canCreateIncidentLogs() &&
-        request.resource.data.keys().hasAll(['createdBy', 'createdAt', 'childId']);
+      // CREATE: Owner, Care Partners, Caregivers (NOT Therapists) + Data validation
+      allow create: if isAuthenticated() && 
+        request.resource.data.childId != null && 
+        hasChildAccess(request.auth.uid, request.resource.data.childId) &&
+        (
+          !(hasChildRoleForRequest('therapists')) ||
+          request.resource.data.category in ['medication','food','bathroom','health']
+        ) &&
+        request.resource.data.keys().hasAll(['createdBy', 'createdAt', 'childId', 'text']) &&
+        request.resource.data.text is string &&
+        request.resource.data.text.size() > 0 &&
+        request.resource.data.text.size() <= 10000 &&
+        request.resource.data.createdBy == request.auth.uid &&
+        request.resource.data.status == 'active' &&
+        (!('tags' in request.resource.data) || request.resource.data.tags is list) &&
+        (!('category' in request.resource.data) || request.resource.data.category in ['mealtime','mood','sleep','milestone','challenge','medical_note','medication','food','bathroom','health']);
       
       // READ: All roles with child access
       allow read: if canReadChildData();

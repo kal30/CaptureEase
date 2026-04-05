@@ -18,6 +18,7 @@ import { createFilterOptions } from '@mui/material/Autocomplete';
  * @param {Function} props.onChange - Value change handler
  * @param {string} props.label - Field label
  * @param {string} props.helperText - Helper text (optional)
+ * @param {string} props.placeholder - Input placeholder text (optional)
  * @param {Function} props.renderTags - Custom tag renderer (optional)
  * @param {Function} props.getOptionLabel - How to display options (for objects)
  * @param {string} props.addText - Custom text for add button (default: "Add")
@@ -29,6 +30,7 @@ const CustomizableAutocomplete = ({
   onChange,
   label,
   helperText,
+  placeholder,
   renderTags,
   getOptionLabel,
   addText = "Add",
@@ -149,6 +151,7 @@ const CustomizableAutocomplete = ({
           {...params}
           label={label}
           variant="outlined"
+          placeholder={placeholder}
           helperText={helperText || `Select from list or type custom ${label?.toLowerCase()} and click the + option (or press Enter)`}
           sx={sx}
         />

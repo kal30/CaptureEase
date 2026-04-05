@@ -140,11 +140,11 @@ const ChildCardHeader = memo(({
           </Box>
         ) : (
           <>
-            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.25, mb: { xs: 0.25, md: 0.5 } }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.12, mb: { xs: 0.25, md: 0.5 } }}>
               <Typography
                 variant="h5"
                 sx={{
-                  flex: 1,
+                  flex: '0 1 auto',
                   minWidth: 0,
                   fontWeight: 700,
                   fontSize: { xs: '1.05rem', md: '1.4rem' },
@@ -152,7 +152,7 @@ const ChildCardHeader = memo(({
                   overflow: { xs: 'visible', md: 'hidden' },
                   textOverflow: { xs: 'clip', md: 'ellipsis' },
                   whiteSpace: { xs: 'normal', md: 'nowrap' },
-                  color: 'text.primary'
+                  color: 'text.primary',
                 }}
                 title={child.name}
               >

@@ -19,6 +19,7 @@ import {
 import { alpha, useTheme } from '@mui/material/styles';
 import { getEntryTypeMeta, mapLegacyType } from '../../constants/timeline';
 import { getIncidentDisplayInfo, getJournalDisplayInfo } from '../../constants/uiDisplayConstants';
+import { getLogTypeByCategory, getLogTypeByEntry } from '../../constants/logTypeRegistry';
 
 /**
  * UnifiedTimelineEntry - Single timeline entry display with expandable details
@@ -47,7 +48,10 @@ const UnifiedTimelineEntry = ({
   const theme = useTheme();
   const normalizedType = mapLegacyType(entry.type);
   const typeMeta = getEntryTypeMeta(entry.type);
-  const typeColor = entry.color || theme.palette.timeline?.entries?.[typeMeta.key] || theme.palette.primary.main;
+  const categoryType = getLogTypeByEntry(entry);
+  const categoryMeta = getLogTypeByCategory(categoryType.category || entry.category || entry.type);
+  const isDailyLogEntry = entry.collection === 'dailyLogs' || normalizedType === 'journal';
+  const typeColor = entry.color || categoryMeta.palette?.dot || theme.palette.timeline?.entries?.[typeMeta.key] || theme.palette.primary.main;
 
   // Get user role color using centralized theme.palette.roles
   const getUserRoleColor = (userRole) => {
@@ -75,6 +79,9 @@ const UnifiedTimelineEntry = ({
 
   // Get entry preview content
   const getPreviewContent = () => {
+    const notesText = entry.notes || entry.sleepDetails?.notes || entry.bathroomDetails?.notes || '';
+    const combinedText = [entry.text, entry.content, notesText].filter(Boolean).join(' — ');
+
     switch (entry.type) {
       case 'incident':
         return {
@@ -84,8 +91,12 @@ const UnifiedTimelineEntry = ({
         };
       case 'journal':
         return {
-          primary: entry.title || `${journalDisplay.label} Entry`,
-          secondary: entry.content?.substring(0, 100) + (entry.content?.length > 100 ? '...' : ''),
+          primary: isDailyLogEntry
+            ? (entry.titlePrefix || entry.title || categoryMeta.trackLabel || categoryMeta.displayLabel || journalDisplay.label)
+            : (entry.title || `${journalDisplay.label} Entry`),
+          secondary: combinedText
+            ? combinedText.substring(0, 100) + (combinedText.length > 100 ? '...' : '')
+            : null,
           hasMedia: false
         };
       case 'behavior':
@@ -101,8 +112,8 @@ const UnifiedTimelineEntry = ({
         };
       case 'dailyLog':
         return {
-          primary: `${entry.activityType || 'Activity'} - ${entry.mood || 'No mood recorded'}`,
-          secondary: entry.notes || entry.description,
+          primary: entry.title || entry.titlePrefix || categoryMeta.trackLabel || categoryMeta.displayLabel || `${entry.activityType || 'Activity'}`,
+          secondary: combinedText || entry.description,
           hasMedia: false
         };
       case 'followUp':
@@ -113,8 +124,8 @@ const UnifiedTimelineEntry = ({
         };
       default:
         return {
-          primary: entry.title || 'Timeline Entry',
-          secondary: entry.description || entry.content,
+          primary: entry.title || entry.titlePrefix || categoryMeta.trackLabel || categoryMeta.displayLabel || 'Timeline Entry',
+          secondary: combinedText || entry.description,
           hasMedia: false
         };
     }
@@ -160,7 +171,9 @@ const UnifiedTimelineEntry = ({
             {/* Title Row */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
               <Chip
-                label={typeMeta.label.replace(/s$/, '')}
+                label={isDailyLogEntry
+                  ? (entry.titlePrefix || categoryMeta.trackLabel || categoryMeta.displayLabel || typeMeta.label.replace(/s$/, ''))
+                  : typeMeta.label.replace(/s$/, '')}
                 size="small"
                 variant="filled"
                 sx={{ 

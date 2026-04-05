@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { getIncidentDisplayInfo } from '../constants/uiDisplayConstants';
+import { getLogTypeByCategory, getLogTypeByEntry } from '../constants/logTypeRegistry';
 import { getIncidentTypeConfig, getSeverityScale } from '../services/incidentService';
 
 /**
@@ -68,11 +69,22 @@ export const useUnifiedDailyLog = (timelineEntries = [], incidents = [], selecte
     
     // Combine all entries
     const allEntries = [
-      ...dayTimelineEntries.map(entry => ({
-        ...entry,
-        entryType: entry.type, // Keep original type (daily_note, mood_log, etc.)
-        isTimelineEntry: true
-      })),
+      ...dayTimelineEntries.map(entry => {
+        const inferredCategory = getLogTypeByEntry(entry).category;
+        const categoryMeta = inferredCategory ? getLogTypeByCategory(inferredCategory) : null;
+        const displayLabel = categoryMeta?.trackLabel || categoryMeta?.displayLabel || entry.label || entry.titlePrefix || entry.type;
+
+        return {
+          ...entry,
+          category: inferredCategory || entry.category,
+          entryType: entry.type, // Keep original type (daily_note, mood_log, etc.)
+          label: entry.label || displayLabel,
+          titlePrefix: entry.titlePrefix || categoryMeta?.displayLabel || null,
+          content: entry.content || entry.notes || entry.sleepDetails?.notes || entry.bathroomDetails?.notes || entry.description || entry.summary || entry.text || null,
+          notes: entry.notes || entry.sleepDetails?.notes || entry.bathroomDetails?.notes || null,
+          isTimelineEntry: true
+        };
+      }),
       ...normalizedIncidents
     ];
     
@@ -153,10 +165,18 @@ export const useUnifiedDailyLog = (timelineEntries = [], incidents = [], selecte
     }
     
     // For timeline entries, use existing type config
+    const categoryType = getLogTypeByEntry(entry);
+    const categoryMeta = getLogTypeByCategory(categoryType.category || entry.category);
     return {
-      icon: entry.icon,
+      icon: entry.icon || categoryMeta.icon,
       color: entry.color,
-      label: entry.label || entry.type
+      label: entry.label
+        || entry.title
+        || entry.titlePrefix
+        || categoryMeta?.trackLabel
+        || categoryMeta?.displayLabel
+        || categoryType.displayLabel
+        || entry.type
     };
   };
   

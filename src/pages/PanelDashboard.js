@@ -4,6 +4,11 @@ import {
   Container,
   Typography,
   Modal,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  IconButton,
+  Drawer,
   CircularProgress,
   Fade,
   Button,
@@ -12,6 +17,7 @@ import {
   Alert,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
+import CloseIcon from "@mui/icons-material/Close";
 
 // Hooks and Services
 import { usePanelDashboard } from "../hooks/usePanelDashboard";
@@ -25,9 +31,13 @@ import AddChildModal from "../components/Dashboard/AddChildModal";
 import EditChildModal from "../components/Dashboard/EditChildModal";
 import DailyCareModal from "../components/DailyCare/DailyCareModal";
 import DailyReportModal from "../components/DailyCare/DailyReportModal";
+import SleepLogSheet from "../components/Sleep/SleepLogSheet";
+import FoodLogSheet from "../components/Dashboard/FoodLogSheet";
+import BathroomLogSheet from "../components/Dashboard/BathroomLogSheet";
 import { IncidentLoggingModal, IncidentFollowUpModal } from "../components/Dashboard/Incidents";
 import PatternSuggestionModal from "../components/Dashboard/PatternSuggestionModal";
 import DailyHabitsModal from "../components/Dashboard/DailyHabitsModal";
+import MedicationsLogTab from "./MedicalLog/MedicationsLogTab";
 import { ImportLogsModal, extractTextFromImportFile, parseImportedLogs } from "../components/Dashboard/ImportLogs";
 import DailyCareReport from "../components/Reports/DailyCareReport";
 import { DashboardViewProvider } from "../components/Dashboard/shared/DashboardViewContext";
@@ -46,6 +56,8 @@ const PanelDashboard = () => {
   const [importInitialChildId, setImportInitialChildId] = useState('');
   const [importLoading, setImportLoading] = useState(false);
   const [importError, setImportError] = useState('');
+  const [showMedicalLogPanel, setShowMedicalLogPanel] = useState(false);
+  const [medicalLogChild, setMedicalLogChild] = useState(null);
   useMountDebug('PanelDashboard');
   trackRenderDebug('PanelDashboard', {
     isMobile,
@@ -77,6 +89,21 @@ const PanelDashboard = () => {
     if (child) {
       hook.handleShowCareReport(child);
     }
+  };
+
+  const handleOpenMedicalLog = (child) => {
+    if (!child) {
+      return;
+    }
+
+    hook.setCurrentChildId(child.id);
+    setMedicalLogChild(child);
+    setShowMedicalLogPanel(true);
+  };
+
+  const handleCloseMedicalLog = () => {
+    setShowMedicalLogPanel(false);
+    setMedicalLogChild(null);
   };
 
   const handleImportFileChange = async (event) => {
@@ -267,9 +294,31 @@ const PanelDashboard = () => {
               onEditChild={hook.handleEditChild}
               onInviteTeamMember={hook.handleInviteTeamMember}
               onDailyReport={hook.handleShowCareReport}
+              onTrack={hook.handleTrack}
+              onOpenSleepLog={hook.handleOpenSleepLog}
+              onOpenFoodLog={hook.handleOpenFoodLog}
+              onOpenBathroomLog={hook.handleOpenBathroomLog}
+              onOpenMedicalLog={handleOpenMedicalLog}
               onMessages={hook.handleMessages}
               onImportLogs={handleImportLogsClick}
               onAddChildClick={() => hook.setShowAddChildModal(true)}
+              showSleepLogSheet={
+                hook.showSleepLogSheet
+                || hook.showFoodLogSheet
+                || hook.showBathroomLogSheet
+                || hook.showDailyCareModal
+                || hook.showDailyHabitsModal
+                || hook.showQuickEntry
+                || hook.showDailyReportModal
+                || hook.showIncidentModal
+                || hook.showFollowUpModal
+                || hook.showPatternSuggestionModal
+                || hook.showFoodLogSheet
+                || showImportModal
+                || showMedicalLogPanel
+              }
+              showFoodLogSheet={hook.showFoodLogSheet}
+              showBathroomLogSheet={hook.showBathroomLogSheet}
             />
           ) : (
             <DesktopDashboardOverview
@@ -277,6 +326,10 @@ const PanelDashboard = () => {
               actionGroups={actionGroups}
               onAddChildClick={() => hook.setShowAddChildModal(true)}
               onImportLogs={handleImportLogsClick}
+              onTrack={hook.handleTrack}
+              onOpenFoodLog={hook.handleOpenFoodLog}
+              onOpenBathroomLog={hook.handleOpenBathroomLog}
+              onOpenMedicalLog={handleOpenMedicalLog}
             />
           )}
         </DashboardViewProvider>
@@ -335,6 +388,24 @@ const PanelDashboard = () => {
         child={hook.dailyCareChild}
         actionType={hook.dailyCareAction}
         onComplete={hook.handleDailyCareComplete}
+      />
+
+      <SleepLogSheet
+        open={hook.showSleepLogSheet}
+        onClose={hook.handleCloseSleepLogSheet}
+        child={hook.sleepLogChild}
+      />
+
+      <FoodLogSheet
+        open={hook.showFoodLogSheet}
+        onClose={hook.handleCloseFoodLogSheet}
+        child={hook.foodLogChild}
+      />
+
+      <BathroomLogSheet
+        open={hook.showBathroomLogSheet}
+        onClose={hook.handleCloseBathroomLogSheet}
+        child={hook.bathroomLogChild}
       />
 
       <DailyReportModal
@@ -408,6 +479,72 @@ const PanelDashboard = () => {
           handleViewImportedPrep(child);
         }}
       />
+
+      {isMobile ? (
+        <Drawer
+          anchor="bottom"
+          open={showMedicalLogPanel}
+          onClose={handleCloseMedicalLog}
+          PaperProps={{
+            sx: {
+              borderTopLeftRadius: 4,
+              borderTopRightRadius: 4,
+              maxHeight: '92vh',
+            },
+          }}
+        >
+          <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                {medicalLogChild?.name ? `${medicalLogChild.name}'s Medications` : 'Medications'}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Child-specific medication list and dose logging
+              </Typography>
+            </Box>
+            <IconButton onClick={handleCloseMedicalLog} aria-label="close medical log">
+              <CloseIcon />
+            </IconButton>
+          </Box>
+          <Box sx={{ p: 2, overflowY: 'auto' }}>
+            <MedicationsLogTab childId={medicalLogChild?.id || hook.currentChildId} />
+          </Box>
+        </Drawer>
+      ) : (
+        <Dialog
+          open={showMedicalLogPanel}
+          onClose={handleCloseMedicalLog}
+          fullWidth
+          maxWidth="lg"
+          PaperProps={{
+            sx: {
+              borderRadius: 3,
+              minHeight: '70vh',
+            },
+          }}
+        >
+          <DialogTitle sx={{ pr: 6 }}>
+            <Box>
+              <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                {medicalLogChild?.name ? `${medicalLogChild.name}'s Medications` : 'Medications'}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                Child-specific medication list and dose logging
+              </Typography>
+            </Box>
+            <IconButton
+              onClick={handleCloseMedicalLog}
+              aria-label="close medical log"
+              sx={{ position: 'absolute', right: 16, top: 16 }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent sx={{ pt: 0, pb: 3 }}>
+            <MedicationsLogTab childId={medicalLogChild?.id || hook.currentChildId} />
+          </DialogContent>
+        </Dialog>
+      )}
 
       <Modal
         open={importLoading}

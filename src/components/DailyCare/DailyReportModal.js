@@ -73,7 +73,7 @@ const DailyReportModal = ({ open, onClose, child, onEditAction }) => {
       label: 'Sleep',
       icon: '😴',
       color: theme.palette.dailyCare.primary,
-      getSummary: (data) => data ? `${data.sleepDuration || 0} hrs, ${data.sleepQuality}/5 quality` : null
+      getSummary: (data) => data ? `${data.sleepDuration || 0} hrs, ${data.sleepQuality}/10 quality` : null
     },
     {
       key: 'energy',

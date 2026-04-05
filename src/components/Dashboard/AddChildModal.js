@@ -363,7 +363,8 @@ const AddChildModal = ({ open, onClose, onSuccess }) => {
                 onChange={(event, newValue) => setCurrentMedications(newValue)}
                 label="Current Medications"
                 addText="Add medication"
-                helperText="List current medications and dosages"
+                helperText="Quick summary for profile context — use Medical Log for detailed dose tracking"
+                placeholder="Quick summary for profile context — use Medical Log for detailed dose tracking"
                 sx={{ mb: 3 }}
               />
 

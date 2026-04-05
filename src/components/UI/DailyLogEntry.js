@@ -154,17 +154,17 @@ const DailyLogEntry = ({
             
             {/* Entry Summary and Chips */}
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
-              <Typography 
-                variant="body2" 
-                color="text.secondary"
-                sx={{ 
-                  flex: 1,
-                  overflow: 'hidden',
+                <Typography 
+                  variant="body2" 
+                  color="text.secondary"
+                  sx={{ 
+                    flex: 1,
+                    overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: expanded ? 'normal' : 'nowrap'
                 }}
-              >
-                {entry.content}
+                >
+                {entry.content || entry.notes}
               </Typography>
               
               {/* Status Chips and Expand Button */}

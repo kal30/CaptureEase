@@ -12,7 +12,14 @@ import VideocamIcon from "@mui/icons-material/Videocam";
 import MicIcon from "@mui/icons-material/Mic";
 import StopIcon from "@mui/icons-material/Stop";
 
-const RichTextInput = ({ onDataChange, clearData, templateText, placeholder }) => {
+const RichTextInput = ({
+  onDataChange,
+  clearData,
+  templateText,
+  placeholder,
+  hideMediaControls = false,
+  hidePhotoButton = false,
+}) => {
   const [text, setText] = useState("");
   const [mediaFile, setMediaFile] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
@@ -183,56 +190,62 @@ const RichTextInput = ({ onDataChange, clearData, templateText, placeholder }) =
         onChange={(e) => setText(e.target.value)}
         sx={{ pr: '48px' }} // Add padding to the right to make space for the icons
       />
-      <Box
-        sx={{
-          position: 'absolute',
-          bottom: 8,
-          right: 8,
-          display: 'flex',
-          gap: '4px',
-        }}
-      >
-        <input
-          accept="image/*"
-          id={imageInputId}
-          type="file"
-          capture="environment"
-          style={{ display: "none" }}
-          onChange={(e) => handleFileChange(e, "image")}
-        />
-        <label htmlFor={imageInputId}>
-          <IconButton color="primary" component="span" size="small">
-            <AddPhotoAlternateIcon />
-          </IconButton>
-        </label>
-
-        <IconButton color="primary" onClick={handleCameraClick} size="small">
-          <PhotoCameraIcon />
-        </IconButton>
-
-        <input
-          accept="video/*"
-          id={videoInputId}
-          type="file"
-          capture="environment"
-          style={{ display: "none" }}
-          onChange={(e) => handleFileChange(e, "video")}
-        />
-        <label htmlFor={videoInputId}>
-          <IconButton color="primary" component="span" size="small">
-            <VideocamIcon />
-          </IconButton>
-        </label>
-
-        <IconButton
-          color="primary"
-          onClick={isRecording ? stopRecording : startRecording}
-          size="small"
+      {!hideMediaControls ? (
+        <Box
+          sx={{
+            position: 'absolute',
+            bottom: 8,
+            right: 8,
+            display: 'flex',
+            gap: '4px',
+          }}
         >
-          {isRecording ? <StopIcon sx={{ color: "red" }} /> : <MicIcon />}
-        </IconButton>
-      </Box>
-      {showCamera && (
+          {!hidePhotoButton ? (
+            <>
+              <input
+                accept="image/*"
+                id={imageInputId}
+                type="file"
+                capture="environment"
+                style={{ display: "none" }}
+                onChange={(e) => handleFileChange(e, "image")}
+              />
+              <label htmlFor={imageInputId}>
+                <IconButton color="primary" component="span" size="small">
+                  <AddPhotoAlternateIcon />
+                </IconButton>
+              </label>
+            </>
+          ) : null}
+
+          <IconButton color="primary" onClick={handleCameraClick} size="small">
+            <PhotoCameraIcon />
+          </IconButton>
+
+          <input
+            accept="video/*"
+            id={videoInputId}
+            type="file"
+            capture="environment"
+            style={{ display: "none" }}
+            onChange={(e) => handleFileChange(e, "video")}
+          />
+          <label htmlFor={videoInputId}>
+            <IconButton color="primary" component="span" size="small">
+              <VideocamIcon />
+            </IconButton>
+          </label>
+
+          <IconButton
+            color="primary"
+            onClick={isRecording ? stopRecording : startRecording}
+            size="small"
+          >
+            {isRecording ? <StopIcon sx={{ color: "red" }} /> : <MicIcon />}
+          </IconButton>
+        </Box>
+      ) : null}
+      {!hideMediaControls && showCamera && (
         <Box
           sx={{
             my: 2,
@@ -258,12 +271,12 @@ const RichTextInput = ({ onDataChange, clearData, templateText, placeholder }) =
           <canvas ref={canvasRef} style={{ display: "none" }}></canvas>
         </Box>
       )}
-      {audioBlob && (
+      {!hideMediaControls && audioBlob && (
         <Typography variant="caption" sx={{ marginLeft: 1 }}>
           Voice memo attached
         </Typography>
       )}
-      {mediaFile && (
+      {!hideMediaControls && mediaFile && (
         <Typography variant="caption" sx={{ marginLeft: 1 }}>
           {mediaFile.file.name} attached
         </Typography>

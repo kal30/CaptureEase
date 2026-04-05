@@ -20,6 +20,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import CloseIcon from '@mui/icons-material/Close';
 import { doc, updateDoc } from 'firebase/firestore';
 import { getEntryTypeMeta, mapLegacyType, ENTRY_TYPE } from "../../constants/timeline";
+import { getLogTypeByCategory, getLogTypeByEntry } from "../../constants/logTypeRegistry";
 
 import TimelineFilters from "./TimelineFilters";
 import { useUnifiedTimelineData } from "../../hooks/useUnifiedTimelineData";
@@ -57,6 +58,7 @@ const UnifiedTimeline = ({
   showFilters = true,
   showDaySummary = true,
   mobileTimeLayout = false,
+  focusEntryId = null,
 }) => {
   useMountDebug('UnifiedTimeline');
   const getContrastText = React.useCallback((hexColor) => {
@@ -238,6 +240,25 @@ const UnifiedTimeline = ({
       });
   }, [deletedEntryIds, entries, localEntryUpdates]);
 
+  React.useEffect(() => {
+    if (!focusEntryId) {
+      return undefined;
+    }
+
+    const timer = window.setTimeout(() => {
+      const entryElement = document.getElementById(`timeline-entry-${focusEntryId}`);
+      if (entryElement) {
+        entryElement.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+          inline: 'nearest',
+        });
+      }
+    }, 50);
+
+    return () => window.clearTimeout(timer);
+  }, [focusEntryId, visibleEntries.length]);
+
   const getEntryPresentation = React.useCallback((entry) => {
     let typeForTimeline;
     if (entry.collection === 'incidents') {
@@ -245,7 +266,7 @@ const UnifiedTimeline = ({
     } else if (entry.collection === 'dailyCare') {
       typeForTimeline = 'dailyHabit';
     } else if (entry.collection === 'dailyLogs') {
-      typeForTimeline = entry.timelineType || entry.type || 'journal';
+      typeForTimeline = getLogTypeByEntry(entry).category || entry.category || entry.timelineType || entry.type || 'journal';
     } else if (entry.collection === 'therapyNotes') {
       typeForTimeline = 'therapyNote';
     } else {
@@ -255,12 +276,19 @@ const UnifiedTimeline = ({
     const entryType = mapLegacyType(typeForTimeline);
     const meta = getEntryTypeMeta(typeForTimeline);
     const defaultEntryLabel = meta.label.replace(/s$/, '');
+    const categoryMeta = entry.category ? getLogTypeByCategory(entry.category) : null;
     const entryLabel = entry.collection === 'incidents'
       ? (entry.incidentCategoryLabel || defaultEntryLabel)
       : entry.collection === 'dailyCare'
         ? (entry.categoryLabel || defaultEntryLabel)
         : entry.collection === 'dailyLogs'
-          ? (entry.title || defaultEntryLabel)
+          ? (entry.titlePrefix
+            || entry.title
+            || entry.label
+            || entry.categoryLabel
+            || categoryMeta?.trackLabel
+            || categoryMeta?.displayLabel
+            || defaultEntryLabel)
           : (entry.title || defaultEntryLabel);
     const timelineColors = resolveCategoryColor(entry);
     const entryColor = timelineColors.dot;
@@ -284,7 +312,7 @@ const UnifiedTimeline = ({
     if (entryType === ENTRY_TYPE.DAILY_HABIT) {
       return <DailyHabitDetails entry={entry} />;
     }
-    if ([ENTRY_TYPE.JOURNAL, ENTRY_TYPE.IMPORTANT_MOMENT, ENTRY_TYPE.BEHAVIOR, ENTRY_TYPE.HEALTH, ENTRY_TYPE.MOOD, ENTRY_TYPE.SLEEP, ENTRY_TYPE.FOOD, ENTRY_TYPE.MILESTONE].includes(entryType)) {
+    if ([ENTRY_TYPE.JOURNAL, ENTRY_TYPE.IMPORTANT_MOMENT, ENTRY_TYPE.BEHAVIOR, ENTRY_TYPE.HEALTH, ENTRY_TYPE.MOOD, ENTRY_TYPE.SLEEP, ENTRY_TYPE.FOOD, ENTRY_TYPE.BATHROOM, ENTRY_TYPE.MILESTONE].includes(entryType)) {
       return <JournalDetails entry={entry} />;
     }
     if (entryType === ENTRY_TYPE.THERAPY_NOTE) {
@@ -306,7 +334,16 @@ const UnifiedTimeline = ({
       return entry.summary || entry.note || entry.notes || entry.content || null;
     }
 
-    return entry.text || entry.summary || entry.notes || null;
+    if ([ENTRY_TYPE.JOURNAL, ENTRY_TYPE.IMPORTANT_MOMENT, ENTRY_TYPE.BEHAVIOR, ENTRY_TYPE.HEALTH, ENTRY_TYPE.MOOD, ENTRY_TYPE.SLEEP, ENTRY_TYPE.FOOD, ENTRY_TYPE.BATHROOM, ENTRY_TYPE.MILESTONE].includes(entryType)) {
+      const primary = entry.text || entry.summary || entry.content || entry.title || null;
+      const noteBits = [entry.notes, entry.bathroomDetails?.notes].filter(Boolean);
+      if (primary && noteBits.length) {
+        return `${primary} — ${noteBits.join(' — ')}`;
+      }
+      return primary || noteBits.join(' — ') || null;
+    }
+
+    return entry.text || entry.summary || entry.notes || entry.content || null;
   }, []);
 
   const getMobileEntryImage = React.useCallback((entry, entryType) => {
@@ -669,30 +706,19 @@ const UnifiedTimeline = ({
                 return (
                   <Box
                     key={`${entry.type}-${entry.id}-${entryIndex}`}
+                    id={`timeline-entry-${entry.id}`}
+                    data-entry-id={entry.id}
                     role="listitem"
                     aria-label={`${presentation.entryLabel} at ${timeString}`}
                     sx={{
                       display: 'grid',
-                      gridTemplateColumns: '72px 26px minmax(0, 1fr)',
+                      gridTemplateColumns: '26px minmax(0, 1fr)',
                       alignItems: 'start',
                       columnGap: 0.9,
                       position: 'relative',
                       backgroundColor: '#FFFFFF',
                     }}
                   >
-                    <Box
-                      sx={{
-                        pt: 0.15,
-                        color: 'text.secondary',
-                        fontWeight: 700,
-                        fontSize: '0.74rem',
-                        lineHeight: 1.1,
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {timeString}
-                    </Box>
-
                     <Box
                       sx={{
                         position: 'relative',
@@ -751,16 +777,18 @@ const UnifiedTimeline = ({
                         flexDirection: 'column',
                         gap: 0.85,
                       }}
-                    >
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          alignItems: 'flex-start',
-                          justifyContent: 'space-between',
-                          gap: 0.75,
-                        }}
                       >
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.3, minWidth: 0 }}>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                          gap: 0.75,
+                      }}
+                      id={`timeline-entry-${entry.id}`}
+                      data-entry-id={entry.id}
+                    >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, minWidth: 0, flexWrap: 'wrap' }}>
                           <Box
                             sx={{
                               px: 1.1,
@@ -778,6 +806,18 @@ const UnifiedTimeline = ({
                           >
                             {presentation.entryLabel}
                           </Box>
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              color: 'text.secondary',
+                              fontSize: '0.72rem',
+                              fontWeight: 700,
+                              lineHeight: 1.1,
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            {timeString}
+                          </Typography>
                         </Box>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.3, flexShrink: 0 }}>
                           {canEditMobileEntry ? (
@@ -962,6 +1002,7 @@ const UnifiedTimeline = ({
                   return (
                     <TimelineItem
                       key={`${entry.type}-${entry.id}-${entryIndex}`}
+                      entryId={entry.id}
                       color={presentation.entryColor}
                       icon={presentation.entryIcon}
                       ariaLabel={`${presentation.entryLabel} at ${timeString}`}

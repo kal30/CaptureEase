@@ -3,8 +3,9 @@ import { Box, Typography } from '@mui/material';
 
 const JournalDetails = ({ entry }) => {
   const hasContent = entry.text || (entry.tags && entry.tags.length > 0);
+  const notesText = entry.notes || entry.bathroomDetails?.notes || '';
   
-  if (!hasContent) {
+  if (!hasContent && !notesText) {
     return null;
   }
 
@@ -31,6 +32,19 @@ const JournalDetails = ({ entry }) => {
           }}
         >
           {entry.text.length > 150 ? `${entry.text.substring(0, 150)}...` : entry.text}
+        </Typography>
+      ) : null}
+
+      {notesText ? (
+        <Typography
+          variant="body2"
+          sx={{
+            color: 'text.secondary',
+            lineHeight: { xs: 1.4, md: 1.45 },
+            fontSize: { xs: '0.95rem', md: '0.9rem' },
+          }}
+        >
+          {notesText.length > 180 ? `${notesText.substring(0, 180)}...` : notesText}
         </Typography>
       ) : null}
     </Box>

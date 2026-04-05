@@ -16,10 +16,14 @@ import {
 } from '@mui/icons-material';
 import FileUploadIcon from '@mui/icons-material/FileUpload';
 import AutoAwesomeOutlinedIcon from '@mui/icons-material/AutoAwesomeOutlined';
+import MedicationOutlinedIcon from '@mui/icons-material/MedicationOutlined';
+import LunchDiningOutlinedIcon from '@mui/icons-material/LunchDiningOutlined';
+import WcOutlinedIcon from '@mui/icons-material/WcOutlined';
 import { useTheme } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
 import { useChildContext } from '../../contexts/ChildContext';
 import { therapyTheme } from '../../assets/theme/therapyTheme';
+import { getLogTypeByCategory } from '../../constants/logTypeRegistry';
 
 /**
  * QuickEntrySection - Integrated Quick Entry circles with Therapy Prep access
@@ -34,6 +38,9 @@ const QuickEntrySection = ({
   hidePrimaryAction = false,
   onQuickEntry,
   onDailyReport,
+  onTrack,
+  onOpenFoodLog,
+  onOpenMedicalLog,
   onImportLogs,
   onHoverAction,
   onLeaveAction,
@@ -104,6 +111,26 @@ const QuickEntrySection = ({
     e.stopPropagation();
     handleMenuClose();
     onImportLogs?.(child);
+  };
+
+  const handleTrack = (e) => {
+    e.stopPropagation();
+    handleMenuClose();
+    onTrack?.(child, getLogTypeByCategory('bathroom').category);
+  };
+
+  const handleOpenMedicalLog = (e) => {
+    e.stopPropagation();
+    handleMenuClose();
+    setCurrentChildId(child.id);
+    onOpenMedicalLog?.(child);
+  };
+
+  const handleOpenFoodLog = (e) => {
+    e.stopPropagation();
+    handleMenuClose();
+    setCurrentChildId(child.id);
+    onOpenFoodLog?.(child);
   };
 
   // Therapist-specific view with therapy notes access
@@ -355,7 +382,49 @@ const QuickEntrySection = ({
           </MenuItem>
         ) : null}
 
-        {onDailyReport && onImportLogs ? <Divider /> : null}
+        {onDailyReport && (onOpenMedicalLog || onTrack || onImportLogs) ? <Divider /> : null}
+
+        {onOpenMedicalLog ? (
+          <MenuItem onClick={handleOpenMedicalLog}>
+            <ListItemIcon>
+              <MedicationOutlinedIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText
+              primary={getLogTypeByCategory('medication').trackLabel}
+              secondary="Open the medical log page"
+            />
+          </MenuItem>
+        ) : null}
+
+        {onOpenMedicalLog && (onOpenFoodLog || onTrack || onImportLogs) ? <Divider /> : null}
+
+        {onOpenFoodLog ? (
+          <MenuItem onClick={handleOpenFoodLog}>
+            <ListItemIcon>
+              <LunchDiningOutlinedIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText
+              primary={getLogTypeByCategory('food').trackLabel}
+              secondary="Log a meal or snack"
+            />
+          </MenuItem>
+        ) : null}
+
+        {onOpenFoodLog && (onTrack || onImportLogs) ? <Divider /> : null}
+
+        {onTrack ? (
+          <MenuItem onClick={handleTrack}>
+            <ListItemIcon>
+              <WcOutlinedIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText
+              primary={getLogTypeByCategory('bathroom').trackLabel}
+              secondary="Log bathroom use"
+            />
+          </MenuItem>
+        ) : null}
+
+        {onTrack && onImportLogs ? <Divider /> : null}
 
         {onImportLogs ? (
           <MenuItem onClick={handleImportPastLogs}>

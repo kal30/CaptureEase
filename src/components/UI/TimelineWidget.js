@@ -13,6 +13,7 @@ import {
   Chip,
   Popover,
   useMediaQuery,
+  Stack,
 } from '@mui/material';
 import {
   ExpandMore as ExpandMoreIcon,
@@ -25,6 +26,8 @@ import MiniCalendar from './MiniCalendar';
 import { UnifiedTimeline, TimelineFilters } from '../Timeline';
 import { useTimelineProgress } from '../../hooks/useTimelineProgress';
 import { trackRenderDebug, useMountDebug } from '../../utils/renderDebug';
+import { CATEGORY_COLORS } from '../../constants/categoryColors';
+import { getLogTypeByCategory, getLogTypeByEntry } from '../../constants/logTypeRegistry';
 
 /**
  * TimelineWidget - Self-contained timeline component with progress visualization and unified daily log
@@ -56,10 +59,12 @@ const TimelineWidget = ({
   const [expanded, setExpanded] = useState(defaultExpanded);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [mobileCalendarAnchor, setMobileCalendarAnchor] = useState(null);
+  const [focusedEntryId, setFocusedEntryId] = useState(null);
 
   const [timelineFilters, setTimelineFilters] = useState({}); // Unified timeline filters
   
   const childSpecificEntries = entries;
+  const searchText = timelineFilters.searchText?.trim() || '';
   
   const timeline = useTimelineProgress(childSpecificEntries, dailyCareStatus);
   trackRenderDebug('TimelineWidget', {
@@ -75,6 +80,37 @@ const TimelineWidget = ({
       setExpanded(controlledExpanded);
     }
   }, [controlledExpanded]);
+
+  useEffect(() => {
+    if (!searchText) {
+      setFocusedEntryId(null);
+    }
+  }, [searchText]);
+
+  useEffect(() => {
+    const handleTimelineFocusDate = (event) => {
+      const detail = event?.detail || {};
+      if (detail.childId && detail.childId !== child?.id) {
+        return;
+      }
+
+      const nextDate = detail.date
+        ? new Date(detail.date)
+        : detail.timestamp
+          ? new Date(detail.timestamp)
+          : null;
+
+      if (!nextDate || Number.isNaN(nextDate.getTime())) {
+        return;
+      }
+
+      setSelectedDate(nextDate);
+      setExpanded(true);
+    };
+
+    window.addEventListener('captureez:timeline-focus-date', handleTimelineFocusDate);
+    return () => window.removeEventListener('captureez:timeline-focus-date', handleTimelineFocusDate);
+  }, [child?.id]);
   
   // Component styles - mobile-first responsive
   const widgetStyles = {
@@ -120,6 +156,238 @@ const TimelineWidget = ({
 
   const handleEmptyStateClick = () => {
     onQuickEntry?.(child, 'quick_note');
+  };
+
+  const normalizeSearchableText = (entry) => [
+    entry.text,
+    entry.description,
+    entry.summary,
+    entry.content,
+    entry.notes,
+    entry.note,
+    entry.title,
+    entry.categoryLabel,
+    entry.categoryId,
+    entry.category,
+    entry.incidentCategoryLabel,
+    entry.incidentType,
+    entry.resolution,
+    ...(entry.triggers || []),
+    ...(entry.interventions || []),
+    ...(entry.tags || []),
+  ].filter(Boolean).join(' ').toLowerCase();
+
+  const getSearchCategoryLabel = (entry) => {
+    const categoryType = getLogTypeByEntry(entry);
+    const categoryMeta = getLogTypeByCategory(categoryType.category || entry.category || entry.type);
+
+    if (entry.collection === 'incidents') {
+      return entry.incidentCategoryLabel || entry.incidentType || 'Incident';
+    }
+    if (entry.collection === 'dailyCare') {
+      return entry.categoryLabel || entry.categoryId || 'Habit';
+    }
+    if (entry.collection === 'therapyNotes') {
+      return entry.title || 'Therapy Note';
+    }
+    if (entry.collection === 'dailyLogs') {
+      return entry.titlePrefix || entry.title || entry.label || categoryMeta.trackLabel || categoryMeta.displayLabel || entry.category || entry.type || 'Log';
+    }
+    return entry.title || entry.category || entry.type || 'Entry';
+  };
+
+  const searchResults = React.useMemo(() => {
+    if (!searchText) {
+      return [];
+    }
+
+    const searchTerm = searchText.toLowerCase();
+    const entryTypeFilters = timelineFilters.entryTypes || [];
+    const userRoleFilters = timelineFilters.userRoles || [];
+
+    const filtered = childSpecificEntries
+      .filter((entry) => {
+        if (entryTypeFilters.length > 0 && !entryTypeFilters.includes(entry.type)) {
+          return false;
+        }
+
+        if (userRoleFilters.length > 0 && !userRoleFilters.includes(entry.userRole)) {
+          return false;
+        }
+
+        return normalizeSearchableText(entry).includes(searchTerm);
+      })
+      .map((entry) => {
+        const entryDate = entry.timestamp?.toDate ? entry.timestamp.toDate() : new Date(entry.timestamp);
+        const previewSource = entry.text || entry.summary || entry.content || entry.description || entry.notes || entry.note || '';
+        const preview = String(previewSource).trim().replace(/\s+/g, ' ');
+        const categoryKey = entry.category || entry.type || 'log';
+        const categoryColors = CATEGORY_COLORS[categoryKey] || CATEGORY_COLORS.log;
+
+        return {
+          ...entry,
+          entryDate,
+          preview: preview.length > 100 ? `${preview.slice(0, 100)}...` : preview,
+          displayCategory: getSearchCategoryLabel(entry),
+          categoryColors,
+          timeLabel: entryDate.toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+        };
+      })
+      .sort((a, b) => b.entryDate - a.entryDate);
+
+    const grouped = [];
+    const byDate = new Map();
+
+    filtered.forEach((entry) => {
+      const dateKey = entry.entryDate.toDateString();
+      if (!byDate.has(dateKey)) {
+        const group = {
+          dateKey,
+          date: entry.entryDate,
+          entries: [],
+        };
+        byDate.set(dateKey, group);
+        grouped.push(group);
+      }
+
+      byDate.get(dateKey).entries.push(entry);
+    });
+
+    return grouped;
+  }, [childSpecificEntries, searchText, timelineFilters.entryTypes, timelineFilters.userRoles]);
+
+  const searchResultStats = React.useMemo(() => {
+    const resultCount = searchResults.reduce((sum, group) => sum + group.entries.length, 0);
+    return { resultCount, dayCount: searchResults.length };
+  }, [searchResults]);
+
+  const handleSearchResultClick = React.useCallback((entry) => {
+    setSelectedDate(entry.entryDate);
+    setFocusedEntryId(entry.id);
+    setExpanded(true);
+  }, []);
+
+  const renderSearchResults = () => {
+    if (!searchText) {
+      return null;
+    }
+
+    if (searchResultStats.resultCount === 0) {
+      return (
+        <Box
+          sx={{
+            mt: 1.5,
+            p: 2,
+            borderRadius: 0.35,
+            bgcolor: 'rgba(248, 250, 252, 0.92)',
+            border: '1px solid rgba(148, 163, 184, 0.16)',
+          }}
+        >
+          <Typography sx={{ fontSize: '0.95rem', fontWeight: 800, color: 'text.primary', mb: 0.5 }}>
+            No entries found for "{searchText}".
+          </Typography>
+          <Typography sx={{ fontSize: '0.82rem', color: 'text.secondary' }}>
+            Clear search to return to the normal day view.
+          </Typography>
+        </Box>
+      );
+    }
+
+    return (
+      <Box
+        sx={{
+          mt: 1.5,
+          p: 1.5,
+          borderRadius: 0.35,
+          bgcolor: 'rgba(248, 250, 252, 0.92)',
+          border: '1px solid rgba(148, 163, 184, 0.16)',
+        }}
+      >
+        <Typography sx={{ fontSize: '0.92rem', fontWeight: 800, color: 'text.primary', mb: 1 }}>
+          {searchResultStats.resultCount} result{searchResultStats.resultCount === 1 ? '' : 's'} across {searchResultStats.dayCount} day{searchResultStats.dayCount === 1 ? '' : 's'}
+        </Typography>
+
+        <Stack spacing={1.25}>
+          {searchResults.map((group) => (
+            <Box key={group.dateKey}>
+              <Typography sx={{ fontSize: '0.8rem', fontWeight: 800, color: 'text.secondary', mb: 0.75 }}>
+                {group.date.toLocaleDateString('en-US', {
+                  weekday: 'short',
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric',
+                })}
+              </Typography>
+
+              <Stack spacing={0.75}>
+                {group.entries.map((entry) => (
+                  <Box
+                    key={entry.id}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => handleSearchResultClick(entry)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        handleSearchResultClick(entry);
+                      }
+                    }}
+                    sx={{
+                      p: 1,
+                      borderRadius: 0.35,
+                      bgcolor: '#fff',
+                      border: '1px solid rgba(148, 163, 184, 0.18)',
+                      cursor: 'pointer',
+                      transition: 'background-color 0.2s ease, box-shadow 0.2s ease',
+                      '&:hover': {
+                        backgroundColor: 'action.hover',
+                        boxShadow: '0 2px 8px rgba(15, 23, 42, 0.06)',
+                      },
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1 }}>
+                      <Box sx={{ minWidth: 0, flex: 1 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.6, flexWrap: 'wrap' }}>
+                          <Chip
+                            label={entry.displayCategory}
+                            size="small"
+                            sx={{
+                              height: 22,
+                              borderRadius: 0.35,
+                              bgcolor: entry.categoryColors.bg,
+                              color: entry.categoryColors.text,
+                              border: `1px solid ${entry.categoryColors.border}`,
+                              fontSize: '0.72rem',
+                              fontWeight: 700,
+                            }}
+                          />
+                          <Typography sx={{ fontSize: '0.78rem', fontWeight: 700, color: 'text.secondary' }}>
+                            {entry.timeLabel}
+                          </Typography>
+                        </Box>
+
+                        <Typography sx={{ fontSize: '0.88rem', fontWeight: 700, color: 'text.primary', lineHeight: 1.3 }}>
+                          {entry.title || entry.displayCategory}
+                        </Typography>
+
+                        {entry.preview ? (
+                          <Typography sx={{ fontSize: '0.8rem', color: 'text.secondary', lineHeight: 1.35, mt: 0.35 }}>
+                            {entry.preview}
+                          </Typography>
+                        ) : null}
+                      </Box>
+                    </Box>
+                  </Box>
+                ))}
+              </Stack>
+            </Box>
+          ))}
+        </Stack>
+      </Box>
+    );
   };
 
   const getMobileDateLabel = () => {
@@ -328,6 +596,8 @@ const TimelineWidget = ({
         </Box>
       </Box>
 
+      {renderSearchResults()}
+
       <UnifiedTimeline 
         child={child}
         selectedDate={selectedDate}
@@ -337,6 +607,7 @@ const TimelineWidget = ({
         showFilters={false}
         showDaySummary={false}
         mobileTimeLayout={true}
+        focusEntryId={focusedEntryId}
       />
 
       <Popover
@@ -363,33 +634,37 @@ const TimelineWidget = ({
   // Render legacy content (original recent entries + calendar)
   const renderLegacyContent = () => {
     return (
-      <Box sx={{ 
-        display: 'flex', 
-        gap: { xs: 2, sm: 2, md: 3 }, 
-        flexDirection: { xs: 'column', md: 'row' },
-        alignItems: { xs: 'stretch', md: 'flex-start' }
-      }}>
-        {/* Mini Calendar */}
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
+        {renderSearchResults()}
+
         <Box sx={{ 
-          flexShrink: 0,
-          width: { xs: '100%', md: 'auto' },
-          display: 'flex',
-          justifyContent: { xs: 'center', md: 'flex-start' }
+          display: 'flex', 
+          gap: { xs: 2, sm: 2, md: 3 }, 
+          flexDirection: { xs: 'column', md: 'row' },
+          alignItems: { xs: 'stretch', md: 'flex-start' }
         }}>
-          <MiniCalendar
-            entries={childSpecificEntries}
-            onDayClick={handleDayClick}
-            currentMonth={selectedDate}
-          />
-        </Box>
-        
-        {/* Recent Entries */}
-        <Box sx={{ 
-          flex: { xs: 'none', md: 1 }, 
-          minWidth: 0,
-          width: { xs: '100%', md: 'auto' }
-        }}>
-          {renderRecentEntries()}
+          {/* Mini Calendar */}
+          <Box sx={{ 
+            flexShrink: 0,
+            width: { xs: '100%', md: 'auto' },
+            display: 'flex',
+            justifyContent: { xs: 'center', md: 'flex-start' }
+          }}>
+            <MiniCalendar
+              entries={childSpecificEntries}
+              onDayClick={handleDayClick}
+              currentMonth={selectedDate}
+            />
+          </Box>
+          
+          {/* Recent Entries */}
+          <Box sx={{ 
+            flex: { xs: 'none', md: 1 }, 
+            minWidth: 0,
+            width: { xs: '100%', md: 'auto' }
+          }}>
+            {renderRecentEntries()}
+          </Box>
         </Box>
       </Box>
     );

@@ -25,6 +25,7 @@ import {
   ArrowDropDown as ArrowDropDownIcon,
 } from '@mui/icons-material';
 import MiniCalendar from '../UI/MiniCalendar';
+import { getTimelineFilterSections, SPECIAL_FILTER_TYPES } from '../../constants/logTypeRegistry';
 
 /**
  * TimelineFilters - Filter controls for unified timeline
@@ -57,17 +58,12 @@ const TimelineFilters = ({
   const [searchText, setSearchText] = useState(filters.searchText || '');
   const [searchExpanded, setSearchExpanded] = useState(Boolean(filters.searchText));
 
-  const IMPORTANT_FILTER_VALUES = ['importantMoment'];
-  const CATEGORY_FILTER_VALUES = ['behavior', 'milestone', 'sleep', 'food', 'mood', 'health', 'journal'];
-
-  const categoryFilterOptions = [
-    { value: 'behavior', label: 'Behavior', icon: '🌋' },
-    { value: 'milestone', label: 'Win', icon: '⭐' },
-    { value: 'sleep', label: 'Sleep', icon: '😴' },
-    { value: 'food', label: 'Food', icon: '🍽️' },
-    { value: 'mood', label: 'Anxiety', icon: '😰' },
-    { value: 'health', label: 'Medication', icon: '💊' },
-    { value: 'journal', label: 'Daily Log', icon: '📓' },
+  const { allEntries, entryType, flaggedAs } = getTimelineFilterSections();
+  const IMPORTANT_FILTER_VALUES = [SPECIAL_FILTER_TYPES.importantMoment.value];
+  const CATEGORY_FILTER_VALUES = [
+    ...entryType.items.map((option) => option.value),
+    ...flaggedAs.items.map((option) => option.value),
+    'health',
   ];
 
   const handleUserRoleFilter = (event) => {
@@ -141,11 +137,11 @@ const TimelineFilters = ({
 
   const importantMomentsSelected = IMPORTANT_FILTER_VALUES.some((value) => filters.entryTypes?.includes(value));
   const selectedCategoryType = (filters.entryTypes || []).find((type) => CATEGORY_FILTER_VALUES.includes(type));
-  const selectedCategoryOption = categoryFilterOptions.find((option) => option.value === selectedCategoryType);
+  const selectedCategoryOption = [...entryType.items, ...flaggedAs.items].find((option) => option.value === selectedCategoryType);
   const filterTriggerLabel = selectedCategoryOption
     ? `${selectedCategoryOption.icon} ${selectedCategoryOption.label}`
     : importantMomentsSelected
-      ? '⭐ Important'
+      ? `⭐ ${SPECIAL_FILTER_TYPES.importantMoment.titlePrefix}`
       : 'Filters';
 
   // User role options - CLEAN VERSION
@@ -165,25 +161,34 @@ const TimelineFilters = ({
   if (compact) {
     // Compact mode for header display
     return (
-      <Box
-        sx={{
-          display: 'flex',
-          gap: 1,
-          alignItems: 'center',
-          flexWrap: useCompactMobileLayout ? 'nowrap' : 'wrap',
-          overflowX: useCompactMobileLayout ? 'auto' : 'visible',
-          overflowY: 'hidden',
-          pb: useCompactMobileLayout ? 0.25 : 0,
-          pr: 0.25,
-          position: 'static',
-          backgroundColor: 'transparent',
-          scrollbarWidth: 'none',
-          '&::-webkit-scrollbar': {
-            display: 'none',
-          },
-          ...sx,
-        }}
-      >
+          <Box
+            sx={{
+              display: 'flex',
+              gap: 1,
+              alignItems: 'center',
+              flexWrap: useCompactMobileLayout ? 'nowrap' : 'wrap',
+              overflowX: useCompactMobileLayout ? 'auto' : 'visible',
+              overflowY: 'hidden',
+              WebkitOverflowScrolling: 'touch',
+              overscrollBehaviorX: 'contain',
+              scrollSnapType: useCompactMobileLayout ? 'x proximity' : 'none',
+              pb: useCompactMobileLayout ? 0.25 : 0,
+              pr: 0,
+              position: 'static',
+              backgroundColor: 'transparent',
+              scrollbarWidth: 'none',
+              '&::-webkit-scrollbar': {
+                display: 'none',
+              },
+              ...(useCompactMobileLayout
+                ? {
+                    width: '100%',
+                    minWidth: 0,
+                  }
+                : {}),
+              ...sx,
+            }}
+          >
         {useCompactMobileLayout ? (
           searchExpanded || searchText ? (
             <TextField
@@ -214,7 +219,7 @@ const TimelineFilters = ({
               sx={{
                 minWidth: 170,
                 width: 'auto',
-                flex: '1 1 220px',
+                flex: useCompactMobileLayout ? '0 0 auto' : '1 1 220px',
                 mr: 0.5,
                 contain: 'none',
                 transform: 'none',
@@ -258,7 +263,7 @@ const TimelineFilters = ({
                 px: 1.2,
                 pl: 1.2,
                 minWidth: 'auto',
-                flex: '1 1 220px',
+                flex: useCompactMobileLayout ? '0 0 auto' : '1 1 220px',
                 mr: 0.5,
                 borderRadius: 0.25,
                 textTransform: 'none',
@@ -388,9 +393,46 @@ const TimelineFilters = ({
         >
           <Box sx={{ p: 0.75, minWidth: 180 }}>
             <MenuItem onClick={clearEntryTypeFilters}>
-              <Typography sx={{ fontSize: '0.9rem', fontWeight: 600 }}>All entries</Typography>
+              <Typography sx={{ fontSize: '0.9rem', fontWeight: 600 }}>{allEntries.label}</Typography>
             </MenuItem>
             <Divider sx={{ my: 0.5 }} />
+
+            <Typography
+              sx={{
+                px: 1,
+                pb: 0.5,
+                pt: 0.25,
+                fontSize: '0.68rem',
+                fontWeight: 800,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                color: 'text.secondary',
+              }}
+            >
+              {entryType.label}
+            </Typography>
+            {entryType.items.map((option) => (
+              <MenuItem key={option.value} onClick={() => setCategoryTypeFilter(option.value)}>
+                <Typography sx={{ mr: 1, fontSize: '1rem' }}>{option.icon}</Typography>
+                <Typography sx={{ fontSize: '0.9rem', fontWeight: 600 }}>{option.label}</Typography>
+              </MenuItem>
+            ))}
+
+            <Divider sx={{ my: 0.5 }} />
+            <Typography
+              sx={{
+                px: 1,
+                pb: 0.5,
+                pt: 0.25,
+                fontSize: '0.68rem',
+                fontWeight: 800,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                color: 'text.secondary',
+              }}
+            >
+              {flaggedAs.label}
+            </Typography>
             <MenuItem
               onClick={() => {
                 const currentTypes = filters.entryTypes || [];
@@ -405,10 +447,9 @@ const TimelineFilters = ({
               }}
             >
               <Typography sx={{ mr: 1, fontSize: '1rem' }}>⭐</Typography>
-              <Typography sx={{ fontSize: '0.9rem', fontWeight: 600 }}>Important Moments</Typography>
+              <Typography sx={{ fontSize: '0.9rem', fontWeight: 600 }}>{SPECIAL_FILTER_TYPES.importantMoment.label}</Typography>
             </MenuItem>
-            <Divider sx={{ my: 0.5 }} />
-            {categoryFilterOptions.map((option) => (
+            {flaggedAs.items.map((option) => (
               <MenuItem key={option.value} onClick={() => setCategoryTypeFilter(option.value)}>
                 <Typography sx={{ mr: 1, fontSize: '1rem' }}>{option.icon}</Typography>
                 <Typography sx={{ fontSize: '0.9rem', fontWeight: 600 }}>{option.label}</Typography>
@@ -487,7 +528,7 @@ const TimelineFilters = ({
             }
           }}
         >
-          ⭐ Important Moments
+          ⭐ {SPECIAL_FILTER_TYPES.importantMoment.label}
         </ToggleButton>
       </Box>
 

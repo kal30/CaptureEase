@@ -23,6 +23,9 @@ const ChildCard = ({
   onDeleteChild,
   onInviteTeamMember,
   onDailyReport,
+  onTrack,
+  onOpenFoodLog,
+  onOpenMedicalLog,
   onMessages,
   onImportLogs,
   compactIdentityOnMobile = false,
@@ -76,6 +79,9 @@ const ChildCard = ({
             onDeleteChild={onDeleteChild}
             onInviteTeamMember={onInviteTeamMember}
             onDailyReport={onDailyReport}
+            onTrack={onTrack}
+            onOpenFoodLog={onOpenFoodLog}
+            onOpenMedicalLog={onOpenMedicalLog}
             onNotificationClick={handleNotificationClick}
             compactIdentityOnMobile={compactIdentityOnMobile}
             collapseSummaryOnMobile={collapseSummaryOnMobile}
@@ -93,6 +99,9 @@ const ChildCard = ({
             hidePrimaryAction={hidePrimaryAction}
             onQuickEntry={onQuickEntry}
             onDailyReport={onDailyReport}
+            onTrack={onTrack}
+            onOpenFoodLog={onOpenFoodLog}
+            onOpenMedicalLog={onOpenMedicalLog}
             onMessages={onMessages}
             onImportLogs={onImportLogs}
             hoveredQuickAction={hoveredQuickAction}

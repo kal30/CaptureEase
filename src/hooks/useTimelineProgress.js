@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { TIMELINE_TYPES } from '../services/timelineService';
+import { getLogTypeByCategory, getLogTypeByEntry } from '../constants/logTypeRegistry';
 
 /**
  * Custom hook for processing timeline data and calculating progress metrics
@@ -51,7 +52,24 @@ export const useTimelineProgress = (entries = [], dailyCareStatus = {}) => {
         const bTime = b.timestamp?.toDate?.() || new Date(b.timestamp);
         return bTime - aTime;
       })
-      .slice(0, 5);
+      .slice(0, 5)
+      .map((entry) => {
+        const categoryType = getLogTypeByEntry(entry);
+        const categoryMeta = getLogTypeByCategory(categoryType.category || entry.category || entry.type);
+        const resolvedLabel = categoryType.category && categoryType.category !== 'log'
+          ? (categoryMeta.trackLabel || categoryMeta.displayLabel || entry.label || entry.titlePrefix || entry.type)
+          : (entry.title || entry.label || entry.titlePrefix || categoryMeta.trackLabel || categoryMeta.displayLabel || entry.type);
+        return {
+          ...entry,
+          category: categoryType.category || entry.category || entry.type,
+          title: resolvedLabel,
+          label: resolvedLabel,
+          icon: entry.icon || categoryMeta.icon,
+          color: entry.color || categoryMeta.palette?.dot || entry.color,
+          content: entry.content || entry.notes || entry.sleepDetails?.notes || entry.bathroomDetails?.notes || entry.description || entry.summary || entry.text || null,
+          notes: entry.notes || entry.sleepDetails?.notes || entry.bathroomDetails?.notes || null,
+        };
+      });
 
     // Calculate type distribution for the week
     const typeDistribution = weekEntries.reduce((acc, entry) => {

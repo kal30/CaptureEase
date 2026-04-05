@@ -14,6 +14,9 @@ import QuickEntrySection from '../QuickEntrySection';
  * @param {boolean} props.completedToday - Whether daily care is completed
  * @param {function} props.onQuickEntry - Handler for quick entry actions
  * @param {function} props.onDailyReport - Handler for daily report
+ * @param {function} props.onTrack - Handler for track action
+ * @param {function} props.onOpenFoodLog - Handler for food log action
+ * @param {function} props.onOpenMedicalLog - Handler for medical log action
  * @param {string} props.hoveredQuickAction - Currently hovered quick action
  * @param {function} props.onHoverAction - Handler for action hover
  * @param {function} props.onLeaveAction - Handler for action leave
@@ -29,6 +32,9 @@ const ChildCardActions = ({
   hidePrimaryAction = false,
   onQuickEntry,
   onDailyReport,
+  onTrack,
+  onOpenFoodLog,
+  onOpenMedicalLog,
   onImportLogs,
   hoveredQuickAction,
   onHoverAction,
@@ -70,6 +76,9 @@ const ChildCardActions = ({
           hidePrimaryAction={hidePrimaryAction}
           onQuickEntry={onQuickEntry}
           onDailyReport={onDailyReport}
+          onTrack={onTrack}
+          onOpenFoodLog={onOpenFoodLog}
+          onOpenMedicalLog={onOpenMedicalLog}
           onImportLogs={onImportLogs}
           onHoverAction={handleQuickActionHover}
           onLeaveAction={handleQuickActionLeave}

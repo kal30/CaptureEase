@@ -8,6 +8,9 @@ const DesktopDashboardOverview = ({
   actionGroups,
   onAddChildClick,
   onImportLogs,
+  onTrack,
+  onOpenFoodLog,
+  onOpenMedicalLog,
 }) => {
   const commonChildGroupProps = {
     quickDataStatus: hook.quickDataStatus,
@@ -20,6 +23,9 @@ const DesktopDashboardOverview = ({
     onEditChild: hook.handleEditChild,
     onInviteTeamMember: hook.handleInviteTeamMember,
     onDailyReport: hook.handleShowCareReport,
+    onTrack,
+    onOpenFoodLog,
+    onOpenMedicalLog,
     onMessages: hook.handleMessages,
     onImportLogs,
     getActionGroups: actionGroups,
