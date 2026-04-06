@@ -93,9 +93,51 @@ const LogEntry = ({ entry, onEdit, onDelete }) => {
     return <div dangerouslySetInnerHTML={{ __html: displayableText }} />;
   };
 
-  const firstAttachedPhoto = Array.isArray(entry.mediaUrls) && entry.mediaUrls.length > 0
-    ? (typeof entry.mediaUrls[0] === 'string' ? entry.mediaUrls[0] : entry.mediaUrls[0]?.url)
-    : '';
+  const getFirstAttachment = () => {
+    if (entry.mediaURL) {
+      return {
+        url: entry.mediaURL,
+        type: entry.mediaType || 'image',
+        filename: entry.mediaFilename || 'Attachment',
+      };
+    }
+
+    if (Array.isArray(entry.mediaUrls) && entry.mediaUrls.length > 0) {
+      const first = entry.mediaUrls[0];
+      if (typeof first === 'string') {
+        const lower = first.toLowerCase();
+        const inferredType = lower.match(/\.(mp4|webm|mov|m4v)(\?|$)/)
+          ? 'video'
+          : lower.match(/\.(mp3|wav|m4a|webm|ogg)(\?|$)/)
+            ? 'audio'
+            : 'image';
+        return {
+          url: first,
+          type: inferredType,
+          filename: entry.mediaFilename || 'Attachment',
+        };
+      }
+
+      if (first && typeof first === 'object') {
+        const url = first.url || first.downloadURL || '';
+        const mimeType = first.mimeType || '';
+        const type = first.type
+          || (mimeType.startsWith('video/') ? 'video' : mimeType.startsWith('audio/') ? 'audio' : 'image');
+        return {
+          url,
+          type,
+          filename: first.filename || first.name || entry.mediaFilename || 'Attachment',
+        };
+      }
+    }
+
+    return null;
+  };
+
+  const firstAttachment = getFirstAttachment();
+  const hasInlineImage = firstAttachment?.url && firstAttachment.type === 'image';
+  const hasInlineVideo = firstAttachment?.url && firstAttachment.type === 'video';
+  const hasInlineAudio = firstAttachment?.url && firstAttachment.type === 'audio';
 
   return (
     <Box 
@@ -203,51 +245,64 @@ const LogEntry = ({ entry, onEdit, onDelete }) => {
             )
           )}
 
-          {entry.mediaURL && entry.mediaType === 'image' && (
+          {hasInlineImage && (
             <Box sx={{ mt: 1 }}>
-              <img 
-                src={entry.mediaURL} 
-                alt="log media" 
-                style={{ 
-                  maxWidth: '100%', 
-                  borderRadius: '4px',
-                  display: 'block'
-                }} 
-              />
-            </Box>
-          )}
-
-          {!entry.mediaURL && firstAttachedPhoto && (
-            <Box sx={{ mt: 1 }}>
-              <img
-                src={firstAttachedPhoto}
-                alt="log attachment"
-                style={{
+              <Box
+                component="img"
+                src={firstAttachment.url}
+                alt={firstAttachment.filename || 'log attachment'}
+                sx={{
                   width: '100%',
-                  maxWidth: '140px',
-                  borderRadius: '8px',
+                  maxWidth: 320,
+                  maxHeight: 240,
+                  borderRadius: 2,
                   display: 'block',
                   objectFit: 'cover',
+                  border: '1px solid',
+                  borderColor: 'grey.200',
+                  bgcolor: 'grey.50',
+                }}
+                loading="lazy"
+                referrerPolicy="no-referrer"
+              />
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                {firstAttachment.filename}
+              </Typography>
+            </Box>
+          )}
+
+          {hasInlineVideo && (
+            <Box sx={{ mt: 1 }}>
+              <Box
+                component="video"
+                controls
+                src={firstAttachment.url}
+                sx={{
+                  width: '100%',
+                  maxWidth: 360,
+                  borderRadius: 2,
+                  display: 'block',
+                  bgcolor: '#111827',
+                  border: '1px solid',
+                  borderColor: 'grey.200',
                 }}
               />
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                {firstAttachment.filename}
+              </Typography>
             </Box>
           )}
 
-          {entry.mediaURL && entry.mediaType === 'video' && (
+          {hasInlineAudio && (
             <Box sx={{ mt: 1 }}>
-              <video 
-                controls 
-                src={entry.mediaURL} 
-                style={{ 
-                  maxWidth: '100%', 
-                  borderRadius: '4px',
-                  display: 'block'
-                }} 
-              />
+              <audio controls src={firstAttachment.url} style={{ width: '100%' }} />
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                {firstAttachment.filename}
+              </Typography>
             </Box>
           )}
 
-          {entry.voiceMemoURL && (
+          {entry.voiceMemoURL && !hasInlineAudio && (
             <Box sx={{ mt: 1 }}>
               <audio controls src={entry.voiceMemoURL} style={{ width: '100%' }} />
             </Box>

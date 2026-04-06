@@ -8,6 +8,7 @@ import { Info, Reply, Check, DoneAll } from '@mui/icons-material';
 
 import { formatMessageTime } from '../../utils/dateUtils';
 import { getMessagingTheme } from '../../assets/theme/messagingTheme';
+import { getTagTypeById, getTimelineMetaForCategory } from '../../constants/logTypeRegistry';
 
 const MessageBubble = ({
   message,
@@ -20,6 +21,20 @@ const MessageBubble = ({
   const messagingTheme = getMessagingTheme(theme);
   const isOwnMessage = message.senderId === currentUserId;
   const isRead = message.readBy && Object.keys(message.readBy).length > 1; // More than just sender
+  const categoryMeta = message.category ? getTimelineMetaForCategory(message.category) : null;
+  const messageTags = Array.isArray(message.tags) ? message.tags : [];
+  const resolvedTags = messageTags
+    .map((tagId) => {
+      const tagType = getTagTypeById(tagId);
+      if (!tagType) return null;
+      return {
+        id: tagId,
+        label: tagType.label,
+        icon: tagType.icon,
+        meta: getTimelineMetaForCategory(tagType.category),
+      };
+    })
+    .filter(Boolean);
 
   return (
     <Box
@@ -148,6 +163,56 @@ const MessageBubble = ({
             />
           )}
 
+          {(categoryMeta || resolvedTags.length > 0) && (
+            <Box
+              sx={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: 0.5,
+                mt: 1,
+              }}
+            >
+              {categoryMeta && message.category !== 'log' && (
+                <Chip
+                  size="small"
+                  label={categoryMeta.label}
+                  icon={<span aria-hidden="true">{categoryMeta.icon}</span>}
+                  sx={{
+                    height: 24,
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
+                    bgcolor: isOwnMessage ? 'rgba(255,255,255,0.16)' : `${categoryMeta.color}18`,
+                    color: isOwnMessage ? 'white' : categoryMeta.color,
+                    border: isOwnMessage ? '1px solid rgba(255,255,255,0.18)' : `1px solid ${categoryMeta.color}33`,
+                    '& .MuiChip-icon': {
+                      color: 'inherit',
+                    },
+                  }}
+                />
+              )}
+
+              {resolvedTags.map((tag) => (
+                <Chip
+                  key={tag.id}
+                  size="small"
+                  label={tag.label}
+                  icon={<span aria-hidden="true">{tag.icon}</span>}
+                  sx={{
+                    height: 24,
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
+                    bgcolor: isOwnMessage ? 'rgba(255,255,255,0.16)' : `${tag.meta.color}18`,
+                    color: isOwnMessage ? 'white' : tag.meta.color,
+                    border: isOwnMessage ? '1px solid rgba(255,255,255,0.18)' : `1px solid ${tag.meta.color}33`,
+                    '& .MuiChip-icon': {
+                      color: 'inherit',
+                    },
+                  }}
+                />
+              ))}
+            </Box>
+          )}
+
           {/* Edited indicator */}
           {message.isEdited && (
             <Typography
@@ -246,4 +311,3 @@ const MessageBubble = ({
 };
 
 export default MessageBubble;
-

@@ -8,6 +8,7 @@ import {
 import { db } from '../firebase';
 import { getDayDateRange, isWithinDateRange } from './dateUtils';
 import { getLogTypeByEntry, getTimelineMetaForCategory } from '../../constants/logTypeRegistry';
+import { dedupeTimelineEntries } from './timelineDeduping';
 
 const buildJournalTitle = (data, categoryMeta) => {
   if (data.titlePrefix?.trim()) {
@@ -80,9 +81,9 @@ export const getJournalEntries = async (childId, selectedDate) => {
       );
       
       const snapshot = await getDocs(dailyLogQuery);
-      return snapshot.docs
+      return dedupeTimelineEntries(snapshot.docs
         .map(mapJournalEntry)
-        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)));
       
     } catch (indexError) {
       if (indexError.message.includes('index')) {
@@ -96,10 +97,10 @@ export const getJournalEntries = async (childId, selectedDate) => {
         );
         
         const snapshot = await getDocs(fallbackQuery);
-        return snapshot.docs
+        return dedupeTimelineEntries(snapshot.docs
           .map(mapJournalEntry)
           .filter(entry => isWithinDateRange(entry.timestamp, start, end))
-          .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+          .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)));
       } else {
         throw indexError;
       }
@@ -143,7 +144,6 @@ export const getDailyLogEntries = async (childId, selectedDate) => {
           type: 'dailyLog',
           collection: collectionName
         }));
-        
         allEntries.push(...entries);
       } catch (error) {
         // If index missing, try fallback for this collection
@@ -172,7 +172,7 @@ export const getDailyLogEntries = async (childId, selectedDate) => {
       }
     }
     
-    return allEntries.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    return dedupeTimelineEntries(allEntries.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)));
   } catch (error) {
     console.error('Error fetching daily log entries:', error);
     return [];

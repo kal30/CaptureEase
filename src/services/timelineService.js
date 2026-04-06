@@ -1,6 +1,7 @@
 import { collection, onSnapshot, query, orderBy, where } from 'firebase/firestore';
 import { db } from './firebase';
 import { LOG_TYPES, getTimelineMetaForCategory } from '../constants/logTypeRegistry';
+import { dedupeTimelineEntries } from './timeline/timelineDeduping';
 
 // Timeline entry types with their display configurations
 export const TIMELINE_TYPES = {
@@ -186,13 +187,13 @@ export const getTimelineEntries = (childId, callback) => {
   const entriesByType = {};
 
   const emitEntries = () => {
-    const sortedEntries = Object.values(entriesByType)
+    const sortedEntries = dedupeTimelineEntries(Object.values(entriesByType)
       .flat()
       .sort((a, b) => {
         const aTime = a.timestamp?.toDate?.() || new Date(a.timestamp) || new Date(0);
         const bTime = b.timestamp?.toDate?.() || new Date(b.timestamp) || new Date(0);
         return bTime - aTime;
-      });
+      }));
 
     callback(sortedEntries);
   };

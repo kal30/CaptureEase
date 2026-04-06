@@ -1,11 +1,12 @@
-import React, { memo, useMemo } from 'react';
-import { Box, Chip } from '@mui/material';
-import Typography from '@mui/material/Typography';
+import React, { memo, useEffect, useMemo, useState } from 'react';
+import { Box, Chip, IconButton, Tooltip, Typography } from '@mui/material';
 import { useMediaQuery, useTheme } from '@mui/material';
+import { ChatBubbleOutlineRounded } from '@mui/icons-material';
 import ChildAvatar from '../../UI/ChildAvatar';
 import CareTeamDisplay from '../../UI/CareTeamDisplay';
 import ChildManagementMenu from '../ChildManagementMenu';
 import MedicalInfoDisplay from './MedicalInfoDisplay';
+import { getChildCareTeam } from '../../../services/childAccessService';
 import { ROLE_DISPLAY, USER_ROLES } from '../../../constants/roles';
 import { getRoleColor, getRoleColorAlpha } from '../../../assets/theme/roleColors';
 
@@ -22,6 +23,7 @@ import { getRoleColor, getRoleColorAlpha } from '../../../assets/theme/roleColor
  * @param {function} props.onDeleteChild - Handler for deleting child
  * @param {function} props.onInviteTeamMember - Handler for inviting team members
  * @param {function} props.onDailyReport - Handler for daily report
+ * @param {function} props.onMessages - Handler for opening child chat
  * @param {function} props.onNotificationClick - Handler for notification badge click
  * @param {Object} props.sx - Additional styling
  */
@@ -35,6 +37,7 @@ const ChildCardHeader = memo(({
   onDeleteChild,
   onInviteTeamMember,
   onDailyReport,
+  onMessages,
   onNotificationClick,
   compactIdentityOnMobile = false,
   collapseSummaryOnMobile = false,
@@ -44,6 +47,35 @@ const ChildCardHeader = memo(({
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const showCompactMobileIdentity = compactIdentityOnMobile && isMobile;
   const showCollapsedSummaryLine = showCompactMobileIdentity && collapseSummaryOnMobile;
+  const [careTeamCount, setCareTeamCount] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    if (!child?.id || !onMessages) {
+      setCareTeamCount(null);
+      return undefined;
+    }
+
+    const loadCareTeamCount = async () => {
+      try {
+        const members = await getChildCareTeam(child.id);
+        if (isMounted) {
+          setCareTeamCount(Array.isArray(members) ? members.length : 0);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setCareTeamCount(0);
+        }
+      }
+    };
+
+    loadCareTeamCount();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [child?.id, onMessages]);
   const roleChip = useMemo(() => {
     if (!userRole) {
       return null;
@@ -118,21 +150,46 @@ const ChildCardHeader = memo(({
       )}
 
       <Box sx={{ flex: 1, minWidth: 0 }}>
-        {showCompactMobileIdentity ? (
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'flex-end',
-              alignItems: 'center',
-              gap: 0.35,
-              mb: 0.35,
-            }}
-          >
-            <ChildManagementMenu
-              child={child}
-              userRole={userRole}
-              canAddData={canAddData}
-              onEditChild={onEditChild}
+      {showCompactMobileIdentity ? (
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            alignItems: 'center',
+            gap: 0.35,
+            mb: 0.35,
+          }}
+        >
+          {onMessages ? (
+            <Tooltip title="Open child chat">
+              <IconButton
+                size="small"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onMessages?.(child);
+                }}
+                sx={{
+                  width: 30,
+                  height: 30,
+                  bgcolor: 'rgba(239, 246, 255, 0.95)',
+                  border: '1px solid rgba(37, 99, 235, 0.14)',
+                  color: 'primary.main',
+                  '&:hover': {
+                    bgcolor: 'rgba(219, 234, 254, 0.98)',
+                  },
+                }}
+                aria-label="Open child chat"
+              >
+                <ChatBubbleOutlineRounded sx={{ fontSize: 17 }} />
+              </IconButton>
+            </Tooltip>
+          ) : null}
+
+          <ChildManagementMenu
+            child={child}
+            userRole={userRole}
+            canAddData={canAddData}
+            onEditChild={onEditChild}
               onDeleteChild={onDeleteChild}
               onInviteTeamMember={onInviteTeamMember}
               onDailyReport={onDailyReport}
@@ -158,6 +215,42 @@ const ChildCardHeader = memo(({
               >
                 {child.name}
               </Typography>
+
+              {onMessages ? (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                  <Tooltip title={careTeamCount === 0 ? 'No care team yet' : 'Open child chat'}>
+                    <Box>
+                      <IconButton
+                        size="small"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          if (careTeamCount === 0) return;
+                          onMessages?.(child);
+                        }}
+                        disabled={careTeamCount === 0}
+                        sx={{
+                          width: 32,
+                          height: 32,
+                          bgcolor: careTeamCount === 0 ? 'rgba(241, 245, 249, 0.95)' : 'rgba(239, 246, 255, 0.95)',
+                          border: '1px solid rgba(37, 99, 235, 0.14)',
+                          color: careTeamCount === 0 ? 'text.disabled' : 'primary.main',
+                          '&:hover': {
+                            bgcolor: careTeamCount === 0 ? 'rgba(241, 245, 249, 0.95)' : 'rgba(219, 234, 254, 0.98)',
+                          },
+                        }}
+                        aria-label={careTeamCount === 0 ? 'No care team yet' : 'Open child chat'}
+                      >
+                        <ChatBubbleOutlineRounded sx={{ fontSize: 18 }} />
+                      </IconButton>
+                    </Box>
+                  </Tooltip>
+                  {careTeamCount === 0 ? (
+                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                      No care team yet
+                    </Typography>
+                  ) : null}
+                </Box>
+              ) : null}
 
               <ChildManagementMenu
                 child={child}

@@ -7,7 +7,8 @@ export {
   getConversations, 
   updateConversation,
   deactivateConversation,
-  getConversationById 
+  getConversationById,
+  getOrCreateChildCareTeamConversation 
 } from './conversationService.js';
 
 export { 

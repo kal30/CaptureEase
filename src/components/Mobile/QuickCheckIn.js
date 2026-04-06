@@ -5,7 +5,6 @@ import {
   Typography,
   Box,
   Button,
-  TextField,
   Chip,
   IconButton,
   CircularProgress,
@@ -19,7 +18,6 @@ import {
   LocalOffer as LocalOfferIcon,
   ExpandMore as ExpandMoreIcon,
   Description as DescriptionIcon,
-  KeyboardVoice as KeyboardVoiceIcon,
 } from '@mui/icons-material';
 import StyledButton from '../UI/StyledButton';
 import RichTextInput from '../UI/RichTextInput';
@@ -65,15 +63,12 @@ const buildTimestampWithTime = (dateValue, timeValue) => {
 const QuickCheckIn = ({ child, onComplete, onSkip }) => {
   const [user] = useAuthState(auth);
 
-  const [noteText, setNoteText] = useState('');
+  const [noteData, setNoteData] = useState({ text: '', mediaFile: null, audioBlob: null });
   const [selectedTime, setSelectedTime] = useState(() => getTimeInputValue());
   const [showQuickTags, setShowQuickTags] = useState(false);
   const [selectedTags, setSelectedTags] = useState([]);
   const [importantMoment, setImportantMoment] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [selectedPhotoFile, setSelectedPhotoFile] = useState(null);
-  const [photoPreviewUrl, setPhotoPreviewUrl] = useState('');
-  const photoInputRef = useRef(null);
   const timeInputRef = useRef(null);
   const quickTagTouchStartYRef = useRef(null);
 
@@ -81,6 +76,8 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
     const primaryTag = selectedTags[0];
     return primaryTag ? QUICK_TAG_CATEGORY_MAP[primaryTag] || null : null;
   }, [selectedTags]);
+
+  const noteText = noteData?.text || '';
 
   const autoCategory = useMemo(() => {
     return classifyQuickNoteCategory(noteText);
@@ -128,30 +125,6 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
     }
   };
 
-  useEffect(() => {
-    if (!selectedPhotoFile) {
-      setPhotoPreviewUrl('');
-      return undefined;
-    }
-
-    const previewUrl = URL.createObjectURL(selectedPhotoFile);
-    setPhotoPreviewUrl(previewUrl);
-
-    return () => {
-      URL.revokeObjectURL(previewUrl);
-    };
-  }, [selectedPhotoFile]);
-
-  const handlePhotoSelect = (event) => {
-    const file = event.target.files?.[0];
-    if (!file) {
-      return;
-    }
-
-    setSelectedPhotoFile(file);
-    event.target.value = '';
-  };
-
   const handleTimePickerOpen = () => {
     const input = timeInputRef.current;
     if (!input) return;
@@ -164,14 +137,15 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
 
   const saveQuickNote = async () => {
     const text = noteText.trim();
-    if (!text) return;
+    const hasContent = Boolean(text || noteData?.mediaFile || noteData?.audioBlob);
+    if (!hasContent) return;
 
     setSaving(true);
     try {
       const timestamp = buildTimestampWithTime(new Date(), selectedTime);
       const optimisticEntry = {
         childId: child.id,
-        text,
+        text: text || 'Shared media note',
         status: 'active',
         category: resolvedCategory,
         tags: combinedTags,
@@ -192,18 +166,21 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
 
       let mediaUrls = [];
 
-      if (selectedPhotoFile) {
-        const uploadedMedia = await uploadIncidentMedia(
-          { file: selectedPhotoFile, type: 'image' },
-          null,
+      if (noteData?.mediaFile || noteData?.audioBlob) {
+        const uploadedRichMedia = await uploadIncidentMedia(
+          noteData?.mediaFile,
+          noteData?.audioBlob,
           docRef.id,
           `dailyLogs/${docRef.id}`
         );
-        mediaUrls = uploadedMedia.map((item) => item.url).filter(Boolean);
+        mediaUrls = [
+          ...mediaUrls,
+          ...(uploadedRichMedia || []).map((item) => item.url).filter(Boolean),
+        ];
+      }
 
-        if (mediaUrls.length > 0) {
-          await updateDoc(docRef, { mediaUrls });
-        }
+      if (mediaUrls.length > 0) {
+        await updateDoc(docRef, { mediaUrls });
       }
 
       window.dispatchEvent(new CustomEvent('captureez:timeline-entry-created', {
@@ -215,7 +192,7 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
         },
       }));
 
-        onComplete?.({
+      onComplete?.({
         text,
         tags: combinedTags,
         importantMoment,
@@ -223,7 +200,7 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
         timestamp,
         ...(mediaUrls.length > 0 && { mediaUrls }),
       });
-      setSelectedPhotoFile(null);
+      setNoteData({ text: '', mediaFile: null, audioBlob: null });
     } catch (error) {
       console.error('Error saving quick note:', error);
     } finally {
@@ -286,7 +263,7 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
 
         <Box sx={{ mb: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 0.5, mb: 0.7, flexWrap: 'wrap' }}>
-            <Button
+          <Button
               variant="outlined"
               onClick={handleTimePickerOpen}
               startIcon={<AccessTimeIcon sx={{ fontSize: 16 }} />}
@@ -316,13 +293,7 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
               }}
             >
               {formatTimeLabel(selectedTime)}
-            </Button>
-            <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.45, color: '#6b7280' }}>
-              <KeyboardVoiceIcon sx={{ fontSize: 16 }} />
-              <Typography sx={{ fontSize: '0.76rem', fontWeight: 600 }}>
-                Use your keyboard mic to dictate
-              </Typography>
-            </Box>
+          </Button>
           </Box>
 
           <input
@@ -342,9 +313,9 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
           />
 
           <RichTextInput
+            value={noteData}
             placeholder={notePlaceholder}
-            hidePhotoButton
-            onDataChange={(data) => setNoteText(data?.text || '')}
+            onDataChange={setNoteData}
           />
 
           {selectedTags.length > 0 && (
@@ -381,15 +352,6 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
             </Box>
           )}
         </Box>
-
-        <input
-          ref={photoInputRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          hidden
-          onChange={handlePhotoSelect}
-        />
 
         <Box sx={{ mb: 2, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1 }}>
           <Box
@@ -464,24 +426,9 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
                 ? selectedTags.length === 1
                   ? `Tags: ${selectedTags[0]}`
                   : `Tags (${selectedTags.length})`
-                : 'Add context to your note'}
+              : 'Add context to your note'}
             </Button>
           </Box>
-
-          {photoPreviewUrl ? (
-            <Box
-              component="img"
-              src={photoPreviewUrl}
-              alt="Selected attachment"
-              sx={{
-                width: 92,
-                height: 92,
-                objectFit: 'cover',
-                borderRadius: '10px',
-                border: '2px solid #d7def4',
-              }}
-            />
-          ) : null}
         </Box>
 
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
@@ -498,7 +445,7 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
             <StyledButton
               variant="contained"
               onClick={saveQuickNote}
-              disabled={!noteText.trim() || saving}
+              disabled={(!noteText.trim() && !noteData?.mediaFile && !noteData?.audioBlob) || saving}
               startIcon={saving ? <CircularProgress size={16} color="inherit" /> : <DescriptionIcon />}
               sx={{
                 minWidth: 180,

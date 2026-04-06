@@ -247,7 +247,19 @@ service cloud.firestore {
       }
     }
 
-    // Child access is now handled through the children collection directly
+    // Child access join table used by care-team lookups and child-specific chat
+    match /child_access/{accessId} {
+      allow read: if isAuthenticated() && (
+        (resource.data.childId != null && hasChildAccess(request.auth.uid, resource.data.childId)) ||
+        (resource.data.childId != null && isChildOwner(resource.data.childId)) ||
+        (resource.data.userId != null && request.auth.uid == resource.data.userId)
+      );
+
+      allow create, update, delete: if isAuthenticated() && (
+        (request.resource.data.childId != null && isChildOwner(request.resource.data.childId)) ||
+        (resource.data.childId != null && isChildOwner(resource.data.childId))
+      );
+    }
     
     // === NEW MESSAGING COLLECTIONS ===
     
@@ -382,7 +394,7 @@ service cloud.firestore {
         hasChildAccess(request.auth.uid, request.resource.data.childId) &&
         (
           !(hasChildRoleForRequest('therapists')) ||
-          request.resource.data.category in ['medication','food','bathroom','health']
+          request.resource.data.category in ['medication','food','bathroom','health','log']
         ) &&
         request.resource.data.keys().hasAll(['createdBy', 'createdAt', 'childId', 'type']) &&
         request.resource.data.type is string &&
@@ -409,7 +421,7 @@ service cloud.firestore {
         hasChildAccess(request.auth.uid, request.resource.data.childId) &&
         (
           !(hasChildRoleForRequest('therapists')) ||
-          request.resource.data.category in ['medication','food','bathroom','health']
+          request.resource.data.category in ['medication','food','bathroom','health','log']
         ) &&
         request.resource.data.keys().hasAll(['createdBy', 'createdAt', 'childId', 'text']) &&
         request.resource.data.text is string &&
@@ -419,7 +431,7 @@ service cloud.firestore {
         request.resource.data.status == 'active' &&
         // Optional fields validation
         (!('tags' in request.resource.data) || request.resource.data.tags is list) &&
-        (!('category' in request.resource.data) || request.resource.data.category in ['mealtime','mood','sleep','milestone','challenge','medical_note','medication','food','bathroom','health']);
+        (!('category' in request.resource.data) || request.resource.data.category in ['mealtime','mood','sleep','milestone','challenge','medical_note','medication','food','bathroom','health','log']);
       
       // READ: All roles with child access (child must be active)
       allow read: if isAuthenticated() && 
@@ -453,7 +465,7 @@ service cloud.firestore {
           request.resource.data.text.size() <= 10000)) &&
         // Optional fields validation for updates
         (!('tags' in request.resource.data) || request.resource.data.tags is list) &&
-        (!('category' in request.resource.data) || request.resource.data.category in ['mealtime','mood','sleep','milestone','challenge','medical_note','medication','food','bathroom','health']);
+        (!('category' in request.resource.data) || request.resource.data.category in ['mealtime','mood','sleep','milestone','challenge','medical_note','medication','food','bathroom','health','log']);
     }
     
     match /journal_entries/{entryId} {

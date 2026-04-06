@@ -294,6 +294,7 @@ const MessageThread = ({
       {/* Message Composer */}
       <MessageComposer
         conversationId={conversation?.id}
+        childId={conversation?.childId}
         currentUserId={currentUserId}
         onMessageSent={handleMessageSent}
         isMobile={isMobile}

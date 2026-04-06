@@ -346,17 +346,54 @@ const UnifiedTimeline = ({
     return entry.text || entry.summary || entry.notes || entry.content || null;
   }, []);
 
-  const getMobileEntryImage = React.useCallback((entry, entryType) => {
+  const getMobileEntryAttachment = React.useCallback((entry, entryType) => {
+    const inferTypeFromUrl = (url = '') => {
+      const lower = String(url).toLowerCase();
+      if (lower.match(/\.(mp4|webm|mov|m4v)(\?|$)/)) return 'video';
+      if (lower.match(/\.(mp3|wav|m4a|ogg)(\?|$)/)) return 'audio';
+      return 'image';
+    };
+
+    const normalizeAttachment = (value, fallbackType = 'image') => {
+      if (!value) return null;
+      if (typeof value === 'string') {
+        return {
+          url: value,
+          type: inferTypeFromUrl(value) || fallbackType,
+          filename: 'Attachment',
+        };
+      }
+
+      if (typeof value === 'object') {
+        const url = value.url || value.downloadURL || value.mediaURL || '';
+        if (!url) return null;
+        const mimeType = value.mimeType || '';
+        const type = value.type
+          || (mimeType.startsWith('video/')
+            ? 'video'
+            : mimeType.startsWith('audio/')
+              ? 'audio'
+              : inferTypeFromUrl(url) || fallbackType);
+        return {
+          url,
+          type,
+          filename: value.filename || value.name || 'Attachment',
+        };
+      }
+
+      return null;
+    };
+
     if (entryType === ENTRY_TYPE.INCIDENT) {
-      return entry.mediaURL || entry.mediaAttachments?.[0] || null;
+      return normalizeAttachment(entry.mediaURL || entry.mediaAttachments?.[0], 'image');
     }
 
     if (entryType === ENTRY_TYPE.DAILY_HABIT) {
-      return entry.mediaUrls?.[0] || null;
+      return normalizeAttachment(entry.mediaUrls?.[0], 'image');
     }
 
     if ([ENTRY_TYPE.JOURNAL, ENTRY_TYPE.IMPORTANT_MOMENT, ENTRY_TYPE.BEHAVIOR, ENTRY_TYPE.HEALTH, ENTRY_TYPE.MOOD, ENTRY_TYPE.SLEEP, ENTRY_TYPE.FOOD, ENTRY_TYPE.MILESTONE].includes(entryType)) {
-      return entry.mediaURL || entry.mediaUrls?.[0] || null;
+      return normalizeAttachment(entry.mediaURL || entry.mediaUrls?.[0] || entry.mediaAttachments?.[0], 'image');
     }
 
     return null;
@@ -393,7 +430,7 @@ const UnifiedTimeline = ({
       if (entry.tags?.length > 0) {
         meta.push(`#${entry.tags[0]}`);
       }
-      if (entry.mediaURL || entry.mediaUrls?.length > 0 || entry.voiceMemoURL) {
+      if (entry.mediaURL || entry.mediaUrls?.length > 0 || entry.mediaAttachments?.length > 0 || entry.voiceMemoURL) {
         meta.push('Media attached');
       }
       return meta.join(' • ') || null;
@@ -688,7 +725,7 @@ const UnifiedTimeline = ({
                   minute: "2-digit",
                 });
                 const presentation = getEntryPresentation(entry);
-                const mobileImage = getMobileEntryImage(entry, presentation.entryType);
+                const mobileAttachment = getMobileEntryAttachment(entry, presentation.entryType);
                 const mobileMeta = getMobileEntryMeta(entry, presentation.entryType);
                 const canEditMobileEntry = entry.collection === 'dailyLogs'
                   && ((entry.createdBy || entry.userId || entry.authorId) === currentUser?.uid);
@@ -903,7 +940,7 @@ const UnifiedTimeline = ({
                         </Typography>
                       ) : null}
 
-                      {mobileImage && !isEditingMobileEntry ? (
+                      {mobileAttachment && !isEditingMobileEntry ? (
                         <Box
                           sx={{
                             width: { xs: 148, md: 176 },
@@ -914,17 +951,63 @@ const UnifiedTimeline = ({
                             backgroundColor: '#F8FAFC',
                           }}
                         >
-                          <Box
-                            component="img"
-                            src={mobileImage}
-                            alt={presentation.entryLabel}
-                            sx={{
-                              display: 'block',
-                              width: '100%',
-                              height: { xs: 110, md: 132 },
-                              objectFit: 'cover',
-                            }}
-                          />
+                          {mobileAttachment.type === 'video' ? (
+                            <Box
+                              component="video"
+                              controls
+                              src={mobileAttachment.url}
+                              sx={{
+                                display: 'block',
+                                width: '100%',
+                                height: { xs: 110, md: 132 },
+                                objectFit: 'cover',
+                                bgcolor: '#111827',
+                              }}
+                            />
+                          ) : mobileAttachment.type === 'audio' ? (
+                            <Box sx={{ p: 1 }}>
+                              <audio controls src={mobileAttachment.url} style={{ width: '100%' }} />
+                            </Box>
+                          ) : (
+                            <Box
+                              component="img"
+                              src={mobileAttachment.url}
+                              alt={mobileAttachment.filename || presentation.entryLabel}
+                              sx={{
+                                display: 'block',
+                                width: '100%',
+                                height: { xs: 110, md: 132 },
+                                objectFit: 'cover',
+                              }}
+                              loading="lazy"
+                              referrerPolicy="no-referrer"
+                            />
+                          )}
+                          {mobileAttachment.filename ? (
+                            <Box
+                              sx={{
+                                px: 1,
+                                py: 0.45,
+                                borderTop: '1px solid rgba(226, 232, 240, 0.9)',
+                                bgcolor: '#F8FAFC',
+                              }}
+                            >
+                              <Typography
+                                variant="caption"
+                                sx={{
+                                  color: 'text.secondary',
+                                  fontSize: '0.68rem',
+                                  lineHeight: 1.2,
+                                  display: 'block',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap',
+                                }}
+                              >
+                                {mobileAttachment.filename}
+                              </Typography>
+                            </Box>
+                          ) : null}
                         </Box>
                       ) : null}
 

@@ -13,6 +13,8 @@ import {
   Chip,
   Menu,
   MenuItem,
+  Popover,
+  Divider,
   Tooltip,
   useTheme
 } from '@mui/material';
@@ -24,7 +26,8 @@ import {
   Share,
   PriorityHigh,
   PhotoCamera,
-  Videocam
+  Videocam,
+  LabelOutlined
 } from '@mui/icons-material';
 import { useAuthState } from 'react-firebase-hooks/auth';
 
@@ -35,6 +38,12 @@ import { getMessagingTheme } from '../../assets/theme/messagingTheme';
 import { auth } from '../../services/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../../services/firebase';
+import {
+  LOG_TYPES,
+  TAG_TYPES,
+  getTagTypeById,
+  getTimelineMetaForCategory,
+} from '../../constants/logTypeRegistry';
 
 /**
  * Message priority selector
@@ -119,6 +128,7 @@ const ReplyPreview = ({ replyToMessage, onCancelReply }) => {
  */
 const MessageComposer = ({
   conversationId,
+  childId = null,
   currentUserId,
   onMessageSent,
   isMobile = false,
@@ -135,6 +145,9 @@ const MessageComposer = ({
   const [error, setError] = useState(null);
   const [priority, setPriority] = useState(MessagePriority.NORMAL);
   const [priorityAnchor, setPriorityAnchor] = useState(null);
+  const [contextAnchor, setContextAnchor] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedTags, setSelectedTags] = useState([]);
 
   // Refs
   const textFieldRef = useRef(null);
@@ -188,9 +201,13 @@ const MessageComposer = ({
         senderName: user?.displayName || user?.email || 'Unknown User',
         text: trimmedText,
         type: MessageTypes.TEXT,
+        category: selectedCategory || null,
+        tags: [...selectedTags],
         priority,
         replyTo: replyToMessage?.id || null,
-        metadata: {}
+        metadata: {
+          childId,
+        }
       };
 
       const result = await sendMessage(messageData);
@@ -200,6 +217,7 @@ const MessageComposer = ({
         // Clear composer
         setMessageText('');
         setPriority(MessagePriority.NORMAL);
+        handleClearContext();
         
         // Cancel reply if active
         if (onCancelReply) {
@@ -257,6 +275,32 @@ const MessageComposer = ({
   const handleShareContent = () => {
     // TODO: Implement content sharing
     console.log('🔗 Content sharing not yet implemented');
+  };
+
+  const handleContextClick = (event) => {
+    setContextAnchor(event.currentTarget);
+  };
+
+  const handleContextClose = () => {
+    setContextAnchor(null);
+  };
+
+  const handleCategorySelect = (category) => {
+    setSelectedCategory((current) => (current === category ? '' : category));
+  };
+
+  const handleTagToggle = (tagId) => {
+    setSelectedTags((current) => (
+      current.includes(tagId)
+        ? current.filter((item) => item !== tagId)
+        : [...current, tagId]
+    ));
+  };
+
+  const handleClearContext = () => {
+    setSelectedCategory('');
+    setSelectedTags([]);
+    setContextAnchor(null);
   };
 
   /**
@@ -319,10 +363,14 @@ const MessageComposer = ({
         senderName: user?.displayName || user?.email || 'Unknown User',
         text: previewText,
         type: MessageTypes.IMAGE,
+        category: selectedCategory || null,
+        tags: [...selectedTags],
         priority,
         replyTo: null,
         attachments: [attachment],
-        metadata: {}
+        metadata: {
+          childId,
+        }
       };
 
       const result = await sendMessage(messageData);
@@ -337,6 +385,7 @@ const MessageComposer = ({
           isDeleted: false
         };
         onMessageSent?.(sentMessage);
+        handleClearContext();
       } else {
         console.error('Failed to send media message:', result.error);
         setError(result.error || 'Failed to send media');
@@ -358,6 +407,29 @@ const MessageComposer = ({
 
   // Auto-resize text field (basic implementation)
   const maxRows = isMobile ? 3 : 4;
+  const categoryOptions = [
+    LOG_TYPES.sleep,
+    LOG_TYPES.medication,
+    LOG_TYPES.food,
+    LOG_TYPES.bathroom,
+    LOG_TYPES.behavior,
+    LOG_TYPES.mood,
+    LOG_TYPES.milestone,
+    LOG_TYPES.health,
+    LOG_TYPES.log,
+  ];
+  const tagOptions = Object.values(TAG_TYPES);
+  const selectedCategoryMeta = selectedCategory ? getTimelineMetaForCategory(selectedCategory) : null;
+  const selectedTagMetas = selectedTags
+    .map((tagId) => {
+      const tag = getTagTypeById(tagId);
+      if (!tag) return null;
+      return {
+        ...tag,
+        meta: getTimelineMetaForCategory(tag.category),
+      };
+    })
+    .filter(Boolean);
 
   return (
     <Paper
@@ -574,6 +646,142 @@ const MessageComposer = ({
           </Box>
         </Tooltip>
       </Box>
+
+      {/* Context Summary */}
+      <Box
+        sx={{
+          px: 2,
+          pb: selectedCategory || selectedTags.length ? 1 : 1.5,
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 0.75,
+          alignItems: 'center',
+        }}
+      >
+        {selectedCategoryMeta ? (
+          <Chip
+            size="small"
+            label={selectedCategoryMeta.label}
+            icon={<span aria-hidden="true">{selectedCategoryMeta.icon}</span>}
+            onDelete={() => setSelectedCategory('')}
+            sx={{
+              bgcolor: `${selectedCategoryMeta.color}18`,
+              color: selectedCategoryMeta.color,
+              borderColor: `${selectedCategoryMeta.color}44`,
+              border: '1px solid',
+              fontWeight: 700,
+              '& .MuiChip-icon': { color: 'inherit' },
+            }}
+          />
+        ) : null}
+
+        {selectedTagMetas.map((tag) => (
+          <Chip
+            key={tag.id}
+            size="small"
+            label={tag.label}
+            icon={<span aria-hidden="true">{tag.icon}</span>}
+            onDelete={() => handleTagToggle(tag.id)}
+            sx={{
+              bgcolor: `${tag.meta.color}18`,
+              color: tag.meta.color,
+              borderColor: `${tag.meta.color}44`,
+              border: '1px solid',
+              fontWeight: 700,
+              '& .MuiChip-icon': { color: 'inherit' },
+            }}
+          />
+        ))}
+
+        <Chip
+          size="small"
+          clickable
+          onClick={handleContextClick}
+          icon={<LabelOutlined />}
+          label={selectedCategory || selectedTags.length ? 'Add more context' : 'Add context'}
+          variant={selectedCategory || selectedTags.length ? 'outlined' : 'filled'}
+          sx={{
+            fontWeight: 700,
+            borderColor: 'rgba(37, 99, 235, 0.22)',
+            color: 'primary.main',
+            bgcolor: selectedCategory || selectedTags.length ? 'transparent' : 'rgba(239, 246, 255, 0.95)',
+          }}
+        />
+      </Box>
+
+      <Popover
+        open={Boolean(contextAnchor)}
+        anchorEl={contextAnchor}
+        onClose={handleContextClose}
+        anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
+        transformOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+        slotProps={{
+          paper: {
+            sx: {
+              width: { xs: 320, sm: 420 },
+              p: 2,
+              borderRadius: 3,
+              mt: 1,
+            },
+          },
+        }}
+      >
+        <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>
+          Entry type
+        </Typography>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+          {categoryOptions.map((type) => {
+            const meta = getTimelineMetaForCategory(type.category);
+            const isSelected = selectedCategory === type.category;
+            return (
+              <Chip
+                key={type.id}
+                label={type.filterLabel}
+                icon={<span aria-hidden="true">{type.icon}</span>}
+                onClick={() => handleCategorySelect(type.category)}
+                variant={isSelected ? 'filled' : 'outlined'}
+                color={isSelected ? 'primary' : 'default'}
+                sx={{
+                  borderColor: isSelected ? `${meta.color}55` : 'rgba(148, 163, 184, 0.22)',
+                  bgcolor: isSelected ? `${meta.color}18` : 'background.paper',
+                  color: isSelected ? meta.color : 'text.primary',
+                  fontWeight: 700,
+                  '& .MuiChip-icon': { color: 'inherit' },
+                }}
+              />
+            );
+          })}
+        </Box>
+
+        <Divider sx={{ my: 1.5 }} />
+
+        <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>
+          Context tags
+        </Typography>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+          {tagOptions.map((tag) => {
+            const tagMeta = getTimelineMetaForCategory(tag.category);
+            const isSelected = selectedTags.includes(tag.id);
+            return (
+              <Chip
+                key={tag.id}
+                label={tag.label}
+                icon={<span aria-hidden="true">{tag.icon}</span>}
+                onClick={() => handleTagToggle(tag.id)}
+                variant={isSelected ? 'filled' : 'outlined'}
+                color={isSelected ? 'primary' : 'default'}
+                sx={{
+                  borderColor: isSelected ? `${tagMeta.color}55` : 'rgba(148, 163, 184, 0.22)',
+                  bgcolor: isSelected ? `${tagMeta.color}18` : 'background.paper',
+                  color: isSelected ? tagMeta.color : 'text.primary',
+                  fontWeight: 700,
+                  '& .MuiChip-icon': { color: 'inherit' },
+                }}
+              />
+            );
+          })}
+        </Box>
+      </Popover>
 
       {/* Priority Selector Menu */}
       <PrioritySelector

@@ -69,6 +69,11 @@ export const getChildCareTeam = async (childId) => {
     return careTeamMembers;
 
   } catch (error) {
+    if (error?.code === 'permission-denied') {
+      console.warn(`Permission denied reading child care team for ${childId}; treating as no accessible team.`);
+      return [];
+    }
+
     console.error('Error getting child care team:', error);
     throw error;
   }
@@ -143,6 +148,10 @@ export const canUserMessageAboutChild = async (userId, childId) => {
     return !accessSnapshot.empty;
 
   } catch (error) {
+    if (error?.code === 'permission-denied') {
+      return false;
+    }
+
     console.error('Error checking child access:', error);
     return false;
   }

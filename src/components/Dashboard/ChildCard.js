@@ -82,6 +82,7 @@ const ChildCard = ({
             onTrack={onTrack}
             onOpenFoodLog={onOpenFoodLog}
             onOpenMedicalLog={onOpenMedicalLog}
+            onMessages={onMessages}
             onNotificationClick={handleNotificationClick}
             compactIdentityOnMobile={compactIdentityOnMobile}
             collapseSummaryOnMobile={collapseSummaryOnMobile}

@@ -189,6 +189,22 @@ export const validateMessage = (message) => {
     }
   }
 
+  if (message.category !== undefined && message.category !== null && typeof message.category !== 'string') {
+    errors.push('category must be a string or null');
+  }
+
+  if (message.tags !== undefined) {
+    if (!Array.isArray(message.tags)) {
+      errors.push('tags must be an array');
+    } else {
+      message.tags.forEach((tag, index) => {
+        if (typeof tag !== 'string') {
+          errors.push(`tags[${index}] must be a string`);
+        }
+      });
+    }
+  }
+
   // Read receipts validation
   if (message.readBy) {
     if (typeof message.readBy !== 'object') {

@@ -9,6 +9,7 @@ import { CATEGORY_COLORS } from '../constants/categoryColors';
 import { getCustomCategories, getIncidentTypeConfig } from '../services/incidentService';
 import { HABIT_TYPES } from '../constants/habitTypes';
 import { LOG_TYPES, getLogTypeByEntry, getTimelineMetaForCategory, SPECIAL_FILTER_TYPES } from '../constants/logTypeRegistry';
+import { dedupeTimelineEntries } from '../services/timeline/timelineDeduping';
 
 const HABIT_CATEGORY_ICON_MAP = {
   mood: '🙂',
@@ -335,8 +336,8 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
     ];
 
     // Sort all entries by timestamp (most recent first)
-    const sortedEntries = transformedEntries.sort((a, b) => 
-      new Date(b.timestamp) - new Date(a.timestamp)
+    const sortedEntries = dedupeTimelineEntries(
+      transformedEntries.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
     );
 
     // Apply filters

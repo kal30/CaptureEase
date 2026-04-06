@@ -722,10 +722,26 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
     setShowBathroomLogSheet(true);
   };
 
-  const handleMessages = (child) => {
-    // Navigate to messages page with child context
+  const handleMessages = async (child) => {
+    if (!child?.id) {
+      return;
+    }
+
     setCurrentChildId(child.id);
-    navigate("/messages", { state: { selectedChildId: child.id } });
+
+    const searchParams = new URLSearchParams({
+      childId: child.id,
+      openChildChat: '1',
+      returnToDashboard: '1',
+    });
+
+    navigate(`/messages?${searchParams.toString()}`, {
+      state: {
+        selectedChildId: child.id,
+        openChildChat: true,
+        returnToDashboard: true,
+      }
+    });
   };
 
   const handleGroupActionClick = (action, child) => {

@@ -20,6 +20,7 @@ import { searchMedications } from '../../services/drugService';
 import { addSideEffect, fetchSideEffects, updateSideEffect, deleteSideEffect } from '../../services/sideEffectService';
 import BulkMedicationLogDialog from './components/BulkMedicationLogDialog';
 import MedicationSideEffectDialog from './components/MedicationSideEffectDialog';
+import { uploadIncidentMedia } from '../../components/Dashboard/Incidents/Media/mediaUploadService';
 
 const MedicationsLogTab = ({ childId, childName }) => {
   const theme = useTheme(); // Get theme object
@@ -41,6 +42,7 @@ const MedicationsLogTab = ({ childId, childName }) => {
     prescribingDoctor: '',
     notes: '',
   });
+  const [medicationNotesData, setMedicationNotesData] = useState({ text: '', mediaFile: null, audioBlob: null });
   const [medicationSuggestions, setMedicationSuggestions] = useState([]);
   const [doseLogMap, setDoseLogMap] = useState({});
 
@@ -153,6 +155,7 @@ const MedicationsLogTab = ({ childId, childName }) => {
       prescribingDoctor: '',
       notes: '',
     });
+    setMedicationNotesData({ text: '', mediaFile: null, audioBlob: null });
   };
 
   const handleOpenBulkLogDialog = () => {
@@ -173,6 +176,11 @@ const MedicationsLogTab = ({ childId, childName }) => {
       prescribingDoctor: med.prescribingDoctor,
       notes: med.notes,
     });
+    setMedicationNotesData({
+      text: med.notes || '',
+      mediaFile: null,
+      audioBlob: null,
+    });
   };
 
   const handleCloseMedicationForm = () => {
@@ -186,6 +194,7 @@ const MedicationsLogTab = ({ childId, childName }) => {
       prescribingDoctor: '',
       notes: '',
     });
+    setMedicationNotesData({ text: '', mediaFile: null, audioBlob: null });
   };
 
   const handleMedicationSearch = async (event, value) => {
@@ -206,22 +215,59 @@ const MedicationsLogTab = ({ childId, childName }) => {
   };
 
   const handleMedicationSubmit = async () => {
+    const notesText = medicationNotesData?.text || '';
+    let mediaUrls = [];
+
     if (editingMedicationId) {
-      await updateMedication(editingMedicationId, medicationForm);
+      await updateMedication(editingMedicationId, {
+        ...medicationForm,
+        notes: notesText,
+      });
+
+      if (medicationNotesData?.mediaFile || medicationNotesData?.audioBlob) {
+        const uploadedRichMedia = await uploadIncidentMedia(
+          medicationNotesData?.mediaFile,
+          medicationNotesData?.audioBlob,
+          editingMedicationId,
+          `medications/${childId}/${editingMedicationId}`
+        );
+        mediaUrls = (uploadedRichMedia || []).map((item) => item.url).filter(Boolean);
+        if (mediaUrls.length > 0) {
+          await updateMedication(editingMedicationId, { mediaUrls });
+        }
+      }
+
       setMedications((prevMedications) =>
         prevMedications.map((med) =>
-          med.id === editingMedicationId ? { ...med, ...medicationForm } : med
+          med.id === editingMedicationId
+            ? { ...med, ...medicationForm, notes: notesText, ...(mediaUrls.length > 0 ? { mediaUrls } : {}) }
+            : med
         )
       );
       handleCloseMedicationForm();
     } else {
       const newMedicationId = await addMedication({
         ...medicationForm,
+        notes: notesText,
         childId,
         createdBy: user?.uid,
         createdAt: serverTimestamp(),
         isArchived: false,
       });
+
+      if (medicationNotesData?.mediaFile || medicationNotesData?.audioBlob) {
+        const uploadedRichMedia = await uploadIncidentMedia(
+          medicationNotesData?.mediaFile,
+          medicationNotesData?.audioBlob,
+          newMedicationId,
+          `medications/${childId}/${newMedicationId}`
+        );
+        mediaUrls = (uploadedRichMedia || []).map((item) => item.url).filter(Boolean);
+        if (mediaUrls.length > 0) {
+          await updateMedication(newMedicationId, { mediaUrls });
+        }
+      }
+
       const startedAt = new Date();
       const milestoneText = `Started ${medicationForm.name} ${medicationForm.dosage || ''}`.trim();
       const milestoneRef = await addDoc(collection(db, 'dailyLogs'), {
@@ -261,11 +307,13 @@ const MedicationsLogTab = ({ childId, childName }) => {
         {
           id: newMedicationId,
           ...medicationForm,
+          notes: notesText,
           childId,
           createdBy: user?.uid,
           createdAt: new Date(),
           isArchived: false,
           sideEffects: [],
+          ...(mediaUrls.length > 0 ? { mediaUrls } : {}),
         },
       ]);
       setMedicationForm({
@@ -276,6 +324,7 @@ const MedicationsLogTab = ({ childId, childName }) => {
         prescribingDoctor: '',
         notes: '',
       });
+      setMedicationNotesData({ text: '', mediaFile: null, audioBlob: null });
       setRecentlySavedMedicationId(newMedicationId);
       setSnackbarMessage(`${medicationForm.name || 'Medication'} saved`);
       setShowSnackbar(true);
@@ -486,7 +535,9 @@ const MedicationsLogTab = ({ childId, childName }) => {
         open={Boolean(showForm)}
         onClose={handleCloseMedicationForm}
         medicationForm={medicationForm}
+        medicationNotesData={medicationNotesData}
         handleMedicationFormChange={handleMedicationFormChange}
+        setMedicationNotesData={setMedicationNotesData}
         handleMedicationSubmit={handleMedicationSubmit}
         handleCancelEdit={handleCloseMedicationForm}
         editingMedicationId={editingMedicationId}

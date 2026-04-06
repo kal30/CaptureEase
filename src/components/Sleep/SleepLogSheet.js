@@ -14,11 +14,12 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp, updateDoc } from 'firebase/firestore';
 import RichTextInput from '../UI/RichTextInput';
 import LogFormShell from '../UI/LogFormShell';
 import { auth, db } from '../../services/firebase';
 import { SLEEP_SCALE } from '../../constants/habitTypes';
+import { uploadIncidentMedia } from '../Dashboard/Incidents/Media/mediaUploadService';
 
 const DEFAULT_BEDTIME = '21:00';
 const DEFAULT_WAKE_TIME = '07:00';
@@ -147,12 +148,27 @@ const SleepLogSheet = ({ open, onClose, child }) => {
       };
 
       const docRef = await addDoc(collection(db, 'dailyLogs'), docData);
+      let mediaUrls = [];
+
+      if (notesData?.mediaFile || notesData?.audioBlob) {
+        const uploadedRichMedia = await uploadIncidentMedia(
+          notesData?.mediaFile,
+          notesData?.audioBlob,
+          docRef.id,
+          `dailyLogs/${docRef.id}`
+        );
+        mediaUrls = (uploadedRichMedia || []).map((item) => item.url).filter(Boolean);
+        if (mediaUrls.length > 0) {
+          await updateDoc(docRef, { mediaUrls });
+        }
+      }
 
       window.dispatchEvent(new CustomEvent('captureez:timeline-entry-created', {
         detail: {
           id: docRef.id,
           collection: 'dailyLogs',
           ...docData,
+          ...(mediaUrls.length > 0 && { mediaUrls }),
         },
       }));
 
@@ -288,6 +304,7 @@ const SleepLogSheet = ({ open, onClose, child }) => {
 
         <Box>
           <RichTextInput
+            value={notesData}
             onDataChange={setNotesData}
             clearData={notesClearToken}
             placeholder="Add notes about sleep, wake-ups, routines, or #tags"

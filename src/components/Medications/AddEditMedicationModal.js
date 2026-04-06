@@ -8,6 +8,7 @@ import {
   Autocomplete,
   Grid,
 } from "@mui/material";
+import RichTextInput from "../UI/RichTextInput";
 
 const style = {
   position: "absolute",
@@ -36,6 +37,8 @@ const AddEditMedicationModal = ({
   editingMedicationId,
   medicationSuggestions,
   handleMedicationSearch,
+  medicationNotesData,
+  setMedicationNotesData,
 }) => {
   return (
     <Modal
@@ -128,16 +131,13 @@ const AddEditMedicationModal = ({
             />
           </Grid>
           <Grid item xs={12}>
-            <TextField
-              margin="normal"
-              fullWidth
-              id="notes"
-              label="Notes"
-              name="notes"
-              multiline
-              rows={1}
-              value={medicationForm.notes}
-              onChange={handleMedicationFormChange}
+            <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 700 }}>
+              Notes
+            </Typography>
+            <RichTextInput
+              value={medicationNotesData}
+              onDataChange={setMedicationNotesData}
+              placeholder="Add notes about this medication, timing, or #tags"
             />
           </Grid>
         </Grid>

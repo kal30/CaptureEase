@@ -17,6 +17,7 @@ import { useTheme } from '@mui/material/styles';
 import {
   ArrowBack as ArrowBackIcon,
   AutoAwesomeOutlined as AutoAwesomeOutlinedIcon,
+  ForumOutlined as ForumOutlinedIcon,
   KeyboardArrowDown as KeyboardArrowDownIcon,
   KeyboardArrowUp as KeyboardArrowUpIcon,
   MedicalServicesOutlined as MedicalServicesOutlinedIcon,
@@ -29,6 +30,7 @@ import TimelineWidget from '../../UI/TimelineWidget';
 import CareTeamDisplay from '../../UI/CareTeamDisplay';
 import ChildManagementMenu from '../ChildManagementMenu';
 import { getChildAccent } from '../shared/childAccent';
+import { getChildCareTeam } from '../../../services/childAccessService';
 import { getTrackLogTypes } from '../../../constants/logTypeRegistry';
 import { useRole } from '../../../contexts/RoleContext';
 import { trackRenderDebug, useMountDebug } from '../../../utils/renderDebug';
@@ -93,6 +95,7 @@ const ChildDashboard = ({
   const [switcherAnchor, setSwitcherAnchor] = useState(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isActionPanelOpen, setIsActionPanelOpen] = useState(true);
+  const [careTeamCount, setCareTeamCount] = useState(null);
   const theme = useTheme();
   const isMobileViewport = useMediaQuery(theme.breakpoints.down('md'));
   const { getUserRoleForChild, canAddDataForChild } = useRole();
@@ -120,6 +123,34 @@ const ChildDashboard = ({
     setIsCollapsed(false);
     return undefined;
   }, [isMobileViewport, pauseScrollCollapse]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    if (!child?.id || !onMessages) {
+      setCareTeamCount(null);
+      return undefined;
+    }
+
+    const loadCareTeamCount = async () => {
+      try {
+        const members = await getChildCareTeam(child.id);
+        if (isMounted) {
+          setCareTeamCount(Array.isArray(members) ? members.length : 0);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setCareTeamCount(0);
+        }
+      }
+    };
+
+    loadCareTeamCount();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [child?.id, onMessages]);
 
   if (!child) {
     return null;
@@ -225,6 +256,7 @@ const ChildDashboard = ({
       <Box
         className={`mobile-dashboard-hero${isCollapsed ? ' is-collapsed' : ''}`}
         sx={{
+          position: 'relative',
           p: isCollapsed ? 1 : { xs: 1.2, sm: 1.75 },
           borderRadius: isCollapsed ? 0 : 1,
           background: isCollapsed
@@ -340,7 +372,17 @@ const ChildDashboard = ({
             ) : null}
           </Box>
 
-          <Box sx={{ display: isCollapsed ? 'none' : 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.4 }}>
+          <Box
+            sx={{
+              display: isCollapsed ? 'none' : 'flex',
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 0.75,
+              width: '100%',
+              flexWrap: 'wrap',
+            }}
+          >
             <CareTeamDisplay
               child={child}
               userRole={userRole}
@@ -349,6 +391,58 @@ const ChildDashboard = ({
               compactMobile={true}
               sx={{ mt: 0, p: 0, minWidth: 0, justifyContent: 'center' }}
             />
+
+            {onMessages ? (
+              <>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<ForumOutlinedIcon sx={{ fontSize: 17 }} />}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    if (careTeamCount === 0) return;
+                    onMessages?.(child);
+                  }}
+                  disabled={careTeamCount === 0}
+                  sx={{
+                    borderRadius: 999,
+                    textTransform: 'none',
+                    fontWeight: 800,
+                    px: 1.15,
+                    py: 0.5,
+                    minHeight: 34,
+                    whiteSpace: 'nowrap',
+                    color: careTeamCount === 0 ? 'text.disabled' : accent.strong,
+                    borderColor: careTeamCount === 0 ? 'rgba(148, 163, 184, 0.25)' : 'rgba(37, 99, 235, 0.35)',
+                    backgroundColor: careTeamCount === 0 ? 'rgba(241, 245, 249, 0.85)' : 'rgba(255,255,255,0.96)',
+                    '& .MuiButton-startIcon': {
+                      color: careTeamCount === 0 ? 'text.disabled' : accent.strong,
+                      mr: 0.45,
+                    },
+                    '&:hover': {
+                      backgroundColor: careTeamCount === 0 ? 'rgba(241, 245, 249, 0.85)' : 'rgba(239, 246, 255, 0.98)',
+                    },
+                  }}
+                  aria-label={careTeamCount === 0 ? 'No care team yet' : 'Open child chat'}
+                >
+                  Start Chat
+                </Button>
+
+                {careTeamCount === 0 ? (
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: 'text.secondary',
+                      fontWeight: 700,
+                      lineHeight: 1,
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    No care team yet
+                  </Typography>
+                ) : null}
+              </>
+            ) : null}
           </Box>
 
           <Box

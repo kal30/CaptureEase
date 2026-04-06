@@ -9,11 +9,12 @@ import {
   Typography,
 } from '@mui/material';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp, updateDoc } from 'firebase/firestore';
 import LogFormShell from '../UI/LogFormShell';
 import RichTextInput from '../UI/RichTextInput';
 import useChildName from '../../hooks/useChildName';
 import { auth, db } from '../../services/firebase';
+import { uploadIncidentMedia } from '../Dashboard/Incidents/Media/mediaUploadService';
 
 const pad = (n) => String(n).padStart(2, '0');
 
@@ -104,12 +105,27 @@ const FoodLogSheet = ({ open, onClose, child }) => {
       };
 
       const docRef = await addDoc(collection(db, 'dailyLogs'), docData);
+      let mediaUrls = [];
+
+      if (whatWasEatenData?.mediaFile || whatWasEatenData?.audioBlob) {
+        const uploadedRichMedia = await uploadIncidentMedia(
+          whatWasEatenData?.mediaFile,
+          whatWasEatenData?.audioBlob,
+          docRef.id,
+          `dailyLogs/${docRef.id}`
+        );
+        mediaUrls = (uploadedRichMedia || []).map((item) => item.url).filter(Boolean);
+        if (mediaUrls.length > 0) {
+          await updateDoc(docRef, { mediaUrls });
+        }
+      }
 
       window.dispatchEvent(new CustomEvent('captureez:timeline-entry-created', {
         detail: {
           id: docRef.id,
           collection: 'dailyLogs',
           ...docData,
+          ...(mediaUrls.length > 0 && { mediaUrls }),
         },
       }));
 
@@ -182,6 +198,7 @@ const FoodLogSheet = ({ open, onClose, child }) => {
           What was eaten?
         </Typography>
         <RichTextInput
+          value={whatWasEatenData}
           onDataChange={setWhatWasEatenData}
           clearData={whatWasEatenClearToken}
           placeholder="Describe the food, portions, and context"

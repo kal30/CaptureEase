@@ -61,6 +61,8 @@ export const MessagePriority = {
  * @property {string} text - Message content
  * @property {MessageAttachment[]} attachments - File/image attachments
  * @property {MessageMetadata} metadata - Additional context (incident refs, etc)
+ * @property {string|null} category - Optional message category for filtering
+ * @property {string[]} tags - Optional context tags for filtering
  * @property {'normal'|'urgent'} priority - Message priority level
  * @property {Object.<string, Date|null>} readBy - Read receipts {userId: timestamp}
  * @property {string|null} replyTo - ID of message this is replying to
@@ -146,6 +148,8 @@ export const createMessageModel = ({
   type = MessageTypes.TEXT,
   attachments = [],
   metadata = {},
+  category = null,
+  tags = [],
   priority = MessagePriority.NORMAL,
   replyTo = null
 }) => {
@@ -161,6 +165,8 @@ export const createMessageModel = ({
     text: text || '',
     attachments: [...attachments], // Clone array
     metadata: { ...metadata }, // Clone object
+    category: category || null,
+    tags: Array.isArray(tags) ? [...tags] : [],
     priority,
     readBy: { [senderId]: now }, // Sender has read their own message
     replyTo,

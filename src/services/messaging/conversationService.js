@@ -18,6 +18,7 @@ import { db } from '../firebase.js';
 import { COLLECTIONS, QUERY_LIMITS } from '../../constants/collections.js';
 import { createConversationModel } from '../../models/messaging.js';
 import { validateConversation } from '../../models/validators/messaging.js';
+import { getChildCareTeam } from '../childAccessService.js';
 
 /**
  * Creates a new conversation
@@ -355,6 +356,111 @@ export const deactivateConversation = async (conversationId, userId) => {
     return {
       success: false,
       error: error.message || 'Failed to deactivate conversation'
+    };
+  }
+};
+
+/**
+ * Gets or creates the unique care-team conversation for a child.
+ * This is the child-scoped chat room used from the child card.
+ * @param {Object} params
+ * @param {string} params.childId
+ * @param {string} params.childName
+ * @param {string} params.createdBy
+ * @returns {Promise<{success: boolean, conversationId?: string, conversation?: Object, isExisting?: boolean, error?: string}>}
+ */
+export const getOrCreateChildCareTeamConversation = async ({ childId, childName, createdBy }) => {
+  try {
+    if (!childId || !createdBy) {
+      return {
+        success: false,
+        error: 'childId and createdBy are required'
+      };
+    }
+
+    const hasAccess = await validateChildAccess(createdBy, childId);
+    if (!hasAccess) {
+      return {
+        success: false,
+        error: 'User does not have access to this child'
+      };
+    }
+
+    const conversationsRef = collection(db, COLLECTIONS.CONVERSATIONS);
+    const existingQuery = query(
+      conversationsRef,
+      where('childId', '==', childId),
+      where('type', '==', 'group'),
+      where('isActive', '==', true)
+    );
+
+    const existingSnapshot = await getDocs(existingQuery);
+    const existingConversationDoc = existingSnapshot.docs
+      .sort((a, b) => {
+        const aTime = a.data()?.updatedAt?.toDate?.() || a.data()?.createdAt?.toDate?.() || new Date(0);
+        const bTime = b.data()?.updatedAt?.toDate?.() || b.data()?.createdAt?.toDate?.() || new Date(0);
+        return bTime - aTime;
+      })[0];
+
+    if (existingConversationDoc) {
+      return {
+        success: true,
+        conversationId: existingConversationDoc.id,
+        conversation: {
+          id: existingConversationDoc.id,
+          ...existingConversationDoc.data(),
+        },
+        isExisting: true,
+        message: 'Found existing child conversation'
+      };
+    }
+
+    const careTeam = await getChildCareTeam(childId);
+    const participants = Array.from(new Set([
+      createdBy,
+      ...careTeam.map((member) => member.userId).filter(Boolean),
+    ]));
+
+    if (participants.length < 2) {
+      return {
+        success: false,
+        error: 'Not enough care team members to create a conversation'
+      };
+    }
+
+    const title = `${childName || 'Child'} Care Team`;
+    const result = await createConversation({
+      participants,
+      childId,
+      type: 'group',
+      title,
+      createdBy,
+    });
+
+    if (!result.success) {
+      return result;
+    }
+
+    return {
+      success: true,
+      conversationId: result.conversationId,
+      conversation: {
+        id: result.conversationId,
+        participants,
+        childId,
+        type: 'group',
+        title,
+        createdBy,
+        isActive: true,
+      },
+      isExisting: false,
+      message: result.message || 'Conversation created successfully'
+    };
+  } catch (error) {
+    console.error('Error in getOrCreateChildCareTeamConversation:', error);
+    return {
+      success: false,
+      error: error.message || 'Failed to open child conversation'
     };
   }
 };
