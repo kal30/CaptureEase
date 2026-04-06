@@ -65,7 +65,7 @@ const MedicalInfoDisplay = ({
             component="span"
             sx={{
               ...compactChipSx,
-              color: colors.app.semantic.warning,
+              color: colors.semantic.warning,
               borderColor: colors.app.safety.allergyBorder,
               backgroundColor: colors.app.safety.allergyBg,
             }}

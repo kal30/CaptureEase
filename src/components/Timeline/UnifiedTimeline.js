@@ -579,7 +579,7 @@ const UnifiedTimeline = ({
             >
               <Typography sx={{ fontSize: '1.05rem', fontWeight: 800, color: 'text.primary', mb: 0.35 }}>
                 Nothing logged yet today
-                <Box component="span" sx={{ ml: 0.5, color: colors.app.semantic.warning }}>💛</Box>
+                <Box component="span" sx={{ ml: 0.5, color: colors.semantic.warning }}>💛</Box>
               </Typography>
               <Typography sx={{ fontSize: '0.92rem', color: 'text.secondary', mb: 1.25 }}>
                 Start with:
@@ -1044,7 +1044,7 @@ const UnifiedTimeline = ({
                 <MenuItem
                   onClick={() => entryMenuEntry && handleDeleteEntry(entryMenuEntry)}
                   disabled={!entryMenuEntry || Boolean(actionLoadingId)}
-                  sx={{ color: colors?.app?.semantic?.error || '#EF4444' }}
+                  sx={{ color: colors.semantic?.error || '#EF4444' }}
                 >
                   <DeleteIcon sx={{ fontSize: 16, mr: 1 }} />
                   Delete
