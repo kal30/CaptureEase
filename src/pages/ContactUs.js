@@ -13,7 +13,7 @@ import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import { sendContactEmail } from "../services/contactService";
 import colors from "../assets/theme/colors";
 
-const CONTACT_EMAIL = "captureezhq@gmail.com";
+const CONTACT_EMAIL = "support@lifelog.care";
 
 export default function ContactUs() {
   const [formData, setFormData] = useState({

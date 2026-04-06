@@ -13,35 +13,26 @@ const ExpertProgram = () => {
   return (
     <Box sx={expertSectionStyles}>
       <Box sx={expertCardStyles}>
-        {/* Left Side: Text */}
         <Box>
           <Box sx={expertLeftColumnStyles}>
             <Typography variant="h2" sx={expertTitleStyles}>
-              The Moment I Knew I Needed Something Better
+              I have two nephews with autism. I built the app I always needed.
             </Typography>
             <Typography variant="body1" sx={expertBodyTextStyles}>
-              There was a day things escalated so badly I knew something had to
-              change.
+              For years I scrambled to remember what happened before every
+              therapy appointment. Behaviors, triggers, good days, hard days —
+              all buried in phone notes.
             </Typography>
             <Typography sx={expertBodyTextStyles}>
-              Afterwards, sitting with his therapist, I couldn't answer the
-              most basic questions. When did this pattern start? What happened
-              the three days before? Were there warning signs?
+              Everyone caring for your child sees the same timeline in real
+              time. A caregiver logs a meltdown at 1 PM. You see it before the
+              2 PM appointment. The therapist walks in already knowing.
             </Typography>
             <Typography sx={expertBodyTextStyles}>
-              I had nothing. No record. No timeline. Just guilt and exhaustion.
-            </Typography>
-            <Typography sx={expertBodyTextStyles}>
-              That day I realized scattered notes on my phone weren't enough.
-              My nephews needed me to be their memory — organized, clear, and
-              ready to share with every doctor, therapist, and teacher trying
-              to help them.
-            </Typography>
-            <Typography sx={expertBodyTextStyles}>
-              That's why I built CaptureEz.
+              No more “I didn’t know that happened.”
             </Typography>
             <Typography sx={expertSubTitleStyles}>
-              — Kalyani, founder and autism mom
+              Kalyani, founder and autism mom
             </Typography>
           </Box>
         </Box>

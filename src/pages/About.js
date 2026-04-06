@@ -66,7 +66,7 @@ export default function About() {
             >
               At{" "}
               <Box component="span" sx={{ fontWeight: 700 }}>
-                CaptureEz
+                lifelog
               </Box>
               , our mission is simple: make care communication effortless.
               Families and care teams should spend less time chasing updates and
@@ -88,7 +88,7 @@ export default function About() {
               We started after seeing how easily important details get lost in
               texts, emails, or memory.{" "}
               <Box component="span" sx={{ fontWeight: 700 }}>
-                CaptureEz
+                lifelog
               </Box>{" "}
               helps you quickly capture moments and share them securely so
               everyone stays in sync.
@@ -143,7 +143,7 @@ export default function About() {
               Next, we aim to expand collaborations, add richer media logging,
               and bring more insights for care teams — all while keeping{" "}
               <Box component="span" sx={{ fontWeight: 700 }}>
-                CaptureEz
+                lifelog
               </Box>{" "}
               simple and approachable.
             </Typography>

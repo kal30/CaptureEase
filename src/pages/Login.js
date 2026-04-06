@@ -93,7 +93,7 @@ const Login = () => {
           variant="h5"
           sx={{ mb: 1.5, fontWeight: "bold", color: "primary.main" }}
         >
-          Sign In to CaptureEz
+          Sign In to lifelog
         </Typography>
         <Typography
           variant="body2"

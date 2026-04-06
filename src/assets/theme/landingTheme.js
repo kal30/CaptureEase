@@ -37,42 +37,43 @@ export const landingColors = {
 export const landingTypography = {
   // Landing page hero styles
   heroMain: {
-    fontSize: { xs: "1.55rem", md: "2rem", lg: "2.3rem" },
-    fontFamily: '"Coco Gothic", sans-serif',
-    fontWeight: 300,
-    letterSpacing: "0.015em",
+    fontSize: { xs: "2.35rem", sm: "2.65rem", md: "3.2rem", lg: "3.85rem" },
+    fontFamily: '"Inter", sans-serif',
+    fontWeight: 600,
+    letterSpacing: "-0.03em",
     textTransform: "none",
-    lineHeight: { xs: 1.2, md: 1.18, lg: 1.15 },
-    marginBottom: { xs: 0.5, md: 0.75, lg: 1 },
-    maxWidth: { xs: "100%", md: "18ch", lg: "18ch" },
+    lineHeight: { xs: 1.08, md: 1.05, lg: 1.02 },
+    marginBottom: { xs: 0.75, md: 1, lg: 1.1 },
+    maxWidth: { xs: "100%", md: "15ch", lg: "14ch" },
     mx: { xs: "auto", md: 0 },
     textAlign: { xs: "center", md: "left" },
   },
   heroSubtitle: {
     marginTop: { xs: 1, md: 1.5, lg: 2 },
-    fontFamily: '"ITC New Baskerville", serif',
-    fontWeight: 700,
-    lineHeight: 1.1,
-    textTransform: "uppercase",
-    letterSpacing: "0.02em",
-    fontSize: { xs: "1.6rem", md: "2.0rem", lg: "2.2rem" },
+    fontFamily: '"Inter", sans-serif',
+    fontWeight: 600,
+    lineHeight: 1.2,
+    textTransform: "none",
+    letterSpacing: "-0.02em",
+    fontSize: { xs: "1.35rem", md: "1.65rem", lg: "1.85rem" },
     maxWidth: { xs: "100%", md: "90%", lg: "85%" },
   },
   heroBody: {
     marginTop: { xs: 1.5, md: 2, lg: 2.25 },
-    fontSize: { xs: "1.0rem", md: "1.0rem", lg: "1.2rem" },
-    lineHeight: { xs: 1.6, md: 1.7, lg: 1.8 },
+    fontSize: { xs: "1rem", md: "1rem", lg: "1.08rem" },
+    lineHeight: { xs: 1.7, md: 1.75, lg: 1.8 },
     color: landingColors.bodyText,
     textAlign: { xs: "center", md: "left" },
-    fontFamily: '"Lancelot", "Inter", "Segoe UI", Roboto, sans-serif',
-    fontWeight: 300,
+    fontFamily: '"Inter", sans-serif',
+    fontWeight: 400,
     maxWidth: { xs: "100%", md: "32rem", lg: "34rem" },
     mx: { xs: "auto", md: 0 },
   },
 
   brandAccent: {
-    fontFamily: '"Dancing Script", cursive',
-    fontWeight: 600,
+    fontFamily: '"Inter", sans-serif',
+    fontWeight: 700,
+    letterSpacing: "-0.02em",
   },
 
   productHighlight: {
@@ -83,13 +84,13 @@ export const landingTypography = {
 export const landingLayout = {
   heroSection: {
     padding: {
-      xs: { pt: 0, pb: 2 },
-      md: { pt: 0, pb: 3.5 },
-      lg: { pt: 0, pb: 4.5 },
+      xs: { pt: 1, pb: 3 },
+      md: { pt: 1.5, pb: 4 },
+      lg: { pt: 2, pb: 5 },
     },
     container: {
-      gap: { xs: 2.5, md: 4, lg: 5 },
-      padding: { xs: 1, md: 2, lg: 3 },
+      gap: { xs: 3, md: 4, lg: 5 },
+      padding: { xs: 1.5, md: 2, lg: 3 },
       maxWidth: { md: 1220, lg: 1280 },
       mx: "auto",
     },
@@ -106,7 +107,7 @@ export const landingLayout = {
   floatingCircle: {
     width: { xs: 180, md: 260, lg: 320, xl: 380 },
     height: { xs: 180, md: 260, lg: 320, xl: 380 },
-    opacity: 0.04,
+    opacity: 0.08,
     position: {
       top: { xs: "-10%", md: "-15%", lg: "-12%" },
       right: { xs: "-8%", md: "-10%", lg: "-8%" },

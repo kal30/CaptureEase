@@ -7,7 +7,7 @@ import image3 from "../../assets/image/landing/DashboardSlideShow/QuickCheckIn.p
 import { landingColors } from "../../assets/theme/landingTheme";
 
 const defaultItems = [
-  { src: image1, alt: "Why CaptureEZ", caption: "Why CaptureEZ" },
+  { src: image1, alt: "Why lifelog", caption: "Why lifelog" },
   { src: image2, alt: "Dashboard", caption: "Dashboard" },
   { src: image3, alt: "Quick Data Capture", caption: "Quick Data Capture" },
 ];

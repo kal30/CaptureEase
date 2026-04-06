@@ -17,13 +17,13 @@ const Footer = () => {
       <Typography
         variant="body1"
         sx={{
-          fontWeight: "bold",
-          color: landingColors.deepNavy, // Eggplant tone
-          fontSize: "0.95rem", // Footer font size
+          fontWeight: 700,
+          color: landingColors.deepNavy,
+          fontSize: "0.95rem",
           mb: 1,
         }}
       >
-        CaptureEz © {new Date().getFullYear()} - Caring Made Simple
+        lifelog © {new Date().getFullYear()} - Caregiver-first timeline tracking
       </Typography>
 
       <Box sx={{ display: "flex", justifyContent: "center", gap: 3, mt: 0.5 }}>

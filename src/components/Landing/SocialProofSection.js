@@ -14,9 +14,10 @@ const SocialProofSection = () => {
           sx={{
             position: "relative",
             p: { xs: "32px 24px", md: "32px 40px" },
-            borderRadius: 1.5,
+            borderRadius: "28px",
             border: `1px solid ${landingColors.borderSoft}`,
             backgroundColor: landingColors.surfaceSoft,
+            boxShadow: `0 8px 24px ${landingColors.shadowSoft}`,
             textAlign: "center",
           }}
         >
@@ -46,8 +47,8 @@ const SocialProofSection = () => {
               fontWeight: 500,
             }}
           >
-            “Finally something that works for our family — I log in 10 seconds and
-            the therapist already knows by our afternoon session.”
+            “Finally something that works for our family - I log in 10 seconds
+            and the therapist already knows by our afternoon session.”
           </Typography>
           <Typography
             sx={{
@@ -57,7 +58,7 @@ const SocialProofSection = () => {
               fontWeight: 700,
             }}
           >
-            — Parent of child with autism, beta user
+            Parent of child with autism, beta user
           </Typography>
         </Paper>
       </Container>

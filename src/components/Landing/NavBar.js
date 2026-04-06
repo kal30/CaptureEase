@@ -2,7 +2,15 @@ import { Link as RouterLink } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import { getAuth } from "firebase/auth";
 import { useEffect, useState } from "react";
-import { AppBar, Toolbar, Button, Box, Container, Skeleton } from "@mui/material";
+import {
+  AppBar,
+  Toolbar,
+  Button,
+  Box,
+  Container,
+  Skeleton,
+  Typography,
+} from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { useMediaQuery } from "@mui/material";
 import { useRole } from "../../contexts/RoleContext";
@@ -10,7 +18,6 @@ import NavButton from "./NavButton";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import GroupIcon from "@mui/icons-material/Group";
 import AvatarMenu from "./AvatarMenu";
-import Wordmark from "../../assets/image/logo/logo-transparent.png";
 import {
   getNavbarColorScheme,
   navbarIconStyles,
@@ -18,7 +25,6 @@ import {
   toolbarStyles,
   containerStyles,
   logoButtonStyles,
-  logoImageStyles,
   navLinksContainerStyles,
   authButtonsContainerStyles,
   loginButtonStyles,
@@ -34,6 +40,10 @@ const Navbar = () => {
   const [authReady, setAuthReady] = useState(false);
   const { childrenWithAccess } = useRole();
   const isDashboardRoute = location.pathname.startsWith("/dashboard");
+  const isLandingRoute = location.pathname === "/";
+  const colorScheme = getNavbarColorScheme(
+    !isLoggedIn && isLandingRoute ? "pastel" : "current"
+  );
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -42,8 +52,6 @@ const Navbar = () => {
     });
     return () => unsubscribe();
   }, [auth]);
-
-  const colorScheme = getNavbarColorScheme("current");
 
   // Simple check - only show if user has children (let page handle role validation)
   const canSeeCareTeamMenu = isLoggedIn && childrenWithAccess && childrenWithAccess.length > 0;
@@ -60,15 +68,35 @@ const Navbar = () => {
             <Button
               component={RouterLink}
               to="/"
-              aria-label="CaptureEz home"
+              aria-label="lifelog home"
               sx={logoButtonStyles}
             >
-              <Box
-                component="img"
-                src={Wordmark}
-                alt="CaptureEz"
-                sx={logoImageStyles}
-              />
+              <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.5 }}>
+                <Typography
+                  component="span"
+                  sx={{
+                    fontSize: { xs: "1.45rem", md: "1.7rem", lg: "1.9rem" },
+                    fontWeight: 700,
+                    letterSpacing: "-0.05em",
+                    color: colorScheme.textColor,
+                    textTransform: "lowercase",
+                    lineHeight: 1,
+                  }}
+                >
+                  lifelog
+                </Typography>
+                <Box
+                  component="span"
+                  sx={{
+                    width: 10,
+                    height: 10,
+                    borderRadius: "50%",
+                    bgcolor: colors.landing.cyanPop,
+                    boxShadow: `0 0 0 4px ${colors.landing.cyanPop}22`,
+                    display: { xs: "inline-flex", md: "inline-flex" },
+                  }}
+                />
+              </Box>
             </Button>
 
             {/* Navigation Links - Hidden on mobile when logged out */}
@@ -109,31 +137,31 @@ const Navbar = () => {
             <Box sx={authButtonsContainerStyles}>
               {authReady ? (
                 isLoggedIn ? (
-                <AvatarMenu user={auth.currentUser} />
-              ) : (
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <Button
-                    variant="text"
-                    component={RouterLink}
-                    to="/login"
-                    sx={{
-                      color: navbarIconStyles.color,
-                      textTransform: "none",
-                      fontWeight: 600,
-                      px: 1.5,
-                    }}
-                  >
-                    Login
-                  </Button>
-                  <Button
-                    variant="contained"
-                    component={RouterLink}
-                    to="/register"
-                    sx={loginButtonStyles()}
-                  >
-                    Get Started Free
-                  </Button>
-                </Box>
+                  <AvatarMenu user={auth.currentUser} />
+                ) : (
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Button
+                      variant="text"
+                      component={RouterLink}
+                      to="/login"
+                      sx={{
+                        color: colorScheme.textColor,
+                        textTransform: "none",
+                        fontWeight: 600,
+                        px: 1.5,
+                      }}
+                    >
+                      Login
+                    </Button>
+                    <Button
+                      variant="contained"
+                      component={RouterLink}
+                      to="/register"
+                      sx={loginButtonStyles()}
+                    >
+                      Get Started Free
+                    </Button>
+                  </Box>
                 )
               ) : isDashboardRoute ? (
                 <Skeleton

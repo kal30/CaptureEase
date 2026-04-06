@@ -121,7 +121,7 @@ const Register = () => {
           variant="h5"
           sx={{ mb: 3, fontWeight: "bold", color: "primary.main" }}
         >
-          Sign Up for CaptureEz
+          Sign Up for lifelog
         </Typography>
         {email && (
           <Alert severity="info" sx={{ width: "100%", mb: 2 }}>
