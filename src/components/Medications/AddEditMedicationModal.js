@@ -14,11 +14,16 @@ const style = {
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",
-  width: 900, // Increased width
+  width: { xs: '92vw', sm: 720, md: 900 },
+  maxWidth: '92vw',
+  maxHeight: '90vh',
   bgcolor: "background.paper",
-  border: "2px solid #000",
+  border: "1px solid",
+  borderColor: "divider",
+  borderRadius: 2,
   boxShadow: 24,
-  p: 2, // Reduced padding
+  p: 2,
+  overflowY: 'auto',
 };
 
 const AddEditMedicationModal = ({

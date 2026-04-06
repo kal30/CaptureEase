@@ -152,7 +152,7 @@ const ChildDashboard = ({
   };
 
   return (
-    <Box sx={{ px: 1.5, pb: 13 }}>
+    <Box sx={{ px: { xs: 1.05, sm: 1.5 }, pb: 13 }}>
       <Box
         sx={{
           display: 'flex',
@@ -225,7 +225,7 @@ const ChildDashboard = ({
       <Box
         className={`mobile-dashboard-hero${isCollapsed ? ' is-collapsed' : ''}`}
         sx={{
-          p: isCollapsed ? 1 : { xs: 1.5, sm: 1.75 },
+          p: isCollapsed ? 1 : { xs: 1.2, sm: 1.75 },
           borderRadius: isCollapsed ? 0 : 1,
           background: isCollapsed
             ? 'rgba(255,255,255,0.98)'
@@ -385,7 +385,7 @@ const ChildDashboard = ({
               sx={{
                 width: '100%',
                 mt: 0.5,
-                p: 1,
+                p: { xs: 0.85, sm: 1 },
                 borderRadius: 1,
                 backgroundColor: 'rgba(255,255,255,0.84)',
                 border: '1px solid rgba(214, 225, 247, 0.88)',
@@ -406,7 +406,7 @@ const ChildDashboard = ({
                   <Box
                     sx={{
                       width: '100%',
-                      px: 0.65,
+                      px: { xs: 0.5, sm: 0.65 },
                       py: 0.55,
                       borderRadius: 1,
                       backgroundColor: 'rgba(255,255,255,0.84)',
@@ -478,7 +478,7 @@ const ChildDashboard = ({
                       width: '100%',
                       display: 'grid',
                       gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-                      gap: 0.75,
+                      gap: { xs: 0.55, sm: 0.75 },
                     }}
                   >
                   <Button
