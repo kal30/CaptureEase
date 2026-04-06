@@ -5,20 +5,17 @@ import {
   Button,
   Chip,
   Collapse,
-  Dialog,
-  DialogContent,
-  DialogTitle,
   IconButton,
   Link,
   Paper,
   Stack,
   Typography,
 } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
-import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
+import GlobalStyles from "@mui/material/GlobalStyles";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import PictureAsPdfOutlinedIcon from "@mui/icons-material/PictureAsPdfOutlined";
 import ShareIcon from "@mui/icons-material/Share";
 import { alpha, useTheme } from "@mui/material/styles";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -26,6 +23,7 @@ import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { getTimelineEntries } from "../../services/timelineService";
 import { CATEGORY_COLORS } from "../../constants/categoryColors";
+import LogFormShell from "../UI/LogFormShell";
 
 const RANGE_PRESET = {
   WEEK: "week",
@@ -430,6 +428,13 @@ const DailyCareReport = ({ open, onClose, child, childId, childName, onLogSometh
     }
   };
 
+  const handleDownloadPdf = () => {
+    setFeedback("Use the print dialog to save the report as a PDF.");
+    window.setTimeout(() => {
+      window.print();
+    }, 0);
+  };
+
   const handleLogSomething = () => {
     if (child && typeof onLogSomething === "function") {
       onLogSomething(child);
@@ -606,37 +611,63 @@ const DailyCareReport = ({ open, onClose, child, childId, childName, onLogSometh
   const isCustomRangeInvalid = !isValidDate(rangeStart) || !isValidDate(rangeEnd) || rangeStart > rangeEnd;
 
   return (
-    <Dialog
+    <LogFormShell
       open={open}
       onClose={onClose}
+      title={`Therapy Prep — ${childName}`}
+      subtitle={periodLabel}
       maxWidth="md"
-      fullWidth
-      sx={{ "& .MuiDialog-paper": { borderRadius: 3 } }}
+      forceDrawer
     >
-      <DialogTitle sx={{ borderBottom: "1px solid #eee", py: 2 }}>
-        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 2 }}>
-          <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.25 }}>
-            <AssignmentOutlinedIcon color="primary" />
-            <Box>
-              <Typography variant="h6" fontWeight={700}>
-                Therapy Prep
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {childName}
-              </Typography>
-            </Box>
-          </Box>
-          <IconButton onClick={onClose} size="small">
-            <CloseIcon />
-          </IconButton>
-        </Box>
-      </DialogTitle>
+      <GlobalStyles
+        styles={{
+          "@media print": {
+            "body *": {
+              visibility: "hidden !important",
+            },
+            ".log-form-shell-print, .log-form-shell-print *": {
+              visibility: "visible !important",
+            },
+            ".log-form-shell-print": {
+              position: "fixed !important",
+              inset: "0 !important",
+              width: "100% !important",
+              height: "auto !important",
+              maxHeight: "none !important",
+              borderRadius: "0 !important",
+              boxShadow: "none !important",
+              overflow: "visible !important",
+              backgroundColor: "#fff !important",
+            },
+            ".MuiBackdrop-root": {
+              display: "none !important",
+            },
+            "html, body": {
+              background: "#fff !important",
+            },
+            "@page": {
+              margin: "12mm",
+            },
+          },
+        }}
+      />
 
-      <DialogContent sx={{ p: 4 }}>
-        <LocalizationProvider dateAdapter={AdapterDateFns}>
-          <Stack spacing={3}>
-            <Box>
-              <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1, mb: 1.5 }}>
+      <LocalizationProvider dateAdapter={AdapterDateFns}>
+        <Stack spacing={3}>
+          <Box>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 1.25,
+                flexWrap: "nowrap",
+                mb: 1.5,
+                overflowX: "auto",
+                pb: 0.25,
+              }}
+            >
+              <Stack direction="row" spacing={1} sx={{ flexWrap: "nowrap", gap: 1, minWidth: "fit-content" }}>
                 <Chip
                   label="This Week"
                   clickable
@@ -660,153 +691,161 @@ const DailyCareReport = ({ open, onClose, child, childId, childName, onLogSometh
                 />
               </Stack>
 
-              <Typography variant="body2" color="text.secondary" sx={{ mb: rangePreset === RANGE_PRESET.CUSTOM ? 2 : 0 }}>
-                {getRangeHelperText(rangePreset)}
-              </Typography>
-
-              {rangePreset === RANGE_PRESET.CUSTOM && (
-                <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-                  <DatePicker
-                    label="Start"
-                    value={customStartDate}
-                    onChange={(value) => value && setCustomStartDate(value)}
-                    slotProps={{ textField: { fullWidth: true, size: "small" } }}
-                  />
-                  <DatePicker
-                    label="End"
-                    value={customEndDate}
-                    onChange={(value) => value && setCustomEndDate(value)}
-                    slotProps={{ textField: { fullWidth: true, size: "small" } }}
-                  />
-                </Stack>
-              )}
-            </Box>
-
-            {feedback && <Alert severity="info">{feedback}</Alert>}
-
-            {loading ? (
-              <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
-                <Typography variant="body1" color="text.secondary">
-                  Building therapy prep...
-                </Typography>
-              </Box>
-            ) : isCustomRangeInvalid ? (
-              <Alert severity="warning">Select a valid date range to build therapy prep.</Alert>
-            ) : filteredEntries.length === 0 ? (
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 4,
-                  textAlign: "center",
-                  borderRadius: 3,
-                  border: `1px solid ${alpha(theme.palette.primary.main, 0.12)}`,
-                  bgcolor: alpha(theme.palette.primary.main, 0.03),
-                }}
-              >
-                <Typography variant="h5" sx={{ fontWeight: 800, mb: 1 }}>
-                  Therapy Prep — {childName}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  {periodLabel}
-                </Typography>
-                <Typography variant="body1" color="text.secondary" sx={{ mb: 1 }}>
-                  No entries logged for this period. Start logging to build your therapy prep report.
-                </Typography>
-                <Link
-                  component="button"
-                  type="button"
-                  onClick={handleLogSomething}
-                  underline="hover"
-                  sx={{ fontWeight: 700 }}
-                >
-                  Open the daily log popup
-                </Link>
-                <Box sx={{ mt: 2 }}>
-                  <Button variant="contained" onClick={handleLogSomething}>
-                    + Log Something
-                  </Button>
-                </Box>
-              </Paper>
-            ) : (
-              <Stack spacing={3}>
-                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: { xs: "flex-start", md: "center" }, gap: 2, flexWrap: "wrap" }}>
-                  <Box>
-                    <Typography variant="h5" sx={{ fontWeight: 800 }}>
-                      Therapy Prep — {childName}
-                    </Typography>
-                    <Typography variant="body1" color="text.secondary" sx={{ mt: 0.5 }}>
-                      {periodLabel}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75, fontWeight: 600 }}>
-                      {filteredEntries.length} total {filteredEntries.length === 1 ? "entry" : "entries"}
-                      {` · ${peopleLoggedCount} ${peopleLoggedCount === 1 ? "person" : "people"} logged`}
-                    </Typography>
-                  </Box>
-                </Box>
-
-                <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1 }}>
-                  <Chip
-                    label="📅 By Date"
-                    clickable
-                    color={groupMode === GROUP_MODE.DATE ? "primary" : "default"}
-                    variant={groupMode === GROUP_MODE.DATE ? "filled" : "outlined"}
-                    onClick={() => setGroupMode(GROUP_MODE.DATE)}
-                  />
-                  <Chip
-                    label="🧊 By Activity"
-                    clickable
-                    color={groupMode === GROUP_MODE.ACTIVITY ? "primary" : "default"}
-                    variant={groupMode === GROUP_MODE.ACTIVITY ? "filled" : "outlined"}
-                    onClick={() => setGroupMode(GROUP_MODE.ACTIVITY)}
-                  />
-                </Stack>
-
-                {groupMode === GROUP_MODE.DATE ? renderDateSections() : renderCategorySections()}
-
-                <Stack
-                  direction={{ xs: "column", sm: "row" }}
-                  spacing={1}
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexShrink: 0 }}>
+                <IconButton
+                  onClick={handleDownloadPdf}
+                  size="small"
+                  aria-label="Download therapy prep as PDF"
                   sx={{
-                    flexWrap: "nowrap",
-                    gap: 1,
-                    pt: 0.5,
+                    width: 38,
+                    height: 38,
+                    border: `1px solid ${alpha(theme.palette.primary.main, 0.28)}`,
+                    bgcolor: "#fff",
+                    color: "primary.main",
+                    "&:hover": {
+                      bgcolor: alpha(theme.palette.primary.main, 0.06),
+                    },
                   }}
                 >
-                  <Button
-                    variant="outlined"
-                    startIcon={<ContentCopyIcon />}
-                    onClick={handleCopy}
-                    fullWidth
-                    sx={{
-                      minHeight: 38,
-                      borderColor: alpha(theme.palette.primary.main, 0.38),
-                      color: "primary.main",
-                      bgcolor: "#fff",
-                    }}
-                  >
-                    Copy
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    startIcon={<ShareIcon />}
-                    onClick={handleShare}
-                    fullWidth
-                    sx={{
-                      minHeight: 38,
-                      borderColor: alpha(theme.palette.primary.main, 0.38),
-                      color: "primary.main",
-                      bgcolor: "#fff",
-                    }}
-                  >
-                    Share with Care Team
-                  </Button>
-                </Stack>
+                  <PictureAsPdfOutlinedIcon fontSize="small" />
+                </IconButton>
+                <IconButton
+                  onClick={handleCopy}
+                  size="small"
+                  aria-label="Copy therapy prep"
+                  sx={{
+                    width: 38,
+                    height: 38,
+                    border: `1px solid ${alpha(theme.palette.primary.main, 0.28)}`,
+                    bgcolor: "#fff",
+                    color: "primary.main",
+                    "&:hover": {
+                      bgcolor: alpha(theme.palette.primary.main, 0.06),
+                    },
+                  }}
+                >
+                  <ContentCopyIcon fontSize="small" />
+                </IconButton>
+                <IconButton
+                  onClick={handleShare}
+                  size="small"
+                  aria-label="Share therapy prep"
+                  sx={{
+                    width: 38,
+                    height: 38,
+                    border: `1px solid ${alpha(theme.palette.primary.main, 0.28)}`,
+                    bgcolor: "#fff",
+                    color: "primary.main",
+                    "&:hover": {
+                      bgcolor: alpha(theme.palette.primary.main, 0.06),
+                    },
+                  }}
+                >
+                  <ShareIcon fontSize="small" />
+                </IconButton>
+              </Box>
+            </Box>
+
+            <Typography variant="body2" color="text.secondary" sx={{ mb: rangePreset === RANGE_PRESET.CUSTOM ? 2 : 0 }}>
+              {getRangeHelperText(rangePreset)}
+            </Typography>
+
+            {rangePreset === RANGE_PRESET.CUSTOM && (
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+                <DatePicker
+                  label="Start"
+                  value={customStartDate}
+                  onChange={(value) => value && setCustomStartDate(value)}
+                  slotProps={{ textField: { fullWidth: true, size: "small" } }}
+                />
+                <DatePicker
+                  label="End"
+                  value={customEndDate}
+                  onChange={(value) => value && setCustomEndDate(value)}
+                  slotProps={{ textField: { fullWidth: true, size: "small" } }}
+                />
               </Stack>
             )}
-          </Stack>
-        </LocalizationProvider>
-      </DialogContent>
-    </Dialog>
+          </Box>
+
+          {feedback && <Alert severity="info">{feedback}</Alert>}
+
+          {loading ? (
+            <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
+              <Typography variant="body1" color="text.secondary">
+                Building therapy prep...
+              </Typography>
+            </Box>
+          ) : isCustomRangeInvalid ? (
+            <Alert severity="warning">Select a valid date range to build therapy prep.</Alert>
+          ) : filteredEntries.length === 0 ? (
+            <Paper
+              elevation={0}
+              sx={{
+                p: 4,
+                textAlign: "center",
+                borderRadius: 3,
+                border: `1px solid ${alpha(theme.palette.primary.main, 0.12)}`,
+                bgcolor: alpha(theme.palette.primary.main, 0.03),
+              }}
+            >
+              <Typography variant="h5" sx={{ fontWeight: 800, mb: 1 }}>
+                Therapy Prep — {childName}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                {periodLabel}
+              </Typography>
+              <Typography variant="body1" color="text.secondary" sx={{ mb: 1 }}>
+                No entries logged for this period. Start logging to build your therapy prep report.
+              </Typography>
+              <Link
+                component="button"
+                type="button"
+                onClick={handleLogSomething}
+                underline="hover"
+                sx={{ fontWeight: 700 }}
+              >
+                Open the daily log popup
+              </Link>
+              <Box sx={{ mt: 2 }}>
+                <Button variant="contained" onClick={handleLogSomething}>
+                  + Log Something
+                </Button>
+              </Box>
+            </Paper>
+          ) : (
+            <Stack spacing={3}>
+              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: { xs: "flex-start", md: "center" }, gap: 2, flexWrap: "wrap" }}>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25, fontWeight: 600 }}>
+                  {filteredEntries.length} total {filteredEntries.length === 1 ? "entry" : "entries"}
+                  {` · ${peopleLoggedCount} ${peopleLoggedCount === 1 ? "person" : "people"} logged`}
+                </Typography>
+              </Box>
+
+              <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1 }}>
+                <Chip
+                  label="📅 By Date"
+                  clickable
+                  color={groupMode === GROUP_MODE.DATE ? "primary" : "default"}
+                  variant={groupMode === GROUP_MODE.DATE ? "filled" : "outlined"}
+                  onClick={() => setGroupMode(GROUP_MODE.DATE)}
+                />
+                <Chip
+                  label="🧊 By Activity"
+                  clickable
+                  color={groupMode === GROUP_MODE.ACTIVITY ? "primary" : "default"}
+                  variant={groupMode === GROUP_MODE.ACTIVITY ? "filled" : "outlined"}
+                  onClick={() => setGroupMode(GROUP_MODE.ACTIVITY)}
+                />
+              </Stack>
+
+              {groupMode === GROUP_MODE.DATE ? renderDateSections() : renderCategorySections()}
+
+            </Stack>
+          )}
+        </Stack>
+      </LocalizationProvider>
+    </LogFormShell>
   );
 };
 

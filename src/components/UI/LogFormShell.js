@@ -19,9 +19,11 @@ const LogFormShell = ({
   footer,
   mobileBreakpoint = 'md',
   maxWidth = 'sm',
+  forceDrawer = false,
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down(mobileBreakpoint));
+  const useDrawer = forceDrawer || isMobile;
 
   const surfaceSx = {
     display: 'flex',
@@ -115,7 +117,7 @@ const LogFormShell = ({
   );
 
   const content = (
-    <Box sx={surfaceSx}>
+    <Box className="log-form-shell-print" sx={surfaceSx}>
       <Box sx={headerSx}>
         {titleBlock}
         {closeButton}
@@ -125,7 +127,7 @@ const LogFormShell = ({
     </Box>
   );
 
-  if (isMobile) {
+  if (useDrawer) {
     return (
         <Drawer
         anchor="bottom"
