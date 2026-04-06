@@ -37,6 +37,7 @@ import TimelineItem from "./parts/TimelineItem";
 import { CATEGORY_COLORS } from "../../constants/categoryColors";
 import { trackRenderDebug, useMountDebug } from "../../utils/renderDebug";
 import { auth, db } from "../../services/firebase";
+import colors from "../../assets/theme/colors";
 
 /**
  * UnifiedTimeline - Main unified timeline component
@@ -81,21 +82,21 @@ const UnifiedTimeline = ({
 
   const resolveCategoryColor = React.useCallback((entry) => {
     if (entry.collection === 'incidents') {
-      const incidentColor = entry.incidentCategoryColor || '#6B7280';
+      const incidentColor = entry.incidentCategoryColor || colors.app.timeline.incident;
       return {
-        bg: '#FFFFFF',
+        bg: colors.app.cards.background,
         text: incidentColor,
-        border: 'rgba(148, 163, 184, 0.22)',
+        border: colors.app.cards.border,
         dot: incidentColor,
       };
     }
 
     if (entry.collection === 'dailyCare') {
-      const habitColor = entry.categoryColor || '#64748B';
+      const habitColor = entry.categoryColor || colors.app.timeline.dailyHabit;
       return {
-        bg: '#FFFFFF',
+        bg: colors.app.cards.background,
         text: habitColor,
-        border: 'rgba(148, 163, 184, 0.22)',
+        border: colors.app.cards.border,
         dot: habitColor,
       };
     }
@@ -103,8 +104,8 @@ const UnifiedTimeline = ({
     if (entry.isImportantMoment) {
       return {
         ...CATEGORY_COLORS.importantMoment,
-        bg: '#FFFFFF',
-        border: 'rgba(148, 163, 184, 0.22)',
+        bg: colors.app.cards.background,
+        border: colors.app.cards.border,
       };
     }
 
@@ -116,8 +117,8 @@ const UnifiedTimeline = ({
 
     return {
       ...CATEGORY_COLORS[categoryKey],
-      bg: '#FFFFFF',
-      border: 'rgba(148, 163, 184, 0.22)',
+      bg: colors.app.cards.background,
+      border: colors.app.cards.border,
     };
   }, []);
 
@@ -569,8 +570,8 @@ const UnifiedTimeline = ({
               sx={{
                 p: 2,
                 borderRadius: 0.35,
-                background: 'linear-gradient(135deg, rgba(255,255,255,0.96) 0%, rgba(245,247,255,0.94) 100%)',
-                border: '1px solid rgba(214, 225, 247, 0.9)',
+                background: `linear-gradient(135deg, ${colors.app.cards.background} 0%, ${colors.app.cards.shadowPanel} 100%)`,
+                border: `1px solid ${colors.app.cards.border}`,
                 boxShadow: 'none',
                 textAlign: 'center',
                 cursor: onEmptyStateClick ? 'pointer' : 'default',
@@ -578,16 +579,16 @@ const UnifiedTimeline = ({
             >
               <Typography sx={{ fontSize: '1.05rem', fontWeight: 800, color: 'text.primary', mb: 0.35 }}>
                 Nothing logged yet today
-                <Box component="span" sx={{ ml: 0.5, color: '#F59E0B' }}>💛</Box>
+                <Box component="span" sx={{ ml: 0.5, color: colors.app.semantic.warning }}>💛</Box>
               </Typography>
               <Typography sx={{ fontSize: '0.92rem', color: 'text.secondary', mb: 1.25 }}>
                 Start with:
               </Typography>
               <Stack direction="row" spacing={0.75} sx={{ justifyContent: 'center', flexWrap: 'wrap' }}>
                 {[
-                  { label: 'Log Behavior', icon: '🛡️', color: '#2563EB', bg: 'rgba(96, 165, 250, 0.16)' },
-                  { label: 'Log Sleep', icon: '🌙', color: '#7C3AED', bg: 'rgba(196, 181, 253, 0.22)' },
-                  { label: 'Quick Note', icon: '📝', color: '#D97706', bg: 'rgba(253, 230, 138, 0.24)' },
+                  { label: 'Log Behavior', icon: '🛡️', color: colors.app.timeline.incident, bg: colors.app.incident.behavior },
+                  { label: 'Log Sleep', icon: '🌙', color: colors.app.timeline.dailyHabit, bg: colors.app.dailyCare.background },
+                  { label: 'Quick Note', icon: '📝', color: colors.app.timeline.journal, bg: colors.app.journal.chipBg },
                 ].map((item) => (
                   <Box
                     key={item.label}
@@ -595,8 +596,8 @@ const UnifiedTimeline = ({
                       px: 1.05,
                       py: 0.58,
                       borderRadius: 0.35,
-                      border: '1px solid rgba(203, 213, 225, 0.9)',
-                      backgroundColor: '#fff',
+                      border: `1px solid ${colors.app.cards.border}`,
+                      backgroundColor: colors.app.cards.background,
                       fontSize: '0.82rem',
                       fontWeight: 700,
                       color: 'text.primary',
@@ -627,8 +628,8 @@ const UnifiedTimeline = ({
                 minHeight: 92,
                 p: 2,
                 borderRadius: 0.35,
-                backgroundColor: '#fff',
-                border: '1px solid rgba(214, 225, 247, 0.9)',
+                backgroundColor: colors.app.cards.background,
+                border: `1px solid ${colors.app.cards.border}`,
                 boxShadow: 'none',
                 display: 'flex',
                 alignItems: 'center',
@@ -668,7 +669,7 @@ const UnifiedTimeline = ({
               "&:hover": onEmptyStateClick
                 ? {
                     backgroundColor: "action.hover",
-                    boxShadow: "0 2px 8px rgba(15, 23, 42, 0.06)",
+                    boxShadow: `0 2px 8px ${colors.app.cards.shadowPanel}`,
                   }
                 : undefined,
               "&:focus-visible": onEmptyStateClick
@@ -688,7 +689,7 @@ const UnifiedTimeline = ({
                 display: "inline-flex",
                 alignItems: "center",
                 justifyContent: "center",
-                backgroundColor: "rgba(148, 163, 184, 0.12)",
+                backgroundColor: colors.app.cards.shadowPanel,
                 color: "text.disabled",
                 mb: 0.75,
                 fontSize: "1.2rem",
@@ -714,7 +715,7 @@ const UnifiedTimeline = ({
             sx={{
               mt: 2,
               minHeight: mobileTimelineMinHeight,
-              backgroundColor: '#FFFFFF',
+              backgroundColor: colors.app.cards.background,
             }}
           >
             <Stack spacing={1.25} role="list">
@@ -753,7 +754,7 @@ const UnifiedTimeline = ({
                       alignItems: 'start',
                       columnGap: 0.9,
                       position: 'relative',
-                      backgroundColor: '#FFFFFF',
+                      backgroundColor: colors.app.cards.background,
                     }}
                   >
                     <Box
@@ -776,7 +777,7 @@ const UnifiedTimeline = ({
                             left: '50%',
                             transform: 'translateX(-50%)',
                             width: '1px',
-                            backgroundColor: '#111111',
+                            backgroundColor: colors.app.text.darkNeutral,
                           }}
                         />
                       ) : null}
@@ -786,10 +787,10 @@ const UnifiedTimeline = ({
                           width: 20,
                           height: 20,
                           borderRadius: '50%',
-                          backgroundColor: '#FFFFFF',
+                          backgroundColor: colors.app.cards.background,
                           border: '2px solid',
                           borderColor: presentation.entryColor,
-                          boxShadow: '0 2px 6px rgba(15, 23, 42, 0.12)',
+                          boxShadow: `0 2px 6px ${colors.app.cards.shadowPanel}`,
                           zIndex: 1,
                           display: 'flex',
                           alignItems: 'center',
@@ -806,10 +807,10 @@ const UnifiedTimeline = ({
                       sx={{
                         px: 1.1,
                         py: 1.05,
-                        backgroundColor: '#FFFFFF',
-                        border: '1px solid rgba(148, 163, 184, 0.22)',
+                        backgroundColor: colors.app.cards.background,
+                        border: `1px solid ${colors.app.cards.border}`,
                         borderRadius: 0.7,
-                        boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)',
+                        boxShadow: `0 1px 2px ${colors.app.cards.shadowSoft}`,
                         display: 'flex',
                         flexDirection: 'column',
                         gap: 0.85,
@@ -867,7 +868,7 @@ const UnifiedTimeline = ({
                                 height: 26,
                                 borderRadius: 0.35,
                                 color: 'text.secondary',
-                                backgroundColor: 'rgba(148, 163, 184, 0.08)',
+                                backgroundColor: colors.app.cards.shadowPanel,
                               }}
                             >
                               <MoreVertIcon sx={{ fontSize: 16 }} />
@@ -881,9 +882,9 @@ const UnifiedTimeline = ({
                                 flexShrink: 0,
                                 fontSize: '0.68rem',
                                 fontWeight: 800,
-                                bgcolor: '#FFFFFF',
+                                bgcolor: colors.app.cards.background,
                                 color: 'text.secondary',
-                                border: '1px solid rgba(203, 213, 225, 0.9)',
+                                border: `1px solid ${colors.app.cards.border}`,
                               }}
                               title={entry.loggedByUser}
                             >
@@ -947,8 +948,8 @@ const UnifiedTimeline = ({
                             maxWidth: '100%',
                             borderRadius: 1,
                             overflow: 'hidden',
-                            border: '1px solid rgba(226, 232, 240, 0.9)',
-                            backgroundColor: '#F8FAFC',
+                            border: `1px solid ${colors.app.cards.border}`,
+                            backgroundColor: colors.app.cards.shadowPanel,
                           }}
                         >
                           {mobileAttachment.type === 'video' ? (
@@ -961,7 +962,7 @@ const UnifiedTimeline = ({
                                 width: '100%',
                                 height: { xs: 110, md: 132 },
                                 objectFit: 'cover',
-                                bgcolor: '#111827',
+                                bgcolor: colors.app.text.darkNeutral,
                               }}
                             />
                           ) : mobileAttachment.type === 'audio' ? (
@@ -988,8 +989,8 @@ const UnifiedTimeline = ({
                               sx={{
                                 px: 1,
                                 py: 0.45,
-                                borderTop: '1px solid rgba(226, 232, 240, 0.9)',
-                                bgcolor: '#F8FAFC',
+                                borderTop: `1px solid ${colors.app.cards.border}`,
+                                bgcolor: colors.app.cards.shadowPanel,
                               }}
                             >
                               <Typography
@@ -1043,7 +1044,7 @@ const UnifiedTimeline = ({
                 <MenuItem
                   onClick={() => entryMenuEntry && handleDeleteEntry(entryMenuEntry)}
                   disabled={!entryMenuEntry || Boolean(actionLoadingId)}
-                  sx={{ color: '#DC2626' }}
+                  sx={{ color: colors?.app?.semantic?.error || '#EF4444' }}
                 >
                   <DeleteIcon sx={{ fontSize: 16, mr: 1 }} />
                   Delete
@@ -1068,7 +1069,7 @@ const UnifiedTimeline = ({
                   width: 8,
                 },
                 '&::-webkit-scrollbar-thumb': {
-                  backgroundColor: 'rgba(148, 163, 184, 0.45)',
+                  backgroundColor: colors.app.cards.shadowHover,
                   borderRadius: 999,
                 },
               }}
@@ -1093,7 +1094,7 @@ const UnifiedTimeline = ({
                       isLast={entryIndex === visibleEntries.length - 1}
                       hideAnchor={false}
                       neutralRail={false}
-                      cardBackground="#FFFFFF"
+                      cardBackground={colors.app.cards.background}
                       cardBorderColor={presentation.timelineColors.border}
                       cardAccentColor={null}
                     >

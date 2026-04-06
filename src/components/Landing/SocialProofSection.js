@@ -15,8 +15,8 @@ const SocialProofSection = () => {
             position: "relative",
             p: { xs: "32px 24px", md: "32px 40px" },
             borderRadius: 1.5,
-            border: "1px solid rgba(8, 31, 92, 0.1)",
-            backgroundColor: "rgba(248, 251, 255, 0.9)",
+            border: `1px solid ${landingColors.borderSoft}`,
+            backgroundColor: landingColors.surfaceSoft,
             textAlign: "center",
           }}
         >
@@ -27,7 +27,7 @@ const SocialProofSection = () => {
               top: 8,
               left: 20,
               fontSize: "80px",
-              color: "#1a3a5c",
+              color: landingColors.quoteBadge,
               opacity: 0.15,
               lineHeight: 1,
               pointerEvents: "none",
@@ -53,7 +53,7 @@ const SocialProofSection = () => {
             sx={{
               mt: 1.25,
               fontSize: { xs: "0.88rem", md: "0.95rem" },
-              color: "rgba(8, 31, 92, 0.76)",
+              color: landingColors.textMuted,
               fontWeight: 700,
             }}
           >

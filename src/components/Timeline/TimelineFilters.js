@@ -26,6 +26,7 @@ import {
 } from '@mui/icons-material';
 import MiniCalendar from '../UI/MiniCalendar';
 import { getTimelineFilterSections, SPECIAL_FILTER_TYPES } from '../../constants/logTypeRegistry';
+import colors from '../../assets/theme/colors';
 
 /**
  * TimelineFilters - Filter controls for unified timeline
@@ -233,7 +234,7 @@ const TimelineFilters = ({
                   contain: 'none',
                   transform: 'none',
                   willChange: 'auto',
-                  backgroundColor: '#fff',
+                  backgroundColor: colors.app.cards.background,
                   '& .MuiOutlinedInput-notchedOutline': {
                     borderRadius: '0 !important',
                   },
@@ -270,15 +271,15 @@ const TimelineFilters = ({
                 fontSize: '0.82rem',
                 fontWeight: 700,
                 color: 'text.primary',
-                borderColor: 'rgba(148, 163, 184, 0.18)',
-                backgroundColor: '#f8f9fa',
+                borderColor: colors.app.cards.border,
+                backgroundColor: colors.app.cards.shadowPanel,
                 boxShadow: 'none',
                 contain: 'none',
                 transform: 'none',
                 willChange: 'auto',
                 '&:hover': {
-                  backgroundColor: '#fff',
-                  borderColor: 'rgba(148, 163, 184, 0.32)',
+                  backgroundColor: colors.app.cards.background,
+                  borderColor: colors.app.cards.border,
                 },
               }}
             >
@@ -368,15 +369,15 @@ const TimelineFilters = ({
             textTransform: 'none',
             fontWeight: 700,
             color: selectedCategoryType || importantMomentsSelected ? undefined : 'text.primary',
-              borderColor: selectedCategoryType || importantMomentsSelected ? undefined : 'rgba(148, 163, 184, 0.18)',
-              backgroundColor: selectedCategoryType || importantMomentsSelected ? undefined : '#f8f9fa',
+              borderColor: selectedCategoryType || importantMomentsSelected ? undefined : colors.app.cards.border,
+              backgroundColor: selectedCategoryType || importantMomentsSelected ? undefined : colors.app.cards.shadowPanel,
             boxShadow: 'none',
             contain: 'none',
             transform: 'none',
               willChange: 'auto',
               '&:hover': {
-                backgroundColor: selectedCategoryType || importantMomentsSelected ? undefined : '#fff',
-                borderColor: selectedCategoryType || importantMomentsSelected ? undefined : 'rgba(148, 163, 184, 0.32)',
+                backgroundColor: selectedCategoryType || importantMomentsSelected ? undefined : colors.app.cards.background,
+                borderColor: selectedCategoryType || importantMomentsSelected ? undefined : colors.app.cards.border,
               },
             }}
         >
@@ -468,8 +469,8 @@ const TimelineFilters = ({
               height: useCompactMobileLayout ? 30 : 24,
               flex: '0 0 auto',
               borderRadius: 0.25,
-              backgroundColor: '#f8f9fa',
-              border: '1px solid rgba(148, 163, 184, 0.18)',
+              backgroundColor: colors.app.cards.shadowPanel,
+              border: `1px solid ${colors.app.cards.border}`,
             }}
             title="Clear all filters"
           >
@@ -519,12 +520,12 @@ const TimelineFilters = ({
             fontSize: '0.75rem',
             textTransform: 'none',
             border: '1px solid',
-            borderColor: 'divider',
+            borderColor: colors.app.cards.border,
             borderRadius: 0.35,
             '&.Mui-selected': {
-              bgcolor: 'secondary.50',
-              borderColor: 'secondary.main',
-              color: 'secondary.main'
+              bgcolor: colors.app.dailyCare.background,
+              borderColor: colors.app.dailyCare.primary,
+              color: colors.app.dailyCare.primary
             }
           }}
         >
@@ -571,14 +572,14 @@ const TimelineFilters = ({
           InputProps={{
             startAdornment: <DateIcon sx={{ fontSize: 16, mr: 0.5 }} />
           }}
-          sx={{ minWidth: 160, '& .MuiOutlinedInput-root': { borderRadius: 0.35 } }}
+          sx={{ minWidth: 160, '& .MuiOutlinedInput-root': { borderRadius: 0.35, backgroundColor: colors.app.cards.background } }}
         />
       </Box>
 
       {/* Active Filters Summary */}
       {activeFiltersCount > 0 && (
         <>
-          <Divider sx={{ mb: 1 }} />
+          <Divider sx={{ mb: 1, borderColor: colors.app.cards.border }} />
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Typography variant="caption" color="text.secondary">
               {activeFiltersCount} filter{activeFiltersCount > 1 ? 's' : ''} active

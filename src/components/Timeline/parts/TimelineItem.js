@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box } from '@mui/material';
+import colors from '../../../assets/theme/colors';
 
 const TimelineItem = ({
   entryId,
@@ -113,7 +114,7 @@ const TimelineItem = ({
         bgcolor: cardBackground,
         borderRadius: 0.7,
         border: `1px solid ${cardBorderColor}`,
-        boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)',
+        boxShadow: `0 1px 2px ${colors.app.cards.paperShadow}`,
         position: 'relative',
         overflow: 'visible',
         zIndex: 1,

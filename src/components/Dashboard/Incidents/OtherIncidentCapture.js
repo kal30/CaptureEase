@@ -27,6 +27,7 @@ import {
 import { useAsyncForm } from '../../../hooks/useAsyncForm';
 import { useAsyncOperation } from '../../../hooks/useAsyncOperation';
 import CategoryCreationModal from '../CategoryCreationModal';
+import colors from '../../../assets/theme/colors';
 
 const OtherIncidentCapture = ({ 
   childId, 
@@ -174,7 +175,7 @@ const OtherIncidentCapture = ({
   const canSave = isCustomCategory || incidentName.trim().length > 0;
 
   return (
-    <Box sx={{ p: 4, backgroundColor: '#fafbfc', minHeight: '100%' }}>
+    <Box sx={{ p: 4, backgroundColor: colors.app.cards.background, minHeight: '100%' }}>
       {incidentForm.error && (
         <Alert 
           severity="error" 
@@ -192,8 +193,8 @@ const OtherIncidentCapture = ({
           p: 3, 
           mb: 3, 
           borderRadius: '16px',
-          border: '1px solid #e5e7eb',
-          backgroundColor: '#ffffff'
+          border: `1px solid ${colors.app.cards.border}`,
+          backgroundColor: colors.app.cards.background
         }}
       >
         <Typography 
@@ -201,7 +202,7 @@ const OtherIncidentCapture = ({
           gutterBottom 
           sx={{ 
             fontWeight: 600,
-            color: '#1f2937'
+            color: colors.app.text.strong
           }}
         >
           Incident Name
@@ -254,8 +255,8 @@ const OtherIncidentCapture = ({
           p: 3, 
           mb: 3, 
           borderRadius: '16px',
-          border: '1px solid #e5e7eb',
-          backgroundColor: '#ffffff'
+          border: `1px solid ${colors.app.cards.border}`,
+          backgroundColor: colors.app.cards.background
         }}
       >
         <Typography 
@@ -263,7 +264,7 @@ const OtherIncidentCapture = ({
           gutterBottom 
           sx={{ 
             fontWeight: 600,
-            color: '#1f2937'
+            color: colors.app.text.strong
           }}
         >
           Severity Level: {severity}/10
@@ -314,8 +315,8 @@ const OtherIncidentCapture = ({
           p: 3, 
           mb: 3, 
           borderRadius: '16px',
-          border: '1px solid #e5e7eb',
-          backgroundColor: '#ffffff'
+          border: `1px solid ${colors.app.cards.border}`,
+          backgroundColor: colors.app.cards.background
         }}
       >
         <Typography 
@@ -323,7 +324,7 @@ const OtherIncidentCapture = ({
           gutterBottom 
           sx={{ 
             fontWeight: 600,
-            color: '#1f2937'
+            color: colors.app.text.strong
           }}
         >
           Additional Context

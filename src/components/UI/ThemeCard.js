@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
+import colors from '../../assets/theme/colors';
 
 /**
  * ThemeCard - Reusable card component with consistent styling
@@ -126,11 +127,11 @@ const ThemeCard = ({
         return {
           ...baseStyles,
           borderRadius: '20px',
-          border: `1px solid ${theme.palette.divider}`,
-          backgroundColor: theme.palette.background.paper,
-          boxShadow: elevated ? '0px 25px 50px rgba(0, 0, 0, 0.15)' : '0 4px 12px rgba(0,0,0,0.06)',
+          border: `1px solid ${colors.app.cards.border}`,
+          backgroundColor: colors.app.cards.background,
+          boxShadow: elevated ? `0px 25px 50px ${colors.app.cards.modalShadow}` : `0 4px 12px ${colors.app.cards.shadowSoft}`,
           '&:hover': (clickable || onClick) ? {
-            boxShadow: '0 8px 24px rgba(0,0,0,0.12)'
+            boxShadow: `0 8px 24px ${colors.app.cards.shadowHover}`
           } : {}
         };
       }
@@ -139,12 +140,12 @@ const ThemeCard = ({
       default: {
         return {
           ...baseStyles,
-          border: borderWidth === 'none' ? 'none' : `1px solid ${theme.palette.divider}`,
-          backgroundColor: theme.palette.background.paper,
-          boxShadow: elevated ? '0 4px 12px rgba(0,0,0,0.06)' : '0 1px 3px rgba(0,0,0,0.05)',
+          border: borderWidth === 'none' ? 'none' : `1px solid ${colors.app.cards.border}`,
+          backgroundColor: colors.app.cards.background,
+          boxShadow: elevated ? `0 4px 12px ${colors.app.cards.shadowSoft}` : `0 1px 3px ${colors.app.cards.paperShadow}`,
           '&:hover': (clickable || onClick) ? {
             transform: 'translateY(-2px)',
-            boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+            boxShadow: `0 8px 24px ${colors.app.cards.shadowHover}`,
             borderColor: alpha(theme.palette.primary.main, 0.3)
           } : {}
         };

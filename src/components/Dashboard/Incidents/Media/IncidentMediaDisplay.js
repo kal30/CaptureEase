@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, Typography, Card, CardMedia, IconButton } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
+import colors from '../../../../assets/theme/colors';
 
 const IncidentMediaDisplay = ({ mediaUrls = [] }) => {
   if (!mediaUrls || mediaUrls.length === 0) return null;
@@ -23,7 +24,7 @@ const IncidentMediaDisplay = ({ mediaUrls = [] }) => {
                 sx={{ 
                   maxHeight: 300,
                   objectFit: 'contain',
-                  backgroundColor: '#f5f5f5'
+                  backgroundColor: colors.app.cards.shadowPanel
                 }}
               />
             )}

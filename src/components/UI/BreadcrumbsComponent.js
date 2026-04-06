@@ -20,7 +20,6 @@ const BreadcrumbsComponent = () => {
     location.pathname.startsWith("/dashboard") ||
     location.pathname.startsWith("/care-team") ||
     location.pathname.startsWith("/daily-activities") ||
-    location.pathname.startsWith("/health-info") ||
     location.pathname.startsWith("/therapy-notes") ||
     location.pathname.startsWith("/templates") ||
     location.pathname.startsWith("/medical") ||
@@ -46,7 +45,6 @@ const BreadcrumbsComponent = () => {
     templates: "Templates",
     "care-team": "Care Team",
     "daily-activities": "Daily Activities",
-    "health-info": "Health Info",
     "progress-notes": "Progress Notes",
     profile: "Profile",
   };

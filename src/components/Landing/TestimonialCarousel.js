@@ -10,10 +10,10 @@ import {
   useTheme,
   Fade,
 } from "@mui/material";
-import { alpha } from "@mui/material/styles";
 import StarIcon from "@mui/icons-material/Star";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
+import { landingColors } from "../../assets/theme/landingTheme";
 
 const testimonials = [
   {
@@ -91,9 +91,9 @@ const TestimonialCarousel = () => {
         pt: { xs: 0, md: 0 },
         pb: { xs: 10, md: 12 },
         py: { xs: 6, md: 8 },
-        bgcolor: "#F8EEE7", // updated background for shell background
+        bgcolor: landingColors.panelSoft,
         borderRadius: "24px",
-        boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+        boxShadow: `0 4px 12px ${landingColors.shadowMedium}`,
         // slick styles (dots + arrows)
         "& .slick-dots li button:before": {
           color: (theme) => theme.palette.primary.main,
@@ -118,7 +118,7 @@ const TestimonialCarousel = () => {
             mb: 1.5,
             fontWeight: 900,
             letterSpacing: "-0.2px",
-            color: (theme) => theme.palette.success.main,
+            color: landingColors.productHighlight,
             position: "relative",
             zIndex: 1,
             fontSize: { xs: "1.6rem", md: "2rem" },
@@ -133,7 +133,7 @@ const TestimonialCarousel = () => {
             borderRadius: 9999,
             mx: "auto",
             mb: 2.5,
-            backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.5),
+            backgroundColor: `${landingColors.quoteGradientStart}80`,
           }}
         />
         <Typography
@@ -161,8 +161,8 @@ const TestimonialCarousel = () => {
                   p: { xs: 3, md: 4 },
                   textAlign: "center",
                   borderRadius: "16px",
-                  boxShadow: "0 2px 6px rgba(0,0,0,0.04)",
-                  border: "1px solid rgba(0,0,0,0.05)",
+                  boxShadow: `0 2px 6px ${landingColors.shadowSoft}`,
+                  border: `1px solid ${landingColors.borderSoft}`,
                   display: "flex",
                   flexDirection: "column",
                   justifyContent: "space-between",
@@ -198,7 +198,7 @@ const TestimonialCarousel = () => {
                       mx: "auto",
                       fontSize: "1.05rem",
                       lineHeight: 1.6,
-                      color: "#333",
+                      color: landingColors.bodyText,
                     }}
                   >
                     "{testimonial.quote}"
@@ -218,7 +218,7 @@ const TestimonialCarousel = () => {
           sx={{
             height: 8,
             width: "100%",
-            background: "linear-gradient(90deg, #94618E 0%, #F4DECB 100%)",
+            background: `linear-gradient(90deg, ${landingColors.quoteGradientStart} 0%, ${landingColors.quoteGradientEnd} 100%)`,
             borderRadius: "9999px",
             mt: 4,
           }}

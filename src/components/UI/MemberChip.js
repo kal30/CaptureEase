@@ -2,16 +2,17 @@ import React from 'react';
 import { Chip, Box, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { useTranslation } from 'react-i18next';
+import colors from '../../assets/theme/colors';
 
 // Role configuration with styling and emojis
 const getRoleConfig = (role, t) => {
   const configs = {
-    [t('owner_one')]: { color: "#8B5CF6", emoji: "👑", priority: 0 },
-    [t('partner_one')]: { color: "#45B7D1", emoji: "👨‍👩‍👧‍👦", priority: 1 },
-    [t('caregiver_one')]: { color: "#4ECDC4", emoji: "🤱", priority: 2 },
-    [t('therapist_one')]: { color: "#FF6B6B", emoji: "🩺", priority: 3 },
+    [t('owner_one')]: { color: colors.app.dailyCare.primary, emoji: "👑", priority: 0 },
+    [t('partner_one')]: { color: colors.app.dailyCare.light, emoji: "👨‍👩‍👧‍👦", priority: 1 },
+    [t('caregiver_one')]: { color: colors.app.performance.primary, emoji: "🤱", priority: 2 },
+    [t('therapist_one')]: { color: colors.app.incident.painMedical, emoji: "🩺", priority: 3 },
   };
-  return configs[role] || { color: "#94A3B8", emoji: "👤", priority: 5 };
+  return configs[role] || { color: colors.app.text.muted, emoji: "👤", priority: 5 };
 };
 
 /**
@@ -58,11 +59,11 @@ const MemberChip = ({
           cursor: onClick ? 'pointer' : 'default',
           '&:hover': onClick ? {
             bgcolor: alpha(roleConfig.color, 0.8), // Darker background for better contrast with white text
-            color: '#FFFFFF', // Force white text on hover
+            color: colors.app.cards.background, // Force white text on hover
             transform: 'translateY(-1px)',
             boxShadow: `0 2px 8px ${alpha(roleConfig.color, 0.3)}`,
             '& .MuiTypography-root': {
-              color: '#FFFFFF', // Force all typography to be white on hover
+              color: colors.app.cards.background, // Force all typography to be white on hover
             }
           } : {}
         }}

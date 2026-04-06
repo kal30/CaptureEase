@@ -20,6 +20,7 @@ import { alpha, useTheme } from '@mui/material/styles';
 import { getEntryTypeMeta, mapLegacyType } from '../../constants/timeline';
 import { getIncidentDisplayInfo, getJournalDisplayInfo } from '../../constants/uiDisplayConstants';
 import { getLogTypeByCategory, getLogTypeByEntry } from '../../constants/logTypeRegistry';
+import colors from '../../assets/theme/colors';
 
 /**
  * UnifiedTimelineEntry - Single timeline entry display with expandable details
@@ -140,13 +141,13 @@ const UnifiedTimelineEntry = ({
         border: '1px solid',
         borderColor: alpha(typeColor, 0.12),
         borderLeft: `4px solid ${typeColor}`,
-        bgcolor: '#ffffff',
+        bgcolor: colors.semantic.surface,
         borderRadius: 3,
-        boxShadow: '0 8px 22px rgba(15, 23, 42, 0.06)',
+        boxShadow: `0 8px 22px ${colors.app.cards.shadowHover}`,
         transition: 'all 0.2s ease',
         '&:hover': {
-          bgcolor: '#ffffff',
-          boxShadow: '0 10px 24px rgba(15, 23, 42, 0.08)'
+          bgcolor: colors.semantic.surface,
+          boxShadow: `0 10px 24px ${colors.app.cards.shadowPanel}`
         }
       }}
     >

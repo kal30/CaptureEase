@@ -9,6 +9,7 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { useTheme } from '@mui/material/styles';
+import colors from '../../assets/theme/colors';
 
 const LogFormShell = ({
   open,
@@ -56,7 +57,7 @@ const LogFormShell = ({
     px: { xs: 3, sm: 4 },
     pt: { xs: 2.5, sm: 3 },
     pb: 2.5,
-    borderBottom: '1px solid rgba(226, 232, 240, 0.8)',
+    borderBottom: `1px solid ${colors.app.cards.border}`,
   };
 
   const bodySx = {
@@ -108,8 +109,8 @@ const LogFormShell = ({
         flexShrink: 0,
         width: 48,
         height: 48,
-        bgcolor: 'rgba(0,0,0,0.04)',
-        '&:hover': { bgcolor: 'rgba(0,0,0,0.06)' },
+        bgcolor: colors.app.cards.shadowSoft,
+        '&:hover': { bgcolor: colors.app.cards.shadowHover },
       }}
     >
       <CloseIcon sx={{ fontSize: 30 }} />
@@ -155,7 +156,7 @@ const LogFormShell = ({
               width: 46,
               height: 5,
               borderRadius: 999,
-              bgcolor: 'rgba(148, 163, 184, 0.45)',
+              bgcolor: colors.app.text.muted,
             }}
           />
         </Box>

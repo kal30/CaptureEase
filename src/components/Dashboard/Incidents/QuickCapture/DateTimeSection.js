@@ -3,6 +3,7 @@ import { Paper, Typography } from '@mui/material';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import colors from '../../../../assets/theme/colors';
 
 const DateTimeSection = ({ value, onChange }) => {
   return (
@@ -12,8 +13,8 @@ const DateTimeSection = ({ value, onChange }) => {
         p: 3, 
         mb: 3, 
         borderRadius: '16px',
-        border: '1px solid #e5e7eb',
-        backgroundColor: '#ffffff'
+        border: `1px solid ${colors.app.cards.border}`,
+        backgroundColor: colors.app.cards.background
       }}
     >
       <Typography 
@@ -21,7 +22,7 @@ const DateTimeSection = ({ value, onChange }) => {
         gutterBottom 
         sx={{ 
           fontWeight: 600,
-          color: '#1f2937'
+          color: colors.app.text.strong
         }}
       >
         ⏰ When did this incident occur?

@@ -23,6 +23,7 @@ import {
   authButtonsContainerStyles,
   loginButtonStyles,
 } from "../../assets/theme/navbarTheme";
+import colors from "../../assets/theme/colors";
 
 const Navbar = () => {
   const auth = getAuth();
@@ -139,7 +140,7 @@ const Navbar = () => {
                   variant="circular"
                   width={40}
                   height={40}
-                  sx={{ bgcolor: "rgba(255,255,255,0.2)" }}
+                  sx={{ bgcolor: colors.navbar.current.skeletonBg }}
                 />
               ) : (
                 <Box sx={{ width: 40, height: 40 }} />

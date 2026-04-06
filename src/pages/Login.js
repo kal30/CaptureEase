@@ -13,6 +13,7 @@ import { handlePostAuthRedirect } from "../services/auth/navigation";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import GoogleAuth from "../components/AuthProviders/GoogleAuth";
 import ResponsiveLayout from "../components/Layout/ResponsiveLayout";
+import colors from "../assets/theme/colors";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -165,7 +166,7 @@ const Login = () => {
           <Link
             to="/register"
             variant="body2"
-            style={{ textDecoration: "none", color: "#1976d2" }}
+            style={{ textDecoration: "none", color: colors.brand.deep }}
           >
             {"Don't have an account? Sign Up"}
           </Link>

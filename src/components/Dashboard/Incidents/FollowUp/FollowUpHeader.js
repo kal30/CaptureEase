@@ -2,6 +2,7 @@ import React from 'react';
 import { DialogTitle, Typography, Button, Box, Chip } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { useTheme } from '@mui/material/styles';
+import colors from '../../../../assets/theme/colors';
 
 const FollowUpHeader = ({ 
   incident, 
@@ -50,8 +51,8 @@ const FollowUpHeader = ({
             label={incidentConfig?.label || incident?.customIncidentName || incident?.type || 'Other Incident'}
             size="small"
             sx={{
-              bgcolor: incidentConfig?.color || '#6b7280',
-              color: 'white',
+              bgcolor: incidentConfig?.color || colors.app.timeline.incident,
+              color: colors.app.cards.background,
               fontWeight: 600,
             }}
           />

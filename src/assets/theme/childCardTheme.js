@@ -1,4 +1,5 @@
 import { alpha } from "@mui/material/styles";
+import colors from "./colors";
 import { getRoleColor } from "./roleColors";
 
 // Role hex mapping using centralized role color system
@@ -7,7 +8,7 @@ const roleHex = {
   care_partner: getRoleColor("carePartner", "primary"), // Violet - supportive, collaborative  
   caregiver: getRoleColor("caregiver", "primary"),      // Emerald Green - helping, professional
   therapist: getRoleColor("therapist", "primary"),      // Teal - medical, clinical
-  default: "#c8d9e6",                                   // brand tint (fallback)
+  default: colors.brand.tint,                           // brand tint (fallback)
 };
 
 // Build a soft gradient from a hex color

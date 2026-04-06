@@ -8,6 +8,7 @@ import {
   MenuItem, 
   TextField 
 } from '@mui/material';
+import colors from '../../../../assets/theme/colors';
 
 const RemedySection = ({ 
   remedy, 
@@ -23,8 +24,8 @@ const RemedySection = ({
         p: 3, 
         mb: 3, 
         borderRadius: '16px',
-        border: '1px solid #e5e7eb',
-        backgroundColor: '#ffffff'
+        border: `1px solid ${colors.app.cards.border}`,
+        backgroundColor: colors.app.cards.background
       }}
     >
       <Typography 
@@ -32,7 +33,7 @@ const RemedySection = ({
         gutterBottom 
         sx={{ 
           fontWeight: 600,
-          color: '#1f2937'
+          color: colors.app.text.strong
         }}
       >
         🩹 Remedy Applied

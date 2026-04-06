@@ -1,22 +1,37 @@
-/****
- * Landing Page Theme Configuration
- * Separate theme file for landing page specific typography and styling
- * Keeps main theme clean and focused on app UI
- */
+import colors from "./colors";
 
 export const landingColors = {
-  brandAccent: "#081f5c", // Existing primary navy
-  productHighlight: "#4CAF50", // CTA green (kept as-is)
-
-  // New extended palette
-  deepNavy: "#001B48", // For shadows or strong accents
-  midNavy: "#02457A", // For gradients
-  cyanPop: "#018ABE", // CTA buttons or icons
-  pastelAqua: "#97CADB", // Light, cool aqua
-  pageBackground: "#c8d9e6", // Main landing page background
-
-  heroText: "#081f5c",
-  bodyText: "#333333",
+  brandAccent: colors.landing.heroText,
+  productHighlight: colors.landing.productHighlight,
+  deepNavy: colors.landing.deepNavy,
+  midNavy: colors.landing.midNavy,
+  cyanPop: colors.landing.cyanPop,
+  pastelAqua: colors.landing.pastelAqua,
+  pageBackground: colors.landing.pageBackground,
+  heroText: colors.landing.heroText,
+  bodyText: colors.landing.bodyText,
+  textStrong: colors.landing.textStrong,
+  textMuted: colors.landing.textMuted,
+  textSoft: colors.landing.textSoft,
+  surface: colors.landing.surface,
+  surfaceSoft: colors.landing.surfaceSoft,
+  surfaceTint: colors.landing.surfaceTint,
+  panelSoft: colors.landing.panelSoft,
+  borderSoft: colors.landing.borderSoft,
+  borderLight: colors.landing.borderLight,
+  borderMedium: colors.landing.borderMedium,
+  borderStrong: colors.landing.borderStrong,
+  borderFocus: colors.landing.borderFocus,
+  borderActive: colors.landing.borderActive,
+  shadowSoft: colors.landing.shadowSoft,
+  shadowMedium: colors.landing.shadowMedium,
+  shadowPanel: colors.landing.shadowPanel,
+  shadowStrong: colors.landing.shadowStrong,
+  shadowHero: colors.landing.shadowHero,
+  shadowHeroStrong: colors.landing.shadowHeroStrong,
+  quoteBadge: colors.landing.quoteBadge,
+  quoteGradientStart: colors.landing.quoteGradientStart,
+  quoteGradientEnd: colors.landing.quoteGradientEnd,
 };
 
 export const landingTypography = {
@@ -68,9 +83,9 @@ export const landingTypography = {
 export const landingLayout = {
   heroSection: {
     padding: {
-      xs: { pt: 1, pb: 2 },
-      md: { pt: 2, pb: 3.5 },
-      lg: { pt: 2.5, pb: 4.5 },
+      xs: { pt: 0, pb: 2 },
+      md: { pt: 0, pb: 3.5 },
+      lg: { pt: 0, pb: 4.5 },
     },
     container: {
       gap: { xs: 2.5, md: 4, lg: 5 },
@@ -111,6 +126,6 @@ export const landingLayout = {
 
 // Landing page component styles
 export const landingPageStyles = {
-  backgroundColor: landingColors.pageBackground,
+  backgroundColor: colors.landing.pageBackground,
   minHeight: "100vh",
 };

@@ -11,6 +11,7 @@ import {
 } from "@mui/material";
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import { sendContactEmail } from "../services/contactService";
+import colors from "../assets/theme/colors";
 
 const CONTACT_EMAIL = "captureezhq@gmail.com";
 
@@ -75,7 +76,7 @@ export default function ContactUs() {
     <Box
       sx={{
         minHeight: "calc(100vh - 64px)",
-        background: "linear-gradient(180deg, #f7fbff 0%, #eef6f3 100%)",
+        background: `linear-gradient(180deg, ${colors.marketing.contact.backgroundStart} 0%, ${colors.marketing.contact.backgroundEnd} 100%)`,
         py: { xs: 6, md: 10 },
       }}
     >
@@ -86,8 +87,8 @@ export default function ContactUs() {
             borderRadius: 4,
             px: { xs: 3, md: 5 },
             py: { xs: 4, md: 5 },
-            border: "1px solid #d9e8df",
-            backgroundColor: "#ffffff",
+            border: `1px solid ${colors.marketing.contact.border}`,
+            backgroundColor: colors.marketing.contact.paperBg,
           }}
         >
           <Stack spacing={2.5}>
@@ -96,7 +97,7 @@ export default function ContactUs() {
               sx={{
                 fontSize: { xs: "2rem", md: "2.5rem" },
                 fontWeight: 800,
-                color: "#183b2b",
+                color: colors.marketing.contact.title,
                 lineHeight: 1.1,
               }}
             >
@@ -107,7 +108,7 @@ export default function ContactUs() {
               sx={{
                 fontSize: { xs: "1rem", md: "1.08rem" },
                 lineHeight: 1.8,
-                color: "#365447",
+                color: colors.marketing.contact.text,
                 maxWidth: "58ch",
               }}
             >
@@ -117,8 +118,8 @@ export default function ContactUs() {
             <Box
               sx={{
                 borderRadius: 3,
-                backgroundColor: "#f5fbf7",
-                border: "1px solid #d7eadc",
+                backgroundColor: colors.marketing.contact.supportBg,
+                border: `1px solid ${colors.marketing.contact.supportBorder}`,
                 px: 2,
                 py: 2,
               }}
@@ -129,7 +130,7 @@ export default function ContactUs() {
                   fontWeight: 700,
                   letterSpacing: 0.8,
                   textTransform: "uppercase",
-                  color: "#4e6c60",
+                  color: colors.marketing.contact.textMuted,
                   mb: 0.75,
                 }}
               >
@@ -139,7 +140,7 @@ export default function ContactUs() {
                 sx={{
                   fontSize: { xs: "1.05rem", md: "1.15rem" },
                   fontWeight: 700,
-                  color: "#183b2b",
+                  color: colors.marketing.contact.title,
                   wordBreak: "break-word",
                 }}
               >
@@ -194,17 +195,17 @@ export default function ContactUs() {
                     startIcon={<EmailOutlinedIcon />}
                     disabled={submitting}
                     sx={{
-                      px: 3,
-                      py: 1.3,
-                      borderRadius: 999,
-                      textTransform: "none",
-                      fontWeight: 700,
-                      backgroundColor: "#2a7a56",
-                      "&:hover": {
-                        backgroundColor: "#236648",
-                      },
-                    }}
-                  >
+                    px: 3,
+                    py: 1.3,
+                    borderRadius: 999,
+                    textTransform: "none",
+                    fontWeight: 700,
+                    backgroundColor: colors.marketing.contact.buttonBg,
+                    "&:hover": {
+                      backgroundColor: colors.marketing.contact.buttonHoverBg,
+                    },
+                  }}
+                >
                     {submitting ? "Sending..." : "Send Message"}
                   </Button>
                 </Box>

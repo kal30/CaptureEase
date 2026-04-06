@@ -12,6 +12,7 @@ import {
   getIncidentTypeConfig
 } from '../../../services/incidentService';
 import { useAsyncForm } from '../../../hooks/useAsyncForm';
+import colors from '../../../assets/theme/colors';
 
 // Import refactored components
 import DateTimeSection from './QuickCapture/DateTimeSection';
@@ -143,7 +144,7 @@ const IncidentQuickCapture = ({
   }
 
   return (
-    <Box sx={{ p: 4, backgroundColor: '#fafbfc', minHeight: '100%' }}>
+    <Box sx={{ p: 4, backgroundColor: colors.app.cards.background, minHeight: '100%' }}>
       {incidentForm.error && (
         <Alert 
           severity="error" 

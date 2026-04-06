@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Box, Collapse } from '@mui/material';
 import Typography from '@mui/material/Typography';
 import AllergyChip, { sortAllergiesByPriority } from '../../UI/Allergies';
+import colors from '../../../assets/theme/colors';
 
 /**
  * MedicalInfoDisplay - Compact display of diagnosis and medical info with expandable list
@@ -64,9 +65,9 @@ const MedicalInfoDisplay = ({
             component="span"
             sx={{
               ...compactChipSx,
-              color: '#B45309',
-              borderColor: 'rgba(245, 158, 11, 0.18)',
-              backgroundColor: 'rgba(255, 244, 229, 0.88)',
+              color: colors.app.semantic.warning,
+              borderColor: colors.app.safety.allergyBorder,
+              backgroundColor: colors.app.safety.allergyBg,
             }}
           >
             Allergies
@@ -87,9 +88,9 @@ const MedicalInfoDisplay = ({
             component="span"
             sx={{
               ...compactChipSx,
-              color: '#92400E',
-              borderColor: 'rgba(245, 158, 11, 0.16)',
-              backgroundColor: 'rgba(255, 247, 237, 0.88)',
+              color: colors.app.dashboard.childHeader.allergyColor,
+              borderColor: colors.app.safety.allergyBorder,
+              backgroundColor: colors.app.cards.shadowPanel,
             }}
           >
             Issues
@@ -167,9 +168,9 @@ const MedicalInfoDisplay = ({
                 px: 0.75,
                 py: 0.35,
                 borderRadius: 999,
-                bgcolor: 'rgba(255, 247, 237, 0.9)',
+                bgcolor: colors.app.safety.allergyBg,
                 border: '1px solid',
-                borderColor: 'rgba(245, 158, 11, 0.16)',
+                borderColor: colors.app.safety.allergyBorder,
               }}
             >
               <Typography component="span" sx={{ fontSize: compact ? '0.75rem' : '0.82rem', fontWeight: 700, color: 'text.primary' }}>
@@ -188,9 +189,9 @@ const MedicalInfoDisplay = ({
                 px: 0.75,
                 py: 0.35,
                 borderRadius: 999,
-                bgcolor: 'rgba(255, 244, 229, 0.9)',
+                bgcolor: colors.app.safety.allergyBg,
                 border: '1px solid',
-                borderColor: 'rgba(245, 158, 11, 0.16)',
+                borderColor: colors.app.safety.allergyBorder,
               }}
             >
           <Typography component="span" sx={{ fontSize: compact ? '0.75rem' : '0.82rem', fontWeight: 700, color: 'text.primary' }}>

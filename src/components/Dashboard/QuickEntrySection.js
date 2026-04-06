@@ -24,6 +24,7 @@ import { useNavigate } from 'react-router-dom';
 import { useChildContext } from '../../contexts/ChildContext';
 import { therapyTheme } from '../../assets/theme/therapyTheme';
 import { getLogTypeByCategory } from '../../constants/logTypeRegistry';
+import colors from '../../assets/theme/colors';
 
 /**
  * QuickEntrySection - Integrated Quick Entry circles with Therapy Prep access
@@ -277,15 +278,15 @@ const QuickEntrySection = ({
                   textTransform: 'none',
                   fontWeight: 700,
                   fontSize: { xs: '0.88rem', md: '0.95rem' },
-                  color: '#ffffff',
-                  background: 'linear-gradient(135deg, #4caf50 0%, #2e7d32 100%)',
+                  color: colors.semantic.surface,
+                  background: `linear-gradient(135deg, ${colors.app.dashboard.quickAction.primaryGradientStart} 0%, ${colors.app.dashboard.quickAction.primaryGradientEnd} 100%)`,
                   boxShadow: (hoveredAction === primaryAction.key || externalHoveredAction === primaryAction.key)
-                    ? '0 8px 18px rgba(76, 175, 80, 0.28)'
-                    : '0 4px 10px rgba(76, 175, 80, 0.18)',
+                    ? `0 8px 18px ${colors.app.dashboard.quickAction.primaryHoverShadow}`
+                    : `0 4px 10px ${colors.app.dashboard.quickAction.primaryShadow}`,
                   width: '100%',
                   '&:hover': {
-                    background: 'linear-gradient(135deg, #43a047 0%, #1f6a28 100%)',
-                    boxShadow: '0 10px 20px rgba(76, 175, 80, 0.3)',
+                    background: `linear-gradient(135deg, ${colors.app.dashboard.quickAction.primaryHoverStart} 0%, ${colors.app.dashboard.quickAction.primaryHoverEnd} 100%)`,
+                    boxShadow: `0 10px 20px ${colors.app.dashboard.quickAction.primaryHoverShadow}`,
                   },
                 }}
               >
@@ -302,11 +303,11 @@ const QuickEntrySection = ({
                   minWidth: { xs: 36, md: 42 },
                   height: { xs: 36, md: 42 },
                   borderRadius: { xs: '14px', md: '12px' },
-                  border: '1px solid rgba(8, 31, 92, 0.14)',
-                  backgroundColor: '#ffffff',
-                  color: '#102d72',
+                  border: `1px solid ${colors.app.dashboard.quickAction.secondaryBorder}`,
+                  backgroundColor: colors.app.dashboard.quickAction.secondaryBg,
+                  color: colors.app.dashboard.quickAction.secondaryText,
                   '&:hover': {
-                    backgroundColor: '#f6f8fc',
+                    backgroundColor: colors.app.dashboard.quickAction.secondaryHoverBg,
                   },
                   transition: "all 0.2s ease",
                 }}
@@ -346,11 +347,11 @@ const QuickEntrySection = ({
                   minWidth: 36,
                   height: 36,
                   borderRadius: '14px',
-                  border: '1px solid rgba(8, 31, 92, 0.14)',
-                  backgroundColor: '#ffffff',
-                  color: '#102d72',
+                  border: `1px solid ${colors.app.dashboard.quickAction.secondaryBorder}`,
+                  backgroundColor: colors.app.dashboard.quickAction.secondaryBg,
+                  color: colors.app.dashboard.quickAction.secondaryText,
                   '&:hover': {
-                    backgroundColor: '#f6f8fc',
+                    backgroundColor: colors.app.dashboard.quickAction.secondaryHoverBg,
                   },
                   transition: "all 0.2s ease",
                 }}

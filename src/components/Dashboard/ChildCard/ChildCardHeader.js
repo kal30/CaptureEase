@@ -9,6 +9,7 @@ import MedicalInfoDisplay from './MedicalInfoDisplay';
 import { getChildCareTeam } from '../../../services/childAccessService';
 import { ROLE_DISPLAY, USER_ROLES } from '../../../constants/roles';
 import { getRoleColor, getRoleColorAlpha } from '../../../assets/theme/roleColors';
+import colors from '../../../assets/theme/colors';
 
 /**
  * ChildCardHeader - Header section of child card with avatar, basic info, and actions
@@ -172,7 +173,7 @@ const ChildCardHeader = memo(({
                   width: 30,
                   height: 30,
                   bgcolor: 'rgba(239, 246, 255, 0.95)',
-                  border: '1px solid rgba(37, 99, 235, 0.14)',
+                  border: `1px solid ${colors.app.dashboard.childHeader.supportBorder}`,
                   color: 'primary.main',
                   '&:hover': {
                     bgcolor: 'rgba(219, 234, 254, 0.98)',
@@ -232,7 +233,7 @@ const ChildCardHeader = memo(({
                           width: 32,
                           height: 32,
                           bgcolor: careTeamCount === 0 ? 'rgba(241, 245, 249, 0.95)' : 'rgba(239, 246, 255, 0.95)',
-                          border: '1px solid rgba(37, 99, 235, 0.14)',
+                          border: `1px solid ${colors.app.dashboard.childHeader.supportBorder}`,
                           color: careTeamCount === 0 ? 'text.disabled' : 'primary.main',
                           '&:hover': {
                             bgcolor: careTeamCount === 0 ? 'rgba(241, 245, 249, 0.95)' : 'rgba(219, 234, 254, 0.98)',

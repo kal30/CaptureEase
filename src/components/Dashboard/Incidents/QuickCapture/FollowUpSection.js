@@ -6,6 +6,7 @@ import {
   Switch, 
   Box 
 } from '@mui/material';
+import colors from '../../../../assets/theme/colors';
 
 const FollowUpSection = ({ 
   scheduleFollowUp,
@@ -19,8 +20,8 @@ const FollowUpSection = ({
         p: 3, 
         mb: 3, 
         borderRadius: '16px',
-        border: '1px solid #e5e7eb',
-        backgroundColor: '#ffffff'
+        border: `1px solid ${colors.app.cards.border}`,
+        backgroundColor: colors.app.cards.background
       }}
     >
       <FormControlLabel

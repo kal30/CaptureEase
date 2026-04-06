@@ -3,6 +3,7 @@ import { themeRoles, getRoleColor } from "./roleColors";
 import { alpha } from "@mui/material/styles";
 import brand from "./brand";
 import getMuiButtonTheme from "./components/buttonTheme";
+import colors from "./colors";
 
 const theme = createTheme({
   breakpoints: { values: { xs: 0, sm: 480, md: 768, lg: 1200, xl: 1536 } },
@@ -10,9 +11,9 @@ const theme = createTheme({
   palette: {
     mode: "light",
     background: {
-      default: "#FFFFFF",
-      paper: "#FFFFFF",
-      container: "#fff8ed", // light warm background for containers
+      default: colors.semantic.surface,
+      paper: colors.semantic.surface,
+      container: colors.app.container,
     },
     primary: {
       main: brand.palette.primary.main,
@@ -28,91 +29,91 @@ const theme = createTheme({
       main: brand.palette.primary.main,
     },
     success: {
-      main: "#4CAF50",
+      main: colors.semantic.success,
     },
     tertiary: {
-      main: "#7C6F57", // muted brown/khaki
-      light: "#A49592", // secondary from CSS files
-      dark: "#727077", // darker neutral
+      main: colors.app.tertiary.main,
+      light: colors.app.tertiary.light,
+      dark: colors.app.tertiary.dark,
     },
     calendar: {
-      background: "#EED8C9",
-      accent: "#E99787",
-      accentHover: "#d48a7a",
-      weekendBg: "#f9f5f2",
-      eventDot: "#EB684A",
-      todayBg: "#A49592",
-      hoverBg: "#fce9e5",
+      background: colors.app.calendar.background,
+      accent: colors.app.calendar.accent,
+      accentHover: colors.app.calendar.accentHover,
+      weekendBg: colors.app.calendar.weekendBg,
+      eventDot: colors.app.calendar.eventDot,
+      todayBg: colors.app.calendar.todayBg,
+      hoverBg: colors.app.calendar.hoverBg,
     },
     dailyCare: {
-      primary: "#6D28D9", // Daily Care purple
-      light: "#8B5CF6", // Lighter purple
-      dark: "#5B21B6", // Darker purple
-      background: "rgba(109, 40, 217, 0.1)", // Light purple background
-      hover: "rgba(109, 40, 217, 0.2)", // Hover background
+      primary: colors.app.dailyCare.primary,
+      light: colors.app.dailyCare.light,
+      dark: colors.app.dailyCare.dark,
+      background: colors.app.dailyCare.background,
+      hover: colors.app.dailyCare.hover,
     },
     journal: {
-      chipBg: "#A3B18A", // sage green
-      hoverIcon: "#EB684A", // terracotta
-      deleteHover: "#F4B860", // mustard
+      chipBg: colors.app.journal.chipBg,
+      hoverIcon: colors.app.journal.hoverIcon,
+      deleteHover: colors.app.journal.deleteHover,
     },
     behavior: {
-      primary: "#FF9800", // Orange (matches timeline service)
-      light: "#FFB74D",
-      dark: "#F57C00",
-      background: "rgba(255, 152, 0, 0.1)",
-      hover: "rgba(255, 152, 0, 0.2)",
+      primary: colors.app.behavior.primary,
+      light: colors.app.behavior.light,
+      dark: colors.app.behavior.dark,
+      background: colors.app.behavior.background,
+      hover: colors.app.behavior.hover,
     },
     performance: {
-      primary: "#4CAF50", // Green (matches timeline service)
-      light: "#81C784",
-      dark: "#388E3C",
-      background: "rgba(76, 175, 80, 0.1)",
-      hover: "rgba(76, 175, 80, 0.2)",
+      primary: colors.app.performance.primary,
+      light: colors.app.performance.light,
+      dark: colors.app.performance.dark,
+      background: colors.app.performance.background,
+      hover: colors.app.performance.hover,
     },
     timeline: {
-      progress: "#6D28D9", // Use dailyCare primary for progress rings
-      background: "rgba(109, 40, 217, 0.05)",
-      border: "rgba(109, 40, 217, 0.1)",
+      progress: colors.app.dailyCare.primary,
+      background: colors.app.dailyCare.progressBackground,
+      border: colors.app.dailyCare.progressBorder,
       entries: {
-        incident: "#DC2626",
-        dailyHabit: "#059669",
-        journal: "#8B5CF6",
+        incident: colors.app.timeline.incident,
+        dailyHabit: colors.app.timeline.dailyHabit,
+        journal: colors.app.timeline.journal,
         therapyNote: getRoleColor("therapist", "primary"),
       },
       periods: {
-        morning: "#0284C7", // info-like
-        afternoon: "#F59E0B", // warning-like
-        evening: "#7C6F57", // secondary-like
+        morning: colors.app.timeline.morning,
+        afternoon: colors.app.timeline.afternoon,
+        evening: colors.app.timeline.evening,
       },
     },
     incident: {
       // Base incident type colors for chips/buttons
       types: {
-        eating_nutrition: "#22C55E",
-        mood: "#F59E0B",
-        sleep: "#3B82F6",
-        behavioral: "#EF4444",
-        sensory: "#8B5CF6",
-        pain_medical: "#DC2626",
-        other: "#6B7280",
+        eating_nutrition: colors.app.incident.eatingNutrition,
+        mood: colors.app.incident.mood,
+        sleep: colors.app.incident.sleep,
+        behavioral: colors.app.incident.behavioral,
+        sensory: colors.app.incident.sensory,
+        pain_medical: colors.app.incident.painMedical,
+        other: colors.app.incident.other,
       },
     },
     safety: {
-      allergy: "#FF9800",
-      medication: "#4CAF50",
-      allergyBg: "rgba(255, 152, 0, 0.15)",
-      medicationBg: "rgba(76, 175, 80, 0.15)",
-      allergyBorder: "rgba(255, 152, 0, 0.3)",
-      medicationBorder: "rgba(76, 175, 80, 0.3)",
+      allergy: colors.app.safety.allergy,
+      medication: colors.app.safety.medication,
+      allergyBg: colors.app.safety.allergyBg,
+      medicationBg: colors.app.safety.medicationBg,
+      allergyBorder: colors.app.safety.allergyBorder,
+      medicationBorder: colors.app.safety.medicationBorder,
     },
     // Role-based colors for care team members
     roles: themeRoles,
     text: {
-      primary: "#333333",
-      secondary: "#666666",
-      tertiary: "#888888", // muted grey
-      darkNeutral: "#04061f", // black pearl from App.css
+      primary: colors.landing.bodyText,
+      secondary: colors.app.text.secondary,
+      tertiary: colors.semantic.neutral, // muted grey
+      darkNeutral: colors.app.text.darkNeutral,
     },
   },
   typography: {
@@ -148,7 +149,7 @@ const theme = createTheme({
       fontWeight: 700,
       lineHeight: 1.2,
       letterSpacing: "-0.02em",
-      color: "#333333",
+      color: colors.landing.bodyText,
     },
     h2: {
       fontSize: {
@@ -159,7 +160,7 @@ const theme = createTheme({
       },
       fontWeight: 600,
       lineHeight: 1.3,
-      color: "#333333",
+      color: colors.landing.bodyText,
     },
     h3: {
       fontSize: {
@@ -169,7 +170,7 @@ const theme = createTheme({
       },
       fontWeight: 600,
       lineHeight: 1.4,
-      color: "#333333",
+      color: colors.landing.bodyText,
     },
     h4: {
       fontSize: {
@@ -179,29 +180,29 @@ const theme = createTheme({
       },
       fontWeight: 600,
       lineHeight: 1.4,
-      color: "#333333",
+      color: colors.landing.bodyText,
     },
     h5: {
       fontSize: "1.25rem",
       fontWeight: 600,
       lineHeight: 1.4,
-      color: "#333333",
+      color: colors.landing.bodyText,
     },
     h6: {
       fontSize: "1.125rem",
       fontWeight: 600,
       lineHeight: 1.4,
-      color: "#333333",
+      color: colors.landing.bodyText,
     },
     body1: {
       fontSize: "1rem",
       lineHeight: 1.6,
-      color: "#333333",
+      color: colors.landing.bodyText,
     },
     body2: {
       fontSize: "0.875rem",
       lineHeight: 1.5,
-      color: "#727077",
+      color: colors.semantic.neutral,
     },
     button: {
       textTransform: "none",
@@ -213,7 +214,7 @@ const theme = createTheme({
     caption: {
       fontSize: "0.75rem",
       lineHeight: 1.4,
-      color: "#727077",
+      color: colors.semantic.neutral,
     },
   },
   shape: {
@@ -244,11 +245,11 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: "18px",
-          backgroundColor: "#FFFFFF",
-          boxShadow: "0 2px 6px rgba(0,0,0,0.04)",
+          backgroundColor: colors.app.cards.background,
+          boxShadow: `0 2px 6px ${colors.app.cards.shadowSoft}`,
           transition: "box-shadow 120ms ease",
           "&:hover": {
-            boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
+            boxShadow: `0 4px 12px ${colors.app.cards.shadowHover}`,
           },
         },
       },
@@ -257,8 +258,8 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: "18px",
-          backgroundColor: "#FFFFFF",
-          boxShadow: "0 1px 2px rgba(17,24,39,0.04)",
+          backgroundColor: colors.app.cards.background,
+          boxShadow: `0 1px 2px ${colors.app.cards.shadowPanel}`,
         },
       },
     },
@@ -267,10 +268,10 @@ const theme = createTheme({
         root: {
           "& .MuiOutlinedInput-root": {
             borderRadius: "14px",
-            backgroundColor: "#FFFFFF",
+            backgroundColor: colors.app.cards.background,
             transition: "all 0.2s ease-in-out",
             "& fieldset": {
-              borderColor: "#E8E2D9",
+              borderColor: colors.app.cards.border,
               borderWidth: "2px",
             },
             "&:hover fieldset": {
@@ -282,11 +283,11 @@ const theme = createTheme({
               boxShadow: `0px 0px 0px 3px ${alpha(brand.palette.primary.main, 0.12)}`,
             },
             "&.Mui-focused": {
-              backgroundColor: "#FFFFFF",
+              backgroundColor: colors.app.cards.background,
             },
           },
           "& .MuiInputLabel-root": {
-            color: "#666666",
+            color: colors.app.text.secondary,
             "&.Mui-focused": {
               color: brand.palette.primary.main,
             },
@@ -312,7 +313,7 @@ const theme = createTheme({
           fontWeight: 600,
           fontSize: "0.875rem",
           minHeight: "48px",
-          color: "#666666",
+          color: colors.app.text.secondary,
           "&.Mui-selected": {
             color: brand.palette.primary.main,
           },
@@ -356,7 +357,7 @@ const theme = createTheme({
         },
         filled: {
           backgroundColor: brand.palette.primary.main,
-          color: "#FFFFFF",
+          color: colors.semantic.surface,
           "&:hover": {
             backgroundColor: brand.palette.primary.dark,
           },
@@ -367,7 +368,7 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: "16px",
-          boxShadow: "0 2px 6px rgba(0,0,0,0.04)",
+          boxShadow: `0 2px 6px ${colors.app.cards.shadowSoft}`,
           "&:before": {
             display: "none",
           },
@@ -392,7 +393,7 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           padding: "24px",
-          backgroundColor: "#FFFFFF",
+          backgroundColor: colors.app.cards.background,
           borderBottomLeftRadius: "16px",
           borderBottomRightRadius: "16px",
         },
@@ -413,8 +414,8 @@ const theme = createTheme({
         root: {
           "& .MuiPaper-root": {
             borderRadius: "20px",
-            boxShadow: "0px 25px 50px rgba(0, 0, 0, 0.15)",
-            border: "1px solid #E8E2D9",
+            boxShadow: `0px 25px 50px ${colors.app.cards.modalShadow}`,
+            border: `1px solid ${colors.app.cards.border}`,
           },
         },
       },
@@ -423,8 +424,8 @@ const theme = createTheme({
       styleOverrides: {
         paper: {
           borderRadius: "20px",
-          boxShadow: "0px 25px 50px rgba(0, 0, 0, 0.15)",
-          border: "1px solid #E8E2D9",
+          boxShadow: `0px 25px 50px ${colors.app.cards.modalShadow}`,
+          border: `1px solid ${colors.app.cards.border}`,
         },
       },
     },
@@ -445,29 +446,29 @@ const theme = createTheme({
     MuiCalendar: {
       styleOverrides: {
         root: {
-          background: "#EED8C9",
+          background: colors.app.calendar.background,
           borderRadius: "16px",
-          boxShadow: "0 4px 10px rgba(0, 0, 0, 0.05)",
+          boxShadow: `0 4px 10px ${colors.app.cards.shadowMedium}`,
           padding: "20px",
           maxWidth: "100%",
           margin: "0 auto",
           "& .rbc-toolbar": {
-            backgroundColor: "#FFFFFF",
+            backgroundColor: colors.app.cards.background,
             padding: "10px",
             borderRadius: "10px",
-            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.03)",
+            boxShadow: `0 2px 8px ${colors.app.cards.shadowPanel}`,
           },
           "& .rbc-toolbar button": {
-            backgroundColor: "#E99787",
-            color: "#FFFFFF",
+            backgroundColor: colors.app.calendar.accent,
+            color: colors.semantic.surface,
             border: "none",
             borderRadius: "6px",
             padding: "5px 10px",
             fontWeight: "bold",
             transition: "background-color 0.2s ease, box-shadow 0.2s ease",
             "&:hover": {
-              backgroundColor: "#d48a7a",
-              boxShadow: "0 2px 5px rgba(0, 0, 0, 0.1)",
+              backgroundColor: colors.app.calendar.accentHover,
+              boxShadow: `0 2px 5px ${colors.app.cards.shadowHover}`,
             },
           },
           "& .rbc-month-view": {
@@ -482,33 +483,33 @@ const theme = createTheme({
             },
           },
           "& .rbc-day-bg:hover": {
-            backgroundColor: "#fce9e5 !important",
+            backgroundColor: `${colors.app.calendar.hoverBg} !important`,
           },
           "& .rbc-date-cell--now": {
-            backgroundColor: "#A49592",
+            backgroundColor: colors.app.calendar.todayBg,
             borderRadius: "50%",
           },
           "& .rbc-date-cell--active": {
-            backgroundColor: "#E99787 !important",
-            color: "#FFFFFF !important",
+            backgroundColor: `${colors.app.calendar.accent} !important`,
+            color: `${colors.semantic.surface} !important`,
             borderRadius: "50%",
           },
           "& .rbc-header": {
             fontWeight: "bold",
             fontSize: "small",
-            color: "#333333",
+            color: colors.app.calendar.headerText,
             padding: "10px",
             textTransform: "uppercase",
             textAlign: "center",
           },
           "& .rbc-day-bg:nth-child(1), & .rbc-day-bg:nth-child(7)": {
-            backgroundColor: "#f9f5f2",
-            color: "#888888",
+            backgroundColor: colors.app.calendar.weekendBg,
+            color: colors.app.text.muted,
           },
           "& .rbc-event": {
-            backgroundColor: "#A49592",
+            backgroundColor: colors.app.calendar.todayBg,
             borderRadius: "8px",
-            color: "#FFFFFF",
+            color: colors.semantic.surface,
             padding: "5px",
             opacity: 0.9,
           },
@@ -519,7 +520,7 @@ const theme = createTheme({
             right: "5px",
             width: "8px",
             height: "8px",
-            backgroundColor: "#EB684A",
+            backgroundColor: colors.app.calendar.eventDot,
             borderRadius: "50%",
           },
           "& .rbc-day-bg.has-progress-note::before": {
@@ -529,7 +530,7 @@ const theme = createTheme({
             left: "5px",
             width: "8px",
             height: "8px",
-            backgroundColor: "#A49592",
+            backgroundColor: colors.app.calendar.todayBg,
             borderRadius: "50%",
           },
           "& .rbc-day-bg.has-sensory-log::after": {
@@ -539,7 +540,7 @@ const theme = createTheme({
             right: "5px",
             width: "8px",
             height: "8px",
-            backgroundColor: "#727077",
+            backgroundColor: colors.app.tertiary.dark,
             borderRadius: "50%",
           },
         },
@@ -548,10 +549,10 @@ const theme = createTheme({
     MuiAppBar: {
       styleOverrides: {
         root: {
-          backgroundColor: "#FFF8ED",
-          color: "#333333",
+          backgroundColor: colors.app.container,
+          color: colors.app.text.strong,
           boxShadow: "none",
-          borderBottom: "1px solid #E8E2D9",
+          borderBottom: `1px solid ${colors.app.cards.border}`,
           backgroundImage: "none",
           position: "sticky",
         },

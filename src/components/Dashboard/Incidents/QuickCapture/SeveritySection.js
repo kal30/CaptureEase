@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Typography, Slider, Paper, Chip } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import colors from '../../../../assets/theme/colors';
 
 const SeveritySection = ({ 
   severity, 
@@ -27,8 +28,8 @@ const SeveritySection = ({
         p: 3, 
         mb: 3, 
         borderRadius: '16px',
-        border: '1px solid #e5e7eb',
-        backgroundColor: '#ffffff'
+        border: `1px solid ${colors.app.cards.border}`,
+        backgroundColor: colors.app.cards.background
       }}
     >
       <Typography 
@@ -36,7 +37,7 @@ const SeveritySection = ({
         gutterBottom 
         sx={{ 
           fontWeight: 600,
-          color: '#1f2937'
+          color: colors.app.text.strong
         }}
       >
         📊 Severity Level: {severity}/10
@@ -61,7 +62,7 @@ const SeveritySection = ({
               backgroundColor: severityConfig?.color,
             },
             '& .MuiSlider-rail': {
-              backgroundColor: theme.palette.grey[300],
+              backgroundColor: colors.app.cards.border,
             },
             '& .MuiSlider-valueLabel': {
               backgroundColor: severityConfig?.color,

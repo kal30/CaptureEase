@@ -9,6 +9,7 @@ import {
 import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
 import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
 import VideocamIcon from "@mui/icons-material/Videocam";
+import FlipCameraIosIcon from "@mui/icons-material/FlipCameraIos";
 
 const RichTextInput = ({
   value,
@@ -33,6 +34,7 @@ const RichTextInput = ({
   const canvasRef = useRef(null);
   const [showCamera, setShowCamera] = useState(false);
   const [captureMode, setCaptureMode] = useState(null);
+  const [cameraFacing, setCameraFacing] = useState('environment');
   const streamRef = useRef(null);
   const idSuffixRef = useRef(Math.random().toString(36).slice(2, 8));
   const imageInputId = `icon-button-file-image-${idSuffixRef.current}`;
@@ -113,11 +115,11 @@ const RichTextInput = ({
     }
   };
 
-  const openCapture = async (mode) => {
+  const openCapture = async (mode, facing = cameraFacing) => {
     try {
       closeCapture();
       const constraints = {
-        video: { facingMode: { ideal: 'environment' } },
+        video: { facingMode: { ideal: facing } },
         ...(mode === 'video' ? { audio: true } : {}),
       };
 
@@ -127,7 +129,7 @@ const RichTextInput = ({
       } catch (error) {
         if (mode === 'video') {
           stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: { ideal: 'environment' } },
+            video: { facingMode: { ideal: cameraFacing } },
           });
         } else {
           throw error;
@@ -150,7 +152,7 @@ const RichTextInput = ({
       closeCapture();
       return;
     }
-    await openCapture('photo');
+    await openCapture('photo', cameraFacing);
   };
 
   const handleVideoClick = async () => {
@@ -158,7 +160,15 @@ const RichTextInput = ({
       closeCapture();
       return;
     }
-    await openCapture('video');
+    await openCapture('video', cameraFacing);
+  };
+
+  const handleFlipCamera = async () => {
+    const nextFacing = cameraFacing === 'environment' ? 'user' : 'environment';
+    setCameraFacing(nextFacing);
+    if (showCamera) {
+      await openCapture(captureMode || 'photo', nextFacing);
+    }
   };
 
   const capturePhoto = () => {
@@ -360,8 +370,27 @@ const RichTextInput = ({
               width: '100%',
               maxWidth: 520,
               alignSelf: 'center',
+              position: 'relative',
             }}
           >
+            <IconButton
+              onClick={handleFlipCamera}
+              size="small"
+              disabled={isVideoRecording}
+              sx={{
+                position: 'absolute',
+                top: 8,
+                right: 8,
+                zIndex: 2,
+                bgcolor: 'rgba(17, 24, 39, 0.75)',
+                color: '#fff',
+                '&:hover': {
+                  bgcolor: 'rgba(17, 24, 39, 0.9)',
+                },
+              }}
+            >
+              <FlipCameraIosIcon fontSize="small" />
+            </IconButton>
             <video
               ref={videoRef}
               autoPlay

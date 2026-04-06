@@ -1,32 +1,28 @@
 // Centralized brand tokens for palette and typography
 
+import colors from "./colors";
+
 const brand = {
   colors: {
     // Core brand colors
-    ink: "#081f5c", // deep blue for primary actions / text on buttons
-    tint: "#c8d9e6", // light blue tint for accents / secondary backgrounds
+    ink: colors.brand.ink, // deep blue for primary actions / text on buttons
+    tint: colors.brand.tint, // light blue tint for accents / secondary backgrounds
 
     // Extended blue scale (reference palette provided)
-    scale: {
-      navy: "#001B48",
-      deep: "#02457A",
-      tealBlue: "#018ABE",
-      lightBlue: "#97CADB",
-      ice: "#D6EBEE",
-    },
+    scale: colors.brand,
   },
 
   // Palette mapping used by MUI theme
   palette: {
     primary: {
-      main: "#081f5c", // ink
-      dark: "#001B48", // navy
-      light: "#97CADB", // lightBlue
+      main: colors.brand.ink, // ink
+      dark: colors.brand.navy, // navy
+      light: colors.brand.lightBlue, // lightBlue
     },
     secondary: {
-      main: "#c8d9e6", // tint
-      light: "#D6EBEE", // ice
-      dark: "#02457A", // deep
+      main: colors.brand.tint, // tint
+      light: colors.brand.ice, // ice
+      dark: colors.brand.deep, // deep
     },
   },
 
@@ -40,4 +36,3 @@ const brand = {
 };
 
 export default brand;
-

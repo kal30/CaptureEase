@@ -2,6 +2,7 @@ import React from "react";
 import { Container, Grid, Typography, Box, Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import aboutImage from "../assets/image/imagesAbout/about.webp";
+import colors from "../assets/theme/colors";
 
 export default function About() {
   const navigate = useNavigate();
@@ -40,7 +41,7 @@ export default function About() {
               component="h1"
               sx={{
                 fontFamily: '"Dancing Script", cursive',
-                color: "success.main",
+                color: colors.marketing.about.title,
                 fontWeight: 700,
                 fontSize: { xs: "2rem", md: "3rem" },
                 letterSpacing: "0.5px",
@@ -160,8 +161,10 @@ export default function About() {
                   textTransform: "none",
                   fontFamily: '"Poppins", sans-serif',
                   fontWeight: 500,
-                  boxShadow: "0px 4px 10px rgba(0,0,0,0.12)",
-                  "&:hover": { boxShadow: "0px 6px 16px rgba(0,0,0,0.16)" },
+                  boxShadow: `0px 4px 10px ${colors.marketing.about.buttonShadow}`,
+                  "&:hover": {
+                    boxShadow: `0px 6px 16px ${colors.marketing.about.buttonHoverShadow}`,
+                  },
                 }}
               >
                 Get Started
@@ -193,7 +196,7 @@ export default function About() {
                 ml: { xs: 0, md: 4 },
                 borderRadius: 3,
                 objectFit: "cover",
-                boxShadow: "0px 10px 24px rgba(0,0,0,0.12)",
+                boxShadow: `0px 10px 24px ${colors.marketing.about.imageShadow}`,
                 alignSelf: "center",
                 display: "block",
               }}

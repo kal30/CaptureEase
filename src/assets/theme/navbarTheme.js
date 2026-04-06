@@ -5,24 +5,13 @@
  */
 
 import { alpha } from "@mui/material/styles";
+import colors from "./colors";
 
 // Color schemes for different navbar styles
 export const navbarColors = {
-  current: {
-    appBarBg: "#0a2270",
-    textColor: "#c8d9e6",
-    hoverColor: "#ffffff",
-  },
-  pastel: {
-    appBarBg: "#c8d9e6",
-    textColor: "#081f5c",
-    hoverColor: "#ffffff",
-  },
-  gradient: {
-    appBarBg: "linear-gradient(90deg, #081f5c 0%, #c8d9e6 100%)",
-    textColor: "#ffffff",
-    hoverColor: "#081f5c",
-  },
+  current: colors.navbar.current,
+  pastel: colors.navbar.pastel,
+  gradient: colors.navbar.gradient,
 };
 
 // Typography constants
@@ -33,7 +22,7 @@ export const navbarFonts = {
 
 // Icon styling constants
 export const navbarIconStyles = {
-  color: "#c8d9e6",
+  color: colors.navbar.current.textColor,
   fontSize: { xs: 20, md: 22 },
   verticalAlign: "middle",
 };
@@ -44,7 +33,7 @@ export const logoCropInsets = "inset(5% 2% 5% 2%)"; // top right bottom left
 // AppBar base styles (curved, gradient background)
 export const appBarStyles = (theme, colorScheme) => ({
   boxShadow: "none",
-  background: `linear-gradient(180deg, ${colorScheme.appBarBg} 0%, #02457A 100%)`,
+  background: `linear-gradient(180deg, ${colorScheme.appBarBg} 0%, ${colors.brand.deep} 100%)`,
   color: colorScheme.textColor,
   borderBottom: `1px solid ${theme.palette.divider}`,
   borderBottomLeftRadius: "0.75rem",
@@ -163,7 +152,7 @@ export const authButtonsContainerStyles = {
 
 // Login button styles
 export const loginButtonStyles = () => ({
-  backgroundColor: "#081f5c",
+  backgroundColor: colors.brand.ink,
   color: "#ffffff",
   fontWeight: 600,
   fontFamily: navbarFonts.button,
@@ -174,9 +163,9 @@ export const loginButtonStyles = () => ({
   py: { xs: 1, md: 1.2 },
   minWidth: { xs: 80, md: "auto" },
   boxShadow: "0px 2px 8px rgba(8, 31, 92, 0.15)",
-  border: "1px solid #081f5c",
+  border: `1px solid ${colors.brand.ink}`,
   "&:hover": {
-    backgroundColor: "#0a2270",
+    backgroundColor: colors.navbar.current.appBarBg,
     boxShadow: "0px 4px 12px rgba(8, 31, 92, 0.25)",
     transform: "translateY(-1px)",
   },
@@ -184,8 +173,8 @@ export const loginButtonStyles = () => ({
 
 // Sign up button styles
 export const signUpButtonStyles = {
-  background: "linear-gradient(135deg, #c8d9e6 0%, #ffffff 100%)",
-  color: "#081f5c",
+  background: `linear-gradient(135deg, ${colors.brand.tint} 0%, #ffffff 100%)`,
+  color: colors.brand.ink,
   fontWeight: 600,
   fontFamily: navbarFonts.button,
   fontSize: { xs: "0.9rem", md: "1rem" },
@@ -194,9 +183,9 @@ export const signUpButtonStyles = {
   py: { xs: 1, md: 1.2 },
   minWidth: { xs: 80, md: "auto" },
   boxShadow: "0px 2px 8px rgba(200, 217, 230, 0.3)",
-  border: "1px solid #c8d9e6",
+  border: `1px solid ${colors.brand.tint}`,
   "&:hover": {
-    background: "linear-gradient(135deg, #ffffff 0%, #c8d9e6 100%)",
+    background: `linear-gradient(135deg, #ffffff 0%, ${colors.brand.tint} 100%)`,
     boxShadow: "0px 4px 12px rgba(200, 217, 230, 0.4)",
     transform: "translateY(-1px)",
   },

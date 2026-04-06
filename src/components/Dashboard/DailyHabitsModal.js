@@ -15,6 +15,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import { useTheme, alpha } from "@mui/material/styles";
+import colors from "../../assets/theme/colors";
 
 import HabitCategorySelector from "./HabitCategorySelector";
 import EntryForm from "../Common/EntryForm";
@@ -158,10 +159,10 @@ const DailyHabitsModal = ({ open, onClose, childId, childName, initialCategoryId
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          backgroundColor: "#fafbfc",
-          color: "#1f2937",
+          backgroundColor: colors.app.cards.background,
+          color: colors.app.text.strong,
           py: 3,
-          borderBottom: "1px solid #e5e7eb",
+          borderBottom: `1px solid ${colors.app.cards.border}`,
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -170,10 +171,10 @@ const DailyHabitsModal = ({ open, onClose, childId, childName, initialCategoryId
               aria-label="back"
               onClick={handleBack}
               sx={{
-                color: "#6b7280",
+                color: colors.app.text.secondary,
                 "&:hover": {
-                  bgcolor: "#f3f4f6",
-                  color: "#374151",
+                  bgcolor: colors.app.cards.shadowPanel,
+                  color: colors.app.text.strong,
                 },
                 mr: 1
               }}
@@ -197,10 +198,10 @@ const DailyHabitsModal = ({ open, onClose, childId, childName, initialCategoryId
           aria-label="close"
           onClick={handleClose}
           sx={{
-            color: "#6b7280",
+            color: colors.app.text.secondary,
             "&:hover": {
-              bgcolor: "#f3f4f6",
-              color: "#374151",
+              bgcolor: colors.app.cards.shadowPanel,
+              color: colors.app.text.strong,
             },
           }}
         >
@@ -214,7 +215,7 @@ const DailyHabitsModal = ({ open, onClose, childId, childName, initialCategoryId
           px: 3, 
           py: 2, 
           bgcolor: alpha(theme.palette.success.main, 0.1),
-          borderBottom: `1px solid ${theme.palette.divider}`
+          borderBottom: `1px solid ${colors.app.cards.border}`
         }}>
           <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
             <CheckCircleIcon sx={{ fontSize: 18, color: 'success.main' }} />
@@ -242,7 +243,7 @@ const DailyHabitsModal = ({ open, onClose, childId, childName, initialCategoryId
       )}
 
       {/* Dialog Content */}
-      <DialogContent sx={{ p: 0, backgroundColor: "#fafbfc" }}>
+      <DialogContent sx={{ p: 0, backgroundColor: colors.app.cards.background }}>
         {currentStep === 'select' ? (
           <HabitCategorySelector
             onCategorySelect={handleCategorySelect}

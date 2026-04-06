@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, Button } from '@mui/material';
 import { useRole } from '../../../contexts/RoleContext';
 import QuickEntrySection from '../QuickEntrySection';
+import colors from '../../../assets/theme/colors';
 
 /**
  * ChildCardActions - Action buttons and quick entry section
@@ -110,14 +111,14 @@ const ChildCardActions = ({
                 textTransform: 'none',
                 fontSize: '0.84rem',
                 fontWeight: 700,
-                color: 'rgba(15, 23, 42, 0.82)',
-                borderColor: 'rgba(148, 163, 184, 0.18)',
-                background: 'linear-gradient(135deg, rgba(255,255,255,0.88) 0%, rgba(240,244,255,0.72) 100%)',
+                color: colors.app.dashboard.quickAction.secondaryText,
+                borderColor: colors.app.dashboard.quickAction.secondaryBorder,
+                background: `linear-gradient(135deg, ${colors.app.dashboard.quickAction.secondaryBg} 0%, ${colors.app.cards.shadowPanel} 100%)`,
                 backdropFilter: 'blur(8px)',
-                boxShadow: '0 10px 24px rgba(15, 23, 42, 0.05)',
+                boxShadow: `0 10px 24px ${colors.app.cards.shadowPanel}`,
                 '&:hover': {
-                  borderColor: 'rgba(99, 102, 241, 0.28)',
-                  background: 'linear-gradient(135deg, rgba(255,255,255,0.96) 0%, rgba(236,242,255,0.82) 100%)',
+                  borderColor: colors.app.dashboard.quickAction.secondaryBorder,
+                  background: `linear-gradient(135deg, ${colors.app.cards.background} 0%, ${colors.app.dashboard.quickAction.secondaryHoverBg} 100%)`,
                 },
               }}
             >
@@ -166,12 +167,10 @@ const ChildCardActions = ({
                 fontSize: '0.875rem',
                 minWidth: 'auto',
                 borderRadius: 1,
-                background:
-                  'linear-gradient(135deg, #94A3B8 0%, #64748B 100%)',
-                color: 'white',
+                background: `linear-gradient(135deg, ${colors.app.timeline.journal} 0%, ${colors.app.timeline.dailyHabit} 100%)`,
+                color: colors.app.cards.background,
                 '&:hover': {
-                  background:
-                    'linear-gradient(135deg, #64748B 0%, #475569 100%)',
+                  background: `linear-gradient(135deg, ${colors.app.timeline.dailyHabit} 0%, ${colors.app.timeline.therapyNote} 100%)`,
                 },
               }}
             >

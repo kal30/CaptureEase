@@ -1,5 +1,6 @@
 import { TextField, Paper, Typography, Box } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import colors from '../../assets/theme/colors';
 
 /**
  * StyledTextArea - Handles all textarea patterns consistently  
@@ -35,15 +36,15 @@ const StyledTextArea = ({
           p: 3, 
           mb: 3, 
           borderRadius: '16px',
-          border: '1px solid #e5e7eb',
-          backgroundColor: '#ffffff'
+          border: `1px solid ${colors.app.cards.border}`,
+          backgroundColor: colors.app.cards.background
         },
         label: {
           variant: 'subtitle1',
           gutterBottom: true,
           sx: { 
             fontWeight: 600,
-            color: '#1f2937'
+            color: colors.app.text.strong
           }
         },
         field: {
@@ -58,15 +59,15 @@ const StyledTextArea = ({
           p: 3, 
           mb: 3, 
           borderRadius: '16px',
-          border: '1px solid #e5e7eb',
-          backgroundColor: '#ffffff'
+          border: `1px solid ${colors.app.cards.border}`,
+          backgroundColor: colors.app.cards.background
         },
         label: {
           variant: 'subtitle1',
           gutterBottom: true,
           sx: { 
             fontWeight: 600,
-            color: '#1f2937'
+            color: colors.app.text.strong
           }
         },
         field: {
@@ -101,8 +102,8 @@ const StyledTextArea = ({
           p: 3, 
           mb: 3, 
           borderRadius: '16px',
-          border: '1px solid #e5e7eb',
-          backgroundColor: '#f8f9fa'
+          border: `1px solid ${colors.app.cards.border}`,
+          backgroundColor: colors.app.cards.shadowPanel
         },
         label: {
           variant: 'subtitle1',

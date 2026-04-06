@@ -7,6 +7,7 @@ import {
   INCIDENT_TYPES,
   getCustomCategories,
 } from "../../../services/incidentService";
+import colors from '../../../assets/theme/colors';
 
 // Keys to hide from the selector (support both enum and lowercase keys)
 const HIDDEN_TYPES = new Set([
@@ -69,7 +70,7 @@ const IncidentTypeSelector = ({ onTypeSelect, onClose, childId }) => {
     <Box
       sx={{
         p: 4,
-        bgcolor: "#fafbfc",
+        bgcolor: colors.app.cards.background,
         minHeight: "100%",
       }}
     >

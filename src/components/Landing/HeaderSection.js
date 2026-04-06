@@ -52,7 +52,7 @@ const HeaderSection = () => {
       sx={{
         backgroundColor: "transparent",
         position: "relative",
-        mt: { xs: 1, md: 2, lg: 2.5 },
+        mt: 0,
         ...landingLayout.heroSection.padding,
         minHeight: { xs: "auto", md: "auto", lg: "auto" },
         display: "flex",
@@ -136,7 +136,7 @@ const HeaderSection = () => {
                   textTransform: "none",
                   borderRadius: "16px",
                   fontSize: { xs: "1rem", md: "1.05rem" },
-                  boxShadow: "0 10px 22px rgba(8, 31, 92, 0.22)",
+                  boxShadow: `0 10px 22px ${landingColors.shadowHero}`,
                 }}
               >
                 Try CaptureEz Free
@@ -164,9 +164,9 @@ const HeaderSection = () => {
                 <Divider
                   sx={{
                     width: "100%",
-                    color: "rgba(8, 31, 92, 0.6)",
+                    color: landingColors.textSoft,
                     "&::before, &::after": {
-                      borderColor: "rgba(8, 31, 92, 0.16)",
+                      borderColor: landingColors.borderMedium,
                     },
                   }}
                 >
@@ -176,7 +176,7 @@ const HeaderSection = () => {
                       fontSize: "0.82rem",
                       letterSpacing: "0.04em",
                       textTransform: "uppercase",
-                      color: "rgba(8, 31, 92, 0.72)",
+                      color: landingColors.textMuted,
                     }}
                   >
                     Or join the founding family list
@@ -200,20 +200,20 @@ const HeaderSection = () => {
                     variant="outlined"
                     InputProps={{
                       sx: {
-                        backgroundColor: "rgba(255,255,255,0.72)",
+                        backgroundColor: landingColors.surfaceTint,
                         borderRadius: 0,
                         height: 48,
                         minHeight: 48,
                         fontSize: "1rem",
                         "& fieldset": {
                           borderRadius: 0,
-                          borderColor: "rgba(8, 31, 92, 0.18)",
+                          borderColor: landingColors.borderStrong,
                         },
                         "&:hover fieldset": {
-                          borderColor: "rgba(8, 31, 92, 0.28)",
+                          borderColor: landingColors.borderFocus,
                         },
                         "&.Mui-focused fieldset": {
-                          borderColor: "rgba(8, 31, 92, 0.38)",
+                          borderColor: landingColors.borderActive,
                           borderWidth: "1px",
                         },
                       },
@@ -267,7 +267,7 @@ const HeaderSection = () => {
                 opacity: landingLayout.floatingCircle.opacity,
                 top: landingLayout.floatingCircle.position.top,
                 right: landingLayout.floatingCircle.position.right,
-                boxShadow: "0px 10px 20px rgba(0, 0, 0, 0.1)",
+                boxShadow: `0px 10px 20px ${landingColors.shadowPanel}`,
                 pointerEvents: "none",
               }}
             />
@@ -287,7 +287,7 @@ const HeaderSection = () => {
                 sx={{
                   width: "100%",
                   height: "auto",
-                  boxShadow: "0px 10px 28px rgba(0, 0, 0, 0.14)",
+                  boxShadow: `0px 10px 28px ${landingColors.shadowHeroStrong}`,
                   objectFit: "cover",
                 }}
               />

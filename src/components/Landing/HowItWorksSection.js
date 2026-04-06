@@ -36,7 +36,7 @@ const HowItWorksSection = () => {
             sx={{
               fontSize: "1.1rem",
               fontWeight: 500,
-              color: "#5a7a9a",
+              color: landingColors.textMuted,
               textAlign: "center",
               mx: "auto",
               mb: 4,
@@ -64,13 +64,13 @@ const HowItWorksSection = () => {
                 minWidth: 240,
                 p: 3,
                 borderRadius: 1.5,
-                border: "1px solid rgba(8, 31, 92, 0.12)",
-                backgroundColor: "#ffffff",
+                border: `1px solid ${landingColors.borderLight}`,
+                backgroundColor: landingColors.surface,
                 color: landingColors.bodyText,
               }}
             >
               <Box sx={{ mb: 1.5 }}>
-                <step.icon sx={{ fontSize: 40, color: "#1a3a5c" }} />
+                <step.icon sx={{ fontSize: 40, color: landingColors.quoteBadge }} />
               </Box>
               <Typography
                 sx={{

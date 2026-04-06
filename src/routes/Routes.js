@@ -9,7 +9,6 @@ import About from "../pages/About";
 import ContactUs from "../pages/ContactUs";
 import PanelDashboard from "../pages/PanelDashboard";
 import LandingPage from "../pages/LandingPage";
-import HealthInfoPage from "../pages/HealthInforPage";
 import DailyActivitiesPage from "../pages/DailyActivitiesPage";
 
 // ProgressNotesPage removed - feature deprecated
@@ -20,7 +19,6 @@ import MedicalLogPage from "../pages/MedicalLog/MedicalLogPage";
 import ProfilePage from "../pages/ProfilePage";
 import InvitationPage from "../pages/InvitationPage";
 import AcceptInvite from "../pages/AcceptInvite";
-import DailyLogPage from "../pages/DailyLogPage";
 import TherapyNotesPage from "../pages/TherapyNotesPage";
 import MessagesPage from "../pages/MessagesPage";
 import AdminPage from "../pages/AdminPage";
@@ -63,7 +61,6 @@ const AppRoutes = () => {
         <Route path="/dashboard" element={<PanelDashboard />} />
         <Route path="/care-team" element={<CareTeamPage />} />
         <Route path="/daily-activities" element={<DailyActivitiesPage />} />
-        <Route path="/health-info" element={<HealthInfoPage />} />
         {/* /progress-notes route removed - feature deprecated */}
         <Route path="/sensory" element={<SensoryPage />} />
         <Route path="/log" element={<Navigate to="/dashboard" replace />} />

@@ -16,6 +16,7 @@ import IncidentQuickCapture from "./IncidentQuickCapture";
 import { getIncidentDisplayInfo } from '../../../constants/uiDisplayConstants';
 import OtherIncidentCapture from "./OtherIncidentCapture";
 import { INCIDENT_TYPES } from "../../../services/incidentService";
+import colors from '../../../assets/theme/colors';
 
 const IncidentLoggingModal = ({ open, onClose, childId, childName }) => {
   // Get centralized display info
@@ -104,10 +105,10 @@ const IncidentLoggingModal = ({ open, onClose, childId, childName }) => {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          backgroundColor: "#fafbfc",
-          color: "#1f2937",
+          backgroundColor: colors.app.cards.background,
+          color: colors.app.text.strong,
           py: 3,
-          borderBottom: "1px solid #e5e7eb",
+          borderBottom: `1px solid ${colors.app.cards.border}`,
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -116,10 +117,10 @@ const IncidentLoggingModal = ({ open, onClose, childId, childName }) => {
               aria-label="back"
               onClick={handleBack}
               sx={{
-                color: "#6b7280",
+                color: colors.app.text.secondary,
                 "&:hover": {
-                  bgcolor: "#f3f4f6",
-                  color: "#374151",
+                  bgcolor: colors.app.cards.shadowPanel,
+                  color: colors.app.text.strong,
                 },
               }}
             >
@@ -132,10 +133,10 @@ const IncidentLoggingModal = ({ open, onClose, childId, childName }) => {
           aria-label="close"
           onClick={handleClose}
           sx={{
-            color: "#6b7280",
+            color: colors.app.text.secondary,
             "&:hover": {
-              bgcolor: "#f3f4f6",
-              color: "#374151",
+              bgcolor: colors.app.cards.shadowPanel,
+              color: colors.app.text.strong,
             },
           }}
         >
@@ -143,7 +144,7 @@ const IncidentLoggingModal = ({ open, onClose, childId, childName }) => {
         </IconButton>
       </DialogTitle>
 
-      <DialogContent sx={{ p: 0, backgroundColor: "#fafbfc" }}>
+      <DialogContent sx={{ p: 0, backgroundColor: colors.app.cards.background }}>
         {currentStep === 1 && (
           <IncidentTypeSelector
             key={`incident-selector-${Date.now()}`} // Force remount to reload categories

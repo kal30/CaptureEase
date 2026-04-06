@@ -4,6 +4,7 @@ import Slider from "react-slick";
 import image1 from "../../assets/image/landing/DashboardSlideShow/LongProse.png";
 import image2 from "../../assets/image/landing/DashboardSlideShow/Dashboard.png";
 import image3 from "../../assets/image/landing/DashboardSlideShow/QuickCheckIn.png";
+import { landingColors } from "../../assets/theme/landingTheme";
 
 const defaultItems = [
   { src: image1, alt: "Why CaptureEZ", caption: "Why CaptureEZ" },
@@ -65,7 +66,7 @@ const AppScreenshots = ({ items }) => {
                   bgcolor: "common.white",
                   borderRadius: 2,
                   p: { xs: 0.75, sm: 1 },
-                  boxShadow: "0 8px 20px rgba(0,0,0,0.08)",
+                  boxShadow: `0 8px 20px ${landingColors.shadowPanel}`,
                 }}
               >
                 {/* Aspect-ratio container to lock proportions (portrait 9:17) */}

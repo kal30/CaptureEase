@@ -17,6 +17,7 @@ import {
 import GoogleAuth from "../components/AuthProviders/GoogleAuth"; // Keep Google Auth
 import ResponsiveLayout from "../components/Layout/ResponsiveLayout";
 import { createUserProfile } from "../services/userService";
+import colors from "../assets/theme/colors";
 
 const Register = () => {
   const [email, setEmail] = useState("");
@@ -208,7 +209,7 @@ const Register = () => {
           <Link
             to="/login"
             variant="body2"
-            style={{ textDecoration: "none", color: "#1976d2" }}
+            style={{ textDecoration: "none", color: colors.brand.deep }}
           >
             {"Already have an account? Sign In"}
           </Link>

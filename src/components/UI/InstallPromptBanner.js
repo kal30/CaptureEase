@@ -13,6 +13,7 @@ import {
   Close as CloseIcon,
   PhoneIphone as PhoneIphoneIcon,
 } from '@mui/icons-material';
+import colors from '../../assets/theme/colors';
 
 const InstallPromptBanner = ({ canInstall, isIOS, onInstall, onDismiss }) => {
   const title = isIOS
@@ -29,9 +30,9 @@ const InstallPromptBanner = ({ canInstall, isIOS, onInstall, onDismiss }) => {
       sx={{
         mb: 2,
         borderRadius: 1.25,
-        border: '1px solid rgba(99, 102, 241, 0.18)',
-        background: 'linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(244,247,255,0.98) 100%)',
-        boxShadow: '0 12px 30px rgba(15, 23, 42, 0.06)',
+        border: `1px solid ${colors.app.dashboard.quickAction.secondaryBorder}`,
+        background: `linear-gradient(180deg, ${colors.app.cards.background} 0%, ${colors.app.cards.shadowPanel} 100%)`,
+        boxShadow: `0 12px 30px ${colors.app.cards.shadowPanel}`,
         overflow: 'hidden',
       }}
     >
@@ -45,7 +46,7 @@ const InstallPromptBanner = ({ canInstall, isIOS, onInstall, onDismiss }) => {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              bgcolor: 'rgba(99, 102, 241, 0.10)',
+              bgcolor: colors.app.dashboard.quickAction.secondaryBg,
               color: 'primary.main',
               flexShrink: 0,
             }}
@@ -65,7 +66,7 @@ const InstallPromptBanner = ({ canInstall, isIOS, onInstall, onDismiss }) => {
               <Alert
                 severity="info"
                 variant="outlined"
-                sx={{ mt: 1.25, borderRadius: 1, bgcolor: 'rgba(255,255,255,0.7)' }}
+                sx={{ mt: 1.25, borderRadius: 1, bgcolor: colors.app.cards.background }}
               >
                 On iPhone or iPad, tap Share, then choose Add to Home Screen.
               </Alert>

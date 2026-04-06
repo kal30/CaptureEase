@@ -1,4 +1,5 @@
 import { alpha } from "@mui/material/styles";
+import colors from "./colors";
 
 /**
  * Role-Based Color System for CaptureEz
@@ -8,44 +9,16 @@ import { alpha } from "@mui/material/styles";
 
 export const roleColors = {
   // Care Owner - Primary family member (Blue - trustworthy, reliable)
-  careOwner: {
-    primary: "#2C74D4",    // Royal Blue - matches brand, conveys leadership
-    secondary: "#A7C7E7",  // Sky Blue - soft, approachable 
-    accent: "#081F5C",     // Deep Navy - authority, trust
-    name: "Care Owner",
-    description: "Primary caregiver with full access",
-    icon: "👑"
-  },
+  careOwner: colors.roles.careOwner,
 
   // Care Partner - Family/Friends (Purple - supportive, caring)
-  carePartner: {
-    primary: "#8B5CF6",    // Violet - supportive, collaborative
-    secondary: "#C4B5FD",  // Light Lavender - gentle, caring
-    accent: "#4C1D95",     // Deep Purple - commitment, loyalty
-    name: "Care Partner", 
-    description: "Family member or friend helper",
-    icon: "👥"
-  },
+  carePartner: colors.roles.carePartner,
 
   // Caregiver - Professional Helper (Green - helping, growth)
-  caregiver: {
-    primary: "#059669",    // Emerald Green - professional, helping
-    secondary: "#A7F3D0",  // Mint Green - fresh, supportive
-    accent: "#065F46",     // Forest Green - stability, expertise
-    name: "Caregiver",
-    description: "Professional daily care provider", 
-    icon: "🤝"
-  },
+  caregiver: colors.roles.caregiver,
 
   // Therapist - Medical Professional (Teal - medical, clinical)
-  therapist: {
-    primary: "#0891B2",    // Teal - medical, professional, calming
-    secondary: "#A5F3FC",  // Light Cyan - clean, clinical
-    accent: "#164E63",     // Dark Teal - expertise, trust
-    name: "Therapist",
-    description: "Licensed healthcare professional",
-    icon: "🩺"
-  }
+  therapist: colors.roles.therapist
 };
 
 /**
