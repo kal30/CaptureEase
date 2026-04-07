@@ -42,7 +42,7 @@ const Navbar = () => {
   const isDashboardRoute = location.pathname.startsWith("/dashboard");
   const isLandingRoute = location.pathname === "/";
   const colorScheme = getNavbarColorScheme(
-    !isLoggedIn && isLandingRoute ? "pastel" : "current"
+    isLandingRoute ? "pastel" : "current"
   );
 
   useEffect(() => {
