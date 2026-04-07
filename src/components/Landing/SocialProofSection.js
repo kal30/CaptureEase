@@ -16,8 +16,8 @@ const SocialProofSection = () => {
           elevation={0}
           sx={{
             borderRadius: { xs: "28px", md: "34px" },
-            border: `1px solid ${landingColors.borderSoft}`,
-            backgroundColor: landingColors.surface,
+            border: `1px solid rgba(217, 209, 238, 0.85)`,
+            background: `linear-gradient(180deg, ${landingColors.panelSoft} 0%, ${landingColors.surface} 100%)`,
             boxShadow: `0 10px 30px ${landingColors.shadowPanel}`,
           }}
         >
@@ -50,16 +50,16 @@ const SocialProofSection = () => {
                     key={paragraph}
                     component="p"
                     sx={{
-                      mb: 2.5,
-                      fontSize: "inherit",
-                      lineHeight: "inherit",
-                      color: "inherit",
-                      maxWidth: "100%",
-                    }}
-                  >
-                    {paragraph}
-                  </Typography>
-                ))}
+                  mb: 2.5,
+                  fontSize: "inherit",
+                  lineHeight: "inherit",
+                  color: "inherit",
+                  maxWidth: "100%",
+                }}
+              >
+                {paragraph}
+              </Typography>
+              ))}
               </Box>
 
               <Typography
@@ -69,7 +69,7 @@ const SocialProofSection = () => {
                   letterSpacing: "0.14em",
                   fontWeight: 800,
                   textTransform: "uppercase",
-                  color: landingColors.textMuted,
+                  color: "#7C6AAE",
                 }}
               >
                 Kalyani, Founder and Autism Mom

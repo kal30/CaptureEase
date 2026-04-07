@@ -17,7 +17,7 @@ const landingPrimaryButtonStyles = {
   width: { xs: "100%", sm: "auto" },
   minWidth: { xs: 0, sm: 230 },
   px: { xs: 3.5, md: 4.5 },
-  py: { xs: 1.35, md: 1.45 },
+  py: { xs: 1.25, md: 1.35 },
   textTransform: "none",
   borderRadius: "9999px",
   fontSize: { xs: "1rem", md: "1.05rem" },
@@ -36,7 +36,7 @@ const landingSecondaryButtonStyles = {
   width: { xs: "100%", sm: "auto" },
   minWidth: { xs: 0, sm: 210 },
   px: { xs: 3.5, md: 4.5 },
-  py: { xs: 1.35, md: 1.45 },
+  py: { xs: 1.25, md: 1.35 },
   textTransform: "none",
   borderRadius: "9999px",
   fontSize: { xs: "1rem", md: "1.05rem" },
@@ -116,15 +116,22 @@ const HeaderSection = () => {
   const tryLifelogPath = auth.currentUser ? "/dashboard" : "/register";
 
   return (
-    <Box sx={{ backgroundColor: "transparent", position: "relative", pt: { xs: 3, md: 5 }, pb: { xs: 4, md: 6 } }}>
+    <Box
+      sx={{
+        backgroundColor: "transparent",
+        position: "relative",
+        pt: { xs: 3, md: 5 },
+        pb: { xs: 4, md: 6 },
+      }}
+    >
       <Container maxWidth="xl" sx={{ px: { xs: 2.5, md: 4, lg: 6 } }}>
         <Box
           sx={{
             display: "grid",
             gridTemplateColumns: { xs: "1fr", md: "1.2fr 0.8fr" },
-            alignItems: "start",
-            gap: { xs: 5, md: 8 },
-            maxWidth: 1200,
+            alignItems: "center",
+            gap: { xs: 4, md: 6, lg: 8 },
+            maxWidth: 1260,
             mx: "auto",
           }}
         >
@@ -147,17 +154,23 @@ const HeaderSection = () => {
                 fontSize: "0.74rem",
               }}
             >
-              lifelog
+              LIFELOG
             </Box>
 
             <Typography
               component="h1"
               sx={{
-                ...landingTypography.heroMain,
+                fontFamily: '"Inter", sans-serif',
+                fontSize: { xs: "2.35rem", sm: "2.8rem", md: "3.15rem", lg: "3.65rem" },
+                lineHeight: { xs: 1.08, md: 1.04, lg: 1.02 },
+                letterSpacing: "-0.05em",
+                fontWeight: 700,
                 color: landingColors.heroText,
-                maxWidth: { xs: "100%", md: 700 },
+                maxWidth: { xs: "100%", md: 720, lg: 760 },
+                textWrap: "balance",
                 textAlign: "left",
                 mx: 0,
+                mb: 2,
               }}
             >
               I have two nephews with autism. I built the app I always needed.
@@ -166,10 +179,10 @@ const HeaderSection = () => {
             <Typography
               sx={{
                 ...landingTypography.heroBody,
-                maxWidth: { xs: "100%", md: 700 },
-                mt: 2,
+                maxWidth: { xs: "100%", md: 760, lg: 800 },
+                mt: 0,
                 fontSize: { xs: "1rem", md: "1.05rem" },
-                lineHeight: { xs: 1.75, md: 1.85 },
+                lineHeight: { xs: 1.6, md: 1.65, lg: 1.7 },
                 textAlign: "left",
                 mx: 0,
               }}
@@ -185,10 +198,10 @@ const HeaderSection = () => {
             <Typography
               sx={{
                 ...landingTypography.heroBody,
-                maxWidth: { xs: "100%", md: 700 },
-                mt: 1.5,
+                maxWidth: { xs: "100%", md: 760, lg: 800 },
+                mt: 1.75,
                 fontSize: { xs: "1rem", md: "1.05rem" },
-                lineHeight: { xs: 1.75, md: 1.85 },
+                lineHeight: { xs: 1.6, md: 1.65, lg: 1.7 },
                 textAlign: "left",
                 mx: 0,
               }}
@@ -196,20 +209,6 @@ const HeaderSection = () => {
               Everyone caring for your child sees the same timeline in real time. A caregiver logs
               a meltdown at 1 PM. You see it before the 2 PM appointment. The therapist walks in
               already knowing.
-            </Typography>
-
-            <Typography
-              sx={{
-                ...landingTypography.heroBody,
-                maxWidth: { xs: "100%", md: 700 },
-                mt: 1.5,
-                fontWeight: 700,
-                fontSize: { xs: "1rem", md: "1.05rem" },
-                textAlign: "left",
-                mx: 0,
-              }}
-            >
-              No more "I didn't know that happened."
             </Typography>
 
             <Box
@@ -220,14 +219,14 @@ const HeaderSection = () => {
                 justifyContent: "flex-start",
                 gap: 1.5,
                 width: "100%",
-                maxWidth: { xs: "100%", md: 580 },
+                maxWidth: { xs: "100%", md: 620, lg: 660 },
               }}
             >
               <Button
                 component={RouterLink}
                 to={tryLifelogPath}
                 variant="contained"
-                sx={landingPrimaryButtonStyles}
+                sx={{ ...landingPrimaryButtonStyles, height: 48, minHeight: 48 }}
               >
                 Start Tracking Free
               </Button>
@@ -235,7 +234,7 @@ const HeaderSection = () => {
                 component={RouterLink}
                 to="/#how-it-works"
                 variant="outlined"
-                sx={landingSecondaryButtonStyles}
+                sx={{ ...landingSecondaryButtonStyles, height: 48, minHeight: 48 }}
               >
                 See How It Works
               </Button>
@@ -247,7 +246,7 @@ const HeaderSection = () => {
               sx={{
                 mt: { xs: 3, md: 3.5 },
                 width: "100%",
-                maxWidth: { xs: "100%", md: 620 },
+                maxWidth: { xs: "100%", md: 660, lg: 700 },
               }}
             >
               <Typography
@@ -261,7 +260,7 @@ const HeaderSection = () => {
                   mb: 1.5,
                 }}
               >
-                Or join the founding family list
+                Founding Family
               </Typography>
 
               {submitSuccess && <Alert severity="success" sx={{ mb: 1.5, py: 0 }}>{submitSuccess}</Alert>}
@@ -286,7 +285,7 @@ const HeaderSection = () => {
                     sx: {
                       backgroundColor: landingColors.surface,
                       borderRadius: "12px",
-                      height: 42,
+                      height: 48,
                       fontSize: "0.9rem",
                       "& fieldset": { borderColor: landingColors.borderMedium },
                     },
@@ -296,7 +295,7 @@ const HeaderSection = () => {
                   variant="contained"
                   type="submit"
                   disabled={isSubmitting}
-                  sx={{ ...landingFormButtonStyles, height: 42, minHeight: 42 }}
+                  sx={{ ...landingFormButtonStyles, height: 48, minHeight: 48 }}
                 >
                   {isSubmitting ? "..." : "Join"}
                 </Button>
@@ -308,23 +307,82 @@ const HeaderSection = () => {
             sx={{
               display: "flex",
               justifyContent: { xs: "center", md: "flex-end" },
-              alignItems: "flex-start",
+              alignItems: "center",
               pt: { xs: 0, md: 1 },
             }}
           >
             <Box
-              component="img"
-              src={heroImage}
-              alt="Lifelog app preview"
               sx={{
                 width: "100%",
-                maxWidth: { xs: 560, md: 600, lg: 640 },
-                display: "block",
-                borderRadius: "28px",
-                objectFit: "cover",
-                boxShadow: `0 18px 42px ${landingColors.shadowMedium}`,
+                maxWidth: { xs: 560, md: 560, lg: 600 },
               }}
-            />
+            >
+              <Box
+                sx={{
+                  p: { xs: 1.5, md: 2 },
+                  borderRadius: "20px",
+                  background: `linear-gradient(180deg, ${landingColors.surface} 0%, ${landingColors.surfaceSoft} 100%)`,
+                  border: `1px solid ${landingColors.borderSoft}`,
+                  boxShadow: `0 18px 42px ${landingColors.shadowMedium}`,
+                  maxHeight: 600,
+                  minHeight: { xs: 390, md: 500 },
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 1,
+                  overflow: "hidden",
+                }}
+              >
+                <Typography
+                  sx={{
+                    fontSize: "0.72rem",
+                    fontWeight: 800,
+                    letterSpacing: "0.18em",
+                    textTransform: "uppercase",
+                    color: landingColors.textMuted,
+                    px: 0.5,
+                  }}
+                >
+                  App Preview
+                </Typography>
+
+                <Typography
+                  sx={{
+                    fontSize: { xs: "1rem", md: "1.05rem" },
+                    fontWeight: 700,
+                    color: landingColors.heroText,
+                    px: 0.5,
+                  }}
+                >
+                  Header
+                </Typography>
+
+                <Box
+                  sx={{
+                    flex: 1,
+                    minHeight: 0,
+                    borderRadius: "16px",
+                    overflow: "hidden",
+                    backgroundColor: landingColors.surfaceSoft,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Box
+                    component="img"
+                    src={heroImage}
+                    alt="Lifelog app preview"
+                    sx={{
+                      width: "100%",
+                      height: "100%",
+                      maxHeight: 600,
+                      objectFit: "contain",
+                      display: "block",
+                    }}
+                  />
+                </Box>
+              </Box>
+            </Box>
           </Box>
         </Box>
 
