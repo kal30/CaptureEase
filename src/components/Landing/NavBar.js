@@ -178,6 +178,7 @@ const Navbar = () => {
                       sx={{
                         width: 32,
                         height: 32,
+                        ml: 1,
                         bgcolor: colors.landing.cyanPop,
                         color: colors.landing.deepNavy,
                         fontSize: "0.88rem",

@@ -137,26 +137,7 @@ const HeaderSection = () => {
           }}
         >
           <Box>
-            <Box
-              sx={{
-                mb: 1.5,
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 1,
-                px: 1.5,
-                py: 0.75,
-                borderRadius: "9999px",
-                backgroundColor: landingColors.surfaceSoft,
-                border: `1px solid ${landingColors.borderSoft}`,
-                color: landingColors.supportMuted,
-                fontWeight: 700,
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-                fontSize: "0.74rem",
-              }}
-            >
-              LIFELOG
-            </Box>
+           
 
             <Typography
               component="h1"
@@ -245,17 +226,17 @@ const HeaderSection = () => {
               component="form"
               onSubmit={handleFoundingFamilySubmit}
               sx={{
-                mt: { xs: 3, md: 3.5 },
-                mb: 5,
+                mt: 4,
+                mb: 8,
                 width: "100%",
                 maxWidth: { xs: "100%", md: 660, lg: 700 },
               }}
             >
               <Typography
                 sx={{
-                  fontSize: "0.72rem",
+                  fontSize: "0.75rem",
                   fontWeight: 700,
-                  letterSpacing: "0.12em",
+                  letterSpacing: "0.1em",
                   textTransform: "uppercase",
                   color: landingColors.textMuted,
                   fontFamily: '"Inter", sans-serif',
@@ -346,29 +327,7 @@ const HeaderSection = () => {
                   overflow: "hidden",
                 }}
               >
-                <Typography
-                  sx={{
-                    fontSize: "0.72rem",
-                    fontWeight: 800,
-                    letterSpacing: "0.18em",
-                    textTransform: "uppercase",
-                    color: landingColors.textMuted,
-                    px: 0.5,
-                  }}
-                >
-                  App Preview
-                </Typography>
-
-                <Typography
-                  sx={{
-                    fontSize: { xs: "1rem", md: "1.05rem" },
-                    fontWeight: 700,
-                    color: landingColors.heroText,
-                    px: 0.5,
-                  }}
-                >
-                  Header
-                </Typography>
+                
 
                 <Box
                   sx={{

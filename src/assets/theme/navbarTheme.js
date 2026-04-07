@@ -159,6 +159,7 @@ export const authButtonsContainerStyles = {
   display: "flex",
   gap: { xs: 1, md: 2.5 },
   ml: { xs: 0.5, md: 3 },
+  alignItems: "center",
   flexShrink: 0, // Prevent shrinking on mobile
 };
 
