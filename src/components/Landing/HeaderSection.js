@@ -5,7 +5,6 @@ import {
   Button,
   Container,
   Divider,
-  Paper,
   TextField,
   Typography,
 } from "@mui/material";
@@ -132,8 +131,8 @@ const HeaderSection = () => {
           sx={{
             display: "grid",
             gridTemplateColumns: { xs: "1fr", md: "1.02fr 0.98fr" },
-            alignItems: "start",
-            gap: { xs: 4, md: 6 },
+            alignItems: { xs: "start", md: "center" },
+            gap: { xs: 4, md: 5.5 },
             width: "100%",
             maxWidth: 1280,
             mx: "auto",
@@ -342,29 +341,25 @@ const HeaderSection = () => {
               ...landingLayout.heroSection.rightColumn,
               position: "relative",
               display: "flex",
-              justifyContent: "center",
-              alignItems: "flex-start",
-              mt: { xs: 1, md: 0.5 },
+              justifyContent: { xs: "center", md: "flex-end" },
+              alignItems: "center",
+              mt: { xs: 1, md: 0 },
+              pl: { md: 1, lg: 2 },
             }}
           >
             <Box
               sx={{
                 width: "100%",
-                maxWidth: { xs: 560, md: 760, lg: 860 },
+                maxWidth: { xs: 560, md: 640, lg: 720 },
                 zIndex: 1,
               }}
             >
-              <Paper
+              <Box
                 sx={{
-                  p: { xs: 1.5, md: 1.75 },
-                  borderRadius: { xs: "28px", md: "34px" },
-                  background:
-                    "linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(243,247,245,0.96) 100%)",
-                  border: `1px solid ${landingColors.borderSoft}`,
-                  boxShadow: `0 18px 42px ${landingColors.shadowMedium}`,
-                  overflow: "hidden",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
                 }}
-                elevation={0}
               >
                 <Box
                   component="img"
@@ -374,43 +369,12 @@ const HeaderSection = () => {
                   sx={{
                     width: "100%",
                     display: "block",
-                    borderRadius: { xs: "24px", md: "30px" },
+                    borderRadius: { xs: "26px", md: "30px" },
                     objectFit: "cover",
+                    boxShadow: `0 18px 42px ${landingColors.shadowMedium}`,
                   }}
                 />
-                <Box
-                  sx={{
-                    mt: 1.25,
-                    borderRadius: "22px",
-                    border: `1px solid rgba(217, 209, 238, 0.74)`,
-                    backgroundColor: "rgba(244, 241, 248, 0.88)",
-                    px: 2,
-                    py: 1.4,
-                    textAlign: "left",
-                  }}
-                >
-                  <Typography
-                    sx={{
-                      fontSize: { xs: "0.9rem", md: "0.95rem" },
-                      fontWeight: 700,
-                      color: landingColors.deepNavy,
-                      mb: 0.35,
-                    }}
-                  >
-                    Shared timeline
-                  </Typography>
-                  <Typography
-                    sx={{
-                      fontSize: { xs: "0.86rem", md: "0.93rem" },
-                      lineHeight: 1.6,
-                      color: landingColors.textMuted,
-                    }}
-                  >
-                    One calm view for caregivers, parents, and therapists to understand the day
-                    together.
-                  </Typography>
-                </Box>
-              </Paper>
+              </Box>
             </Box>
           </Box>
         </Box>
