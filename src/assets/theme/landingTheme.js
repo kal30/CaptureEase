@@ -44,7 +44,7 @@ export const landingTypography = {
     textTransform: "none",
     lineHeight: { xs: 1.12, md: 1.08, lg: 1.06 },
     marginBottom: { xs: 0.75, md: 1, lg: 1.1 },
-    maxWidth: { xs: "100%", md: "22ch", lg: "24ch" },
+    maxWidth: { xs: "100%", md: "28ch", lg: "30ch" },
     mx: { xs: "auto", md: 0 },
     textAlign: { xs: "center", md: "left" },
   },
@@ -66,7 +66,7 @@ export const landingTypography = {
     textAlign: { xs: "center", md: "left" },
     fontFamily: '"Inter", sans-serif',
     fontWeight: 400,
-    maxWidth: { xs: "100%", md: "36rem", lg: "38rem" },
+    maxWidth: { xs: "100%", md: "40rem", lg: "42rem" },
     mx: { xs: "auto", md: 0 },
   },
 
@@ -91,15 +91,15 @@ export const landingLayout = {
     container: {
       gap: { xs: 3, md: 3.5, lg: 4 },
       padding: { xs: 1.5, md: 2, lg: 2.5 },
-      maxWidth: { md: 1120, lg: 1160 },
+      maxWidth: { md: 1160, lg: 1200 },
       mx: "auto",
     },
     leftColumn: {
-      width: { xs: "100%", md: "54%", lg: "53%" },
+      width: { xs: "100%", md: "56%", lg: "55%" },
       paddingRight: { md: 1, lg: 2 },
     },
     rightColumn: {
-      width: { xs: "100%", md: "46%", lg: "47%" },
+      width: { xs: "100%", md: "44%", lg: "45%" },
       marginTop: { xs: 2, md: 0 },
       minHeight: { xs: 280, md: 360, lg: 430, xl: 520 },
     },

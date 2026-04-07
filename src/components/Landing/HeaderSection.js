@@ -122,29 +122,26 @@ const HeaderSection = () => {
         ...landingLayout.heroSection.padding,
         display: "flex",
         alignItems: "center",
-        overflow: "hidden",
         maxWidth: "100%",
       }}
     >
-      <Container maxWidth="xl" sx={{ maxWidth: "100%", overflow: "hidden" }}>
+      <Container maxWidth="xl" sx={{ maxWidth: "100%" }}>
         <Box
           sx={{
             display: "grid",
-            gridTemplateColumns: { xs: "1fr", md: "minmax(0, 1.06fr) minmax(0, 0.94fr)" },
+            gridTemplateColumns: { xs: "1fr", md: "minmax(0, 1.02fr) minmax(0, 0.98fr)" },
             alignItems: { xs: "start", md: "center" },
             gap: { xs: 4, md: 5 },
             width: "100%",
             maxWidth: 1160,
             mx: "auto",
             ...landingLayout.heroSection.container,
-            overflow: "hidden",
           }}
         >
           <Box
             sx={{
               ...landingLayout.heroSection.leftColumn,
               maxWidth: "100%",
-              overflow: "hidden",
               pr: { md: 1.5, lg: 2.5 },
             }}
           >
@@ -174,7 +171,7 @@ const HeaderSection = () => {
               sx={{
                   ...landingTypography.heroMain,
                   color: landingColors.heroText,
-                  maxWidth: { xs: "100%", md: "22ch", lg: "24ch" },
+                  maxWidth: { xs: "100%", md: "28ch", lg: "30ch" },
                   mx: 0,
                   textAlign: "left",
                 }}
@@ -186,7 +183,7 @@ const HeaderSection = () => {
             <Typography
               sx={{
                 ...landingTypography.heroBody,
-                maxWidth: 600,
+                maxWidth: { xs: "100%", md: 640, lg: 680 },
                 mt: 2,
                 fontSize: { xs: "0.98rem", md: "1.04rem" },
                 lineHeight: { xs: 1.7, md: 1.8 },
@@ -200,7 +197,7 @@ const HeaderSection = () => {
             <Typography
               sx={{
                 ...landingTypography.heroBody,
-                maxWidth: 600,
+                maxWidth: { xs: "100%", md: 640, lg: 680 },
                 mt: 1.5,
                 fontSize: { xs: "0.98rem", md: "1.04rem" },
                 lineHeight: { xs: 1.7, md: 1.8 },
@@ -214,7 +211,7 @@ const HeaderSection = () => {
             <Typography
               sx={{
                 ...landingTypography.heroBody,
-                maxWidth: 600,
+                maxWidth: { xs: "100%", md: 640, lg: 680 },
                 mt: 1.5,
                 fontWeight: 700,
                 fontSize: { xs: "0.98rem", md: "1.04rem" },
@@ -227,11 +224,12 @@ const HeaderSection = () => {
               sx={{
                 mt: { xs: 3, md: 3.5 },
                 display: "flex",
-                flexDirection: { xs: "column", md: "row" },
+                flexDirection: { xs: "column", sm: "row" },
                 justifyContent: { xs: "center", md: "flex-start" },
                 gap: 1.5,
                 width: "100%",
-                maxWidth: { xs: "100%", md: 520 },
+                maxWidth: { xs: "100%", md: 560 },
+                flexWrap: "wrap",
               }}
             >
               <Button
@@ -252,95 +250,6 @@ const HeaderSection = () => {
               </Button>
             </Box>
 
-            <Paper
-              component="form"
-              onSubmit={handleFoundingFamilySubmit}
-              elevation={0}
-              sx={{
-                mt: { xs: 4, md: 5 },
-                width: "100%",
-                maxWidth: { xs: "100%", md: 520 },
-                px: { xs: 2.25, md: 2.75 },
-                py: { xs: 2.25, md: 2.5 },
-                borderRadius: "24px",
-                border: `1px solid ${landingColors.borderSoft}`,
-                backgroundColor: landingColors.surfaceSoft,
-                boxShadow: `0 10px 28px ${landingColors.shadowSoft}`,
-              }}
-            >
-              <Typography
-                sx={{
-                  fontSize: "0.82rem",
-                  letterSpacing: "0.14em",
-                  textTransform: "uppercase",
-                  color: landingColors.textMuted,
-                  fontWeight: 700,
-                  mb: 0.75,
-                }}
-              >
-                Join the founding family
-              </Typography>
-              <Typography
-                sx={{
-                  fontSize: { xs: "0.95rem", md: "1rem" },
-                  lineHeight: 1.6,
-                  color: landingColors.bodyText,
-                  mb: 2,
-                  maxWidth: 440,
-                }}
-              >
-                Get early access and help shape the calm, caregiver-first version of Lifelog.
-              </Typography>
-              {submitSuccess && <Alert severity="success">{submitSuccess}</Alert>}
-              {submitError && <Alert severity="error">{submitError}</Alert>}
-              <Box
-                sx={{
-                  mt: submitSuccess || submitError ? 1.25 : 0,
-                  display: "flex",
-                  flexDirection: { xs: "column", md: "row" },
-                  alignItems: "stretch",
-                  gap: 1,
-                }}
-              >
-                <TextField
-                  type="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  fullWidth
-                  size="small"
-                  variant="outlined"
-                  InputProps={{
-                    sx: {
-                      backgroundColor: landingColors.surface,
-                      borderRadius: "16px",
-                      height: 48,
-                      minHeight: 48,
-                      fontSize: "1rem",
-                      "& fieldset": {
-                        borderRadius: "16px",
-                        borderColor: landingColors.borderMedium,
-                      },
-                      "&:hover fieldset": {
-                        borderColor: landingColors.borderFocus,
-                      },
-                      "&.Mui-focused fieldset": {
-                        borderColor: landingColors.borderActive,
-                        borderWidth: "1px",
-                      },
-                    },
-                  }}
-                />
-                <Button
-                  variant="contained"
-                  type="submit"
-                  disabled={isSubmitting}
-                  sx={landingFormButtonStyles}
-                >
-                  {isSubmitting ? "Joining..." : "Add Email"}
-                </Button>
-              </Box>
-            </Paper>
           </Box>
 
           <Box
@@ -348,7 +257,7 @@ const HeaderSection = () => {
               ...landingLayout.heroSection.rightColumn,
               position: "relative",
               display: "flex",
-              justifyContent: { xs: "center", md: "flex-end" },
+              justifyContent: { xs: "center", md: "center" },
               alignItems: "center",
               mt: { xs: 1, md: 0 },
               pl: { md: 1, lg: 2 },
@@ -357,7 +266,7 @@ const HeaderSection = () => {
             <Box
               sx={{
                 width: "100%",
-                maxWidth: { xs: 560, md: 640, lg: 720 },
+                maxWidth: { xs: 560, md: 560, lg: 640 },
                 zIndex: 1,
               }}
             >
@@ -385,6 +294,102 @@ const HeaderSection = () => {
             </Box>
           </Box>
         </Box>
+
+        <Paper
+          component="form"
+          onSubmit={handleFoundingFamilySubmit}
+          elevation={0}
+          sx={{
+            mt: { xs: 4, md: 5 },
+            mx: "auto",
+            width: "100%",
+            maxWidth: 760,
+            px: { xs: 2.25, md: 3 },
+            py: { xs: 2.25, md: 2.75 },
+            borderRadius: "24px",
+            border: `1px solid ${landingColors.borderSoft}`,
+            backgroundColor: landingColors.surfaceSoft,
+            boxShadow: `0 10px 28px ${landingColors.shadowSoft}`,
+          }}
+        >
+          <Typography
+            sx={{
+              fontSize: "0.82rem",
+              letterSpacing: "0.14em",
+              textTransform: "uppercase",
+              color: landingColors.textMuted,
+              fontWeight: 700,
+              mb: 0.75,
+              textAlign: "center",
+            }}
+          >
+            Join the founding family
+          </Typography>
+          <Typography
+            sx={{
+              fontSize: { xs: "0.95rem", md: "1rem" },
+              lineHeight: 1.6,
+              color: landingColors.bodyText,
+              mb: 2,
+              maxWidth: 520,
+              mx: "auto",
+              textAlign: "center",
+            }}
+          >
+            Get early access and help shape the calm, caregiver-first version of Lifelog.
+          </Typography>
+          {submitSuccess && <Alert severity="success">{submitSuccess}</Alert>}
+          {submitError && <Alert severity="error">{submitError}</Alert>}
+          <Box
+            sx={{
+              mt: submitSuccess || submitError ? 1.25 : 0,
+              display: "flex",
+              flexDirection: { xs: "column", md: "row" },
+              alignItems: "stretch",
+              gap: 1,
+              maxWidth: 640,
+              mx: "auto",
+            }}
+          >
+            <TextField
+              type="email"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              fullWidth
+              size="small"
+              variant="outlined"
+              InputProps={{
+                sx: {
+                  backgroundColor: landingColors.surface,
+                  borderRadius: "16px",
+                  height: 48,
+                  minHeight: 48,
+                  fontSize: "1rem",
+                  "& fieldset": {
+                    borderRadius: "16px",
+                    borderColor: landingColors.borderMedium,
+                  },
+                  "&:hover fieldset": {
+                    borderColor: landingColors.borderFocus,
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: landingColors.borderActive,
+                    borderWidth: "1px",
+                  },
+                },
+              }}
+            />
+            <Button
+              variant="contained"
+              type="submit"
+              disabled={isSubmitting}
+              sx={landingFormButtonStyles}
+            >
+              {isSubmitting ? "Joining..." : "Add Email"}
+            </Button>
+          </Box>
+        </Paper>
       </Container>
     </Box>
   );
