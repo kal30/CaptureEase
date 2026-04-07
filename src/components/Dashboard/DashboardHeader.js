@@ -36,7 +36,7 @@ const DashboardHeader = ({
       {canInvite && (
         <GradientButton
           variant="outlined"
-          color="success"
+          color="secondary"
           size="large"
           startIcon={<PersonAddIcon />}
           onClick={() => onInviteClick(null)}

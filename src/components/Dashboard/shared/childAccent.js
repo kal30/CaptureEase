@@ -1,25 +1,27 @@
+import colors from '../../../assets/theme/colors';
+
 const ACCENT_PALETTE = [
   {
-    surface: '#F6F1FF',
-    border: '#CDB8FF',
-    text: '#6B46C1',
-    strong: '#7C4DCC',
+    surface: colors.landing.panelSoft,
+    border: colors.landing.quoteGradientStart,
+    text: colors.landing.midNavy,
+    strong: colors.brand.deep,
   },
   {
-    surface: '#EEF6FF',
-    border: '#B7D5FF',
-    text: '#1D4ED8',
-    strong: '#2563EB',
-  },
-  {
-    surface: '#EEF9F4',
-    border: '#B9E5CC',
+    surface: colors.landing.tealLight || '#EAF4F2',
+    border: colors.landing.cyanPop,
     text: '#0F766E',
     strong: '#0F9B8E',
   },
   {
-    surface: '#FFF6EB',
-    border: '#FFD4A8',
+    surface: colors.landing.sageLight || '#F7FBF9',
+    border: colors.landing.pastelAqua,
+    text: '#4E6C60',
+    strong: '#6B8B76',
+  },
+  {
+    surface: '#FFF8ED',
+    border: '#F4C88A',
     text: '#B45309',
     strong: '#D97706',
   },

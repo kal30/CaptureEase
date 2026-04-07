@@ -5,24 +5,24 @@ import colors from "./colors";
 const brand = {
   colors: {
     // Core brand colors
-    ink: colors.brand.ink, // deep blue for primary actions / text on buttons
-    tint: colors.brand.tint, // light blue tint for accents / secondary backgrounds
+    ink: colors.brand.ink, // teal for primary actions / buttons
+    tint: colors.brand.tint, // lavender tint for accents / supportive backgrounds
 
-    // Extended blue scale (reference palette provided)
+    // Extended brand scale
     scale: colors.brand,
   },
 
   // Palette mapping used by MUI theme
   palette: {
     primary: {
-      main: colors.brand.ink, // ink
-      dark: colors.brand.navy, // navy
-      light: colors.brand.lightBlue, // lightBlue
+      main: colors.brand.ink, // teal
+      dark: colors.brand.navy, // deep teal
+      light: colors.brand.lightBlue, // soft teal
     },
     secondary: {
-      main: colors.brand.tint, // tint
-      light: colors.brand.ice, // ice
-      dark: colors.brand.deep, // deep
+      main: colors.brand.tint, // lavender
+      light: colors.brand.ice, // soft lavender
+      dark: colors.brand.deep, // deeper lavender
     },
   },
 

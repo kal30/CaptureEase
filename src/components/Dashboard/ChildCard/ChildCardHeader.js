@@ -172,11 +172,11 @@ const ChildCardHeader = memo(({
                 sx={{
                   width: 30,
                   height: 30,
-                  bgcolor: 'rgba(239, 246, 255, 0.95)',
+                  bgcolor: colors.app.dashboard.childHeader.switchBg,
                   border: `1px solid ${colors.app.dashboard.childHeader.supportBorder}`,
                   color: 'primary.main',
                   '&:hover': {
-                    bgcolor: 'rgba(219, 234, 254, 0.98)',
+                    bgcolor: colors.app.dashboard.childHeader.switchHoverBg,
                   },
                 }}
                 aria-label="Open child chat"
@@ -232,11 +232,11 @@ const ChildCardHeader = memo(({
                         sx={{
                           width: 32,
                           height: 32,
-                          bgcolor: careTeamCount === 0 ? 'rgba(241, 245, 249, 0.95)' : 'rgba(239, 246, 255, 0.95)',
+                          bgcolor: careTeamCount === 0 ? 'rgba(247, 251, 249, 0.95)' : colors.app.dashboard.childHeader.switchBg,
                           border: `1px solid ${colors.app.dashboard.childHeader.supportBorder}`,
                           color: careTeamCount === 0 ? 'text.disabled' : 'primary.main',
                           '&:hover': {
-                            bgcolor: careTeamCount === 0 ? 'rgba(241, 245, 249, 0.95)' : 'rgba(219, 234, 254, 0.98)',
+                            bgcolor: careTeamCount === 0 ? 'rgba(247, 251, 249, 0.95)' : colors.app.dashboard.childHeader.switchHoverBg,
                           },
                         }}
                         aria-label={careTeamCount === 0 ? 'No care team yet' : 'Open child chat'}
