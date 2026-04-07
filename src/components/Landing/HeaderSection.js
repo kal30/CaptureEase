@@ -227,7 +227,7 @@ const HeaderSection = () => {
               sx={{
                 mt: { xs: 3, md: 3.5 },
                 display: "flex",
-                flexDirection: { xs: "column", sm: "row" },
+                flexDirection: { xs: "column", md: "row" },
                 justifyContent: { xs: "center", md: "flex-start" },
                 gap: 1.5,
                 width: "100%",
@@ -290,7 +290,7 @@ const HeaderSection = () => {
               <Box
                 sx={{
                   display: "flex",
-                  flexDirection: { xs: "column", sm: "row" },
+                  flexDirection: { xs: "column", md: "row" },
                   alignItems: "stretch",
                   gap: 1,
                 }}
