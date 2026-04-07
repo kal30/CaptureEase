@@ -1,7 +1,7 @@
 import React from "react";
 import { Container, Grid, Typography, Box, Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import aboutImage from "../assets/image/imagesAbout/about.webp";
+import aboutImage from "../assets/image/landing/heroImage-Lifelog.png";
 import colors from "../assets/theme/colors";
 
 export default function About() {
@@ -187,7 +187,7 @@ export default function About() {
             <Box
               component="img"
               src={aboutImage}
-              alt="Caregiving Illustration"
+              alt="Lifelog caregiving illustration"
               sx={{
                 width: "100%",
                 maxWidth: { xs: 440, sm: 500, md: 600 },

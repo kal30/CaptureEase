@@ -6,12 +6,12 @@ import {
   Container,
   Divider,
   Paper,
-  Stack,
   TextField,
   Typography,
 } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import { getAuth } from "firebase/auth";
+import heroImage from "../../assets/image/landing/heroImage-Lifelog.png";
 import { saveFoundingFamilyEmail } from "../../services/foundingFamilyService";
 import {
   landingLayout,
@@ -78,27 +78,6 @@ const landingFormButtonStyles = {
   },
 };
 
-const timelineItems = [
-  {
-    title: "Med: Given at breakfast",
-    tone: "rgba(234, 244, 242, 0.98)",
-    accent: landingColors.brandTeal,
-    meta: "Caregiver • 9:00",
-  },
-  {
-    title: "Sleep: 2h",
-    tone: "rgba(244, 241, 248, 0.98)",
-    accent: landingColors.brandLavender,
-    meta: "Parent • 12:30",
-  },
-  {
-    title: "Lunch: Ate well",
-    tone: "rgba(247, 251, 249, 0.98)",
-    accent: landingColors.brandSage,
-    meta: "Caregiver • 3:00",
-  },
-];
-
 const HeaderSection = () => {
   const auth = getAuth();
   const [email, setEmail] = useState("");
@@ -142,7 +121,6 @@ const HeaderSection = () => {
         position: "relative",
         mt: 0,
         ...landingLayout.heroSection.padding,
-        minHeight: { xs: "auto", md: "auto", lg: "auto" },
         display: "flex",
         alignItems: "center",
         overflow: "hidden",
@@ -163,14 +141,14 @@ const HeaderSection = () => {
             overflow: "hidden",
           }}
         >
-            <Box
-              sx={{
-                ...landingLayout.heroSection.leftColumn,
-                maxWidth: "100%",
-                overflow: "hidden",
-                pr: { md: 1.5, lg: 2.5 },
-              }}
-            >
+          <Box
+            sx={{
+              ...landingLayout.heroSection.leftColumn,
+              maxWidth: "100%",
+              overflow: "hidden",
+              pr: { md: 1.5, lg: 2.5 },
+            }}
+          >
             <Box
               sx={{
                 mb: 1.5,
@@ -206,43 +184,43 @@ const HeaderSection = () => {
               </Typography>
             </Box>
 
-              <Typography
-                sx={{
-                  ...landingTypography.heroBody,
-                  maxWidth: 600,
-                  mt: 2,
-                  fontSize: { xs: "0.98rem", md: "1.04rem" },
-                  lineHeight: { xs: 1.7, md: 1.8 },
-                }}
-              >
+            <Typography
+              sx={{
+                ...landingTypography.heroBody,
+                maxWidth: 600,
+                mt: 2,
+                fontSize: { xs: "0.98rem", md: "1.04rem" },
+                lineHeight: { xs: 1.7, md: 1.8 },
+              }}
+            >
               For years I scrambled to remember what happened before every therapy appointment.
               Behaviors, triggers, good days, hard days - all buried in phone notes. I built
               Lifelog so no parent has to do that anymore.
             </Typography>
 
-              <Typography
-                sx={{
-                  ...landingTypography.heroBody,
-                  maxWidth: 600,
-                  mt: 1.5,
-                  fontSize: { xs: "0.98rem", md: "1.04rem" },
-                  lineHeight: { xs: 1.7, md: 1.8 },
-                }}
-              >
+            <Typography
+              sx={{
+                ...landingTypography.heroBody,
+                maxWidth: 600,
+                mt: 1.5,
+                fontSize: { xs: "0.98rem", md: "1.04rem" },
+                lineHeight: { xs: 1.7, md: 1.8 },
+              }}
+            >
               Everyone caring for your child sees the same timeline in real time. A caregiver logs
               a meltdown at 1 PM. You see it before the 2 PM appointment. The therapist walks in
               already knowing.
             </Typography>
 
-              <Typography
-                sx={{
-                  ...landingTypography.heroBody,
-                  maxWidth: 600,
-                  mt: 1.5,
-                  fontWeight: 700,
-                  fontSize: { xs: "0.98rem", md: "1.04rem" },
-                }}
-              >
+            <Typography
+              sx={{
+                ...landingTypography.heroBody,
+                maxWidth: 600,
+                mt: 1.5,
+                fontWeight: 700,
+                fontSize: { xs: "0.98rem", md: "1.04rem" },
+              }}
+            >
               No more "I didn't know that happened."
             </Typography>
 
@@ -359,306 +337,79 @@ const HeaderSection = () => {
             </Box>
           </Box>
 
+          <Box
+            sx={{
+              ...landingLayout.heroSection.rightColumn,
+              position: "relative",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "flex-start",
+              mt: { xs: 1, md: 0.5 },
+            }}
+          >
             <Box
               sx={{
-                ...landingLayout.heroSection.rightColumn,
-                position: "relative",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "flex-start",
-                mt: { xs: 1, md: 0.5 },
+                width: "100%",
+                maxWidth: { xs: 560, md: 760, lg: 860 },
+                zIndex: 1,
               }}
             >
-              <Box
+              <Paper
                 sx={{
-                  width: "100%",
-                  maxWidth: { xs: 580, md: 760, lg: 860 },
-                  zIndex: 1,
+                  p: { xs: 1.5, md: 1.75 },
+                  borderRadius: { xs: "28px", md: "34px" },
+                  background:
+                    "linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(243,247,245,0.96) 100%)",
+                  border: `1px solid ${landingColors.borderSoft}`,
+                  boxShadow: `0 18px 42px ${landingColors.shadowMedium}`,
+                  overflow: "hidden",
                 }}
+                elevation={0}
               >
-                <Paper
+                <Box
+                  component="img"
+                  src={heroImage}
+                  alt="Lifelog landing hero illustration"
+                  loading="eager"
                   sx={{
-                    p: { xs: 2.5, md: 3.25 },
-                    borderRadius: { xs: "28px", md: "34px" },
-                    background:
-                      "linear-gradient(180deg, rgba(255,255,255,0.88) 0%, rgba(243,247,245,0.9) 100%)",
-                    border: `1px solid ${landingColors.borderSoft}`,
-                    boxShadow: `0 18px 42px ${landingColors.shadowMedium}`,
-                    overflow: "visible",
+                    width: "100%",
+                    display: "block",
+                    borderRadius: { xs: "24px", md: "30px" },
+                    objectFit: "cover",
                   }}
-                  elevation={0}
-                >
-                <Stack
-                  spacing={{ xs: 2.25, md: 2.75 }}
+                />
+                <Box
                   sx={{
-                    alignItems: "center",
-                    textAlign: "center",
-                    py: { xs: 0.5, md: 1 },
+                    mt: 1.25,
+                    borderRadius: "22px",
+                    border: `1px solid rgba(217, 209, 238, 0.74)`,
+                    backgroundColor: "rgba(244, 241, 248, 0.88)",
+                    px: 2,
+                    py: 1.4,
+                    textAlign: "left",
                   }}
                 >
                   <Typography
                     sx={{
-                      fontSize: { xs: "0.8rem", md: "0.85rem" },
-                      letterSpacing: "0.24em",
-                      textTransform: "uppercase",
-                      color: landingColors.textMuted,
+                      fontSize: { xs: "0.9rem", md: "0.95rem" },
                       fontWeight: 700,
+                      color: landingColors.deepNavy,
+                      mb: 0.35,
                     }}
                   >
-                    From notes to insights
+                    Shared timeline
                   </Typography>
-
                   <Typography
                     sx={{
-                      fontSize: { xs: "1.02rem", md: "1.12rem" },
-                      color: landingColors.bodyText,
-                      maxWidth: 920,
+                      fontSize: { xs: "0.86rem", md: "0.93rem" },
+                      lineHeight: 1.6,
+                      color: landingColors.textMuted,
                     }}
                   >
-                    The whole care team logs notes, all neatly organized in one shared timeline.
+                    One calm view for caregivers, parents, and therapists to understand the day
+                    together.
                   </Typography>
-
-                  <Box
-                    sx={{
-                      width: "100%",
-                      display: "grid",
-                      gridTemplateColumns: {
-                        xs: "1fr",
-                        md: "minmax(290px, 0.94fr) auto minmax(320px, 1.06fr)",
-                      },
-                      alignItems: "center",
-                      gap: { xs: 2.5, md: 2.75 },
-                      mt: { xs: 0.5, md: 1 },
-                    }}
-                  >
-                    <Paper
-                      sx={{
-                        position: "relative",
-                        minHeight: { xs: 320, md: 420 },
-                        borderRadius: "30px",
-                        border: `1px solid rgba(199, 217, 196, 0.82)`,
-                        background:
-                          "linear-gradient(180deg, rgba(239, 245, 241, 0.98) 0%, rgba(248, 250, 248, 0.98) 100%)",
-                        overflow: "hidden",
-                        p: { xs: 2.25, md: 3 },
-                        boxShadow: `0 14px 28px ${landingColors.shadowSoft}`,
-                        transform: { xs: "none", md: "rotate(-0.8deg)" },
-                      }}
-                      elevation={0}
-                    >
-                      <Typography
-                        sx={{
-                          fontSize: { xs: "0.8rem", md: "0.83rem" },
-                          letterSpacing: "0.16em",
-                          textTransform: "uppercase",
-                          color: landingColors.textMuted,
-                          fontWeight: 700,
-                          mb: 1.75,
-                        }}
-                      >
-                        Care Team Note
-                      </Typography>
-
-                      <Box
-                        sx={{
-                          borderRadius: "24px",
-                          backgroundColor: "rgba(255,255,255,0.86)",
-                          border: `1px solid rgba(226, 232, 240, 0.9)`,
-                          p: { xs: 2, md: 2.35 },
-                          boxShadow: `0 10px 22px ${landingColors.shadowSoft}`,
-                          transform: { xs: "none", md: "rotate(-1.4deg)" },
-                          maxWidth: 440,
-                          mx: "auto",
-                        }}
-                      >
-                        <Typography
-                          sx={{
-                            fontSize: { xs: "0.92rem", md: "0.98rem" },
-                            fontWeight: 700,
-                            color: landingColors.deepNavy,
-                            mb: 1.25,
-                            textAlign: "left",
-                          }}
-                        >
-                          From notes to clarity
-                        </Typography>
-                        <Box
-                          sx={{
-                            textAlign: "left",
-                            color: landingColors.bodyText,
-                            fontSize: { xs: "0.95rem", md: "0.98rem" },
-                            lineHeight: 1.8,
-                            fontFamily:
-                              "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-                            pr: 1,
-                          }}
-                        >
-                          <Typography sx={{ fontSize: "inherit", lineHeight: "inherit", mb: 0.75 }}>
-                            • 9 am: Gave meds
-                          </Typography>
-                          <Typography sx={{ fontSize: "inherit", lineHeight: "inherit", mb: 0.75 }}>
-                            • Breakfast: Ate well
-                          </Typography>
-                          <Typography sx={{ fontSize: "inherit", lineHeight: "inherit", mb: 0.75 }}>
-                            • Slept 2 hrs
-                          </Typography>
-                          <Typography sx={{ fontSize: "inherit", lineHeight: "inherit" }}>
-                            • Mood: Happy
-                          </Typography>
-                        </Box>
-                      </Box>
-                    </Paper>
-
-                    <Box
-                      sx={{
-                        display: { xs: "none", md: "flex" },
-                        alignItems: "center",
-                        justifyContent: "center",
-                        minWidth: 68,
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          width: 88,
-                          height: 88,
-                          borderRadius: "50%",
-                          border: `1px solid rgba(143, 201, 192, 0.28)`,
-                          background:
-                            "radial-gradient(circle at 35% 35%, rgba(143, 201, 192, 0.28), transparent 52%)",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          color: landingColors.supportMuted,
-                          fontSize: "2.1rem",
-                          transform: "rotate(-8deg)",
-                        }}
-                      >
-                        →
-                      </Box>
-                    </Box>
-
-                    <Paper
-                      sx={{
-                        position: "relative",
-                        minHeight: { xs: 360, md: 440 },
-                        borderRadius: "34px",
-                        border: `1px solid rgba(226, 232, 240, 0.95)`,
-                        background:
-                          "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(243,247,245,0.98) 100%)",
-                        overflow: "hidden",
-                        p: { xs: 1.5, md: 2 },
-                        boxShadow: `0 16px 34px ${landingColors.shadowMedium}`,
-                      }}
-                      elevation={0}
-                    >
-                        <Box
-                          sx={{
-                            borderRadius: "30px",
-                            overflow: "hidden",
-                            minHeight: { xs: 330, md: 400 },
-                          background:
-                            "linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(243,247,245,0.98) 100%)",
-                          border: `1px solid rgba(199, 217, 196, 0.68)`,
-                        }}
-                      >
-                        <Box
-                          sx={{
-                            height: 44,
-                            background:
-                              "linear-gradient(180deg, rgba(143, 201, 192, 0.72) 0%, rgba(199, 217, 196, 0.92) 100%)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            color: landingColors.deepNavy,
-                            fontSize: "1rem",
-                            fontWeight: 700,
-                          }}
-                        >
-                          lifelog
-                        </Box>
-                        <Box sx={{ px: 2, py: 2 }}>
-                          <Typography
-                            sx={{
-                              fontSize: "0.78rem",
-                              letterSpacing: "0.14em",
-                              textTransform: "uppercase",
-                              color: landingColors.textMuted,
-                              fontWeight: 700,
-                              mb: 0.65,
-                            }}
-                          >
-                            Timeline
-                          </Typography>
-                          <Box
-                            sx={{
-                              display: "flex",
-                              flexDirection: "column",
-                              gap: 1.35,
-                            }}
-                          >
-                            {timelineItems.map((item) => (
-                              <Box
-                                key={item.title}
-                                sx={{
-                                  borderRadius: "18px",
-                                  backgroundColor: item.tone,
-                                  border: `1px solid rgba(226, 232, 240, 0.92)`,
-                                  overflow: "hidden",
-                                }}
-                              >
-                                <Box
-                                  sx={{
-                                    height: 6,
-                                    backgroundColor: item.accent,
-                                  }}
-                                />
-                                <Box sx={{ px: 1.75, py: 1.55 }}>
-                                  <Box
-                                    sx={{
-                                      display: "flex",
-                                      justifyContent: "space-between",
-                                      alignItems: "center",
-                                      gap: 2,
-                                      mb: 0.65,
-                                    }}
-                                  >
-                                    <Typography
-                                      sx={{
-                                        fontSize: "0.82rem",
-                                        fontWeight: 700,
-                                        color: landingColors.textMuted,
-                                      }}
-                                    >
-                                      {item.meta}
-                                    </Typography>
-                                    <Typography
-                                      sx={{
-                                        fontSize: "0.9rem",
-                                        color: landingColors.textMuted,
-                                      }}
-                                    >
-                                      ◔
-                                    </Typography>
-                                  </Box>
-                                  <Typography
-                                    sx={{
-                                      fontSize: "1rem",
-                                      fontWeight: 700,
-                                      color: landingColors.deepNavy,
-                                      lineHeight: 1.3,
-                                    }}
-                                  >
-                                    {item.title}
-                                  </Typography>
-                                </Box>
-                              </Box>
-                            ))}
-                          </Box>
-                        </Box>
-                      </Box>
-                    </Paper>
-                  </Box>
-                </Stack>
+                </Box>
               </Paper>
             </Box>
           </Box>
