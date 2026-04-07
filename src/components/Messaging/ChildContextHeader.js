@@ -15,6 +15,7 @@ import { Group, ContactPage, ArrowBack } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import { getMessagingTheme } from '../../assets/theme/messagingTheme';
 import { useTranslation } from 'react-i18next';
+import colors from '../../assets/theme/colors';
 
 /**
  * Child context header with messaging mode selector
@@ -50,7 +51,7 @@ const ChildContextHeader = ({
             <Button
               startIcon={<ArrowBack />}
               onClick={onBack}
-              sx={{ color: 'text.secondary' }}
+              sx={{ color: colors.landing.textMuted }}
             >
               Back
             </Button>
@@ -60,7 +61,7 @@ const ChildContextHeader = ({
           variant={isMobile ? "h5" : "h4"}
           sx={{
             fontWeight: 600,
-            color: 'primary.main',
+            color: colors.landing.heroText,
             fontFamily: '"Lancelot", serif',
           }}
         >
@@ -81,7 +82,7 @@ const ChildContextHeader = ({
           <Button
             startIcon={<ArrowBack />}
             onClick={onBack}
-            sx={{ color: 'text.secondary' }}
+            sx={{ color: colors.landing.textMuted }}
           >
             Back
           </Button>

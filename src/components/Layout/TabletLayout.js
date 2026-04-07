@@ -27,6 +27,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '../../services/firebase';
+import colors from '../../assets/theme/colors';
 
 const DRAWER_WIDTH = 240;
 
@@ -56,15 +57,15 @@ const TabletLayout = ({ children, pageTitle, showSidebar = true }) => {
             '& .MuiDrawer-paper': {
               width: DRAWER_WIDTH,
               boxSizing: 'border-box',
-              borderRight: `1px solid ${theme.palette.divider}`,
-              bgcolor: 'background.paper'
+              borderRight: `1px solid ${colors.landing.borderLight}`,
+              bgcolor: colors.landing.pageBackground,
             },
           }}
         >
           {/* Sidebar Header */}
           <Box sx={{ p: 3, borderBottom: `1px solid ${theme.palette.divider}` }}>
-            <Typography variant="h6" sx={{ fontWeight: 700, color: theme.palette.primary.main }}>
-              CaptureEz
+            <Typography variant="h6" sx={{ fontWeight: 700, color: colors.landing.heroText }}>
+              lifelog
             </Typography>
             <Typography variant="body2" color="text.secondary">
               {pageTitle}
@@ -132,13 +133,14 @@ const TabletLayout = ({ children, pageTitle, showSidebar = true }) => {
           position="static" 
           elevation={0}
           sx={{ 
-            bgcolor: 'white',
-            color: 'text.primary',
-            borderBottom: `1px solid ${theme.palette.divider}`
+            bgcolor: colors.landing.pageBackground,
+            color: colors.landing.heroText,
+            borderBottom: `1px solid ${colors.landing.borderLight}`,
+            backgroundImage: `linear-gradient(180deg, ${colors.landing.pageBackground} 0%, ${colors.landing.panelSoft} 100%)`
           }}
         >
           <Toolbar>
-            <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 600 }}>
+              <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 700, color: colors.landing.heroText }}>
               {pageTitle || t('nav:dashboard')}
             </Typography>
             

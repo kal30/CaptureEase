@@ -23,6 +23,7 @@ import { useTheme } from '@mui/material/styles';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '../../services/firebase';
+import colors from '../../assets/theme/colors';
 
 const MobileLayout = ({ children, pageTitle, showBottomNav = true }) => {
   const theme = useTheme();
@@ -68,9 +69,10 @@ const MobileLayout = ({ children, pageTitle, showBottomNav = true }) => {
         position="sticky" 
         elevation={0}
         sx={{ 
-          bgcolor: 'white',
-          color: 'text.primary',
-          borderBottom: `1px solid ${theme.palette.divider}`
+          bgcolor: colors.landing.pageBackground,
+          color: colors.landing.heroText,
+          borderBottom: `1px solid ${colors.landing.borderLight}`,
+          backgroundImage: `linear-gradient(180deg, ${colors.landing.pageBackground} 0%, ${colors.landing.panelSoft} 100%)`
         }}
       >
         <Toolbar sx={{ justifyContent: 'space-between', minHeight: '56px !important' }}>
@@ -78,7 +80,7 @@ const MobileLayout = ({ children, pageTitle, showBottomNav = true }) => {
             <IconButton size="small">
               <MenuIcon />
             </IconButton>
-            <Typography variant="h6" sx={{ fontWeight: 700, color: theme.palette.primary.main }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, color: colors.landing.heroText }}>
               {pageTitle || 'CaptureEz'}
             </Typography>
           </Box>
@@ -106,12 +108,16 @@ const MobileLayout = ({ children, pageTitle, showBottomNav = true }) => {
 
       {/* Floating Action Button */}
       <Fab
-        color="primary"
         sx={{
           position: 'fixed',
           bottom: showBottomNav ? 80 : 16,
           right: 16,
           zIndex: 1000
+          , bgcolor: colors.brand.ink,
+          color: colors.landing.heroText,
+          '&:hover': {
+            bgcolor: colors.brand.navy,
+          }
         }}
       >
         <AddIcon />
@@ -127,8 +133,8 @@ const MobileLayout = ({ children, pageTitle, showBottomNav = true }) => {
             bottom: 0,
             left: 0,
             right: 0,
-            borderTop: `1px solid ${theme.palette.divider}`,
-            bgcolor: 'background.paper'
+            borderTop: `1px solid ${colors.landing.borderLight}`,
+            bgcolor: colors.landing.pageBackground
           }}
         >
           <BottomNavigationAction 

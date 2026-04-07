@@ -9,8 +9,20 @@ import colors from "./colors";
 
 // Color schemes for different navbar styles
 export const navbarColors = {
-  current: colors.navbar.current,
-  pastel: colors.navbar.pastel,
+  current: {
+    appBarBg: colors.landing.pageBackground,
+    textColor: colors.landing.heroText,
+    hoverColor: colors.brand.ink,
+    skeletonBg: "rgba(15, 23, 42, 0.08)",
+    bottomBg: colors.landing.panelSoft,
+  },
+  pastel: {
+    appBarBg: colors.landing.pageBackground,
+    textColor: colors.landing.heroText,
+    hoverColor: colors.brand.deep,
+    skeletonBg: "rgba(15, 23, 42, 0.06)",
+    bottomBg: colors.landing.sageLight,
+  },
   gradient: colors.navbar.gradient,
 };
 
@@ -22,7 +34,7 @@ export const navbarFonts = {
 
 // Icon styling constants
 export const navbarIconStyles = {
-  color: colors.navbar.current.textColor,
+  color: colors.brand.deep,
   fontSize: { xs: 20, md: 22 },
   verticalAlign: "middle",
 };
@@ -33,7 +45,7 @@ export const logoCropInsets = "inset(5% 2% 5% 2%)"; // top right bottom left
 // AppBar base styles (curved, gradient background)
 export const appBarStyles = (theme, colorScheme) => ({
   boxShadow: "none",
-  background: `linear-gradient(180deg, ${colorScheme.appBarBg} 0%, ${colorScheme.bottomBg || colors.brand.deep} 100%)`,
+  background: `linear-gradient(180deg, ${colorScheme.appBarBg} 0%, ${colorScheme.bottomBg || colors.landing.panelSoft} 100%)`,
   color: colorScheme.textColor,
   borderBottom: `1px solid ${theme.palette.divider}`,
   borderBottomLeftRadius: "0.75rem",
@@ -113,7 +125,7 @@ export const navLinksContainerStyles = (theme, isLoggedIn, colorScheme) => ({
     px: { xs: 1, md: 1.5 },
     "&:hover": {
       backgroundColor: isLoggedIn
-        ? alpha(theme.palette.primary.main, 0.08)
+        ? alpha(colors.brand.ink, 0.08)
         : "transparent",
       color: colorScheme.hoverColor,
     },
@@ -152,8 +164,8 @@ export const authButtonsContainerStyles = {
 
 // Login button styles
 export const loginButtonStyles = () => ({
-  backgroundColor: colors.landing.cyanPop,
-  color: colors.landing.deepNavy,
+  backgroundColor: colors.brand.ink,
+  color: colors.landing.heroText,
   fontWeight: 700,
   fontFamily: navbarFonts.button,
   fontSize: { xs: "0.9rem", md: "1rem" },
@@ -163,9 +175,9 @@ export const loginButtonStyles = () => ({
   py: { xs: 1, md: 1.15 },
   minWidth: { xs: 80, md: "auto" },
   boxShadow: "0px 8px 18px rgba(143, 201, 192, 0.18)",
-  border: `1px solid ${colors.landing.cyanPop}`,
+  border: `1px solid ${colors.brand.ink}`,
   "&:hover": {
-    backgroundColor: "#9DD4CD",
+    backgroundColor: colors.brand.navy,
     boxShadow: "0px 10px 22px rgba(143, 201, 192, 0.26)",
     transform: "translateY(-1px)",
   },
@@ -173,8 +185,8 @@ export const loginButtonStyles = () => ({
 
 // Sign up button styles
 export const signUpButtonStyles = {
-  background: `linear-gradient(135deg, ${colors.brand.tint} 0%, #ffffff 100%)`,
-  color: colors.brand.ink,
+  background: `linear-gradient(135deg, ${colors.brand.tint} 0%, ${colors.landing.pageBackground} 100%)`,
+  color: colors.landing.heroText,
   fontWeight: 600,
   fontFamily: navbarFonts.button,
   fontSize: { xs: "0.9rem", md: "1rem" },
@@ -185,7 +197,7 @@ export const signUpButtonStyles = {
   boxShadow: "0px 2px 8px rgba(200, 217, 230, 0.3)",
   border: `1px solid ${colors.brand.tint}`,
   "&:hover": {
-    background: `linear-gradient(135deg, #ffffff 0%, ${colors.brand.tint} 100%)`,
+    background: `linear-gradient(135deg, ${colors.landing.pageBackground} 0%, ${colors.brand.tint} 100%)`,
     boxShadow: "0px 4px 12px rgba(200, 217, 230, 0.4)",
     transform: "translateY(-1px)",
   },
