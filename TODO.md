@@ -6,12 +6,12 @@ We can update it as we go so the plan survives if the chat window closes.
 ## Current Focus
 
 - [x] Archive `DailyLogPage`
-- [ ] Review `HealthInforPage` and decide whether it should stay as a placeholder or be renamed/rewritten
+- [x] Archive `HealthInforPage`
+- [x] Archive `DailyActivitiesPage`
 - [ ] Audit remaining page files and mark keep / combine / archive candidates
 
 ## Page Cleanup Candidates
 
-- [ ] `DailyActivitiesPage` - decide whether it should remain a separate page
 - [ ] `SensoryPage` - decide whether it should remain a separate page
 - [ ] `TemplateLibraryPage` - decide whether it should remain a separate page
 - [ ] Invite flow pages - evaluate whether to combine into one invite wizard
@@ -42,6 +42,6 @@ We can update it as we go so the plan survives if the chat window closes.
 
 ## Notes
 
-- `HealthInforPage` is currently a live `/health-info` route, but it is only a placeholder component right now.
 - `DailyLogPage` has been archived to `src/archive/pages/DailyLogPage.js`.
-
+- `HealthInforPage` has been archived to `src/archive/pages/HealthInforPage.js`.
+- `DailyActivitiesPage` has been archived to `src/archive/pages/DailyActivitiesPage.js`.

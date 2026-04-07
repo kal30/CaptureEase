@@ -19,7 +19,6 @@ const BreadcrumbsComponent = () => {
   const isAuthenticatedRoute =
     location.pathname.startsWith("/dashboard") ||
     location.pathname.startsWith("/care-team") ||
-    location.pathname.startsWith("/daily-activities") ||
     location.pathname.startsWith("/therapy-notes") ||
     location.pathname.startsWith("/templates") ||
     location.pathname.startsWith("/medical") ||
@@ -44,7 +43,6 @@ const BreadcrumbsComponent = () => {
     medical: "Medical Log",
     templates: "Templates",
     "care-team": "Care Team",
-    "daily-activities": "Daily Activities",
     "progress-notes": "Progress Notes",
     profile: "Profile",
   };

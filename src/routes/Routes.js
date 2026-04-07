@@ -9,7 +9,6 @@ import About from "../pages/About";
 import ContactUs from "../pages/ContactUs";
 import PanelDashboard from "../pages/PanelDashboard";
 import LandingPage from "../pages/LandingPage";
-import DailyActivitiesPage from "../pages/DailyActivitiesPage";
 
 // ProgressNotesPage removed - feature deprecated
 import SensoryPage from "../pages/SensoryPage";
@@ -60,7 +59,6 @@ const AppRoutes = () => {
         <Route path="/contact-us" element={<ContactUs />} />
         <Route path="/dashboard" element={<PanelDashboard />} />
         <Route path="/care-team" element={<CareTeamPage />} />
-        <Route path="/daily-activities" element={<DailyActivitiesPage />} />
         {/* /progress-notes route removed - feature deprecated */}
         <Route path="/sensory" element={<SensoryPage />} />
         <Route path="/log" element={<Navigate to="/dashboard" replace />} />
