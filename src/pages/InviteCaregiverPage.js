@@ -97,11 +97,11 @@ const InviteCaregiverPage = () => {
   };
 
   return (
-    <Container maxWidth="sm" sx={{ mt: 4, mb: 4 }}>
+    <Container maxWidth="sm" sx={{ mt: { xs: 2, md: 4 }, mb: 4, px: { xs: 1.5, sm: 2 } }}>
       <Card 
         elevation={0}
         sx={{ 
-          borderRadius: 4,
+          borderRadius: { xs: 3, md: 4 },
           border: `2px solid ${alpha(theme.palette.primary.main, 0.2)}`,
           overflow: 'hidden'
         }}
@@ -109,23 +109,23 @@ const InviteCaregiverPage = () => {
         {/* Header */}
         <Box sx={{ 
           background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.1)} 0%, ${alpha(theme.palette.primary.light, 0.1)} 100%)`,
-          p: 4,
+          p: { xs: 2.5, md: 4 },
           textAlign: 'center'
         }}>
           <FamilyIcon sx={{ 
-            fontSize: 64, 
+            fontSize: { xs: 48, sm: 64 }, 
             color: theme.palette.primary.main, 
             mb: 2 
           }} />
-          <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
+          <Typography variant="h4" sx={{ fontWeight: 700, mb: 1, fontSize: { xs: '1.6rem', sm: '2.125rem' } }}>
             Invite a Caregiver
           </Typography>
-          <Typography variant="h6" color="text.secondary">
+          <Typography variant="h6" color="text.secondary" sx={{ fontSize: { xs: '0.95rem', sm: '1.25rem' } }}>
             Add a family member or caregiver to your team
           </Typography>
         </Box>
 
-        <CardContent sx={{ p: 4 }}>
+        <CardContent sx={{ p: { xs: 2.5, md: 4 } }}>
           {error && (
             <Alert severity="error" sx={{ mb: 3 }}>
               {error}
@@ -137,7 +137,7 @@ const InviteCaregiverPage = () => {
             display: 'flex', 
             alignItems: 'center', 
             gap: 2,
-            p: 3,
+            p: { xs: 2, md: 3 },
             border: `2px solid ${alpha(theme.palette.primary.main, 0.3)}`,
             borderRadius: 2,
             bgcolor: alpha(theme.palette.primary.main, 0.05),
@@ -148,7 +148,7 @@ const InviteCaregiverPage = () => {
             </Box>
             <Box sx={{ flex: 1 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                <Typography variant="h6" sx={{ fontWeight: 600, fontSize: { xs: '1rem', sm: '1.25rem' } }}>
                   Family & Caregiver
                 </Typography>
                 <Chip
@@ -189,7 +189,7 @@ const InviteCaregiverPage = () => {
             </FormControl>
 
             {/* Email */}
-            <TextField
+              <TextField
               fullWidth
               label="Caregiver Email Address"
               type="email"
@@ -255,7 +255,7 @@ const InviteCaregiverPage = () => {
                 startIcon={<ArrowBackIcon />}
                 onClick={() => navigate('/care-team')}
                 disabled={loading}
-                sx={{ minWidth: 150 }}
+                sx={{ minWidth: { xs: '100%', sm: 150 } }}
               >
                 Cancel
               </Button>
@@ -270,7 +270,8 @@ const InviteCaregiverPage = () => {
                   '&:hover': {
                     transform: 'translateY(-1px)',
                     boxShadow: `0 6px 20px ${alpha(theme.palette.primary.main, 0.3)}`
-                  }
+                  },
+                  minWidth: { xs: '100%', sm: 150 },
                 }}
               >
                 {loading ? 'Sending...' : 'Send Invitation'}

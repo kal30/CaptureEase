@@ -62,11 +62,11 @@ const InviteSuccessPage = () => {
   const roleInfo = getRoleInfo(role);
 
   return (
-    <Container maxWidth="sm" sx={{ mt: 4, mb: 4 }}>
+    <Container maxWidth="sm" sx={{ mt: { xs: 2, md: 4 }, mb: 4, px: { xs: 1.5, sm: 2 } }}>
       <Card 
         elevation={0}
         sx={{ 
-          borderRadius: 4,
+          borderRadius: { xs: 3, md: 4 },
           border: `2px solid ${alpha(theme.palette.success.main, 0.2)}`,
           overflow: 'hidden'
         }}
@@ -74,23 +74,23 @@ const InviteSuccessPage = () => {
         {/* Success Header */}
         <Box sx={{ 
           background: `linear-gradient(135deg, ${alpha(theme.palette.success.main, 0.1)} 0%, ${alpha(theme.palette.success.light, 0.1)} 100%)`,
-          p: 4,
+          p: { xs: 2.5, md: 4 },
           textAlign: 'center'
         }}>
           <CheckIcon sx={{ 
-            fontSize: 64, 
+            fontSize: { xs: 48, sm: 64 }, 
             color: theme.palette.success.main, 
             mb: 2 
           }} />
-          <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
+          <Typography variant="h4" sx={{ fontWeight: 700, mb: 1, fontSize: { xs: '1.6rem', sm: '2.125rem' } }}>
             Invitation Sent!
           </Typography>
-          <Typography variant="h6" color="text.secondary">
+          <Typography variant="h6" color="text.secondary" sx={{ fontSize: { xs: '0.95rem', sm: '1.25rem' } }}>
             Your invitation has been delivered successfully
           </Typography>
         </Box>
 
-        <CardContent sx={{ p: 4 }}>
+        <CardContent sx={{ p: { xs: 2.5, md: 4 } }}>
           {/* Success Details */}
           <Alert 
             severity="success" 
@@ -103,13 +103,13 @@ const InviteSuccessPage = () => {
           {/* Invitation Summary */}
           {recipientEmail && role && childName && (
             <Box sx={{ 
-              p: 3,
+              p: { xs: 2, md: 3 },
               border: `1px solid ${alpha(roleInfo.color, 0.3)}`,
               borderRadius: 2,
               bgcolor: alpha(roleInfo.color, 0.05),
               mb: 3
             }}>
-              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, fontSize: { xs: '1rem', sm: '1.25rem' } }}>
                 Invitation Summary
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -151,21 +151,21 @@ const InviteSuccessPage = () => {
             gap: 2,
             justifyContent: 'center'
           }}>
-            <Button
-              variant="outlined"
-              startIcon={<ArrowBackIcon />}
-              onClick={() => navigate('/care-team')}
-              sx={{ minWidth: 150 }}
-            >
-              Back to Care Team
-            </Button>
-            <StyledButton
-              variant="contained"
-              onClick={() => navigate('/dashboard')}
-              sx={{ minWidth: 150 }}
-            >
-              Back to Dashboard
-            </StyledButton>
+              <Button
+                variant="outlined"
+                startIcon={<ArrowBackIcon />}
+                onClick={() => navigate('/care-team')}
+                sx={{ minWidth: { xs: '100%', sm: 150 } }}
+              >
+                Back to Care Team
+              </Button>
+              <StyledButton
+                variant="contained"
+                onClick={() => navigate('/dashboard')}
+                sx={{ minWidth: { xs: '100%', sm: 150 } }}
+              >
+                Back to Dashboard
+              </StyledButton>
           </Box>
         </CardContent>
       </Card>

@@ -96,19 +96,22 @@ const InviteRoleSelectionPage = () => {
   };
 
   return (
-    <Container maxWidth="sm" sx={{ mt: 2, mb: 4, px: 2 }}>
+    <Container maxWidth="sm" sx={{ mt: { xs: 1.5, md: 2 }, mb: 4, px: { xs: 1.5, sm: 2 } }}>
       {/* Header */}
-      <Box sx={{ textAlign: 'center', mb: 4 }}>
-        <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
+      <Box sx={{ textAlign: 'center', mb: { xs: 2.5, md: 4 } }}>
+        <Typography
+          variant="h4"
+          sx={{ fontWeight: 700, mb: 1, fontSize: { xs: '1.75rem', sm: '2.125rem' } }}
+        >
           + Build Your Care Team
         </Typography>
-        <Typography variant="body1" color="text.secondary">
+        <Typography variant="body1" color="text.secondary" sx={{ fontSize: { xs: '0.95rem', sm: '1rem' } }}>
           Choose who you'd like to invite to your care team
         </Typography>
       </Box>
 
       {/* Role Cards - Single Column */}
-      <Stack spacing={2} sx={{ mb: 4 }}>
+      <Stack spacing={{ xs: 1.5, md: 2 }} sx={{ mb: 4 }}>
         {roleOptions.map((option) => {
           const IconComponent = option.icon;
           const roleDisplay = ROLE_DISPLAY[option.role];
@@ -119,7 +122,7 @@ const InviteRoleSelectionPage = () => {
               key={option.role}
               elevation={0}
               sx={{ 
-                borderRadius: 3,
+                borderRadius: { xs: 2.25, md: 3 },
                 border: `2px solid ${alpha(option.color, 0.2)}`,
                 transition: 'all 0.3s ease',
                 '&:hover': {
@@ -128,19 +131,30 @@ const InviteRoleSelectionPage = () => {
                 }
               }}
             >
-              <CardActionArea 
+            <CardActionArea 
                 onClick={() => handleRoleSelect(option.route)}
                 sx={{ p: 0 }}
               >
-                <CardContent sx={{ p: 3 }}>
+                <CardContent sx={{ p: { xs: 2, sm: 2.5, md: 3 } }}>
                   {/* Main Card Content */}
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: { xs: 1.5, md: 2 },
+                      mb: 2,
+                      flexWrap: 'wrap',
+                    }}
+                  >
                     <IconComponent sx={{ 
-                      fontSize: 40, 
+                      fontSize: { xs: 34, sm: 40 }, 
                       color: option.color
                     }} />
                     <Box sx={{ flex: 1 }}>
-                      <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
+                      <Typography
+                        variant="h6"
+                        sx={{ fontWeight: 600, mb: 0.5, fontSize: { xs: '1.05rem', sm: '1.25rem' } }}
+                      >
                         {option.title}
                       </Typography>
                       <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
@@ -173,7 +187,7 @@ const InviteRoleSelectionPage = () => {
                   </Box>
 
                   {/* Brief Description */}
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontSize: { xs: '0.875rem', sm: '0.95rem' } }}>
                     {option.description}
                   </Typography>
 
@@ -184,7 +198,7 @@ const InviteRoleSelectionPage = () => {
                       borderTop: `1px solid ${alpha(option.color, 0.2)}`,
                       bgcolor: alpha(option.color, 0.03),
                       borderRadius: 2,
-                      p: 2,
+                      p: { xs: 1.5, md: 2 },
                       mt: 2
                     }}>
                       <Typography variant="subtitle2" sx={{ 
@@ -216,7 +230,7 @@ const InviteRoleSelectionPage = () => {
                   {/* Action hint */}
                   <Box sx={{ 
                     mt: 2, 
-                    p: 2, 
+                    p: { xs: 1.5, md: 2 }, 
                     bgcolor: alpha(option.color, 0.05),
                     borderRadius: 2,
                     textAlign: 'center'
@@ -242,7 +256,7 @@ const InviteRoleSelectionPage = () => {
           variant="outlined"
           startIcon={<ArrowBackIcon />}
           onClick={() => navigate('/dashboard')}
-          sx={{ minWidth: 150 }}
+          sx={{ minWidth: { xs: '100%', sm: 150 } }}
         >
           Back to Dashboard
         </StyledButton>
@@ -250,12 +264,12 @@ const InviteRoleSelectionPage = () => {
 
       {/* Help Info - Compact */}
       <Box sx={{ 
-        p: 3,
+        p: { xs: 2, md: 3 },
         bgcolor: alpha(theme.palette.info.main, 0.05),
         borderRadius: 3,
         border: `1px solid ${alpha(theme.palette.info.main, 0.2)}`
       }}>
-        <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: theme.palette.info.main }}>
+        <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: theme.palette.info.main, fontSize: { xs: '1.05rem', sm: '1.25rem' } }}>
           Need help choosing?
         </Typography>
         <Stack spacing={1}>
