@@ -1,6 +1,6 @@
 import { Link as RouterLink } from "react-router-dom";
 import { useLocation } from "react-router-dom";
-import { getAuth } from "firebase/auth";
+import { getAuth, signOut } from "firebase/auth";
 import { useEffect, useState } from "react";
 import {
   AppBar,
@@ -10,14 +10,15 @@ import {
   Container,
   Skeleton,
   Typography,
+  Avatar,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { useMediaQuery } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 import { useRole } from "../../contexts/RoleContext";
 import NavButton from "./NavButton";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import GroupIcon from "@mui/icons-material/Group";
-import AvatarMenu from "./AvatarMenu";
 import {
   getNavbarColorScheme,
   navbarIconStyles,
@@ -33,6 +34,7 @@ import colors from "../../assets/theme/colors";
 
 const Navbar = () => {
   const auth = getAuth();
+  const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const location = useLocation();
@@ -44,6 +46,10 @@ const Navbar = () => {
   const colorScheme = getNavbarColorScheme(
     isLandingRoute ? "pastel" : "current"
   );
+  const userAvatarLabel =
+    auth.currentUser?.displayName?.trim()?.charAt(0)?.toUpperCase() ||
+    auth.currentUser?.email?.trim()?.charAt(0)?.toUpperCase() ||
+    "U";
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -52,6 +58,15 @@ const Navbar = () => {
     });
     return () => unsubscribe();
   }, [auth]);
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      navigate("/login");
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+  };
 
   // Simple check - only show if user has children (let page handle role validation)
   const canSeeCareTeamMenu = isLoggedIn && childrenWithAccess && childrenWithAccess.length > 0;
@@ -137,7 +152,58 @@ const Navbar = () => {
             <Box sx={authButtonsContainerStyles}>
               {authReady ? (
                 isLoggedIn ? (
-                  <AvatarMenu user={auth.currentUser} />
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                    }}
+                  >
+                    {!isDashboardRoute && (
+                      <Button
+                        variant="text"
+                        component={RouterLink}
+                        to="/dashboard"
+                        sx={{
+                          color: colorScheme.textColor,
+                          textTransform: "none",
+                          fontWeight: 700,
+                          px: 1,
+                          minWidth: "auto",
+                        }}
+                      >
+                        Dashboard
+                      </Button>
+                    )}
+                    <Button
+                      variant="text"
+                      onClick={handleLogout}
+                      sx={{
+                        color: colorScheme.textColor,
+                        textTransform: "none",
+                        fontWeight: 700,
+                        px: 1,
+                        minWidth: "auto",
+                      }}
+                    >
+                      Logout
+                    </Button>
+                    <Avatar
+                      alt={auth.currentUser?.displayName || "User"}
+                      src={auth.currentUser?.photoURL || undefined}
+                      sx={{
+                        width: 32,
+                        height: 32,
+                        bgcolor: colors.landing.cyanPop,
+                        color: colors.landing.deepNavy,
+                        fontSize: "0.88rem",
+                        fontWeight: 700,
+                        boxShadow: "0 4px 10px rgba(15, 23, 42, 0.08)",
+                      }}
+                    >
+                      {userAvatarLabel}
+                    </Avatar>
+                  </Box>
                 ) : (
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                     <Button

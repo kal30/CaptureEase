@@ -59,21 +59,22 @@ const landingFormButtonStyles = {
   height: 48,
   minHeight: 48,
   px: 3,
-  borderRadius: "9999px",
+  borderRadius: "12px",
   fontWeight: 700,
   fontSize: "1rem",
-  color: landingColors.deepNavy,
-  backgroundColor: landingColors.cyanPop,
-  border: `1px solid ${landingColors.cyanPop}`,
-  boxShadow: `0 8px 18px ${landingColors.shadowHero}`,
+  color: landingColors.heroText,
+  backgroundColor: landingColors.surfaceSoft,
+  border: `1px solid ${landingColors.borderMedium}`,
+  boxShadow: `0 6px 16px ${landingColors.shadowSoft}`,
   "&:hover": {
-    backgroundColor: "#9DD4CD",
-    boxShadow: `0 10px 22px ${landingColors.shadowHeroStrong}`,
+    backgroundColor: landingColors.surface,
+    borderColor: landingColors.borderFocus,
+    boxShadow: `0 8px 20px ${landingColors.shadowMedium}`,
   },
 };
 
 const lifelogWordStyles = {
-  color: landingColors.cyanPop,
+  color: landingColors.deepNavy,
   fontWeight: 800,
   letterSpacing: "-0.03em",
   whiteSpace: "nowrap",
@@ -245,6 +246,7 @@ const HeaderSection = () => {
               onSubmit={handleFoundingFamilySubmit}
               sx={{
                 mt: { xs: 3, md: 3.5 },
+                mb: 5,
                 width: "100%",
                 maxWidth: { xs: "100%", md: 660, lg: 700 },
               }}
@@ -260,7 +262,7 @@ const HeaderSection = () => {
                   mb: 1.5,
                 }}
               >
-                Founding Family
+                Join the Founding Family
               </Typography>
 
               {submitSuccess && <Alert severity="success" sx={{ mb: 1.5, py: 0 }}>{submitSuccess}</Alert>}
@@ -281,6 +283,18 @@ const HeaderSection = () => {
                   onChange={(event) => setEmail(event.target.value)}
                   fullWidth
                   size="small"
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      height: 48,
+                      borderRadius: "12px",
+                    },
+                    "& .MuiOutlinedInput-input": {
+                      py: 0,
+                      px: 1.75,
+                      height: "100%",
+                      boxSizing: "border-box",
+                    },
+                  }}
                   InputProps={{
                     sx: {
                       backgroundColor: landingColors.surface,
@@ -292,7 +306,7 @@ const HeaderSection = () => {
                   }}
                 />
                 <Button
-                  variant="contained"
+                  variant="outlined"
                   type="submit"
                   disabled={isSubmitting}
                   sx={{ ...landingFormButtonStyles, height: 48, minHeight: 48 }}
