@@ -234,7 +234,7 @@ const ChildCardHeader = memo(({
                           height: 32,
                           bgcolor: careTeamCount === 0 ? 'rgba(247, 251, 249, 0.95)' : colors.app.dashboard.childHeader.switchBg,
                           border: `1px solid ${colors.app.dashboard.childHeader.supportBorder}`,
-                          color: careTeamCount === 0 ? 'text.disabled' : 'primary.main',
+                          color: careTeamCount === 0 ? 'text.disabled' : colors.brand.ink,
                           '&:hover': {
                             bgcolor: careTeamCount === 0 ? 'rgba(247, 251, 249, 0.95)' : colors.app.dashboard.childHeader.switchHoverBg,
                           },
@@ -349,10 +349,10 @@ const ChildCardHeader = memo(({
                 )}
 
                 {metricChips.find((chip) => chip.key === 'streak') && (
-                  <Chip
+                <Chip
                     label={metricChips.find((chip) => chip.key === 'streak').label}
                     size="small"
-                    color="success"
+                    color="secondary"
                     variant="outlined"
                     sx={{
                       height: 22,
@@ -387,9 +387,9 @@ const ChildCardHeader = memo(({
                         key={chip.key}
                         label={chip.label}
                         size="small"
-                        color={chip.color}
-                        variant={chip.variant}
-                        sx={{
+                      color={chip.color}
+                      variant={chip.variant}
+                      sx={{
                           height: { xs: 24, md: 26 },
                           fontSize: { xs: '0.78rem', md: '0.82rem' },
                           ...chip.sx,

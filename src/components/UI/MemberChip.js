@@ -7,12 +7,12 @@ import colors from '../../assets/theme/colors';
 // Role configuration with styling and emojis
 const getRoleConfig = (role, t) => {
   const configs = {
-    [t('owner_one')]: { color: colors.app.dailyCare.primary, emoji: "👑", priority: 0 },
-    [t('partner_one')]: { color: colors.app.dailyCare.light, emoji: "👨‍👩‍👧‍👦", priority: 1 },
-    [t('caregiver_one')]: { color: colors.app.performance.primary, emoji: "🤱", priority: 2 },
-    [t('therapist_one')]: { color: colors.app.incident.painMedical, emoji: "🩺", priority: 3 },
+    [t('owner_one')]: { color: colors.brand.ink, emoji: "👑", priority: 0 },
+    [t('partner_one')]: { color: colors.brand.tint, emoji: "👨‍👩‍👧‍👦", priority: 1 },
+    [t('caregiver_one')]: { color: colors.brand.navy, emoji: "🤱", priority: 2 },
+    [t('therapist_one')]: { color: colors.brand.deep, emoji: "🩺", priority: 3 },
   };
-  return configs[role] || { color: colors.app.text.muted, emoji: "👤", priority: 5 };
+  return configs[role] || { color: colors.landing.textMuted, emoji: "👤", priority: 5 };
 };
 
 /**
@@ -59,11 +59,11 @@ const MemberChip = ({
           cursor: onClick ? 'pointer' : 'default',
           '&:hover': onClick ? {
             bgcolor: alpha(roleConfig.color, 0.8), // Darker background for better contrast with white text
-            color: colors.app.cards.background, // Force white text on hover
+            color: colors.landing.surface, // Force light text on hover
             transform: 'translateY(-1px)',
             boxShadow: `0 2px 8px ${alpha(roleConfig.color, 0.3)}`,
             '& .MuiTypography-root': {
-              color: colors.app.cards.background, // Force all typography to be white on hover
+              color: colors.landing.surface, // Force all typography to be light on hover
             }
           } : {}
         }}

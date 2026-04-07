@@ -12,7 +12,7 @@ import {
   Settings as SettingsIcon,
   Delete as DeleteIcon,
 } from '@mui/icons-material';
-import { alpha, useTheme } from '@mui/material/styles';
+import { alpha } from '@mui/material/styles';
 import { USER_ROLES } from '../../constants/roles';
 import colors from '../../assets/theme/colors';
 
@@ -28,8 +28,6 @@ const ChildManagementMenu = ({
   userRole,
 }) => {
   const [menuAnchor, setMenuAnchor] = useState(null);
-  const theme = useTheme();
-
   // Care owners can manage everything; care partners can edit basic child info.
   const canManage = userRole === USER_ROLES.CARE_OWNER || userRole === USER_ROLES.CARE_PARTNER;
   const canInvite = userRole === USER_ROLES.CARE_OWNER; // Only Care Owner can invite

@@ -107,14 +107,14 @@ const ThemeCard = ({
       }
 
       case 'completion': {
-        const completionColor = isCompleted ? theme.palette.success.main : theme.palette.primary.main;
+        const completionColor = isCompleted ? colors.brand.ink : colors.brand.deep;
         return {
           ...baseStyles,
           border: `1px solid ${alpha(completionColor, 0.3)}`,
           borderLeft: `4px solid ${completionColor}`,
           backgroundColor: isCompleted 
-            ? alpha(theme.palette.success.main, 0.05)
-            : alpha(theme.palette.primary.main, 0.03),
+            ? alpha(colors.brand.ink, 0.05)
+            : alpha(colors.landing.panelSoft, 0.8),
           boxShadow: elevated ? `0 4px 12px ${alpha(completionColor, 0.15)}` : `0 2px 8px ${alpha(completionColor, 0.08)}`,
           '&:hover': (clickable || onClick) ? {
             transform: 'translateY(-2px)',
@@ -146,7 +146,7 @@ const ThemeCard = ({
           '&:hover': (clickable || onClick) ? {
             transform: 'translateY(-2px)',
             boxShadow: `0 8px 24px ${colors.app.cards.shadowHover}`,
-            borderColor: alpha(theme.palette.primary.main, 0.3)
+            borderColor: alpha(colors.brand.ink, 0.3)
           } : {}
         };
       }

@@ -65,7 +65,7 @@ const MedicalInfoDisplay = ({
             component="span"
             sx={{
               ...compactChipSx,
-              color: colors.semantic.warning,
+              color: colors.brand.deep,
               borderColor: colors.app.safety.allergyBorder,
               backgroundColor: colors.app.safety.allergyBg,
             }}
@@ -88,7 +88,7 @@ const MedicalInfoDisplay = ({
             component="span"
             sx={{
               ...compactChipSx,
-              color: colors.app.dashboard.childHeader.allergyColor,
+              color: colors.brand.navy,
               borderColor: colors.app.safety.allergyBorder,
               backgroundColor: colors.app.cards.shadowPanel,
             }}
@@ -116,7 +116,7 @@ const MedicalInfoDisplay = ({
                 p: 0,
                 border: 0,
                 background: 'transparent',
-                color: 'primary.main',
+                color: colors.brand.ink,
                 cursor: 'pointer',
                 fontWeight: 700,
                 fontSize: '0.75rem',
@@ -205,7 +205,7 @@ const MedicalInfoDisplay = ({
               component="span"
               onClick={() => setShowAllAllergies(!showAllAllergies)}
               sx={{
-                color: 'primary.main',
+                color: colors.brand.ink,
                 cursor: 'pointer',
                 fontWeight: 600,
                 fontSize: compact ? '0.75rem' : '0.82rem',

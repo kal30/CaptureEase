@@ -22,7 +22,6 @@ import WcOutlinedIcon from '@mui/icons-material/WcOutlined';
 import { useTheme } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
 import { useChildContext } from '../../contexts/ChildContext';
-import { therapyTheme } from '../../assets/theme/therapyTheme';
 import { getLogTypeByCategory } from '../../constants/logTypeRegistry';
 import colors from '../../assets/theme/colors';
 
@@ -145,8 +144,8 @@ const QuickEntrySection = ({
           py: 1,
           px: 2,
           borderRadius: 2,
-          bgcolor: therapyTheme.background.subtle,
-          border: `1px solid ${therapyTheme.border.light}`,
+          bgcolor: colors.landing.sageLight,
+          border: `1px solid ${colors.app.dashboard.childHeader.heroBorder}`,
         }}
       >
         <Typography
@@ -154,7 +153,7 @@ const QuickEntrySection = ({
           sx={{
             fontSize: "0.875rem",
             fontWeight: 600,
-            color: therapyTheme.text.primary,
+            color: colors.landing.heroText,
           }}
         >
           🩺 Professional View:
@@ -170,10 +169,10 @@ const QuickEntrySection = ({
                 height: 20,
                 borderRadius: "50%",
                 border: `1px solid ${status[action.key]
-                  ? action.color
+                  ? colors.brand.deep
                   : theme.palette.divider}`,
                 bgcolor: status[action.key]
-                  ? action.bgColor
+                  ? colors.landing.panelSoft
                   : theme.palette.background.paper,
                 display: "flex",
                 alignItems: "center",
@@ -199,17 +198,17 @@ const QuickEntrySection = ({
             navigate('/therapy-notes');
           }}
           sx={{
-            backgroundColor: therapyTheme.primary,
-            color: "#FFFFFF",
+            backgroundColor: colors.brand.ink,
+            color: colors.landing.heroText,
             fontWeight: 600,
             fontSize: "0.75rem",
             minHeight: "28px",
             px: 1.5,
             "&:hover": {
-              backgroundColor: therapyTheme.dark,
+              backgroundColor: colors.brand.navy,
               transform: "scale(1.05)",
             },
-            boxShadow: `0 2px 4px ${therapyTheme.primary}30`,
+            boxShadow: `0 2px 4px ${colors.brand.ink}30`,
           }}
         >
           Notes
