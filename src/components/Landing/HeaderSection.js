@@ -2,13 +2,13 @@ import React, { useState } from "react";
 import {
   Alert,
   Box,
+  Button,
   Container,
   Divider,
-  TextField,
-  Typography,
-  Button,
   Paper,
   Stack,
+  TextField,
+  Typography,
 } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import { getAuth } from "firebase/auth";
@@ -78,6 +78,27 @@ const landingFormButtonStyles = {
   },
 };
 
+const timelineItems = [
+  {
+    title: "Med: Given at breakfast",
+    tone: "rgba(234, 244, 242, 0.98)",
+    accent: landingColors.brandTeal,
+    meta: "Caregiver • 9:00",
+  },
+  {
+    title: "Sleep: 2h",
+    tone: "rgba(244, 241, 248, 0.98)",
+    accent: landingColors.brandLavender,
+    meta: "Parent • 12:30",
+  },
+  {
+    title: "Lunch: Ate well",
+    tone: "rgba(247, 251, 249, 0.98)",
+    accent: landingColors.brandSage,
+    meta: "Caregiver • 3:00",
+  },
+];
+
 const HeaderSection = () => {
   const auth = getAuth();
   const [email, setEmail] = useState("");
@@ -102,7 +123,7 @@ const HeaderSection = () => {
       setIsSubmitting(true);
       setSubmitError("");
       await saveFoundingFamilyEmail(trimmedEmail);
-      setSubmitSuccess("Thanks. You’re on the founding family list.");
+      setSubmitSuccess("Thanks. You're on the founding family list.");
       setEmail("");
     } catch (e) {
       setSubmitSuccess("");
@@ -131,49 +152,97 @@ const HeaderSection = () => {
       <Container maxWidth="xl" sx={{ maxWidth: "100%", overflow: "hidden" }}>
         <Box
           sx={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: { xs: 4, md: 5 },
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", md: "1.02fr 0.98fr" },
+            alignItems: "start",
+            gap: { xs: 4, md: 6 },
+            width: "100%",
+            maxWidth: 1280,
+            mx: "auto",
             ...landingLayout.heroSection.container,
-            maxWidth: "100%",
             overflow: "hidden",
           }}
         >
           <Box
             sx={{
-              maxWidth: 1020,
-              width: "100%",
-              textAlign: "center",
-              mx: "auto",
-              px: { xs: 0.5, md: 0 },
+              ...landingLayout.heroSection.leftColumn,
+              maxWidth: "100%",
+              overflow: "hidden",
             }}
           >
-            <Box sx={{ ...landingLayout.heroHeading, justifyContent: "center" }}>
+            <Box
+              sx={{
+                mb: 1.5,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 1,
+                px: 1.5,
+                py: 0.75,
+                borderRadius: "9999px",
+                backgroundColor: landingColors.surfaceSoft,
+                border: `1px solid ${landingColors.borderSoft}`,
+                color: landingColors.supportMuted,
+                fontWeight: 700,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                fontSize: "0.74rem",
+              }}
+            >
+              lifelog
+            </Box>
+
+            <Box sx={{ ...landingLayout.heroHeading, justifyContent: "flex-start" }}>
               <Typography
                 sx={{
                   ...landingTypography.heroMain,
                   color: landingColors.heroText,
-                  maxWidth: 900,
-                  mx: "auto",
+                  maxWidth: 760,
+                  mx: 0,
+                  textAlign: "left",
                 }}
               >
-                From notes to insights
+                I have two nephews with autism. I built the app I always needed.
               </Typography>
             </Box>
 
             <Typography
               sx={{
                 ...landingTypography.heroBody,
-                maxWidth: 840,
-                mx: "auto",
+                maxWidth: 760,
                 mt: 2,
-                fontSize: { xs: "1.02rem", md: "1.22rem" },
-                lineHeight: { xs: 1.55, md: 1.65 },
+                fontSize: { xs: "1rem", md: "1.08rem" },
+                lineHeight: { xs: 1.75, md: 1.85 },
               }}
             >
-              The whole care team logs notes, all neatly organized in one shared timeline.
+              For years I scrambled to remember what happened before every therapy appointment.
+              Behaviors, triggers, good days, hard days - all buried in phone notes. I built
+              Lifelog so no parent has to do that anymore.
+            </Typography>
+
+            <Typography
+              sx={{
+                ...landingTypography.heroBody,
+                maxWidth: 760,
+                mt: 1.5,
+                fontSize: { xs: "1rem", md: "1.08rem" },
+                lineHeight: { xs: 1.75, md: 1.85 },
+              }}
+            >
+              Everyone caring for your child sees the same timeline in real time. A caregiver logs
+              a meltdown at 1 PM. You see it before the 2 PM appointment. The therapist walks in
+              already knowing.
+            </Typography>
+
+            <Typography
+              sx={{
+                ...landingTypography.heroBody,
+                maxWidth: 760,
+                mt: 1.5,
+                fontWeight: 700,
+                fontSize: { xs: "1rem", md: "1.08rem" },
+              }}
+            >
+              No more "I didn't know that happened."
             </Typography>
 
             <Box
@@ -181,11 +250,10 @@ const HeaderSection = () => {
                 mt: { xs: 3, md: 3.5 },
                 display: "flex",
                 flexDirection: { xs: "column", sm: "row" },
-                justifyContent: "center",
+                justifyContent: { xs: "center", md: "flex-start" },
                 gap: 1.5,
                 width: "100%",
                 maxWidth: { xs: "100%", md: 540 },
-                mx: "auto",
               }}
             >
               <Button
@@ -207,16 +275,109 @@ const HeaderSection = () => {
             </Box>
 
             <Box
+              component="form"
+              onSubmit={handleFoundingFamilySubmit}
               sx={{
-                mt: { xs: 3.5, md: 4 },
-                mx: "auto",
+                mt: { xs: 4, md: 5 },
+                display: "flex",
+                flexDirection: "column",
+                gap: 1,
                 width: "100%",
-                maxWidth: 1180,
+                maxWidth: { xs: "100%", md: 420 },
+              }}
+            >
+              {submitSuccess && <Alert severity="success">{submitSuccess}</Alert>}
+              {submitError && <Alert severity="error">{submitError}</Alert>}
+              <Divider
+                sx={{
+                  width: "100%",
+                  color: landingColors.textSoft,
+                  "&::before, &::after": {
+                    borderColor: landingColors.borderMedium,
+                  },
+                }}
+              >
+                <Typography
+                  component="span"
+                  sx={{
+                    fontSize: "0.82rem",
+                    letterSpacing: "0.04em",
+                    textTransform: "uppercase",
+                    color: landingColors.textMuted,
+                  }}
+                >
+                  Or join the founding family list
+                </Typography>
+              </Divider>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: { xs: "column", sm: "row" },
+                  alignItems: "stretch",
+                  gap: 1,
+                }}
+              >
+                <TextField
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  fullWidth
+                  size="small"
+                  variant="outlined"
+                  InputProps={{
+                    sx: {
+                      backgroundColor: landingColors.surfaceTint,
+                      borderRadius: 0,
+                      height: 48,
+                      minHeight: 48,
+                      fontSize: "1rem",
+                      "& fieldset": {
+                        borderRadius: 0,
+                        borderColor: landingColors.borderStrong,
+                      },
+                      "&:hover fieldset": {
+                        borderColor: landingColors.borderFocus,
+                      },
+                      "&.Mui-focused fieldset": {
+                        borderColor: landingColors.borderActive,
+                        borderWidth: "1px",
+                      },
+                    },
+                  }}
+                />
+                <Button
+                  variant="contained"
+                  type="submit"
+                  disabled={isSubmitting}
+                  sx={landingFormButtonStyles}
+                >
+                  {isSubmitting ? "Joining..." : "Add Email"}
+                </Button>
+              </Box>
+            </Box>
+          </Box>
+
+          <Box
+            sx={{
+              ...landingLayout.heroSection.rightColumn,
+              position: "relative",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "flex-start",
+              mt: { xs: 0.5, md: 0.8 },
+            }}
+          >
+            <Box
+              sx={{
+                width: "100%",
+                maxWidth: { xs: 580, md: 700, lg: 760 },
+                zIndex: 1,
               }}
             >
               <Paper
                 sx={{
-                  p: { xs: 2, md: 3 },
+                  p: { xs: 2.5, md: 3.25 },
                   borderRadius: { xs: "28px", md: "34px" },
                   background:
                     "linear-gradient(180deg, rgba(255,255,255,0.88) 0%, rgba(243,247,245,0.9) 100%)",
@@ -227,11 +388,11 @@ const HeaderSection = () => {
                 elevation={0}
               >
                 <Stack
-                  spacing={{ xs: 2.5, md: 3 }}
+                  spacing={{ xs: 2.25, md: 2.75 }}
                   sx={{
                     alignItems: "center",
                     textAlign: "center",
-                    py: { xs: 1, md: 1.5 },
+                    py: { xs: 0.5, md: 1 },
                   }}
                 >
                   <Typography
@@ -243,17 +404,17 @@ const HeaderSection = () => {
                       fontWeight: 700,
                     }}
                   >
-                    From notes → insights
+                    From notes to insights
                   </Typography>
 
                   <Typography
                     sx={{
-                      fontSize: { xs: "1.05rem", md: "1.15rem" },
+                      fontSize: { xs: "1.02rem", md: "1.12rem" },
                       color: landingColors.bodyText,
-                      maxWidth: 900,
+                      maxWidth: 920,
                     }}
                   >
-                    Caregivers and parents log notes, all neatly organized in one shared timeline.
+                    The whole care team logs notes, all neatly organized in one shared timeline.
                   </Typography>
 
                   <Box
@@ -277,47 +438,31 @@ const HeaderSection = () => {
                         overflow: "hidden",
                         p: { xs: 2.5, md: 3.5 },
                         boxShadow: `0 14px 28px ${landingColors.shadowSoft}`,
+                        transform: { xs: "none", md: "rotate(-1deg)" },
                       }}
                       elevation={0}
                     >
-                      <Box
+                      <Typography
                         sx={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
+                          fontSize: { xs: "0.82rem", md: "0.86rem" },
+                          letterSpacing: "0.16em",
+                          textTransform: "uppercase",
+                          color: landingColors.textMuted,
+                          fontWeight: 700,
                           mb: 2,
                         }}
                       >
-                        <Typography
-                          sx={{
-                            fontSize: { xs: "0.82rem", md: "0.86rem" },
-                            letterSpacing: "0.16em",
-                            textTransform: "uppercase",
-                            color: landingColors.textMuted,
-                            fontWeight: 700,
-                          }}
-                        >
-                          Care Team Note
-                        </Typography>
-                        <Typography
-                          sx={{
-                            fontSize: "1.2rem",
-                            color: landingColors.supportMuted,
-                            lineHeight: 1,
-                          }}
-                        >
-                          ✦
-                        </Typography>
-                      </Box>
+                        Care Team Note
+                      </Typography>
 
                       <Box
                         sx={{
                           borderRadius: "24px",
-                          backgroundColor: "rgba(255,255,255,0.8)",
+                          backgroundColor: "rgba(255,255,255,0.86)",
                           border: `1px solid rgba(226, 232, 240, 0.9)`,
                           p: { xs: 2.25, md: 2.75 },
                           boxShadow: `0 10px 22px ${landingColors.shadowSoft}`,
-                          transform: "rotate(-1.8deg)",
+                          transform: { xs: "none", md: "rotate(-1.8deg)" },
                           maxWidth: 470,
                           mx: "auto",
                         }}
@@ -447,26 +592,7 @@ const HeaderSection = () => {
                               gap: 1.35,
                             }}
                           >
-                            {[
-                              {
-                                title: "Med: Given at breakfast",
-                                tone: "rgba(234, 244, 242, 0.98)",
-                                accent: landingColors.brandTeal,
-                                meta: "Caregiver • 9:00",
-                              },
-                              {
-                                title: "Sleep: 2h",
-                                tone: "rgba(244, 241, 248, 0.98)",
-                                accent: landingColors.brandLavender,
-                                meta: "Parent • 12:30",
-                              },
-                              {
-                                title: "Lunch: Ate well",
-                                tone: "rgba(247, 251, 249, 0.98)",
-                                accent: landingColors.brandSage,
-                                meta: "Caregiver • 3:00",
-                              },
-                            ].map((item) => (
+                            {timelineItems.map((item) => (
                               <Box
                                 key={item.title}
                                 sx={{
@@ -528,163 +654,8 @@ const HeaderSection = () => {
                       </Box>
                     </Paper>
                   </Box>
-
-                  <Box
-                    sx={{
-                      mt: { xs: 0.5, md: 1 },
-                      width: "100%",
-                      display: "grid",
-                      gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
-                      gap: 1.5,
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        borderRadius: "22px",
-                        border: `1px solid rgba(199, 217, 196, 0.7)`,
-                        backgroundColor: "rgba(247, 251, 249, 0.95)",
-                        px: 2,
-                        py: 1.5,
-                        textAlign: "left",
-                      }}
-                    >
-                      <Typography
-                        sx={{
-                          fontSize: { xs: "0.9rem", md: "0.95rem" },
-                          fontWeight: 700,
-                          color: landingColors.deepNavy,
-                          mb: 0.35,
-                        }}
-                      >
-                        Replace with screenshots later
-                      </Typography>
-                      <Typography
-                        sx={{
-                          fontSize: { xs: "0.86rem", md: "0.93rem" },
-                          lineHeight: 1.6,
-                          color: landingColors.textMuted,
-                        }}
-                      >
-                        Keep this hero concept now. We can swap in real app screenshots once they are ready.
-                      </Typography>
-                    </Box>
-                    <Box
-                      sx={{
-                        borderRadius: "22px",
-                        border: `1px solid rgba(217, 209, 238, 0.74)`,
-                        backgroundColor: "rgba(244, 241, 248, 0.88)",
-                        px: 2,
-                        py: 1.5,
-                        textAlign: "left",
-                      }}
-                    >
-                      <Typography
-                        sx={{
-                          fontSize: { xs: "0.9rem", md: "0.95rem" },
-                          fontWeight: 700,
-                          color: landingColors.deepNavy,
-                          mb: 0.35,
-                        }}
-                      >
-                        Shared timeline
-                      </Typography>
-                      <Typography
-                        sx={{
-                          fontSize: { xs: "0.86rem", md: "0.93rem" },
-                          lineHeight: 1.6,
-                          color: landingColors.textMuted,
-                        }}
-                      >
-                        One calm view for caregivers, parents, and therapists to understand the day together.
-                      </Typography>
-                    </Box>
-                  </Box>
                 </Stack>
               </Paper>
-            </Box>
-
-            <Box
-              component="form"
-              onSubmit={handleFoundingFamilySubmit}
-              sx={{
-                mt: { xs: 4, md: 5 },
-                display: "flex",
-                flexDirection: "column",
-                gap: 1,
-                width: "100%",
-                maxWidth: { xs: "100%", md: 420 },
-                mx: { xs: "auto", md: 0 },
-              }}
-            >
-              {submitSuccess && <Alert severity="success">{submitSuccess}</Alert>}
-              {submitError && <Alert severity="error">{submitError}</Alert>}
-              <Divider
-                sx={{
-                  width: "100%",
-                  color: landingColors.textSoft,
-                  "&::before, &::after": {
-                    borderColor: landingColors.borderMedium,
-                  },
-                }}
-              >
-                <Typography
-                  component="span"
-                  sx={{
-                    fontSize: "0.82rem",
-                    letterSpacing: "0.04em",
-                    textTransform: "uppercase",
-                    color: landingColors.textMuted,
-                  }}
-                >
-                  Or join the founding family list
-                </Typography>
-              </Divider>
-              <Box
-                sx={{
-                  display: "flex",
-                  flexDirection: { xs: "column", sm: "row" },
-                  alignItems: "stretch",
-                  gap: 1,
-                }}
-              >
-                <TextField
-                  type="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  fullWidth
-                  size="small"
-                  variant="outlined"
-                  InputProps={{
-                    sx: {
-                      backgroundColor: landingColors.surfaceTint,
-                      borderRadius: 0,
-                      height: 48,
-                      minHeight: 48,
-                      fontSize: "1rem",
-                      "& fieldset": {
-                        borderRadius: 0,
-                        borderColor: landingColors.borderStrong,
-                      },
-                      "&:hover fieldset": {
-                        borderColor: landingColors.borderFocus,
-                      },
-                      "&.Mui-focused fieldset": {
-                        borderColor: landingColors.borderActive,
-                        borderWidth: "1px",
-                      },
-                    },
-                  }}
-                />
-                <Button
-                  variant="contained"
-                  type="submit"
-                  disabled={isSubmitting}
-                  sx={landingFormButtonStyles}
-                >
-                  {isSubmitting ? "Joining..." : "Add Email"}
-                </Button>
-              </Box>
             </Box>
           </Box>
         </Box>
