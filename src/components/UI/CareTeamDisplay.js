@@ -12,15 +12,16 @@ import { auth } from '../../services/firebase';
 import { USER_ROLES } from "../../constants/roles";
 import ProgressiveDisclosure from "./ProgressiveDisclosure";
 import MemberChip, { sortMembersByPriority } from "./MemberChip";
+import colors from '../../assets/theme/colors';
 
 const getMemberAvatarColor = (role, t) => {
-  const colors = {
-    [t('owner_one')]: "#8B5CF6",
-    [t('partner_one')]: "#45B7D1",
-    [t('caregiver_one')]: "#4ECDC4",
-    [t('therapist_one')]: "#FF6B6B",
+  const roleColors = {
+    [t('owner_one')]: colors.brand.tint,
+    [t('partner_one')]: colors.brand.lightBlue,
+    [t('caregiver_one')]: colors.brand.ink,
+    [t('therapist_one')]: colors.brand.deep,
   };
-  return colors[role] || "#94A3B8";
+  return roleColors[role] || "#94A3B8";
 };
 
 /**

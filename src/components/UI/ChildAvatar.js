@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, Avatar } from '@mui/material';
+import colors from '../../assets/theme/colors';
 
 /**
  * ChildAvatar - Reusable avatar component with role indicator
@@ -38,8 +39,8 @@ const ChildAvatar = ({
           height: avatarSize,
           fontSize: avatarSize / 2.5, // Dynamic font size for initials
           fontWeight: 600,
-          bgcolor: 'primary.main',
-          color: 'white'
+          bgcolor: colors.brand.tint,
+          color: colors.brand.navy
         }}
       >
         {!child.profilePhoto && child.name?.[0]?.toUpperCase()}

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
+import colors from '../../assets/theme/colors';
 
 /**
  * GroupStyledCard - Card component with group-based styling
@@ -40,27 +41,27 @@ const GroupStyledCard = ({
       case "own":
         return {
           ...baseStyle,
-          borderColor: alpha(theme.palette.primary.main, 0.4),
-          backgroundColor: alpha(theme.palette.primary.main, 0.03),
+          borderColor: alpha(colors.brand.ink, 0.35),
+          backgroundColor: alpha(colors.landing.pageBackground, 0.75),
           '&:hover': onClick ? {
-            boxShadow: `0 6px 20px ${alpha(theme.palette.primary.main, 0.14)}`
+            boxShadow: `0 6px 20px ${alpha(colors.brand.ink, 0.14)}`
           } : {},
           ...(isExpanded && {
-            borderColor: alpha(theme.palette.primary.main, 0.6),
-            backgroundColor: alpha(theme.palette.primary.main, 0.05)
+            borderColor: alpha(colors.brand.ink, 0.55),
+            backgroundColor: alpha(colors.landing.tealLight, 0.85)
           }),
           ...(isHovered && {
-            borderColor: alpha(theme.palette.primary.main, 0.8),
-            backgroundColor: alpha(theme.palette.primary.main, 0.08)
+            borderColor: alpha(colors.brand.ink, 0.7),
+            backgroundColor: alpha(colors.landing.tealLight, 0.95)
           })
         };
 
       case "family":
-        const familyColor = theme.palette.calendar?.accent || theme.palette.secondary.main;
+        const familyColor = colors.brand.tint;
         return {
           ...baseStyle,
           borderColor: alpha(familyColor, 0.4),
-          backgroundColor: alpha(familyColor, 0.03),
+          backgroundColor: alpha(colors.landing.panelSoft, 0.85),
           '&:hover': onClick ? {
             boxShadow: `0 6px 20px ${alpha(familyColor, 0.14)}`
           } : {},
@@ -75,11 +76,11 @@ const GroupStyledCard = ({
         };
 
       case "professional":
-        const professionalColor = theme.palette.success?.main || '#4caf50';
+        const professionalColor = colors.brand.deep;
         return {
           ...baseStyle,
           borderColor: alpha(professionalColor, 0.4),
-          backgroundColor: alpha(professionalColor, 0.03),
+          backgroundColor: alpha(colors.landing.sageLight, 0.9),
           '&:hover': onClick ? {
             boxShadow: `0 6px 20px ${alpha(professionalColor, 0.14)}`
           } : {},

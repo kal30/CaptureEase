@@ -2,6 +2,7 @@ import React from "react";
 import { Box, Typography } from "@mui/material";
 import { alpha, useTheme } from "@mui/material/styles";
 import { AutoAwesome as SparkleIcon } from "@mui/icons-material";
+import colors from "../../assets/theme/colors";
 
 /**
  * A reusable page header component with a consistent style.
@@ -18,13 +19,13 @@ const PageHeader = ({ title, subtitle, actions }) => {
       sx={{
         mb: { xs: 3, md: 6 },
         background: `linear-gradient(135deg, ${alpha(
-          theme.palette.primary.main,
-          0.05
-        )} 0%, ${alpha(theme.palette.secondary.main, 0.05)} 100%)`,
+          colors.landing.pageBackground,
+          0.98
+        )} 0%, ${alpha(colors.landing.panelSoft, 0.92)} 100%)`,
         py: { xs: 3, md: 4 },
         px: { xs: 2, md: 3 },
         borderRadius: { xs: 2, md: theme.spacing(0.5) },
-        border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+        border: `1px solid ${alpha(colors.landing.borderLight, 0.9)}`,
       }}
     >
       <Box
@@ -39,13 +40,13 @@ const PageHeader = ({ title, subtitle, actions }) => {
         {/* Left: Title and Subtitle */}
         <Box sx={{ display: "flex", alignItems: "center", flex: 1 }}>
           <SparkleIcon
-            sx={{ fontSize: { xs: 32, md: 40 }, color: theme.palette.primary.main, mr: { xs: 1.25, md: 2 } }}
+            sx={{ fontSize: { xs: 32, md: 40 }, color: colors.brand.ink, mr: { xs: 1.25, md: 2 } }}
           />
           <Box>
             <Typography
               sx={{
                 fontWeight: 800,
-                background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+                background: `linear-gradient(135deg, ${colors.landing.heroText} 0%, ${colors.brand.deep} 100%)`,
                 backgroundClip: "text",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",

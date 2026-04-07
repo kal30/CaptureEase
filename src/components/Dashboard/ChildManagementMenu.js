@@ -14,6 +14,7 @@ import {
 } from '@mui/icons-material';
 import { alpha, useTheme } from '@mui/material/styles';
 import { USER_ROLES } from '../../constants/roles';
+import colors from '../../assets/theme/colors';
 
 /**
  * ChildManagementMenu - Extracted settings menu component for child management
@@ -68,18 +69,19 @@ const ChildManagementMenu = ({
       <IconButton
         size="small"
         onClick={handleMenuOpen}
-        sx={{
-          ml: 1,
-          width: 28,
-          height: 28,
-          bgcolor: alpha(theme.palette.primary.main, 0.1),
-          color: theme.palette.primary.main,
-          "&:hover": {
-            bgcolor: alpha(theme.palette.primary.main, 0.2),
-            transform: "scale(1.05)",
-          },
-          transition: "all 0.2s ease",
-        }}
+      sx={{
+        ml: 1,
+        width: 28,
+        height: 28,
+        bgcolor: colors.landing.panelSoft,
+        color: colors.brand.deep,
+        border: `1px solid ${alpha(colors.brand.tint, 0.28)}`,
+        "&:hover": {
+          bgcolor: colors.landing.sageLight,
+          transform: "scale(1.05)",
+        },
+        transition: "all 0.2s ease",
+      }}
         title="Manage child settings"
       >
         <SettingsIcon sx={{ fontSize: 16 }} />
