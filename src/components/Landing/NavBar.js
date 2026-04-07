@@ -159,22 +159,6 @@ const Navbar = () => {
                       gap: 1,
                     }}
                   >
-                    {!isDashboardRoute && (
-                      <Button
-                        variant="text"
-                        component={RouterLink}
-                        to="/dashboard"
-                        sx={{
-                          color: colorScheme.textColor,
-                          textTransform: "none",
-                          fontWeight: 700,
-                          px: 1,
-                          minWidth: "auto",
-                        }}
-                      >
-                        Dashboard
-                      </Button>
-                    )}
                     <Button
                       variant="text"
                       onClick={handleLogout}
