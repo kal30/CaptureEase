@@ -72,6 +72,13 @@ const landingFormButtonStyles = {
   },
 };
 
+const lifelogWordStyles = {
+  color: landingColors.cyanPop,
+  fontWeight: 800,
+  letterSpacing: "-0.03em",
+  whiteSpace: "nowrap",
+};
+
 const HeaderSection = () => {
   const auth = getAuth();
   const [email, setEmail] = useState("");
@@ -168,8 +175,11 @@ const HeaderSection = () => {
               }}
             >
               For years I scrambled to remember what happened before every therapy appointment.
-              Behaviors, triggers, good days, hard days - all buried in phone notes. I built
-              Lifelog so no parent has to do that anymore.
+              Behaviors, triggers, good days, hard days - all buried in phone notes. I built{" "}
+              <Box component="span" sx={lifelogWordStyles}>
+                Lifelog
+              </Box>{" "}
+              so no parent has to do that anymore.
             </Typography>
 
             <Typography

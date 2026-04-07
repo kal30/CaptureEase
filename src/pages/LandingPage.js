@@ -10,8 +10,8 @@ const LandingPage = () => {
   return (
     <Box sx={landingPageStyles}>
       <HeaderSection />
-      <HowItWorksSection />
       <SocialProofSection />
+      <HowItWorksSection />
       <Footer />
     </Box>
   );
