@@ -47,8 +47,8 @@ const SocialProofSection = () => {
               fontWeight: 500,
             }}
           >
-            “Finally something that works for our family - I log in 10 seconds
-            and the therapist already knows by our afternoon session.”
+            “We finally have one place to keep track of what happened, and it
+            helps us walk into therapy prepared.”
           </Typography>
           <Typography
             sx={{

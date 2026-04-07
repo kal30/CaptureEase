@@ -104,20 +104,6 @@ const HeaderSection = () => {
               overflow: "hidden",
             }}
           >
-            <Typography
-              sx={{
-                fontSize: { xs: "0.76rem", md: "0.8rem" },
-                fontWeight: 700,
-                letterSpacing: "0.18em",
-                textTransform: "uppercase",
-                color: landingColors.cyanPop,
-                textAlign: { xs: "center", md: "left" },
-                mb: 1.25,
-              }}
-            >
-              caregiver-first timeline tracking
-            </Typography>
-
             {/* Hero Heading */}
             <Box sx={landingLayout.heroHeading}>
               <Typography
