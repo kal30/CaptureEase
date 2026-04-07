@@ -150,16 +150,16 @@ const CareTeamDisplay = ({
         width: compactMobile ? 22 : 20,
         height: compactMobile ? 22 : 20,
         ml: 0.5,
-        bgcolor: '#ffffff',
-        border: `1px solid ${alpha(theme.palette.primary.main, 0.32)}`,
+        bgcolor: colors.landing.surface,
+        border: `1px solid ${alpha(colors.brand.ink, 0.26)}`,
         "&:hover": {
-          bgcolor: alpha(theme.palette.primary.main, 0.08),
+          bgcolor: colors.landing.sageLight,
           transform: "scale(1.05)",
-          boxShadow: `0 2px 8px ${theme.palette.primary.main}18`,
+          boxShadow: `0 2px 8px ${colors.brand.ink}18`,
         },
       }}
     >
-      <AddIcon sx={{ fontSize: 12, color: theme.palette.primary.main }} />
+      <AddIcon sx={{ fontSize: 12, color: colors.brand.ink }} />
     </IconButton>
   ) : null;
 
@@ -288,7 +288,7 @@ const CareTeamDisplay = ({
       label={t('care_team')}
       icon={
         <HospitalIcon
-          sx={{ color: theme.palette.secondary.main, fontSize: 16 }}
+          sx={{ color: colors.brand.tint, fontSize: 16 }}
         />
       }
       actionButton={inviteButton}

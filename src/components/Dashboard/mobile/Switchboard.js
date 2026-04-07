@@ -2,6 +2,7 @@ import React from 'react';
 import { Avatar, Box, Button, ButtonBase, Typography } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
 import { getChildAccent } from '../shared/childAccent';
+import colors from '../../../assets/theme/colors';
 
 const Switchboard = ({ children = [], onSelectChild, onAddChild }) => (
   <Box
@@ -21,7 +22,7 @@ const Switchboard = ({ children = [], onSelectChild, onAddChild }) => (
         sx={{
           fontWeight: 800,
           fontSize: '1.9rem',
-          color: 'primary.dark',
+          color: colors.brand.navy,
           mb: 1,
         }}
       >
@@ -106,7 +107,7 @@ const Switchboard = ({ children = [], onSelectChild, onAddChild }) => (
 
       <Button
         fullWidth
-        variant="outlined"
+        variant="contained"
         startIcon={<AddIcon />}
         onClick={onAddChild}
         sx={{
@@ -115,6 +116,11 @@ const Switchboard = ({ children = [], onSelectChild, onAddChild }) => (
           textTransform: 'none',
           fontSize: '1rem',
           fontWeight: 700,
+          bgcolor: colors.brand.ink,
+          color: colors.brand.navy,
+          '&:hover': {
+            bgcolor: colors.brand.lightBlue,
+          },
         }}
       >
         Add Child

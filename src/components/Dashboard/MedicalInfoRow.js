@@ -3,6 +3,7 @@ import { Box, IconButton, Collapse } from '@mui/material';
 import Typography from '@mui/material/Typography';
 import { Add as AddIcon, Remove as RemoveIcon } from '@mui/icons-material';
 import AllergyChip, { sortAllergiesByPriority } from '../UI/Allergies';
+import colors from '../../assets/theme/colors';
 
 /**
  * MedicalInfoRow - Compact row of diagnosis and allergies with expand
@@ -28,13 +29,13 @@ const MedicalInfoRow = ({ diagnosis, allergies = [] }) => {
               width: 6, 
               height: 6, 
               borderRadius: '50%', 
-              bgcolor: 'primary.main' 
+              bgcolor: colors.brand.ink 
             }} />
             <Typography 
               variant="caption" 
               sx={{ 
                 fontWeight: 500, 
-                color: 'primary.dark',
+                color: colors.brand.navy,
                 fontSize: '0.75rem'
               }}
             >

@@ -111,14 +111,13 @@ const ChildCardActions = ({
                 textTransform: 'none',
                 fontSize: '0.84rem',
                 fontWeight: 700,
-                color: colors.app.dashboard.quickAction.secondaryText,
+                color: colors.brand.navy,
                 borderColor: colors.app.dashboard.quickAction.secondaryBorder,
-                background: `linear-gradient(135deg, ${colors.app.dashboard.quickAction.secondaryBg} 0%, ${colors.app.cards.shadowPanel} 100%)`,
-                backdropFilter: 'blur(8px)',
+                backgroundColor: colors.landing.surface,
                 boxShadow: `0 10px 24px ${colors.app.cards.shadowPanel}`,
                 '&:hover': {
-                  borderColor: colors.app.dashboard.quickAction.secondaryBorder,
-                  background: `linear-gradient(135deg, ${colors.app.cards.background} 0%, ${colors.app.dashboard.quickAction.secondaryHoverBg} 100%)`,
+                  borderColor: colors.brand.ink,
+                  backgroundColor: colors.landing.sageLight,
                 },
               }}
             >
@@ -167,10 +166,10 @@ const ChildCardActions = ({
                 fontSize: '0.875rem',
                 minWidth: 'auto',
                 borderRadius: 1,
-                background: `linear-gradient(135deg, ${colors.app.timeline.journal} 0%, ${colors.app.timeline.dailyHabit} 100%)`,
-                color: colors.app.cards.background,
+                backgroundColor: colors.brand.tint,
+                color: colors.brand.navy,
                 '&:hover': {
-                  background: `linear-gradient(135deg, ${colors.app.timeline.dailyHabit} 0%, ${colors.app.timeline.therapyNote} 100%)`,
+                  backgroundColor: colors.brand.ice,
                 },
               }}
             >

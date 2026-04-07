@@ -113,7 +113,6 @@ const ChildCardHeader = memo(({
       ? {
           key: 'today',
           label: `${timelineSummary.todayCount} today`,
-          color: 'primary',
           variant: 'filled',
         }
       : null,
@@ -133,7 +132,6 @@ const ChildCardHeader = memo(({
       ? {
           key: 'streak',
           label: `${timelineSummary.activityStreak} day streak`,
-          color: 'success',
           variant: 'outlined',
         }
       : null,
@@ -174,7 +172,7 @@ const ChildCardHeader = memo(({
                   height: 30,
                   bgcolor: colors.app.dashboard.childHeader.switchBg,
                   border: `1px solid ${colors.app.dashboard.childHeader.supportBorder}`,
-                  color: 'primary.main',
+                  color: colors.brand.ink,
                   '&:hover': {
                     bgcolor: colors.app.dashboard.childHeader.switchHoverBg,
                   },
@@ -191,10 +189,10 @@ const ChildCardHeader = memo(({
             userRole={userRole}
             canAddData={canAddData}
             onEditChild={onEditChild}
-              onDeleteChild={onDeleteChild}
-              onInviteTeamMember={onInviteTeamMember}
-              onDailyReport={onDailyReport}
-            />
+            onDeleteChild={onDeleteChild}
+            onInviteTeamMember={onInviteTeamMember}
+            onDailyReport={onDailyReport}
+          />
           </Box>
         ) : (
           <>
@@ -348,20 +346,22 @@ const ChildCardHeader = memo(({
                   <Box />
                 )}
 
-                {metricChips.find((chip) => chip.key === 'streak') && (
+              {metricChips.find((chip) => chip.key === 'streak') && (
                 <Chip
-                    label={metricChips.find((chip) => chip.key === 'streak').label}
-                    size="small"
-                    color="secondary"
-                    variant="outlined"
-                    sx={{
-                      height: 22,
-                      fontSize: '0.72rem',
-                      fontWeight: 700,
-                      flex: '0 0 auto',
-                      ml: 0.5,
-                    }}
-                  />
+                  label={metricChips.find((chip) => chip.key === 'streak').label}
+                  size="small"
+                  variant="outlined"
+                  sx={{
+                    bgcolor: colors.brand.ice,
+                    borderColor: colors.brand.tint,
+                    color: colors.brand.deep,
+                    height: 22,
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
+                    flex: '0 0 auto',
+                    ml: 0.5,
+                  }}
+                />
                 )}
               </Box>
             ) : (
@@ -387,9 +387,23 @@ const ChildCardHeader = memo(({
                         key={chip.key}
                         label={chip.label}
                         size="small"
-                      color={chip.color}
                       variant={chip.variant}
                       sx={{
+                          ...(chip.key === 'today' && {
+                            bgcolor: colors.landing.tealLight,
+                            color: colors.brand.navy,
+                            borderColor: colors.brand.ink,
+                          }),
+                          ...(chip.key === 'week' && {
+                            bgcolor: colors.landing.surface,
+                            color: colors.brand.navy,
+                            borderColor: colors.app.dashboard.childHeader.supportBorder,
+                          }),
+                          ...(chip.key === 'streak' && {
+                            bgcolor: colors.brand.ice,
+                            color: colors.brand.deep,
+                            borderColor: colors.brand.tint,
+                          }),
                           height: { xs: 24, md: 26 },
                           fontSize: { xs: '0.78rem', md: '0.82rem' },
                           ...chip.sx,

@@ -270,24 +270,25 @@ const QuickEntrySection = ({
                 onClick={(e) => handleQuickEntryClick(primaryAction, e)}
                 onMouseEnter={() => handleQuickEntryHover(primaryAction.key)}
                 onMouseLeave={handleQuickEntryLeave}
-                sx={{
-                  minHeight: { xs: 36, md: 42 },
-                  px: { xs: 2, md: 2 },
-                  borderRadius: { xs: '14px', md: '12px' },
-                  textTransform: 'none',
-                  fontWeight: 700,
-                  fontSize: { xs: '0.88rem', md: '0.95rem' },
-                  color: colors.semantic.surface,
-                  background: `linear-gradient(135deg, ${colors.app.dashboard.quickAction.primaryGradientStart} 0%, ${colors.app.dashboard.quickAction.primaryGradientEnd} 100%)`,
-                  boxShadow: (hoveredAction === primaryAction.key || externalHoveredAction === primaryAction.key)
-                    ? `0 8px 18px ${colors.app.dashboard.quickAction.primaryHoverShadow}`
-                    : `0 4px 10px ${colors.app.dashboard.quickAction.primaryShadow}`,
-                  width: '100%',
-                  '&:hover': {
-                    background: `linear-gradient(135deg, ${colors.app.dashboard.quickAction.primaryHoverStart} 0%, ${colors.app.dashboard.quickAction.primaryHoverEnd} 100%)`,
-                    boxShadow: `0 10px 20px ${colors.app.dashboard.quickAction.primaryHoverShadow}`,
-                  },
-                }}
+              sx={{
+                minHeight: { xs: 36, md: 42 },
+                px: { xs: 2, md: 2 },
+                borderRadius: { xs: '14px', md: '12px' },
+                textTransform: 'none',
+                fontWeight: 700,
+                fontSize: { xs: '0.88rem', md: '0.95rem' },
+                color: colors.semantic.surface,
+                backgroundColor: colors.app.dashboard.quickAction.primaryGradientStart,
+                border: `1px solid ${colors.app.dashboard.quickAction.primaryGradientEnd}`,
+                boxShadow: (hoveredAction === primaryAction.key || externalHoveredAction === primaryAction.key)
+                  ? `0 8px 18px ${colors.app.dashboard.quickAction.primaryHoverShadow}`
+                  : `0 4px 10px ${colors.app.dashboard.quickAction.primaryShadow}`,
+                width: '100%',
+                '&:hover': {
+                  backgroundColor: colors.app.dashboard.quickAction.primaryHoverStart,
+                  boxShadow: `0 10px 20px ${colors.app.dashboard.quickAction.primaryHoverShadow}`,
+                },
+              }}
               >
                 {`+ ${primaryAction.label}`}
               </Button>
@@ -304,7 +305,7 @@ const QuickEntrySection = ({
                   borderRadius: { xs: '14px', md: '12px' },
                   border: `1px solid ${colors.app.dashboard.quickAction.secondaryBorder}`,
                   backgroundColor: colors.app.dashboard.quickAction.secondaryBg,
-                  color: colors.app.dashboard.quickAction.secondaryText,
+                  color: colors.brand.ink,
                   '&:hover': {
                     backgroundColor: colors.app.dashboard.quickAction.secondaryHoverBg,
                   },
