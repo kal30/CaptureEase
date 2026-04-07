@@ -317,15 +317,15 @@ const HeaderSection = () => {
             <Box
               sx={{
                 width: "100%",
-                maxWidth: { xs: 380, md: 430, lg: 520, xl: 600 },
+                maxWidth: { xs: 380, md: 460, lg: 620, xl: 700 },
                 zIndex: 1,
               }}
             >
               <Paper
                 sx={{
-                  p: { xs: 2.5, md: 3 },
+                  p: { xs: 2.5, md: 3.5 },
                   borderRadius: "28px",
-                  backgroundColor: landingColors.surfaceTint,
+                  backgroundColor: landingColors.surface,
                   border: `1px solid ${landingColors.borderSoft}`,
                   boxShadow: `0 18px 38px ${landingColors.shadowMedium}`,
                 }}
@@ -364,27 +364,13 @@ const HeaderSection = () => {
                       lifelog in action
                     </Typography>
                   </Box>
-                  <Box
-                    sx={{
-                      px: 1.75,
-                      py: 0.75,
-                      borderRadius: "9999px",
-                      backgroundColor: "rgba(217, 209, 238, 0.55)",
-                      color: landingColors.midNavy,
-                      fontSize: "0.9rem",
-                      fontWeight: 600,
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    Replace with screenshots
-                  </Box>
                 </Box>
 
                 <Box
                   sx={{
                     display: "grid",
                     gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
-                    gap: 1.5,
+                    gap: 1.75,
                   }}
                 >
                   {previewSlots.map((slot) => (
@@ -392,15 +378,15 @@ const HeaderSection = () => {
                       key={slot.title}
                       sx={{
                         border: `2px dashed ${slot.border}`,
-                        borderRadius: "24px",
+                        borderRadius: "26px",
                         backgroundColor: slot.tint,
                         p: 1.5,
                       }}
                     >
                       <Box
                         sx={{
-                          minHeight: 260,
-                          borderRadius: "20px",
+                          minHeight: { xs: 240, sm: 280, md: 320 },
+                          borderRadius: "22px",
                           backgroundColor: landingColors.surfaceTint,
                           display: "flex",
                           alignItems: "center",
