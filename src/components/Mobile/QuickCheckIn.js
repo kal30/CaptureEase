@@ -213,20 +213,21 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
       elevation={0}
       sx={{
         border: '2px solid #cfcfcf',
-        borderRadius: '32px',
+        borderRadius: { xs: '24px', md: '32px' },
         backgroundColor: '#f8f8f8',
         position: 'relative',
         overflow: 'hidden',
       }}
     >
-      <CardContent sx={{ p: { xs: 2, md: 2.25 } }}>
+      <CardContent sx={{ p: { xs: 1.5, sm: 2, md: 2.25 } }}>
         <Box
           sx={{
             display: 'flex',
             alignItems: 'center',
             gap: 1,
-            mb: 1.25,
+            mb: { xs: 1, md: 1.25 },
             px: 0.25,
+            flexWrap: 'wrap',
           }}
         >
           <Avatar
@@ -247,22 +248,40 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
           </Typography>
         </Box>
 
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: { xs: 'flex-start', sm: 'center' },
+            mb: { xs: 1.2, md: 1.5 },
+            gap: 1.25,
+            flexWrap: 'wrap',
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, minWidth: 0 }}>
             <Typography sx={{ fontSize: '1.9rem', lineHeight: 1 }}>
               📝
             </Typography>
-            <Typography sx={{ fontSize: { xs: '1.2rem', md: '1.35rem' }, fontWeight: 800, color: '#33343a', lineHeight: 1.2 }}>
+            <Typography sx={{ fontSize: { xs: '1.12rem', sm: '1.2rem', md: '1.35rem' }, fontWeight: 800, color: '#33343a', lineHeight: 1.2 }}>
               Quick Note for {child.name}
             </Typography>
           </Box>
-          <IconButton onClick={onSkip}>
-            <CloseIcon sx={{ fontSize: 32, color: '#7d7d80' }} />
+          <IconButton onClick={onSkip} sx={{ mt: { xs: -0.5, sm: 0 }, ml: 'auto' }}>
+            <CloseIcon sx={{ fontSize: { xs: 28, md: 32 }, color: '#7d7d80' }} />
           </IconButton>
         </Box>
 
         <Box sx={{ mb: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 0.5, mb: 0.7, flexWrap: 'wrap' }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 0.75,
+              mb: 0.9,
+              flexWrap: 'wrap',
+            }}
+          >
           <Button
               variant="outlined"
               onClick={handleTimePickerOpen}
@@ -270,7 +289,7 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
               endIcon={<ExpandMoreIcon sx={{ fontSize: 18 }} />}
               sx={{
                 minHeight: 32,
-                px: 1,
+                px: 1.1,
                 py: 0.25,
                 borderRadius: '10px',
                 textTransform: 'none',
@@ -290,6 +309,7 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
                 '& .MuiButton-endIcon': {
                   ml: 0.25,
                 },
+                width: { xs: '100%', sm: 'auto' },
               }}
             >
               {formatTimeLabel(selectedTime)}
@@ -431,13 +451,34 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
           </Box>
         </Box>
 
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            alignItems: 'center',
+          }}
+        >
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1.5,
+              width: '100%',
+              flexDirection: { xs: 'column', sm: 'row' },
+              justifyContent: { xs: 'stretch', sm: 'flex-end' },
+            }}
+          >
             <Button
               variant="text"
               onClick={onSkip}
               disabled={saving}
-              sx={{ color: '#b4c8de', fontWeight: 700, fontSize: '1rem', textTransform: 'none' }}
+              sx={{
+                color: '#b4c8de',
+                fontWeight: 700,
+                fontSize: '1rem',
+                textTransform: 'none',
+                width: { xs: '100%', sm: 'auto' },
+              }}
             >
               Cancel
             </Button>
@@ -456,6 +497,7 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
                 fontWeight: 700,
                 fontSize: '1rem',
                 textTransform: 'none',
+                width: { xs: '100%', sm: 'auto' },
                 '&:hover': { bgcolor: noteText.trim() ? '#256628' : '#d8d8dc' },
                 '&.Mui-disabled': {
                   bgcolor: '#e3e3e5',

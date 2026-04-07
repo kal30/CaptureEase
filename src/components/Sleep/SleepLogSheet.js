@@ -320,7 +320,13 @@ const SleepLogSheet = ({ open, onClose, child }) => {
   const footerActions = (
     <>
       <Divider sx={{ my: 3 }} />
-      <Box sx={{ display: 'flex', gap: 1.5 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          gap: 1.5,
+          flexDirection: { xs: 'column', sm: 'row' },
+        }}
+      >
         <Button fullWidth variant="outlined" onClick={onClose} disabled={saving}>
           Cancel
         </Button>
