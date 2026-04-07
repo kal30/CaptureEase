@@ -159,7 +159,7 @@ const Navbar = () => {
                       to="/register"
                       sx={loginButtonStyles()}
                     >
-                      Get Started Free
+                      Get Started
                     </Button>
                   </Box>
                 )

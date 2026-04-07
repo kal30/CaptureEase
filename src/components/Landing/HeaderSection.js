@@ -11,13 +11,71 @@ import {
 } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import { getAuth } from "firebase/auth";
-import { GradientButton } from "../UI";
 import { saveFoundingFamilyEmail } from "../../services/foundingFamilyService";
 import {
   landingLayout,
   landingTypography,
   landingColors,
 } from "../../assets/theme/landingTheme";
+
+const landingPrimaryButtonStyles = {
+  width: { xs: "100%", sm: "auto" },
+  minWidth: { xs: 0, sm: 230 },
+  px: { xs: 3.5, md: 4.5 },
+  py: { xs: 1.35, md: 1.45 },
+  textTransform: "none",
+  borderRadius: "9999px",
+  fontSize: { xs: "1rem", md: "1.05rem" },
+  fontWeight: 700,
+  color: landingColors.deepNavy,
+  backgroundColor: landingColors.cyanPop,
+  boxShadow: `0 10px 22px ${landingColors.shadowHero}`,
+  border: `1px solid ${landingColors.cyanPop}`,
+  "&:hover": {
+    backgroundColor: "#9DD4CD",
+    boxShadow: `0 12px 26px ${landingColors.shadowHeroStrong}`,
+  },
+};
+
+const landingSecondaryButtonStyles = {
+  width: { xs: "100%", sm: "auto" },
+  minWidth: { xs: 0, sm: 210 },
+  px: { xs: 3.5, md: 4.5 },
+  py: { xs: 1.35, md: 1.45 },
+  textTransform: "none",
+  borderRadius: "9999px",
+  fontSize: { xs: "1rem", md: "1.05rem" },
+  fontWeight: 700,
+  color: landingColors.deepNavy,
+  borderColor: landingColors.borderMedium,
+  backgroundColor: landingColors.surface,
+  boxShadow: `0 6px 16px ${landingColors.shadowSoft}`,
+  "&:hover": {
+    borderColor: landingColors.borderFocus,
+    backgroundColor: landingColors.surfaceSoft,
+    boxShadow: `0 8px 20px ${landingColors.shadowMedium}`,
+  },
+};
+
+const landingFormButtonStyles = {
+  width: { xs: "100%", sm: "auto" },
+  whiteSpace: "nowrap",
+  minWidth: { sm: 180 },
+  height: 48,
+  minHeight: 48,
+  px: 3,
+  borderRadius: "9999px",
+  fontWeight: 700,
+  fontSize: "1rem",
+  color: landingColors.deepNavy,
+  backgroundColor: landingColors.cyanPop,
+  border: `1px solid ${landingColors.cyanPop}`,
+  boxShadow: `0 8px 18px ${landingColors.shadowHero}`,
+  "&:hover": {
+    backgroundColor: "#9DD4CD",
+    boxShadow: `0 10px 22px ${landingColors.shadowHeroStrong}`,
+  },
+};
 
 const HeaderSection = () => {
   const auth = getAuth();
@@ -142,49 +200,19 @@ const HeaderSection = () => {
                 maxWidth: { xs: "100%", md: 520 },
               }}
             >
-              <GradientButton
+              <Button
                 component={RouterLink}
                 to={tryLifelogPath}
-                variant="gradient"
-                color="primary"
-                size="large"
-                elevated
-                sx={{
-                  width: { xs: "100%", sm: "auto" },
-                  minWidth: { xs: 0, sm: 220 },
-                  px: { xs: 3.5, md: 4 },
-                  py: { xs: 1.2, md: 1.4 },
-                  textTransform: "none",
-                  borderRadius: "16px",
-                  fontSize: { xs: "1rem", md: "1.05rem" },
-                  boxShadow: `0 10px 22px ${landingColors.shadowHero}`,
-                  backgroundColor: landingColors.cyanPop,
-                }}
+                variant="contained"
+                sx={landingPrimaryButtonStyles}
               >
                 Start Tracking Free
-              </GradientButton>
+              </Button>
               <Button
                 component={RouterLink}
                 to="/#how-it-works"
                 variant="outlined"
-                sx={{
-                  width: { xs: "100%", sm: "auto" },
-                  minWidth: { xs: 0, sm: 190 },
-                  px: { xs: 3.5, md: 4 },
-                  py: { xs: 1.2, md: 1.35 },
-                  textTransform: "none",
-                  borderRadius: "16px",
-                  fontSize: { xs: "1rem", md: "1.05rem" },
-                  fontWeight: 600,
-                  color: landingColors.heroText,
-                  borderColor: landingColors.borderMedium,
-                  backgroundColor: landingColors.surface,
-                  boxShadow: `0 4px 12px ${landingColors.shadowSoft}`,
-                  "&:hover": {
-                    borderColor: landingColors.borderFocus,
-                    backgroundColor: landingColors.surfaceSoft,
-                  },
-                }}
+                sx={landingSecondaryButtonStyles}
               >
                 See How It Works
               </Button>
@@ -263,27 +291,14 @@ const HeaderSection = () => {
                     },
                   }}
                 />
-                <GradientButton
-                  variant="gradient"
-                  color="primary"
-                  size="small"
+                <Button
+                  variant="contained"
                   type="submit"
-                  elevated
                   disabled={isSubmitting}
-                  sx={{
-                    width: { xs: "100%", sm: "auto" },
-                    whiteSpace: "nowrap",
-                    minWidth: { sm: 180 },
-                    height: 48,
-                    minHeight: 48,
-                    px: 2.5,
-                    borderRadius: 0,
-                    fontWeight: 600,
-                    fontSize: "1rem",
-                  }}
+                  sx={landingFormButtonStyles}
                 >
                   {isSubmitting ? "Joining..." : "Add Email"}
-                </GradientButton>
+                </Button>
               </Box>
             </Box>
           </Box>
