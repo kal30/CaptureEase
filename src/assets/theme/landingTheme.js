@@ -37,14 +37,14 @@ export const landingColors = {
 export const landingTypography = {
   // Landing page hero styles
   heroMain: {
-    fontSize: { xs: "2.1rem", sm: "2.4rem", md: "2.9rem", lg: "3.25rem" },
+    fontSize: { xs: "2.1rem", sm: "2.35rem", md: "2.7rem", lg: "3rem" },
     fontFamily: '"Inter", sans-serif',
     fontWeight: 600,
     letterSpacing: "-0.03em",
     textTransform: "none",
     lineHeight: { xs: 1.12, md: 1.08, lg: 1.06 },
     marginBottom: { xs: 0.75, md: 1, lg: 1.1 },
-    maxWidth: { xs: "100%", md: "640px", lg: "640px" },
+    maxWidth: { xs: "100%", md: "700px", lg: "720px" },
     mx: { xs: "auto", md: 0 },
     textAlign: { xs: "center", md: "left" },
   },
@@ -95,11 +95,11 @@ export const landingLayout = {
       mx: "auto",
     },
     leftColumn: {
-      width: { xs: "100%", md: "54%", lg: "53%" },
+      width: { xs: "100%", md: "60%", lg: "58%" },
       paddingRight: { md: 1, lg: 2 },
     },
     rightColumn: {
-      width: { xs: "100%", md: "46%", lg: "47%" },
+      width: { xs: "100%", md: "40%", lg: "42%" },
       marginTop: { xs: 2, md: 0 },
       minHeight: { xs: 280, md: 360, lg: 430, xl: 520 },
     },

@@ -171,7 +171,7 @@ const HeaderSection = () => {
               sx={{
                   ...landingTypography.heroMain,
                   color: landingColors.heroText,
-                  maxWidth: 640,
+                  maxWidth: 740,
                   mx: 0,
                   textAlign: "left",
                 }}
@@ -183,7 +183,7 @@ const HeaderSection = () => {
             <Typography
               sx={{
                 ...landingTypography.heroBody,
-                maxWidth: 600,
+                maxWidth: 700,
                 mt: 2,
                 fontSize: { xs: "0.98rem", md: "1.04rem" },
                 lineHeight: { xs: 1.7, md: 1.8 },
@@ -197,7 +197,7 @@ const HeaderSection = () => {
             <Typography
               sx={{
                 ...landingTypography.heroBody,
-                maxWidth: 600,
+                maxWidth: 700,
                 mt: 1.5,
                 fontSize: { xs: "0.98rem", md: "1.04rem" },
                 lineHeight: { xs: 1.7, md: 1.8 },
@@ -211,7 +211,7 @@ const HeaderSection = () => {
             <Typography
               sx={{
                 ...landingTypography.heroBody,
-                maxWidth: 600,
+                maxWidth: 700,
                 mt: 1.5,
                 fontWeight: 700,
                 fontSize: { xs: "0.98rem", md: "1.04rem" },
@@ -228,7 +228,7 @@ const HeaderSection = () => {
                 justifyContent: { xs: "center", md: "flex-start" },
                 gap: 1.5,
                 width: "100%",
-                maxWidth: { xs: "100%", md: 540 },
+                maxWidth: { xs: "100%", md: 620 },
               }}
             >
               <Button
@@ -265,7 +265,7 @@ const HeaderSection = () => {
             <Box
               sx={{
                 width: "100%",
-                maxWidth: { xs: 560, md: 640, lg: 720 },
+                maxWidth: { xs: 560, md: 560, lg: 600 },
                 zIndex: 1,
               }}
             >
