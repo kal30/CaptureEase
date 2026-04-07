@@ -129,11 +129,11 @@ const HeaderSection = () => {
         <Box
           sx={{
             display: "grid",
-            gridTemplateColumns: { xs: "1fr", md: "minmax(0, 1.02fr) minmax(0, 0.98fr)" },
-            alignItems: { xs: "start", md: "center" },
-            gap: { xs: 4, md: 5 },
+            gridTemplateColumns: { xs: "1fr", md: "1.02fr 0.98fr" },
+            alignItems: "start",
+            gap: { xs: 4, md: 6 },
             width: "100%",
-            maxWidth: 1160,
+            maxWidth: 1280,
             mx: "auto",
             ...landingLayout.heroSection.container,
           }}
@@ -171,7 +171,7 @@ const HeaderSection = () => {
               sx={{
                   ...landingTypography.heroMain,
                   color: landingColors.heroText,
-                  maxWidth: { xs: "100%", md: "28ch", lg: "30ch" },
+                  maxWidth: 640,
                   mx: 0,
                   textAlign: "left",
                 }}
@@ -183,7 +183,7 @@ const HeaderSection = () => {
             <Typography
               sx={{
                 ...landingTypography.heroBody,
-                maxWidth: { xs: "100%", md: 640, lg: 680 },
+                maxWidth: 600,
                 mt: 2,
                 fontSize: { xs: "0.98rem", md: "1.04rem" },
                 lineHeight: { xs: 1.7, md: 1.8 },
@@ -197,7 +197,7 @@ const HeaderSection = () => {
             <Typography
               sx={{
                 ...landingTypography.heroBody,
-                maxWidth: { xs: "100%", md: 640, lg: 680 },
+                maxWidth: 600,
                 mt: 1.5,
                 fontSize: { xs: "0.98rem", md: "1.04rem" },
                 lineHeight: { xs: 1.7, md: 1.8 },
@@ -211,7 +211,7 @@ const HeaderSection = () => {
             <Typography
               sx={{
                 ...landingTypography.heroBody,
-                maxWidth: { xs: "100%", md: 640, lg: 680 },
+                maxWidth: 600,
                 mt: 1.5,
                 fontWeight: 700,
                 fontSize: { xs: "0.98rem", md: "1.04rem" },
@@ -224,12 +224,11 @@ const HeaderSection = () => {
               sx={{
                 mt: { xs: 3, md: 3.5 },
                 display: "flex",
-                flexDirection: { xs: "column", sm: "row" },
+                flexDirection: { xs: "column", md: "row" },
                 justifyContent: { xs: "center", md: "flex-start" },
                 gap: 1.5,
                 width: "100%",
-                maxWidth: { xs: "100%", md: 560 },
-                flexWrap: "wrap",
+                maxWidth: { xs: "100%", md: 540 },
               }}
             >
               <Button
@@ -257,7 +256,7 @@ const HeaderSection = () => {
               ...landingLayout.heroSection.rightColumn,
               position: "relative",
               display: "flex",
-              justifyContent: { xs: "center", md: "center" },
+              justifyContent: { xs: "center", md: "flex-end" },
               alignItems: "center",
               mt: { xs: 1, md: 0 },
               pl: { md: 1, lg: 2 },
@@ -266,7 +265,7 @@ const HeaderSection = () => {
             <Box
               sx={{
                 width: "100%",
-                maxWidth: { xs: 560, md: 560, lg: 640 },
+                maxWidth: { xs: 560, md: 640, lg: 720 },
                 zIndex: 1,
               }}
             >
