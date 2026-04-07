@@ -4,7 +4,6 @@ import {
   Box,
   Button,
   Container,
-  Paper,
   TextField,
   Typography,
 } from "@mui/material";
@@ -12,7 +11,7 @@ import { Link as RouterLink } from "react-router-dom";
 import { getAuth } from "firebase/auth";
 import heroImage from "../../assets/image/landing/heroImage-Lifelog.png";
 import { saveFoundingFamilyEmail } from "../../services/foundingFamilyService";
-import { landingLayout, landingTypography, landingColors } from "../../assets/theme/landingTheme";
+import { landingTypography, landingColors } from "../../assets/theme/landingTheme";
 
 const landingPrimaryButtonStyles = {
   width: { xs: "100%", sm: "auto" },
@@ -231,6 +230,68 @@ const HeaderSection = () => {
                 See How It Works
               </Button>
             </Box>
+
+            <Box
+              component="form"
+              onSubmit={handleFoundingFamilySubmit}
+              sx={{
+                mt: { xs: 3, md: 3.5 },
+                width: "100%",
+                maxWidth: { xs: "100%", md: 620 },
+              }}
+            >
+              <Typography
+                sx={{
+                  fontSize: "0.72rem",
+                  fontWeight: 700,
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase",
+                  color: landingColors.textMuted,
+                  fontFamily: '"Inter", sans-serif',
+                  mb: 1.5,
+                }}
+              >
+                Or join the founding family list
+              </Typography>
+
+              {submitSuccess && <Alert severity="success" sx={{ mb: 1.5, py: 0 }}>{submitSuccess}</Alert>}
+              {submitError && <Alert severity="error" sx={{ mb: 1.5, py: 0 }}>{submitError}</Alert>}
+
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: { xs: "column", sm: "row" },
+                  alignItems: "stretch",
+                  gap: 1,
+                }}
+              >
+                <TextField
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  fullWidth
+                  size="small"
+                  InputProps={{
+                    sx: {
+                      backgroundColor: landingColors.surface,
+                      borderRadius: "12px",
+                      height: 42,
+                      fontSize: "0.9rem",
+                      "& fieldset": { borderColor: landingColors.borderMedium },
+                    },
+                  }}
+                />
+                <Button
+                  variant="contained"
+                  type="submit"
+                  disabled={isSubmitting}
+                  sx={{ ...landingFormButtonStyles, height: 42, minHeight: 42 }}
+                >
+                  {isSubmitting ? "..." : "Join"}
+                </Button>
+              </Box>
+            </Box>
           </Box>
 
           <Box
@@ -257,101 +318,6 @@ const HeaderSection = () => {
           </Box>
         </Box>
 
-        <Paper
-          component="form"
-          onSubmit={handleFoundingFamilySubmit}
-          elevation={0}
-          sx={{
-            mt: { xs: 4, md: 5 },
-            mx: "auto",
-            width: "100%",
-            maxWidth: 760,
-            px: { xs: 2.25, md: 3 },
-            py: { xs: 2.25, md: 2.75 },
-            borderRadius: "24px",
-            border: `1px solid ${landingColors.borderSoft}`,
-            backgroundColor: landingColors.surfaceSoft,
-            boxShadow: `0 10px 28px ${landingColors.shadowSoft}`,
-          }}
-        >
-          <Typography
-            sx={{
-              fontSize: "0.82rem",
-              letterSpacing: "0.14em",
-              textTransform: "uppercase",
-              color: landingColors.textMuted,
-              fontWeight: 700,
-              mb: 0.75,
-              textAlign: "center",
-            }}
-          >
-            Join the founding family
-          </Typography>
-          <Typography
-            sx={{
-              fontSize: { xs: "0.95rem", md: "1rem" },
-              lineHeight: 1.6,
-              color: landingColors.bodyText,
-              mb: 2,
-              maxWidth: 520,
-              mx: "auto",
-              textAlign: "center",
-            }}
-          >
-            Get early access and help shape the calm, caregiver-first version of Lifelog.
-          </Typography>
-          {submitSuccess && <Alert severity="success">{submitSuccess}</Alert>}
-          {submitError && <Alert severity="error">{submitError}</Alert>}
-          <Box
-            sx={{
-              mt: submitSuccess || submitError ? 1.25 : 0,
-              display: "flex",
-              flexDirection: { xs: "column", md: "row" },
-              alignItems: "stretch",
-              gap: 1,
-              maxWidth: 640,
-              mx: "auto",
-            }}
-          >
-            <TextField
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              fullWidth
-              size="small"
-              variant="outlined"
-              InputProps={{
-                sx: {
-                  backgroundColor: landingColors.surface,
-                  borderRadius: "16px",
-                  height: 48,
-                  minHeight: 48,
-                  fontSize: "1rem",
-                  "& fieldset": {
-                    borderRadius: "16px",
-                    borderColor: landingColors.borderMedium,
-                  },
-                  "&:hover fieldset": {
-                    borderColor: landingColors.borderFocus,
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: landingColors.borderActive,
-                    borderWidth: "1px",
-                  },
-                },
-              }}
-            />
-            <Button
-              variant="contained"
-              type="submit"
-              disabled={isSubmitting}
-              sx={landingFormButtonStyles}
-            >
-              {isSubmitting ? "Joining..." : "Add Email"}
-            </Button>
-          </Box>
-        </Paper>
       </Container>
     </Box>
   );
