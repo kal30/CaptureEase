@@ -16,14 +16,14 @@ const PageHeader = ({ title, subtitle, actions }) => {
   return (
     <Box
       sx={{
-        mb: 6,
+        mb: { xs: 3, md: 6 },
         background: `linear-gradient(135deg, ${alpha(
           theme.palette.primary.main,
           0.05
         )} 0%, ${alpha(theme.palette.secondary.main, 0.05)} 100%)`,
-        py: 4,
-        px: 3,
-        borderRadius: theme.spacing(0.5),
+        py: { xs: 3, md: 4 },
+        px: { xs: 2, md: 3 },
+        borderRadius: { xs: 2, md: theme.spacing(0.5) },
         border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
       }}
     >
@@ -39,11 +39,10 @@ const PageHeader = ({ title, subtitle, actions }) => {
         {/* Left: Title and Subtitle */}
         <Box sx={{ display: "flex", alignItems: "center", flex: 1 }}>
           <SparkleIcon
-            sx={{ fontSize: 40, color: theme.palette.primary.main, mr: 2 }}
+            sx={{ fontSize: { xs: 32, md: 40 }, color: theme.palette.primary.main, mr: { xs: 1.25, md: 2 } }}
           />
           <Box>
             <Typography
-              variant="h3"
               sx={{
                 fontWeight: 800,
                 background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
@@ -51,17 +50,18 @@ const PageHeader = ({ title, subtitle, actions }) => {
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
                 textAlign: "left",
+                fontSize: { xs: "1.8rem", sm: "2.2rem", md: "2.75rem" },
+                lineHeight: 1.08,
               }}
             >
               {title}
             </Typography>
             <Typography
-              variant="subtitle1"
               color="text.secondary"
               sx={{
                 fontWeight: 500,
                 textAlign: "left",
-                fontSize: "1.1rem",
+                fontSize: { xs: "0.98rem", md: "1.1rem" },
                 mt: 0.5,
               }}
             >
@@ -79,6 +79,9 @@ const PageHeader = ({ title, subtitle, actions }) => {
               flexDirection: { xs: "column", sm: "row" },
               width: { xs: "100%", md: "auto" },
               alignSelf: { xs: "stretch", md: "flex-end" },
+              "& .MuiButton-root": {
+                width: { xs: "100%", sm: "auto" },
+              },
             }}
           >
             {actions}

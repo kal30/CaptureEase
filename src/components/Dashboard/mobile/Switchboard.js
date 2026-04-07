@@ -41,8 +41,11 @@ const Switchboard = ({ children = [], onSelectChild, onAddChild }) => (
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-          gap: 2,
+          gridTemplateColumns: {
+            xs: '1fr',
+            sm: 'repeat(2, minmax(0, 1fr))',
+          },
+          gap: { xs: 1.5, sm: 2 },
           mb: 4,
         }}
         >
@@ -59,7 +62,7 @@ const Switchboard = ({ children = [], onSelectChild, onAddChild }) => (
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: 1.25,
-                p: 2,
+                p: { xs: 1.75, sm: 2 },
                 borderRadius: 3,
                 border: '1px solid',
                 borderColor: accent.border,
@@ -69,14 +72,14 @@ const Switchboard = ({ children = [], onSelectChild, onAddChild }) => (
                 '&:hover': {
                   boxShadow: '0 14px 28px rgba(15, 23, 42, 0.06)',
                 },
-              }}
-            >
-              <Avatar
-                src={child.profilePhoto}
-                alt={child.name}
-                sx={{
-                  width: 78,
-                  height: 78,
+                }}
+              >
+                <Avatar
+                  src={child.profilePhoto}
+                  alt={child.name}
+                  sx={{
+                  width: { xs: 64, sm: 78 },
+                  height: { xs: 64, sm: 78 },
                   fontSize: '2rem',
                   fontWeight: 700,
                   bgcolor: accent.strong,
@@ -88,7 +91,7 @@ const Switchboard = ({ children = [], onSelectChild, onAddChild }) => (
               <Typography
                 sx={{
                   fontWeight: 700,
-                  fontSize: '1rem',
+                  fontSize: { xs: '0.96rem', sm: '1rem' },
                   lineHeight: 1.2,
                   color: accent.text,
                   textAlign: 'center',
