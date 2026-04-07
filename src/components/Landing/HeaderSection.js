@@ -12,11 +12,7 @@ import { Link as RouterLink } from "react-router-dom";
 import { getAuth } from "firebase/auth";
 import heroImage from "../../assets/image/landing/heroImage-Lifelog.png";
 import { saveFoundingFamilyEmail } from "../../services/foundingFamilyService";
-import {
-  landingLayout,
-  landingTypography,
-  landingColors,
-} from "../../assets/theme/landingTheme";
+import { landingLayout, landingTypography, landingColors } from "../../assets/theme/landingTheme";
 
 const landingPrimaryButtonStyles = {
   width: { xs: "100%", sm: "auto" },
@@ -114,37 +110,19 @@ const HeaderSection = () => {
   const tryLifelogPath = auth.currentUser ? "/dashboard" : "/register";
 
   return (
-    <Box
-      sx={{
-        backgroundColor: "transparent",
-        position: "relative",
-        mt: 0,
-        ...landingLayout.heroSection.padding,
-        display: "flex",
-        alignItems: "center",
-        maxWidth: "100%",
-      }}
-    >
-      <Container maxWidth="xl" sx={{ maxWidth: "100%" }}>
+    <Box sx={{ backgroundColor: "transparent", position: "relative", pt: { xs: 3, md: 5 }, pb: { xs: 4, md: 6 } }}>
+      <Container maxWidth="xl" sx={{ px: { xs: 2.5, md: 4, lg: 6 } }}>
         <Box
           sx={{
             display: "grid",
-            gridTemplateColumns: { xs: "1fr", md: "1.02fr 0.98fr" },
+            gridTemplateColumns: { xs: "1fr", md: "1.2fr 0.8fr" },
             alignItems: "start",
-            gap: { xs: 4, md: 6 },
-            width: "100%",
-            maxWidth: 1280,
+            gap: { xs: 5, md: 8 },
+            maxWidth: 1200,
             mx: "auto",
-            ...landingLayout.heroSection.container,
           }}
         >
-          <Box
-            sx={{
-              ...landingLayout.heroSection.leftColumn,
-              maxWidth: "100%",
-              pr: { md: 1.5, lg: 2.5 },
-            }}
-          >
+          <Box>
             <Box
               sx={{
                 mb: 1.5,
@@ -166,27 +144,28 @@ const HeaderSection = () => {
               lifelog
             </Box>
 
-            <Box sx={{ ...landingLayout.heroHeading, justifyContent: "flex-start" }}>
-              <Typography
+            <Typography
+              component="h1"
               sx={{
-                  ...landingTypography.heroMain,
-                  color: landingColors.heroText,
-                  maxWidth: 740,
-                  mx: 0,
-                  textAlign: "left",
-                }}
-              >
-                I have two nephews with autism. I built the app I always needed.
-              </Typography>
-            </Box>
+                ...landingTypography.heroMain,
+                color: landingColors.heroText,
+                maxWidth: { xs: "100%", md: 700 },
+                textAlign: "left",
+                mx: 0,
+              }}
+            >
+              I have two nephews with autism. I built the app I always needed.
+            </Typography>
 
             <Typography
               sx={{
                 ...landingTypography.heroBody,
-                maxWidth: 700,
+                maxWidth: { xs: "100%", md: 700 },
                 mt: 2,
-                fontSize: { xs: "0.98rem", md: "1.04rem" },
-                lineHeight: { xs: 1.7, md: 1.8 },
+                fontSize: { xs: "1rem", md: "1.05rem" },
+                lineHeight: { xs: 1.75, md: 1.85 },
+                textAlign: "left",
+                mx: 0,
               }}
             >
               For years I scrambled to remember what happened before every therapy appointment.
@@ -197,10 +176,12 @@ const HeaderSection = () => {
             <Typography
               sx={{
                 ...landingTypography.heroBody,
-                maxWidth: 700,
+                maxWidth: { xs: "100%", md: 700 },
                 mt: 1.5,
-                fontSize: { xs: "0.98rem", md: "1.04rem" },
-                lineHeight: { xs: 1.7, md: 1.8 },
+                fontSize: { xs: "1rem", md: "1.05rem" },
+                lineHeight: { xs: 1.75, md: 1.85 },
+                textAlign: "left",
+                mx: 0,
               }}
             >
               Everyone caring for your child sees the same timeline in real time. A caregiver logs
@@ -211,10 +192,12 @@ const HeaderSection = () => {
             <Typography
               sx={{
                 ...landingTypography.heroBody,
-                maxWidth: 700,
+                maxWidth: { xs: "100%", md: 700 },
                 mt: 1.5,
                 fontWeight: 700,
-                fontSize: { xs: "0.98rem", md: "1.04rem" },
+                fontSize: { xs: "1rem", md: "1.05rem" },
+                textAlign: "left",
+                mx: 0,
               }}
             >
               No more "I didn't know that happened."
@@ -222,13 +205,13 @@ const HeaderSection = () => {
 
             <Box
               sx={{
-                mt: { xs: 3, md: 3.5 },
+                mt: { xs: 3, md: 4 },
                 display: "flex",
                 flexDirection: { xs: "column", md: "row" },
-                justifyContent: { xs: "center", md: "flex-start" },
+                justifyContent: "flex-start",
                 gap: 1.5,
                 width: "100%",
-                maxWidth: { xs: "100%", md: 620 },
+                maxWidth: { xs: "100%", md: 580 },
               }}
             >
               <Button
@@ -248,49 +231,29 @@ const HeaderSection = () => {
                 See How It Works
               </Button>
             </Box>
-
           </Box>
 
           <Box
             sx={{
-              ...landingLayout.heroSection.rightColumn,
-              position: "relative",
               display: "flex",
               justifyContent: { xs: "center", md: "flex-end" },
-              alignItems: "center",
-              mt: { xs: 1, md: 0 },
-              pl: { md: 1, lg: 2 },
+              alignItems: "flex-start",
+              pt: { xs: 0, md: 1 },
             }}
           >
             <Box
+              component="img"
+              src={heroImage}
+              alt="Lifelog app preview"
               sx={{
                 width: "100%",
-                maxWidth: { xs: 560, md: 560, lg: 600 },
-                zIndex: 1,
+                maxWidth: { xs: 560, md: 600, lg: 640 },
+                display: "block",
+                borderRadius: "28px",
+                objectFit: "cover",
+                boxShadow: `0 18px 42px ${landingColors.shadowMedium}`,
               }}
-            >
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                <Box
-                  component="img"
-                  src={heroImage}
-                  alt="Lifelog landing hero illustration"
-                  loading="eager"
-                  sx={{
-                    width: "100%",
-                    display: "block",
-                    borderRadius: { xs: "26px", md: "30px" },
-                    objectFit: "cover",
-                    boxShadow: `0 18px 42px ${landingColors.shadowMedium}`,
-                  }}
-                />
-              </Box>
-            </Box>
+            />
           </Box>
         </Box>
 
