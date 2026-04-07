@@ -1,13 +1,17 @@
 {
   "firestore": {
+    "database": "(default)",
+    "location": "nam5",
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
   },
   "hosting": {
-    "//": "Production domain captureez.com / www.captureez.com is served from Firebase Hosting site 'carelog'. See DEPLOYMENT.md.",
-    "site": "carelog",
     "public": "build",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
     "rewrites": [
       {
         "source": "**",
@@ -17,7 +21,6 @@
   },
   "functions": [
     {
-      "source": "functions",
       "codebase": "default",
       "ignore": [
         "node_modules",
@@ -26,7 +29,9 @@
         "firebase-debug.*.log",
         "*.local"
       ],
-      "predeploy": ["npm --prefix \"$RESOURCE_DIR\" run lint"],
+      "predeploy": [
+        "npm --prefix \"$RESOURCE_DIR\" run lint"
+      ],
       "endpoints": {
         "sendInvitationEmail": {
           "platform": "gcfv1"
@@ -34,7 +39,23 @@
         "sendSmsNotification": {
           "platform": "gcfv1"
         }
-      }
+      },
+      "source": "functions"
+    },
+    {
+      "source": "lifelog",
+      "codebase": "lifelog",
+      "disallowLegacyRuntimeConfig": true,
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ],
+      "predeploy": [
+        "npm --prefix \"$RESOURCE_DIR\" run lint"
+      ]
     }
   ]
 }
