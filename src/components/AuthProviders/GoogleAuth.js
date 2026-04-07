@@ -7,7 +7,26 @@ import { handlePostAuthRedirect } from "../../services/auth/navigation";
 import { Box, Button } from "@mui/material";
 import GoogleIcon from "@mui/icons-material/Google"; // Import Google Icon
 
-const GoogleAuth = ({ buttonText }) => {
+const getGoogleAuthErrorMessage = (error) => {
+  switch (error?.code) {
+    case "auth/popup-closed-by-user":
+      return "The Google sign-in window was closed before login finished. Please try again.";
+    case "auth/cancelled-popup-request":
+      return "A Google sign-in request was cancelled. Please try again.";
+    case "auth/popup-blocked":
+      return "Your browser blocked the Google sign-in popup. Please allow popups and try again.";
+    case "auth/unauthorized-domain":
+      return "This domain is not authorized for Google sign-in.";
+    case "auth/configuration-not-found":
+      return "Google sign-in is not enabled for this Firebase project yet.";
+    case "auth/network-request-failed":
+      return "Network error during Google sign-in. Please check your connection and try again.";
+    default:
+      return "Google sign-in could not complete. Please try again.";
+  }
+};
+
+const GoogleAuth = ({ buttonText, onError }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const auth = getAuth();
@@ -50,7 +69,22 @@ const GoogleAuth = ({ buttonText }) => {
       // Use shared post-auth redirect utility
       handlePostAuthRedirect(navigate, location, user);
     } catch (error) {
-      console.error("Error during sign-in", error);
+      const message = getGoogleAuthErrorMessage(error);
+      if (onError) {
+        onError(message);
+      }
+      if (
+        ![
+          "auth/popup-closed-by-user",
+          "auth/cancelled-popup-request",
+          "auth/popup-blocked",
+          "auth/unauthorized-domain",
+          "auth/configuration-not-found",
+          "auth/network-request-failed",
+        ].includes(error?.code)
+      ) {
+        console.error("Error during sign-in", error);
+      }
     }
   };
 

@@ -113,7 +113,7 @@ const Login = () => {
           </Alert>
         )}
         <Box sx={{ width: "100%", mb: 2 }}>
-          <GoogleAuth buttonText="Continue with Google" />
+          <GoogleAuth buttonText="Continue with Google" onError={setError} />
         </Box>
         <Divider sx={{ width: "100%", my: 2 }}>or use email</Divider>
         <Box
