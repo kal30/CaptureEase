@@ -1,6 +1,5 @@
 import React from "react";
 import { Box } from "@mui/material";
-import Expert from "../components/Landing/Expert";
 import Footer from "../components/Landing/Footer";
 import HeaderSection from "../components/Landing/HeaderSection";
 import HowItWorksSection from "../components/Landing/HowItWorksSection";
@@ -13,7 +12,6 @@ const LandingPage = () => {
       <HeaderSection />
       <HowItWorksSection />
       <SocialProofSection />
-      <Expert />
       <Footer />
     </Box>
   );

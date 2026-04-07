@@ -4,7 +4,7 @@ import {
   Box,
   Button,
   Container,
-  Divider,
+  Paper,
   TextField,
   Typography,
 } from "@mui/material";
@@ -130,11 +130,11 @@ const HeaderSection = () => {
         <Box
           sx={{
             display: "grid",
-            gridTemplateColumns: { xs: "1fr", md: "1.02fr 0.98fr" },
+            gridTemplateColumns: { xs: "1fr", md: "minmax(0, 0.94fr) minmax(0, 1.06fr)" },
             alignItems: { xs: "start", md: "center" },
-            gap: { xs: 4, md: 5.5 },
+            gap: { xs: 4, md: 5 },
             width: "100%",
-            maxWidth: 1280,
+            maxWidth: 1160,
             mx: "auto",
             ...landingLayout.heroSection.container,
             overflow: "hidden",
@@ -174,7 +174,7 @@ const HeaderSection = () => {
                 sx={{
                   ...landingTypography.heroMain,
                   color: landingColors.heroText,
-                  maxWidth: 640,
+                  maxWidth: { xs: "100%", md: "16.5ch", lg: "17.5ch" },
                   mx: 0,
                   textAlign: "left",
                 }}
@@ -231,7 +231,7 @@ const HeaderSection = () => {
                 justifyContent: { xs: "center", md: "flex-start" },
                 gap: 1.5,
                 width: "100%",
-                maxWidth: { xs: "100%", md: 540 },
+                maxWidth: { xs: "100%", md: 520 },
               }}
             >
               <Button
@@ -252,43 +252,50 @@ const HeaderSection = () => {
               </Button>
             </Box>
 
-            <Box
+            <Paper
               component="form"
               onSubmit={handleFoundingFamilySubmit}
+              elevation={0}
               sx={{
                 mt: { xs: 4, md: 5 },
-                display: "flex",
-                flexDirection: "column",
-                gap: 1,
                 width: "100%",
-                maxWidth: { xs: "100%", md: 420 },
+                maxWidth: { xs: "100%", md: 520 },
+                px: { xs: 2.25, md: 2.75 },
+                py: { xs: 2.25, md: 2.5 },
+                borderRadius: "24px",
+                border: `1px solid ${landingColors.borderSoft}`,
+                backgroundColor: landingColors.surfaceSoft,
+                boxShadow: `0 10px 28px ${landingColors.shadowSoft}`,
               }}
             >
-              {submitSuccess && <Alert severity="success">{submitSuccess}</Alert>}
-              {submitError && <Alert severity="error">{submitError}</Alert>}
-              <Divider
+              <Typography
                 sx={{
-                  width: "100%",
-                  color: landingColors.textSoft,
-                  "&::before, &::after": {
-                    borderColor: landingColors.borderMedium,
-                  },
+                  fontSize: "0.82rem",
+                  letterSpacing: "0.14em",
+                  textTransform: "uppercase",
+                  color: landingColors.textMuted,
+                  fontWeight: 700,
+                  mb: 0.75,
                 }}
               >
-                <Typography
-                  component="span"
-                  sx={{
-                    fontSize: "0.82rem",
-                    letterSpacing: "0.04em",
-                    textTransform: "uppercase",
-                    color: landingColors.textMuted,
-                  }}
-                >
-                  Or join the founding family list
-                </Typography>
-              </Divider>
+                Join the founding family
+              </Typography>
+              <Typography
+                sx={{
+                  fontSize: { xs: "0.95rem", md: "1rem" },
+                  lineHeight: 1.6,
+                  color: landingColors.bodyText,
+                  mb: 2,
+                  maxWidth: 440,
+                }}
+              >
+                Get early access and help shape the calm, caregiver-first version of Lifelog.
+              </Typography>
+              {submitSuccess && <Alert severity="success">{submitSuccess}</Alert>}
+              {submitError && <Alert severity="error">{submitError}</Alert>}
               <Box
                 sx={{
+                  mt: submitSuccess || submitError ? 1.25 : 0,
                   display: "flex",
                   flexDirection: { xs: "column", md: "row" },
                   alignItems: "stretch",
@@ -305,14 +312,14 @@ const HeaderSection = () => {
                   variant="outlined"
                   InputProps={{
                     sx: {
-                      backgroundColor: landingColors.surfaceTint,
-                      borderRadius: 0,
+                      backgroundColor: landingColors.surface,
+                      borderRadius: "16px",
                       height: 48,
                       minHeight: 48,
                       fontSize: "1rem",
                       "& fieldset": {
-                        borderRadius: 0,
-                        borderColor: landingColors.borderStrong,
+                        borderRadius: "16px",
+                        borderColor: landingColors.borderMedium,
                       },
                       "&:hover fieldset": {
                         borderColor: landingColors.borderFocus,
@@ -333,7 +340,7 @@ const HeaderSection = () => {
                   {isSubmitting ? "Joining..." : "Add Email"}
                 </Button>
               </Box>
-            </Box>
+            </Paper>
           </Box>
 
           <Box
