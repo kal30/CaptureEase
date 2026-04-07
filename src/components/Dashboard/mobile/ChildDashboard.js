@@ -32,6 +32,7 @@ import ChildManagementMenu from '../ChildManagementMenu';
 import { getChildAccent } from '../shared/childAccent';
 import { getChildCareTeam } from '../../../services/childAccessService';
 import { getTrackLogTypes } from '../../../constants/logTypeRegistry';
+import colors from '../../../assets/theme/colors';
 import { useRole } from '../../../contexts/RoleContext';
 import { trackRenderDebug, useMountDebug } from '../../../utils/renderDebug';
 
@@ -260,10 +261,10 @@ const ChildDashboard = ({
           p: isCollapsed ? 1 : { xs: 1.2, sm: 1.75 },
           borderRadius: isCollapsed ? 0 : 1,
           background: isCollapsed
-            ? 'rgba(255,255,255,0.98)'
-            : 'linear-gradient(180deg, rgba(243,246,255,0.98) 0%, rgba(236,241,255,0.94) 100%)',
-          border: isCollapsed ? '1px solid rgba(226, 232, 240, 0.9)' : '1px solid rgba(205, 216, 245, 0.6)',
-          boxShadow: isCollapsed ? '0 4px 14px rgba(15, 23, 42, 0.06)' : '0 12px 24px rgba(129, 140, 248, 0.08)',
+            ? colors.landing.surface
+            : `linear-gradient(180deg, ${colors.landing.surface} 0%, ${colors.landing.sageLight} 100%)`,
+          border: `1px solid ${colors.landing.borderLight}`,
+          boxShadow: isCollapsed ? `0 4px 14px ${colors.landing.shadowSoft}` : `0 12px 24px ${colors.landing.shadowHero}`,
           mb: 1.2,
           overflow: 'hidden',
         }}
@@ -279,13 +280,13 @@ const ChildDashboard = ({
             src={child.profilePhoto}
             alt={child.name}
             onClick={isCollapsed ? handleRevealDashboard : undefined}
-            sx={{
-              width: isCollapsed ? 40 : 92,
-              height: isCollapsed ? 40 : 92,
-              borderRadius: isCollapsed ? '14px' : '26px',
-              boxShadow: '0 10px 22px rgba(15, 23, 42, 0.08)',
-              bgcolor: accent.strong,
-              color: '#fff',
+              sx={{
+                width: isCollapsed ? 40 : 92,
+                height: isCollapsed ? 40 : 92,
+                borderRadius: isCollapsed ? '14px' : '26px',
+                boxShadow: `0 10px 22px ${colors.landing.shadowSoft}`,
+                bgcolor: accent.strong,
+                color: '#fff',
               fontSize: isCollapsed ? '1.05rem' : '2.1rem',
               fontWeight: 800,
               cursor: isCollapsed ? 'pointer' : 'default',
@@ -312,7 +313,7 @@ const ChildDashboard = ({
                 sx={{
                   fontSize: isCollapsed ? '0.98rem' : '1.28rem',
                   fontWeight: 800,
-                  color: 'text.primary',
+                  color: colors.landing.heroText,
                   lineHeight: 1.15,
                 }}
               >
@@ -342,14 +343,14 @@ const ChildDashboard = ({
             }}
           >
             <Chip
-              icon={<WarningAmberRoundedIcon sx={{ fontSize: 16, color: '#B45309 !important' }} />}
+              icon={<WarningAmberRoundedIcon sx={{ fontSize: 16, color: `${colors.brand.deep} !important` }} />}
               label={allergies.length > 0 ? `${allergies.join(', ')} allergy` : 'No allergies listed'}
               sx={{
                 height: 30,
                 borderRadius: 0.35,
-                backgroundColor: 'transparent',
-                color: '#B45309',
-                border: '1px solid rgba(245, 158, 11, 0.16)',
+                backgroundColor: colors.landing.panelSoft,
+                color: colors.brand.deep,
+                border: `1px solid ${colors.landing.borderLight}`,
                 fontWeight: 700,
                 '& .MuiChip-label': { px: 1.05, fontSize: '0.76rem' },
               }}
@@ -362,9 +363,9 @@ const ChildDashboard = ({
                 sx={{
                   height: 30,
                   borderRadius: 0.35,
-                  backgroundColor: 'transparent',
-                  color: '#4338CA',
-                  border: '1px solid rgba(129, 140, 248, 0.16)',
+                  backgroundColor: colors.landing.panelSoft,
+                  color: colors.brand.deep,
+                  border: `1px solid ${colors.landing.borderLight}`,
                   fontWeight: 700,
                   '& .MuiChip-label': { px: 1.05, fontSize: '0.76rem' },
                 }}
@@ -413,14 +414,14 @@ const ChildDashboard = ({
                     minHeight: 34,
                     whiteSpace: 'nowrap',
                     color: careTeamCount === 0 ? 'text.disabled' : accent.strong,
-                    borderColor: careTeamCount === 0 ? 'rgba(148, 163, 184, 0.25)' : 'rgba(37, 99, 235, 0.35)',
-                    backgroundColor: careTeamCount === 0 ? 'rgba(241, 245, 249, 0.85)' : 'rgba(255,255,255,0.96)',
+                    borderColor: careTeamCount === 0 ? colors.landing.borderLight : colors.landing.borderFocus,
+                    backgroundColor: careTeamCount === 0 ? colors.landing.surface : colors.landing.surface,
                     '& .MuiButton-startIcon': {
                       color: careTeamCount === 0 ? 'text.disabled' : accent.strong,
                       mr: 0.45,
                     },
                     '&:hover': {
-                      backgroundColor: careTeamCount === 0 ? 'rgba(241, 245, 249, 0.85)' : 'rgba(239, 246, 255, 0.98)',
+                      backgroundColor: careTeamCount === 0 ? colors.landing.surface : colors.landing.sageLight,
                     },
                   }}
                   aria-label={careTeamCount === 0 ? 'No care team yet' : 'Open child chat'}
@@ -461,12 +462,12 @@ const ChildDashboard = ({
               sx={{
                 width: 26,
                 height: 26,
-                border: '1px solid rgba(148, 163, 184, 0.18)',
-                backgroundColor: 'rgba(255,255,255,0.92)',
-                color: 'text.secondary',
-                boxShadow: '0 4px 10px rgba(15, 23, 42, 0.05)',
+                border: `1px solid ${colors.landing.borderLight}`,
+                backgroundColor: colors.landing.surface,
+                color: colors.landing.bodyText,
+                boxShadow: `0 4px 10px ${colors.landing.shadowSoft}`,
                 '&:hover': {
-                  backgroundColor: '#fff',
+                  backgroundColor: colors.landing.sageLight,
                 },
               }}
             >
@@ -481,9 +482,9 @@ const ChildDashboard = ({
                 mt: 0.5,
                 p: { xs: 0.85, sm: 1 },
                 borderRadius: 1,
-                backgroundColor: 'rgba(255,255,255,0.84)',
-                border: '1px solid rgba(214, 225, 247, 0.88)',
-                boxShadow: '0 6px 14px rgba(129, 140, 248, 0.08)',
+                backgroundColor: colors.landing.surface,
+                border: `1px solid ${colors.landing.borderLight}`,
+                boxShadow: `0 6px 14px ${colors.landing.shadowSoft}`,
               }}
             >
               <Box
@@ -503,9 +504,9 @@ const ChildDashboard = ({
                       px: { xs: 0.5, sm: 0.65 },
                       py: 0.55,
                       borderRadius: 1,
-                      backgroundColor: 'rgba(255,255,255,0.84)',
-                      border: '1px solid rgba(214, 225, 247, 0.88)',
-                      boxShadow: '0 6px 14px rgba(129, 140, 248, 0.08)',
+                      backgroundColor: colors.landing.surface,
+                      border: `1px solid ${colors.landing.borderLight}`,
+                      boxShadow: `0 6px 14px ${colors.landing.shadowSoft}`,
                       display: 'grid',
                       gridTemplateColumns: 'minmax(0, 1fr) auto',
                       alignItems: 'center',
@@ -520,21 +521,21 @@ const ChildDashboard = ({
                         width: 30,
                         height: 30,
                         borderRadius: 1,
-                        bgcolor: 'rgba(250, 204, 21, 0.16)',
-                        border: '1px solid rgba(245, 158, 11, 0.22)',
+                        bgcolor: colors.landing.panelSoft,
+                        border: `1px solid ${colors.landing.borderLight}`,
                         flex: '0 0 auto',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                       }}
                     >
-                      <AutoAwesomeOutlinedIcon sx={{ fontSize: 15, color: '#B45309' }} />
+                      <AutoAwesomeOutlinedIcon sx={{ fontSize: 15, color: colors.brand.deep }} />
                     </Box>
                     <Box sx={{ minWidth: 0 }}>
-                      <Typography sx={{ fontSize: '0.82rem', fontWeight: 800, color: 'text.primary', lineHeight: 1.05 }}>
+                      <Typography sx={{ fontSize: '0.82rem', fontWeight: 800, color: colors.landing.heroText, lineHeight: 1.05 }}>
                         Prep for Therapy
                       </Typography>
-                      <Typography sx={{ fontSize: '0.66rem', color: 'text.secondary', mt: 0.1, lineHeight: 1.15 }}>
+                      <Typography sx={{ fontSize: '0.66rem', color: colors.landing.bodyText, mt: 0.1, lineHeight: 1.15 }}>
                         Review patterns and key moments before your session.
                       </Typography>
                     </Box>
@@ -546,23 +547,23 @@ const ChildDashboard = ({
                         e.stopPropagation();
                         onDailyReport?.(child);
                       }}
-                      sx={{
-                        minWidth: 62,
-                        minHeight: 32,
-                        borderRadius: 1,
-                        px: 1.05,
-                        textTransform: 'none',
-                        fontWeight: 800,
-                        fontSize: '0.76rem',
-                        color: '#fff',
-                        background: 'linear-gradient(135deg, #3D8B68 0%, #2D6E52 100%)',
-                        boxShadow: '0 8px 18px rgba(45, 110, 82, 0.18)',
-                        justifySelf: 'end',
-                        '&:hover': {
-                          background: 'linear-gradient(135deg, #327555 0%, #23533E 100%)',
-                        },
-                      }}
-                    >
+                    sx={{
+                      minWidth: 62,
+                      minHeight: 32,
+                      borderRadius: 1,
+                      px: 1.05,
+                      textTransform: 'none',
+                      fontWeight: 800,
+                      fontSize: '0.76rem',
+                      color: colors.landing.heroText,
+                      background: `linear-gradient(135deg, ${colors.brand.ink} 0%, ${colors.brand.navy} 100%)`,
+                      boxShadow: `0 8px 18px ${colors.landing.shadowHero}`,
+                      justifySelf: 'end',
+                      '&:hover': {
+                        background: `linear-gradient(135deg, ${colors.brand.navy} 0%, ${colors.brand.deep} 100%)`,
+                      },
+                    }}
+                  >
                       Start
                     </Button>
                   </Box>
@@ -583,19 +584,19 @@ const ChildDashboard = ({
                       borderRadius: 1.1,
                       textTransform: 'none',
                       fontWeight: 800,
-                      color: '#0F5132',
-                      background: 'linear-gradient(180deg, rgba(230, 253, 240, 0.98) 0%, rgba(238, 252, 243, 0.92) 100%)',
-                      border: '1px solid rgba(167, 243, 208, 0.8)',
-                      boxShadow: '0 10px 22px rgba(15, 23, 42, 0.05)',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 0.35,
-                      justifyContent: 'center',
+                      color: colors.landing.heroText,
+                      background: `linear-gradient(180deg, ${colors.landing.surface} 0%, ${colors.landing.sageLight} 100%)`,
+                      border: `1px solid ${colors.landing.borderLight}`,
+                        boxShadow: `0 10px 22px ${colors.landing.shadowSoft}`,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 0.35,
+                        justifyContent: 'center',
                       alignItems: 'center',
                       position: 'relative',
                       pb: 1.8,
                       '&:hover': {
-                        background: 'linear-gradient(180deg, rgba(221, 250, 233, 1) 0%, rgba(234, 250, 240, 0.96) 100%)',
+                        background: `linear-gradient(180deg, ${colors.landing.sageLight} 0%, ${colors.landing.panelSoft} 100%)`,
                       },
                     }}
                   >
@@ -605,13 +606,13 @@ const ChildDashboard = ({
                       <Box
                         sx={{
                           position: 'absolute',
-                          left: 0,
-                          right: 0,
-                          bottom: 10,
-                          textAlign: 'center',
-                          fontSize: '0.7rem',
-                          fontWeight: 600,
-                          color: '#6B7280',
+                        left: 0,
+                        right: 0,
+                        bottom: 10,
+                        textAlign: 'center',
+                        fontSize: '0.7rem',
+                        fontWeight: 600,
+                          color: colors.landing.textMuted,
                           lineHeight: 1.1,
                         }}
                       >
@@ -631,16 +632,16 @@ const ChildDashboard = ({
                       borderRadius: 1.1,
                       textTransform: 'none',
                       fontWeight: 800,
-                      color: 'text.primary',
-                      backgroundColor: 'rgba(255,255,255,0.82)',
-                      borderColor: 'rgba(148, 163, 184, 0.22)',
-                      boxShadow: '0 10px 22px rgba(15, 23, 42, 0.05)',
+                      color: colors.landing.heroText,
+                      backgroundColor: colors.landing.surface,
+                      borderColor: colors.landing.borderLight,
+                      boxShadow: `0 10px 22px ${colors.landing.shadowSoft}`,
                       display: 'flex',
                       flexDirection: 'column',
                       gap: 0.45,
                       '&:hover': {
-                        backgroundColor: 'rgba(255,255,255,0.95)',
-                        borderColor: 'rgba(148, 163, 184, 0.34)',
+                        backgroundColor: colors.landing.sageLight,
+                        borderColor: colors.landing.borderMedium,
                       },
                     }}
                   >
@@ -652,9 +653,9 @@ const ChildDashboard = ({
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        border: '1px solid rgba(148, 163, 184, 0.18)',
-                        backgroundColor: 'rgba(248, 250, 252, 0.95)',
-                        color: 'text.secondary',
+                        border: `1px solid ${colors.landing.borderLight}`,
+                        backgroundColor: colors.landing.panelSoft,
+                        color: colors.landing.bodyText,
                       }}
                     >
                       <FileUploadOutlinedIcon sx={{ fontSize: 17 }} />

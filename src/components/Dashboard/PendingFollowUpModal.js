@@ -22,7 +22,7 @@ import {
   Warning as WarningIcon,
   CheckCircle as CheckIcon
 } from '@mui/icons-material';
-import { useTheme } from '@mui/material/styles';
+import colors from '../../assets/theme/colors';
 import { getIncidentsPendingFollowUp, INCIDENT_TYPES } from '../../services/incidentService';
 import { useNotificationBadges } from '../../hooks/useNotificationBadges';
 import { IncidentFollowUpModal } from './Incidents';
@@ -33,7 +33,6 @@ const PendingFollowUpModal = ({
   childId, 
   childName 
 }) => {
-  const theme = useTheme();
   const [selectedIncident, setSelectedIncident] = useState(null);
   const [showFollowUpModal, setShowFollowUpModal] = useState(false);
 
@@ -319,16 +318,16 @@ const PendingFollowUpModal = ({
                     sx={{ 
                       py: 2,
                       px: 3,
-                      borderBottom: '1px solid #bfdbfe',
-                      backgroundColor: '#eff6ff'
+                      borderBottom: `1px solid ${colors.landing.borderLight}`,
+                      backgroundColor: colors.landing.surface
                     }}
                   >
                     <ListItemIcon>
-                      <ScheduleIcon sx={{ color: 'primary.main' }} />
+                      <ScheduleIcon sx={{ color: colors.brand.ink }} />
                     </ListItemIcon>
                     <ListItemText 
                       primary={
-                        <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'primary.dark' }}>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 600, color: colors.brand.deep }}>
                           {upcomingIncidents.length} Upcoming Follow-up{upcomingIncidents.length > 1 ? 's' : ''}
                         </Typography>
                       }
@@ -342,14 +341,14 @@ const PendingFollowUpModal = ({
                       sx={{ 
                         py: 2,
                         px: 3,
-                        backgroundColor: 'white',
+                        backgroundColor: colors.landing.surface,
                         borderRadius: 2,
-                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                        border: '1px solid #f3f4f6',
+                        boxShadow: `0 2px 8px ${colors.landing.shadowSoft}`,
+                        border: `1px solid ${colors.landing.borderLight}`,
                         mb: 1.5,
                         '&:hover': { 
-                          backgroundColor: '#eff6ff',
-                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                          backgroundColor: colors.landing.sageLight,
+                          boxShadow: `0 4px 12px ${colors.landing.shadowMedium}`,
                           transform: 'translateY(-1px)',
                           transition: 'all 0.2s ease-in-out'
                         }

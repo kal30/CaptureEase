@@ -12,7 +12,7 @@ import { Close as CloseIcon } from "@mui/icons-material";
 import Autocomplete, { createFilterOptions } from "@mui/material/Autocomplete";
 import { useTranslation } from 'react-i18next';
 import AllergyChip from "../UI/Allergies";
-import { useTheme } from "@mui/material/styles";
+import colors from "../../assets/theme/colors";
 import {
   getStorage,
   ref,
@@ -28,7 +28,6 @@ import { useAsyncForm } from "../../hooks/useAsyncForm";
 
 const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
   const { t } = useTranslation(['terms', 'common']);
-  const theme = useTheme();
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
   const [photo, setPhoto] = useState(null);
@@ -263,7 +262,7 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
             </Alert>
           )}
           {/* Basic Information Section */}
-          <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: theme.palette.primary.main }}>
+          <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: colors.brand.ink }}>
             Basic Information
           </Typography>
 
@@ -316,9 +315,9 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
                   variant="filled"
                   sx={{
                     mr: 0.5,
-                    backgroundColor: "#c8e6c9",
-                    color: "#000",
-                    "& .MuiChip-deleteIcon": { color: "#2e7d32" },
+                    backgroundColor: colors.landing.sageLight,
+                    color: colors.brand.navy,
+                    "& .MuiChip-deleteIcon": { color: colors.brand.ink },
                   }}
                 />
               )
@@ -344,7 +343,7 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
           {/* Medical & Behavioral Profile Section - Only for Primary/Co-Parents */}
           {canEditMedicalInfo && (
             <Box sx={{ mt: 4, pt: 3, borderTop: 1, borderColor: 'divider' }}>
-              <Typography variant="h6" sx={{ mb: 1, fontWeight: 600, color: theme.palette.primary.main }}>
+              <Typography variant="h6" sx={{ mb: 1, fontWeight: 600, color: colors.brand.deep }}>
                 {t('terms:medical_behavioral_profile')}
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>

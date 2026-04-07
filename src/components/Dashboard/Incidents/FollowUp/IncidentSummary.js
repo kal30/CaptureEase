@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, Typography, Chip, Alert } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import IncidentMediaDisplay from '../Media/IncidentMediaDisplay';
+import colors from '../../../../assets/theme/colors';
 
 const IncidentSummary = ({ 
   incident, 
@@ -31,7 +32,7 @@ const IncidentSummary = ({
       <Chip
         label={incident.remedy}
         sx={{
-          bgcolor: incidentConfig?.color || theme.palette.primary.main,
+          bgcolor: incidentConfig?.color || colors.brand.ink,
           color: 'white',
           mb: 1
         }}

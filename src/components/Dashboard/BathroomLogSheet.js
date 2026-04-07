@@ -15,6 +15,7 @@ import LogFormShell from '../UI/LogFormShell';
 import useChildName from '../../hooks/useChildName';
 import { auth, db } from '../../services/firebase';
 import { BATHROOM_SCALE } from '../../constants/habitTypes';
+import colors from '../../assets/theme/colors';
 
 const pad = (n) => String(n).padStart(2, '0');
 
@@ -247,7 +248,7 @@ const BathroomLogSheet = ({ open, onClose, child }) => {
             sx={{
               bgcolor: selectedConsistency?.color
                 ? `${selectedConsistency.color}18`
-                : 'primary.light',
+                : colors.landing.sageLight,
               borderRadius: 2,
               p: 2,
               mt: 3,
@@ -258,7 +259,7 @@ const BathroomLogSheet = ({ open, onClose, child }) => {
               variant="body2"
               sx={{
                 fontWeight: 800,
-                color: selectedConsistency?.color || 'primary.dark',
+                color: selectedConsistency?.color || colors.brand.deep,
               }}
             >
               {selectedConsistency ? selectedConsistency.label : 'Select a consistency level'}

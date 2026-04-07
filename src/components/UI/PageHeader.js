@@ -17,15 +17,19 @@ const PageHeader = ({ title, subtitle, actions }) => {
   return (
     <Box
       sx={{
-        mb: { xs: 3, md: 6 },
+        mb: { xs: 2.5, md: 5 },
+        width: '100%',
+        maxWidth: 1200,
+        mx: 'auto',
         background: `linear-gradient(135deg, ${alpha(
           colors.landing.pageBackground,
           0.98
         )} 0%, ${alpha(colors.landing.panelSoft, 0.92)} 100%)`,
-        py: { xs: 3, md: 4 },
-        px: { xs: 2, md: 3 },
-        borderRadius: { xs: 2, md: theme.spacing(0.5) },
+        py: { xs: 2.5, md: 3.5 },
+        px: { xs: 1.5, sm: 2.5, md: 3 },
+        borderRadius: { xs: 2, md: 3 },
         border: `1px solid ${alpha(colors.landing.borderLight, 0.9)}`,
+        boxShadow: `0 10px 24px ${colors.landing.shadowSoft}`,
       }}
     >
       <Box
@@ -40,19 +44,17 @@ const PageHeader = ({ title, subtitle, actions }) => {
         {/* Left: Title and Subtitle */}
         <Box sx={{ display: "flex", alignItems: "center", flex: 1 }}>
           <SparkleIcon
-            sx={{ fontSize: { xs: 32, md: 40 }, color: colors.brand.ink, mr: { xs: 1.25, md: 2 } }}
+            sx={{ fontSize: { xs: 28, md: 38 }, color: colors.brand.ink, mr: { xs: 1, md: 1.75 } }}
           />
           <Box>
             <Typography
               sx={{
                 fontWeight: 800,
-                background: `linear-gradient(135deg, ${colors.landing.heroText} 0%, ${colors.brand.deep} 100%)`,
-                backgroundClip: "text",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
+                color: colors.landing.heroText,
                 textAlign: "left",
-                fontSize: { xs: "1.8rem", sm: "2.2rem", md: "2.75rem" },
-                lineHeight: 1.08,
+                fontSize: { xs: "1.45rem", sm: "1.9rem", md: "2.45rem" },
+                lineHeight: 1.12,
+                letterSpacing: "-0.03em",
               }}
             >
               {title}
@@ -62,8 +64,10 @@ const PageHeader = ({ title, subtitle, actions }) => {
               sx={{
                 fontWeight: 500,
                 textAlign: "left",
-                fontSize: { xs: "0.98rem", md: "1.1rem" },
+                fontSize: { xs: "0.92rem", md: "1.02rem" },
                 mt: 0.5,
+                lineHeight: 1.55,
+                maxWidth: 720,
               }}
             >
               {subtitle}

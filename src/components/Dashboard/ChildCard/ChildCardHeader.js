@@ -170,11 +170,11 @@ const ChildCardHeader = memo(({
                 sx={{
                   width: 30,
                   height: 30,
-                  bgcolor: colors.app.dashboard.childHeader.switchBg,
-                  border: `1px solid ${colors.app.dashboard.childHeader.supportBorder}`,
+                  bgcolor: colors.landing.surface,
+                  border: `1px solid ${colors.landing.borderLight}`,
                   color: colors.brand.ink,
                   '&:hover': {
-                    bgcolor: colors.app.dashboard.childHeader.switchHoverBg,
+                    bgcolor: colors.landing.sageLight,
                   },
                 }}
                 aria-label="Open child chat"
@@ -230,11 +230,11 @@ const ChildCardHeader = memo(({
                         sx={{
                           width: 32,
                           height: 32,
-                          bgcolor: careTeamCount === 0 ? 'rgba(247, 251, 249, 0.95)' : colors.app.dashboard.childHeader.switchBg,
-                          border: `1px solid ${colors.app.dashboard.childHeader.supportBorder}`,
+                          bgcolor: colors.landing.surface,
+                          border: `1px solid ${colors.landing.borderLight}`,
                           color: careTeamCount === 0 ? 'text.disabled' : colors.brand.ink,
                           '&:hover': {
-                            bgcolor: careTeamCount === 0 ? 'rgba(247, 251, 249, 0.95)' : colors.app.dashboard.childHeader.switchHoverBg,
+                            bgcolor: careTeamCount === 0 ? colors.landing.surface : colors.landing.sageLight,
                           },
                         }}
                         aria-label={careTeamCount === 0 ? 'No care team yet' : 'Open child chat'}
@@ -397,7 +397,7 @@ const ChildCardHeader = memo(({
                           ...(chip.key === 'week' && {
                             bgcolor: colors.landing.surface,
                             color: colors.brand.navy,
-                            borderColor: colors.app.dashboard.childHeader.supportBorder,
+                            borderColor: colors.landing.borderLight,
                           }),
                           ...(chip.key === 'streak' && {
                             bgcolor: colors.brand.ice,

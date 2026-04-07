@@ -7,7 +7,6 @@ import {
   Button,
   Stack,
 } from '@mui/material';
-import { useTheme } from '@mui/material/styles'; // Import useTheme
 import {
   SentimentVeryDissatisfied,
   SentimentDissatisfied,
@@ -16,6 +15,7 @@ import {
   SentimentVerySatisfied,
 } from '@mui/icons-material';
 import { logMood } from '../../services/moodService';
+import colors from '../../assets/theme/colors';
 
 const style = {
   position: 'absolute',
@@ -24,7 +24,7 @@ const style = {
   transform: 'translate(-50%, -50%)',
   width: 400,
   bgcolor: 'background.paper',
-  border: '2px solid #000',
+  border: `2px solid ${colors.landing.borderLight}`,
   boxShadow: 24,
   p: 4,
 };
@@ -38,7 +38,6 @@ const moods = [
 ];
 
 const LogMoodModal = ({ open, onClose, child }) => {
-  const theme = useTheme(); // Get the theme object
   const [selectedMood, setSelectedMood] = useState(null);
 
   const handleMoodSelect = (mood) => {
@@ -63,10 +62,10 @@ const LogMoodModal = ({ open, onClose, child }) => {
             <IconButton 
               key={mood.label} 
               onClick={() => handleMoodSelect(mood)}
-              sx={{ color: selectedMood === mood.label ? theme.palette.primary.main : 'action.active' }}
-            >
-              {mood.icon}
-            </IconButton>
+            sx={{ color: selectedMood === mood.label ? colors.brand.ink : 'action.active' }}
+          >
+            {mood.icon}
+          </IconButton>
           ))}
         </Stack>
         {selectedMood && (
@@ -74,7 +73,7 @@ const LogMoodModal = ({ open, onClose, child }) => {
             Selected: {selectedMood}
           </Typography>
         )}
-        <Button variant="contained" color="primary" onClick={handleSubmit} disabled={!selectedMood} sx={{ mt: 2 }}>
+        <Button variant="contained" onClick={handleSubmit} disabled={!selectedMood} sx={{ mt: 2, bgcolor: colors.brand.ink, color: colors.landing.heroText, '&:hover': { bgcolor: colors.brand.navy } }}>
           Log Mood
         </Button>
       </Box>

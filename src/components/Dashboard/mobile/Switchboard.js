@@ -12,18 +12,31 @@ const Switchboard = ({ children = [], onSelectChild, onAddChild }) => (
       flexDirection: 'column',
       justifyContent: 'center',
       alignItems: 'center',
-      px: 2,
-      py: 4,
+      px: { xs: 1.25, sm: 2 },
+      py: { xs: 2.5, sm: 4 },
     }}
   >
-    <Box sx={{ width: '100%', maxWidth: 440, textAlign: 'center' }}>
+    <Box
+      sx={{
+        width: '100%',
+        maxWidth: 540,
+        textAlign: 'center',
+        background: `linear-gradient(180deg, ${colors.landing.surface} 0%, ${colors.landing.sageLight} 100%)`,
+        border: `1px solid ${colors.landing.borderLight}`,
+        borderRadius: { xs: 3, md: 4 },
+        boxShadow: `0 14px 32px ${colors.landing.shadowSoft}`,
+        px: { xs: 1.5, sm: 2.5, md: 3 },
+        py: { xs: 2.5, sm: 3.25, md: 4 },
+      }}
+    >
       <Typography
         variant="h4"
         sx={{
           fontWeight: 800,
-          fontSize: '1.9rem',
-          color: colors.brand.navy,
-          mb: 1,
+          fontSize: { xs: '1.55rem', sm: '1.8rem' },
+          color: colors.landing.heroText,
+          mb: 0.75,
+          letterSpacing: '-0.03em',
         }}
       >
         Choose a Profile
@@ -31,9 +44,10 @@ const Switchboard = ({ children = [], onSelectChild, onAddChild }) => (
       <Typography
         variant="body1"
         sx={{
-          color: 'text.secondary',
-          fontSize: '1rem',
-          mb: 4,
+          color: colors.landing.bodyText,
+          fontSize: { xs: '0.95rem', sm: '1rem' },
+          lineHeight: 1.6,
+          mb: { xs: 2.5, sm: 3.5 },
         }}
       >
         Select who you&apos;re logging for.
@@ -46,8 +60,8 @@ const Switchboard = ({ children = [], onSelectChild, onAddChild }) => (
             xs: '1fr',
             sm: 'repeat(2, minmax(0, 1fr))',
           },
-          gap: { xs: 1.5, sm: 2 },
-          mb: 4,
+          gap: { xs: 1.2, sm: 1.75 },
+          mb: { xs: 2.5, sm: 3.5 },
         }}
         >
         {children.map((child) => {
@@ -62,16 +76,16 @@ const Switchboard = ({ children = [], onSelectChild, onAddChild }) => (
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: 1.25,
-                p: { xs: 1.75, sm: 2 },
+                gap: 1,
+                p: { xs: 1.5, sm: 1.9 },
                 borderRadius: 3,
                 border: '1px solid',
                 borderColor: accent.border,
                 bgcolor: accent.surface,
-                boxShadow: '0 10px 22px rgba(15, 23, 42, 0.04)',
+                boxShadow: `0 10px 22px ${colors.landing.shadowSoft}`,
                 transition: 'box-shadow 0.18s ease, border-color 0.18s ease',
                 '&:hover': {
-                  boxShadow: '0 14px 28px rgba(15, 23, 42, 0.06)',
+                  boxShadow: `0 14px 28px ${colors.landing.shadowMedium}`,
                 },
                 }}
               >
@@ -79,12 +93,12 @@ const Switchboard = ({ children = [], onSelectChild, onAddChild }) => (
                   src={child.profilePhoto}
                   alt={child.name}
                   sx={{
-                  width: { xs: 64, sm: 78 },
-                  height: { xs: 64, sm: 78 },
+                  width: { xs: 60, sm: 76 },
+                  height: { xs: 60, sm: 76 },
                   fontSize: '2rem',
                   fontWeight: 700,
                   bgcolor: accent.strong,
-                  boxShadow: `0 0 0 5px ${accent.border}`,
+                  boxShadow: `0 0 0 4px ${accent.border}`,
                 }}
               >
                 {!child.profilePhoto && child.name?.[0]?.toUpperCase()}
@@ -111,15 +125,16 @@ const Switchboard = ({ children = [], onSelectChild, onAddChild }) => (
         startIcon={<AddIcon />}
         onClick={onAddChild}
         sx={{
-          py: 1.3,
+          py: 1.25,
           borderRadius: 2,
           textTransform: 'none',
           fontSize: '1rem',
           fontWeight: 700,
           bgcolor: colors.brand.ink,
-          color: colors.brand.navy,
+          color: colors.landing.heroText,
+          boxShadow: `0 10px 24px ${colors.landing.shadowHero}`,
           '&:hover': {
-            bgcolor: colors.brand.lightBlue,
+            bgcolor: colors.brand.navy,
           },
         }}
       >

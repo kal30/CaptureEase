@@ -59,8 +59,8 @@ const QuickEntrySection = ({
       emoji: '＋',
       label: 'Log Something',
       description: 'Quick note popup',
-      color: '#4caf50', // Green
-      bgColor: '#e8f5e9',
+      color: colors.brand.ink,
+      bgColor: colors.landing.sageLight,
       type: 'input',
       shape: 'button'
     },

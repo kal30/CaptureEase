@@ -45,11 +45,12 @@ import { DashboardViewProvider } from "../components/Dashboard/shared/DashboardV
 import RenderDebugOverlay from "../components/Dashboard/shared/RenderDebugOverlay";
 import InstallPromptBanner from "../components/UI/InstallPromptBanner";
 import { trackRenderDebug, useMountDebug } from "../utils/renderDebug";
+import colors from "../assets/theme/colors";
 
 const PanelDashboard = () => {
   const theme = useTheme();
-  const isDesktop = useMediaQuery(theme.breakpoints.up('xl'));
-  const isMobile = !isDesktop;
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isDesktop = !isMobile;
   const hook = usePanelDashboard({ activeChildOnly: isMobile });
   const actionGroups = getActionGroups(hook.theme);
   const pwaInstallPrompt = usePWAInstallPrompt();
@@ -168,7 +169,7 @@ const PanelDashboard = () => {
                 size={60}
                 thickness={4}
                 sx={{
-                  color: 'primary.main',
+                  color: colors.brand.ink,
                   '& .MuiCircularProgress-circle': {
                     strokeLinecap: 'round',
                   },

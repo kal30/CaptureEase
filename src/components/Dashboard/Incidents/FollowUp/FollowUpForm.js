@@ -1,7 +1,7 @@
 import React from 'react';
 import { DialogActions, TextField, Button, CircularProgress } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
 import { EFFECTIVENESS_LEVELS } from '../../../../services/incidentService';
+import colors from '../../../../assets/theme/colors';
 
 const FollowUpForm = ({ 
   followUpNotes, 
@@ -12,8 +12,6 @@ const FollowUpForm = ({
   onClose,
   onResolveIncident
 }) => {
-  const theme = useTheme();
-
   return (
     <>
       <TextField
@@ -38,11 +36,11 @@ const FollowUpForm = ({
           onClick={onResolveIncident}
           disabled={loading}
           sx={{
-            borderColor: '#4CAF50',
-            color: '#4CAF50',
+            borderColor: colors.semantic.success,
+            color: colors.semantic.success,
             '&:hover': {
-              borderColor: '#4CAF50',
-              bgcolor: 'rgba(76, 175, 80, 0.1)',
+              borderColor: colors.semantic.success,
+              bgcolor: colors.landing.sageLight,
             },
           }}
         >
@@ -57,11 +55,11 @@ const FollowUpForm = ({
           sx={{
             bgcolor: effectiveness ? EFFECTIVENESS_LEVELS[Object.keys(EFFECTIVENESS_LEVELS).find(
               k => EFFECTIVENESS_LEVELS[k].value === effectiveness
-            )]?.color : theme.palette.primary.main,
+            )]?.color : colors.brand.ink,
             '&:hover': {
               bgcolor: effectiveness ? EFFECTIVENESS_LEVELS[Object.keys(EFFECTIVENESS_LEVELS).find(
-                k => EFFECTIVENESS_LEVELS[k].value === effectiveness
-              )]?.color : theme.palette.primary.dark,
+              k => EFFECTIVENESS_LEVELS[k].value === effectiveness
+              )]?.color : colors.brand.navy,
               filter: 'brightness(0.9)',
             },
           }}

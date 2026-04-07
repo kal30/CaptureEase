@@ -82,8 +82,8 @@ const PatternSuggestionModal = ({
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          bgcolor: theme.palette.primary.main,
-          color: 'white',
+          bgcolor: theme.palette.secondary.main,
+          color: theme.palette.text.primary,
           py: 2,
         }}
       >
@@ -98,7 +98,7 @@ const PatternSuggestionModal = ({
             </Typography>
           </Box>
         </Box>
-        <IconButton onClick={handleClose} sx={{ color: 'white' }}>
+        <IconButton onClick={handleClose} sx={{ color: theme.palette.text.primary }}>
           <CloseIcon />
         </IconButton>
       </DialogTitle>
@@ -119,17 +119,17 @@ const PatternSuggestionModal = ({
               key={index}
               sx={{
                 border: selectedSuggestions.has(index) 
-                  ? `2px solid ${theme.palette.primary.main}` 
+                  ? `2px solid ${theme.palette.secondary.main}` 
                   : '1px solid #e0e0e0',
                 borderRadius: 2,
                 mb: 2,
                 bgcolor: selectedSuggestions.has(index) 
-                  ? `${theme.palette.primary.main}08` 
+                  ? `${theme.palette.secondary.main}10` 
                   : 'transparent',
                 cursor: 'pointer',
                 '&:hover': {
                   bgcolor: selectedSuggestions.has(index) 
-                    ? `${theme.palette.primary.main}12` 
+                    ? `${theme.palette.secondary.main}18` 
                     : '#f5f5f5',
                 },
               }}
@@ -170,10 +170,17 @@ const PatternSuggestionModal = ({
                     e.stopPropagation();
                     handleSuggestionToggle(index);
                   }}
-                  sx={{
-                    bgcolor: selectedSuggestions.has(index) ? theme.palette.primary.main : 'transparent',
-                  }}
-                >
+                      sx={{
+                        bgcolor: selectedSuggestions.has(index) ? theme.palette.secondary.main : 'transparent',
+                        color: selectedSuggestions.has(index) ? theme.palette.text.primary : theme.palette.secondary.main,
+                        borderColor: theme.palette.secondary.main,
+                        '&:hover': {
+                          bgcolor: selectedSuggestions.has(index)
+                            ? theme.palette.secondary.dark
+                            : `${theme.palette.secondary.main}10`,
+                        },
+                      }}
+                    >
                   {selectedSuggestions.has(index) ? 'Selected' : 'Add'}
                 </Button>
               </ListItemSecondaryAction>

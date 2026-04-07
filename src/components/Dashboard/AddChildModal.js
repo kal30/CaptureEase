@@ -16,6 +16,7 @@ import { addDoc, collection } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { db } from "../../services/firebase";
 import ChildPhotoUploader from "./ChildPhotoUploader";
+import colors from "../../assets/theme/colors";
 import {
   ThemeCard,
   EnhancedLoadingButton,
@@ -287,9 +288,9 @@ const AddChildModal = ({ open, onClose, onSuccess }) => {
                         variant="filled"
                         sx={{
                           mr: 0.5,
-                          backgroundColor: "#c8e6c9",
-                          color: "#000",
-                          "& .MuiChip-deleteIcon": { color: "#2e7d32" },
+                          backgroundColor: colors.landing.sageLight,
+                          color: colors.brand.navy,
+                          "& .MuiChip-deleteIcon": { color: colors.brand.ink },
                         }}
                       />
                     )
