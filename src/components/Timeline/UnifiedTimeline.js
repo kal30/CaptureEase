@@ -503,6 +503,8 @@ const UnifiedTimeline = ({
           onFiltersChange={onFiltersChange}
           selectedDate={selectedDate}
           summary={summary}
+          compact
+          mobileLayout={mobileTimeLayout}
         />
       )}
 
@@ -510,15 +512,23 @@ const UnifiedTimeline = ({
       {showDaySummary && summary && visibleEntries.length > 0 && (
         <Box
           sx={{
-            mb: 2,
-            p: 2,
+            mb: { xs: 1.5, md: 2 },
+            p: { xs: 1.5, md: 2 },
             bgcolor: "background.default",
-            borderRadius: 0.5,
+            borderRadius: { xs: 0.35, md: 0.5 },
             border: "1px solid",
             borderColor: "divider",
           }}
         >
-          <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mb: 1 }}>
+          <Typography
+            gutterBottom
+            sx={{
+              fontWeight: 700,
+              mb: 1,
+              fontSize: { xs: '1rem', md: '1.25rem' },
+              lineHeight: 1.25,
+            }}
+          >
             {selectedDate.toLocaleDateString('en-US', { 
               weekday: 'long', 
               month: 'long', 
@@ -661,8 +671,8 @@ const UnifiedTimeline = ({
             sx={{
               minHeight: mobileTimelineMinHeight,
               textAlign: "center",
-              py: 2.25,
-              px: 2,
+              py: { xs: 1.75, md: 2.25 },
+              px: { xs: 1.5, md: 2 },
               borderRadius: 0.35,
               cursor: onEmptyStateClick ? "pointer" : "default",
               transition: "background-color 0.2s ease, box-shadow 0.2s ease",
@@ -715,6 +725,7 @@ const UnifiedTimeline = ({
             sx={{
               mt: 2,
               minHeight: mobileTimelineMinHeight,
+              px: { xs: 0, md: 0.5 },
               backgroundColor: colors.app.cards.background,
             }}
           >
@@ -750,9 +761,9 @@ const UnifiedTimeline = ({
                     aria-label={`${presentation.entryLabel} at ${timeString}`}
                     sx={{
                       display: 'grid',
-                      gridTemplateColumns: '26px minmax(0, 1fr)',
+                      gridTemplateColumns: { xs: '22px minmax(0, 1fr)', md: '26px minmax(0, 1fr)' },
                       alignItems: 'start',
-                      columnGap: 0.9,
+                      columnGap: { xs: 0.65, md: 0.9 },
                       position: 'relative',
                       backgroundColor: colors.app.cards.background,
                     }}
@@ -804,15 +815,15 @@ const UnifiedTimeline = ({
                     </Box>
 
                     <Box
-                      sx={{
-                        px: 1.1,
-                        py: 1.05,
-                        backgroundColor: colors.app.cards.background,
-                        border: `1px solid ${colors.app.cards.border}`,
-                        borderRadius: 0.7,
-                        boxShadow: `0 1px 2px ${colors.app.cards.shadowSoft}`,
-                        display: 'flex',
-                        flexDirection: 'column',
+                        sx={{
+                          px: 1.1,
+                          py: 1.05,
+                          backgroundColor: colors.app.cards.background,
+                          border: `1px solid ${colors.app.cards.border}`,
+                          borderRadius: { xs: 0.5, md: 0.7 },
+                          boxShadow: `0 1px 2px ${colors.app.cards.shadowSoft}`,
+                          display: 'flex',
+                          flexDirection: 'column',
                         gap: 0.85,
                       }}
                       >
@@ -942,12 +953,12 @@ const UnifiedTimeline = ({
                       ) : null}
 
                       {mobileAttachment && !isEditingMobileEntry ? (
-                        <Box
-                          sx={{
-                            width: { xs: 148, md: 176 },
-                            maxWidth: '100%',
-                            borderRadius: 1,
-                            overflow: 'hidden',
+                            <Box
+                              sx={{
+                                width: { xs: 136, md: 176 },
+                                maxWidth: '100%',
+                                borderRadius: 1,
+                                overflow: 'hidden',
                             border: `1px solid ${colors.app.cards.border}`,
                             backgroundColor: colors.app.cards.shadowPanel,
                           }}
@@ -960,7 +971,7 @@ const UnifiedTimeline = ({
                               sx={{
                                 display: 'block',
                                 width: '100%',
-                                height: { xs: 110, md: 132 },
+                                height: { xs: 102, md: 132 },
                                 objectFit: 'cover',
                                 bgcolor: colors.app.text.darkNeutral,
                               }}
@@ -977,7 +988,7 @@ const UnifiedTimeline = ({
                               sx={{
                                 display: 'block',
                                 width: '100%',
-                                height: { xs: 110, md: 132 },
+                                height: { xs: 102, md: 132 },
                                 objectFit: 'cover',
                               }}
                               loading="lazy"

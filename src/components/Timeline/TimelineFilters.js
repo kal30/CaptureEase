@@ -174,7 +174,7 @@ const TimelineFilters = ({
               overscrollBehaviorX: 'contain',
               scrollSnapType: useCompactMobileLayout ? 'x proximity' : 'none',
               pb: useCompactMobileLayout ? 0.25 : 0,
-              pr: 0,
+              pr: useCompactMobileLayout ? 0.5 : 0,
               position: 'static',
               backgroundColor: 'transparent',
               scrollbarWidth: 'none',
@@ -254,12 +254,12 @@ const TimelineFilters = ({
                 }
               }}
             />
-          ) : (
-            <Button
-              startIcon={<SearchIcon sx={{ fontSize: 16 }} />}
-              onClick={() => setSearchExpanded(true)}
-              variant="outlined"
-              sx={{
+              ) : (
+                <Button
+                  startIcon={<SearchIcon sx={{ fontSize: 16 }} />}
+                  onClick={() => setSearchExpanded(true)}
+                  variant="outlined"
+                  sx={{
                 height: mobileControlHeight,
                 px: 1.2,
                 pl: 1.2,
@@ -354,21 +354,21 @@ const TimelineFilters = ({
           </>
         )}
 
-        <Button
-          endIcon={<ArrowDropDownIcon />}
-          onClick={handleCategoryMenuOpen}
-          variant={selectedCategoryType || importantMomentsSelected ? 'contained' : 'outlined'}
-          color={selectedCategoryType || importantMomentsSelected ? 'primary' : 'inherit'}
-          sx={{
+              <Button
+              endIcon={<ArrowDropDownIcon />}
+              onClick={handleCategoryMenuOpen}
+              variant={selectedCategoryType || importantMomentsSelected ? 'contained' : 'outlined'}
+              color={selectedCategoryType || importantMomentsSelected ? 'primary' : 'inherit'}
+              sx={{
             fontSize: useCompactMobileLayout ? '0.78rem' : '0.7rem',
             height: useCompactMobileLayout ? mobileControlHeight : 24,
             flex: '0 0 auto',
             px: useCompactMobileLayout ? 1.2 : 1,
             minWidth: 'auto',
-              borderRadius: useCompactMobileLayout ? 0.25 : undefined,
-            textTransform: 'none',
-            fontWeight: 700,
-            color: selectedCategoryType || importantMomentsSelected ? undefined : 'text.primary',
+              borderRadius: useCompactMobileLayout ? 9999 : undefined,
+                textTransform: 'none',
+                fontWeight: 700,
+                color: selectedCategoryType || importantMomentsSelected ? undefined : 'text.primary',
               borderColor: selectedCategoryType || importantMomentsSelected ? undefined : colors.app.cards.border,
               backgroundColor: selectedCategoryType || importantMomentsSelected ? undefined : colors.app.cards.shadowPanel,
             boxShadow: 'none',
@@ -461,17 +461,17 @@ const TimelineFilters = ({
 
         {/* Clear All Filters */}
         {(Object.keys(filters).length > 0 || searchText) && (
-          <IconButton
-            size="small"
-            onClick={clearAllFilters}
-            sx={{
-              width: useCompactMobileLayout ? 30 : 24,
-              height: useCompactMobileLayout ? 30 : 24,
-              flex: '0 0 auto',
-              borderRadius: 0.25,
-              backgroundColor: colors.app.cards.shadowPanel,
-              border: `1px solid ${colors.app.cards.border}`,
-            }}
+            <IconButton
+              size="small"
+              onClick={clearAllFilters}
+              sx={{
+                width: useCompactMobileLayout ? 30 : 24,
+                height: useCompactMobileLayout ? 30 : 24,
+                flex: '0 0 auto',
+                borderRadius: 9999,
+                backgroundColor: colors.app.cards.shadowPanel,
+                border: `1px solid ${colors.app.cards.border}`,
+              }}
             title="Clear all filters"
           >
             <ClearIcon sx={{ fontSize: useCompactMobileLayout ? 16 : 14 }} />
@@ -483,7 +483,15 @@ const TimelineFilters = ({
 
   // Full mode for main timeline display
   return (
-    <Paper variant="outlined" sx={{ p: 2, mb: 2, borderRadius: 0.35, ...sx }}>
+    <Paper
+      variant="outlined"
+      sx={{
+        p: { xs: 1.5, md: 2 },
+        mb: 2,
+        borderRadius: { xs: 0.35, md: 0.35 },
+        ...sx,
+      }}
+    >
       <Box sx={{ mb: 2 }}>
         <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
           Timeline Filters
