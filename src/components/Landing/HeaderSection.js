@@ -130,7 +130,7 @@ const HeaderSection = () => {
         <Box
           sx={{
             display: "grid",
-            gridTemplateColumns: { xs: "1fr", md: "minmax(0, 0.94fr) minmax(0, 1.06fr)" },
+            gridTemplateColumns: { xs: "1fr", md: "minmax(0, 1.06fr) minmax(0, 0.94fr)" },
             alignItems: { xs: "start", md: "center" },
             gap: { xs: 4, md: 5 },
             width: "100%",
@@ -171,10 +171,10 @@ const HeaderSection = () => {
 
             <Box sx={{ ...landingLayout.heroHeading, justifyContent: "flex-start" }}>
               <Typography
-                sx={{
+              sx={{
                   ...landingTypography.heroMain,
                   color: landingColors.heroText,
-                  maxWidth: { xs: "100%", md: "16.5ch", lg: "17.5ch" },
+                  maxWidth: { xs: "100%", md: "22ch", lg: "24ch" },
                   mx: 0,
                   textAlign: "left",
                 }}
