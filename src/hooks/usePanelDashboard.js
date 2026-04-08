@@ -744,6 +744,15 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
     });
   };
 
+  const refreshDashboard = async () => {
+    await refreshRoles();
+
+    const childIdToRefresh = currentChildId || children[0]?.id;
+    if (childIdToRefresh) {
+      await refreshDailyCareStatus(childIdToRefresh);
+    }
+  };
+
   const handleGroupActionClick = (action, child) => {
     setCurrentChildId(child.id);
 
@@ -907,5 +916,6 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
     handleQuickEntryComplete,
     handleQuickEntrySkip,
     refreshDailyCareStatus,
+    refreshDashboard,
   };
 };

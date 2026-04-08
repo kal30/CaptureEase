@@ -7,6 +7,7 @@ import { trackRenderDebug, useMountDebug } from '../../utils/renderDebug';
 const MobileDashboardFlow = ({
   children = [],
   allEntries,
+  onRefreshDashboard,
   onQuickEntry,
   onEditChild,
   onDeleteChild,
@@ -48,6 +49,7 @@ const MobileDashboardFlow = ({
       child={activeChild}
       children={children}
       allEntries={allEntries}
+      onRefreshDashboard={onRefreshDashboard}
       onQuickEntry={onQuickEntry}
       onEditChild={onEditChild}
       onDeleteChild={onDeleteChild}

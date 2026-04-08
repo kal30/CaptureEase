@@ -289,6 +289,7 @@ const PanelDashboard = () => {
               recentEntries={hook.recentEntries}
               timelineSummary={hook.timelineSummary}
               incidents={hook.incidents}
+              onRefreshDashboard={hook.refreshDashboard}
               onQuickEntry={hook.handleQuickDataEntry}
               onEditChild={hook.handleEditChild}
               onDeleteChild={hook.handleDeleteChild}

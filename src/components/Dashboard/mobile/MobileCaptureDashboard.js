@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Avatar,
   Box,
+  CircularProgress,
   Button,
   Chip,
   ListItemIcon,
@@ -100,6 +101,7 @@ const timelineFilters = [
 const MobileCaptureDashboard = ({
   children = [],
   allEntries = {},
+  onRefreshDashboard,
   onQuickEntry,
   onEditChild,
   onDeleteChild,
@@ -119,7 +121,15 @@ const MobileCaptureDashboard = ({
   const [toolsAnchor, setToolsAnchor] = useState(null);
   const [childMenuAnchor, setChildMenuAnchor] = useState(null);
   const [careTeamCount, setCareTeamCount] = useState(null);
+  const [pullDistance, setPullDistance] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const timelineRef = useRef(null);
+  const pullStateRef = useRef({
+    startY: 0,
+    active: false,
+    distance: 0,
+  });
+  const rootRef = useRef(null);
 
   const activeChild = useMemo(
     () => children.find((child) => child.id === activeChildId) || children[0] || null,
@@ -156,6 +166,97 @@ const MobileCaptureDashboard = ({
     setSearchText('');
     setActiveEntryType(null);
   }, [activeChild?.id]);
+
+  useEffect(() => {
+    const node = rootRef.current;
+    if (!node || typeof window === 'undefined') {
+      return undefined;
+    }
+
+    const threshold = 72;
+    const maxPullDistance = 120;
+    const getScrollTop = () => window.scrollY || document.documentElement.scrollTop || 0;
+
+    const updatePullDistance = (nextDistance) => {
+      pullStateRef.current.distance = nextDistance;
+      setPullDistance(nextDistance);
+    };
+
+    const handleTouchStart = (event) => {
+      if (isRefreshing || event.touches?.length !== 1) {
+        return;
+      }
+
+      if (getScrollTop() > 0) {
+        pullStateRef.current.active = false;
+        updatePullDistance(0);
+        return;
+      }
+
+      pullStateRef.current.startY = event.touches[0].clientY;
+      pullStateRef.current.active = true;
+      updatePullDistance(0);
+    };
+
+    const handleTouchMove = (event) => {
+      if (!pullStateRef.current.active || event.touches?.length !== 1) {
+        return;
+      }
+
+      if (getScrollTop() > 0) {
+        pullStateRef.current.active = false;
+        updatePullDistance(0);
+        return;
+      }
+
+      const delta = event.touches[0].clientY - pullStateRef.current.startY;
+      if (delta <= 0) {
+        updatePullDistance(0);
+        return;
+      }
+
+      const nextDistance = Math.min(maxPullDistance, delta * 0.65);
+      updatePullDistance(nextDistance);
+
+      if (delta > 6) {
+        event.preventDefault();
+      }
+    };
+
+    const handleTouchEnd = async () => {
+      if (!pullStateRef.current.active) {
+        updatePullDistance(0);
+        return;
+      }
+
+      const shouldRefresh = pullStateRef.current.distance >= threshold;
+      pullStateRef.current.active = false;
+      updatePullDistance(0);
+
+      if (shouldRefresh && typeof onRefreshDashboard === 'function') {
+        setIsRefreshing(true);
+        try {
+          await onRefreshDashboard();
+        } catch (error) {
+          console.error('Error refreshing dashboard:', error);
+        } finally {
+          setIsRefreshing(false);
+        }
+      }
+    };
+
+    node.addEventListener('touchstart', handleTouchStart, { passive: true });
+    node.addEventListener('touchmove', handleTouchMove, { passive: false });
+    node.addEventListener('touchend', handleTouchEnd, { passive: true });
+    node.addEventListener('touchcancel', handleTouchEnd, { passive: true });
+
+    return () => {
+      node.removeEventListener('touchstart', handleTouchStart);
+      node.removeEventListener('touchmove', handleTouchMove);
+      node.removeEventListener('touchend', handleTouchEnd);
+      node.removeEventListener('touchcancel', handleTouchEnd);
+    };
+  }, [onRefreshDashboard, isRefreshing]);
 
   useEffect(() => {
     let isMounted = true;
@@ -269,12 +370,48 @@ const MobileCaptureDashboard = ({
 
   return (
     <Box
+      ref={rootRef}
       sx={{
         px: { xs: 1.1, sm: 1.5 },
         pt: { xs: 1, sm: 1.25 },
         pb: 10,
+        touchAction: 'pan-y',
       }}
     >
+      <Box
+        sx={{
+          height: pullDistance > 0 || isRefreshing ? 44 : 0,
+          mb: pullDistance > 0 || isRefreshing ? 0.75 : 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          overflow: 'hidden',
+          transition: 'height 180ms ease, margin-bottom 180ms ease',
+        }}
+      >
+        {isRefreshing ? (
+          <CircularProgress size={18} thickness={5} sx={{ color: colors.brand.ink }} />
+        ) : pullDistance > 0 ? (
+          <Box
+            sx={{
+              width: 28,
+              height: 28,
+              borderRadius: '9999px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              bgcolor: colors.landing.surface,
+              border: `1px solid ${colors.landing.borderLight}`,
+              boxShadow: `0 8px 18px ${colors.landing.shadowSoft}`,
+              transform: `translateY(${Math.min(12, pullDistance / 6)}px) rotate(${Math.min(180, (pullDistance / 72) * 180)}deg)`,
+              color: colors.landing.textMuted,
+            }}
+          >
+            <KeyboardArrowDownIcon sx={{ fontSize: 18 }} />
+          </Box>
+        ) : null}
+      </Box>
+
       <Paper
         elevation={0}
         sx={{
