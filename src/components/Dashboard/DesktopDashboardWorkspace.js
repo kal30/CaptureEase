@@ -1,130 +1,143 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Avatar,
   Box,
   Button,
+  Chip,
   Divider,
+  ListItemIcon,
   Menu,
   MenuItem,
   Paper,
   Stack,
   Typography,
 } from '@mui/material';
-import { alpha } from '@mui/material/styles';
 import {
-  Add as AddIcon,
-  Assignment as ReportsIcon,
-  CalendarToday as TimelineIcon,
+  CalendarToday as CalendarTodayIcon,
+  CategoryOutlined as CategoryOutlinedIcon,
   KeyboardArrowDown as KeyboardArrowDownIcon,
-  NoteAltOutlined as NoteAltOutlinedIcon,
-  BuildOutlined as BuildOutlinedIcon,
+  PeopleAltOutlined as PeopleAltOutlinedIcon,
+  RestaurantOutlined as RestaurantOutlinedIcon,
+  BedtimeOutlined as BedtimeOutlinedIcon,
+  MedicationOutlined as MedicationOutlinedIcon,
+  WcOutlined as WcOutlinedIcon,
 } from '@mui/icons-material';
+import { alpha } from '@mui/material/styles';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from '../../services/firebase';
 import { useDashboardView } from './shared/DashboardViewContext';
-import ChildManagementMenu from './ChildManagementMenu';
+import { getLogTypeByEntry } from '../../constants/logTypeRegistry';
+import { getAllQuickTagOptions, loadCustomQuickTags } from '../../utils/quickTags';
 import TimelineFilters from '../Timeline/TimelineFilters';
 import UnifiedTimeline from '../Timeline/UnifiedTimeline';
-import { getLogTypeByEntry } from '../../constants/logTypeRegistry';
+import MiniCalendar from '../UI/MiniCalendar';
+import ChildManagementMenu from './ChildManagementMenu';
 import colors from '../../assets/theme/colors';
 
-const quickActions = [
-  {
-    key: 'meds',
+const actionPalette = {
+  meds: {
+    icon: <MedicationOutlinedIcon sx={{ fontSize: 18 }} />,
     label: 'Meds',
-    emoji: '💊',
-    color: colors.brand.ink,
-    border: colors.brand.ink,
-    surface: colors.landing.tealLight,
-  },
-  {
-    key: 'sleep',
-    label: 'Sleep',
-    emoji: '😴',
-    color: colors.brand.deep,
-    border: colors.brand.deep,
-    surface: colors.landing.panelSoft,
-  },
-  {
-    key: 'food',
-    label: 'Food',
-    emoji: '🍽️',
-    color: colors.semantic.warning,
-    border: colors.semantic.warning,
-    surface: alpha(colors.semantic.warning, 0.08),
-  },
-  {
-    key: 'toilet',
-    label: 'Toilet',
-    emoji: '🚽',
     color: colors.semantic.success,
-    border: colors.semantic.success,
-    surface: alpha(colors.semantic.success, 0.08),
   },
-];
-
-const toDayStart = (value) => {
-  const date = value?.toDate?.() || new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return null;
-  }
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  sleep: {
+    icon: <BedtimeOutlinedIcon sx={{ fontSize: 18 }} />,
+    label: 'Sleep',
+    color: colors.brand.deep,
+  },
+  food: {
+    icon: <RestaurantOutlinedIcon sx={{ fontSize: 18 }} />,
+    label: 'Food',
+    color: colors.semantic.warning,
+  },
+  toilet: {
+    icon: <WcOutlinedIcon sx={{ fontSize: 18 }} />,
+    label: 'Toilet',
+    color: colors.app.tertiary.main,
+  },
 };
+
+const countTodayEntries = (entries = []) => {
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
+  return entries.reduce((acc, entry) => {
+    if (!entry) return acc;
+    const entryDate = entry.timestamp?.toDate?.() ? entry.timestamp.toDate() : new Date(entry.timestamp);
+    if (Number.isNaN(entryDate.getTime()) || entryDate < todayStart) {
+      return acc;
+    }
+
+    const meta = getLogTypeByEntry(entry);
+    const category = meta?.category || entry.category || entry.type || '';
+
+    if (category === 'medication') acc.meds += 1;
+    else if (category === 'food') acc.meals += 1;
+    else if (category === 'sleep') acc.sleep += 1;
+
+    return acc;
+  }, { meds: 0, meals: 0, sleep: 0 });
+};
+
+const getChildLabel = (child) => child?.name || 'Select child';
 
 const DesktopDashboardWorkspace = ({
   hook,
-  onQuickEntry,
-  onDailyReport,
+  onAddChildClick,
   onOpenSleepLog,
   onOpenFoodLog,
   onOpenBathroomLog,
-  onOpenMedicalLog,
-  onAddChildClick,
 }) => {
   const { activeChildId, setActiveChildId } = useDashboardView();
-  const mainRef = useRef(null);
-  const [filters, setFilters] = useState({});
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [switchAnchor, setSwitchAnchor] = useState(null);
+  const [childSwitcherAnchor, setChildSwitcherAnchor] = useState(null);
+  const [customQuickTags, setCustomQuickTags] = useState([]);
+  const [timelineFilters, setTimelineFilters] = useState({});
+  const [selectedDate, setSelectedDate] = useState(() => new Date());
+  const activeChild = useMemo(
+    () => hook.children.find((child) => child.id === activeChildId) || hook.children[0] || null,
+    [activeChildId, hook.children]
+  );
 
-  const activeChild = hook.children.find((child) => child.id === activeChildId) || hook.children[0] || null;
-  const activeRole = activeChild ? hook.getUserRoleForChild?.(activeChild.id) : null;
-  const canAddData = activeChild ? (hook.canAddDataForChild?.(activeChild.id) ?? false) : false;
+  const activeChildEntries = useMemo(
+    () => hook.allEntries?.[activeChild?.id] || [],
+    [activeChild?.id, hook.allEntries]
+  );
 
-  const todaySummary = useMemo(() => {
-    const entries = hook.allEntries?.[activeChild?.id] || [];
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-    const counts = {
-      meds: 0,
-      meals: 0,
-      sleep: 0,
-      toilet: 0,
-    };
+  const todayStats = useMemo(() => countTodayEntries(activeChildEntries), [activeChildEntries]);
 
-    entries.forEach((entry) => {
-      const entryStart = toDayStart(entry.timestamp);
-      if (!entryStart || entryStart < todayStart) {
-        return;
-      }
-
-      const meta = getLogTypeByEntry(entry);
-      const category = meta?.category || entry.category || entry.type || '';
-
-      if (category === 'medication') counts.meds += 1;
-      else if (category === 'food') counts.meals += 1;
-      else if (category === 'sleep') counts.sleep += 1;
-      else if (category === 'bathroom') counts.toilet += 1;
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCustomQuickTags(loadCustomQuickTags(user?.uid));
     });
 
-    return counts;
-  }, [activeChild?.id, hook.allEntries]);
+    return () => unsubscribe();
+  }, []);
 
-  const handleScrollTimeline = () => {
-    mainRef.current?.scrollTo?.({ top: 0, behavior: 'smooth' });
+  useEffect(() => {
+    setTimelineFilters({});
+    setSelectedDate(new Date());
+  }, [activeChild?.id]);
+
+  const quickTagOptions = useMemo(() => getAllQuickTagOptions(customQuickTags), [customQuickTags]);
+
+  const handleChildSwitcherOpen = (event) => {
+    if (hook.children.length > 1) {
+      setChildSwitcherAnchor(event.currentTarget);
+    }
   };
 
-  const handleToday = () => {
-    setSelectedDate(new Date());
-    handleScrollTimeline();
+  const handleChildSwitcherClose = () => {
+    setChildSwitcherAnchor(null);
+  };
+
+  const handleSelectChild = (childId) => {
+    setActiveChildId(childId);
+    handleChildSwitcherClose();
+  };
+
+  const handleAddChild = () => {
+    handleChildSwitcherClose();
+    onAddChildClick?.();
   };
 
   const handleQuickAction = (actionKey) => {
@@ -132,7 +145,7 @@ const DesktopDashboardWorkspace = ({
 
     switch (actionKey) {
       case 'meds':
-        onOpenMedicalLog?.(activeChild);
+        hook.handleTrack?.(activeChild, 'medication');
         break;
       case 'sleep':
         onOpenSleepLog?.(activeChild);
@@ -148,391 +161,322 @@ const DesktopDashboardWorkspace = ({
     }
   };
 
-  const handleQuickNote = () => {
-    if (!activeChild) return;
-    onQuickEntry?.(activeChild, 'quick_note');
-  };
-
   if (!activeChild) {
     return null;
   }
 
-  const otherChildren = hook.children.filter((child) => child.id !== activeChild.id);
+  const childAvatar = activeChild.profilePhoto || activeChild.photoURL || activeChild.avatarUrl || '';
+  const childLabel = getChildLabel(activeChild);
 
   return (
     <Box
       sx={{
-        display: 'flex',
-        gap: { xs: 0, md: 2.5 },
-        alignItems: 'flex-start',
-        minHeight: { xs: 'auto', md: 'calc(100vh - 140px)' },
-        width: '100%',
+        bgcolor: colors.landing.pageBackground,
+        minHeight: '100%',
+        px: { xs: 0, lg: 0 },
       }}
     >
-      <Paper
-        elevation={0}
-        sx={{
-          display: { xs: 'none', md: 'flex' },
-          flexDirection: 'column',
-          gap: 2,
-          width: 240,
-          flex: '0 0 240px',
-          position: 'sticky',
-          top: 24,
-          maxHeight: 'calc(100vh - 48px)',
-          overflowY: 'auto',
-          p: 1.5,
-          borderRadius: 4,
-          border: `1px solid ${colors.landing.borderLight}`,
-          bgcolor: colors.landing.sageLight,
-          boxShadow: `0 16px 36px ${colors.landing.shadowSoft}`,
-        }}
-      >
-        <Box
-          sx={{
-            p: 2,
-            borderRadius: 3,
-            background: `linear-gradient(135deg, ${colors.brand.deep} 0%, ${colors.brand.ink} 100%)`,
-            color: colors.landing.surface,
-          }}
-        >
-          <Typography sx={{ fontSize: '0.72rem', fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', opacity: 0.85 }}>
-            Child
-          </Typography>
-
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, mt: 1 }}>
-            <Box sx={{ minWidth: 0 }}>
-              <Typography sx={{ fontSize: '1.15rem', fontWeight: 800, lineHeight: 1.1 }}>
-                {activeChild.name}
-              </Typography>
-              <Typography sx={{ fontSize: '0.82rem', mt: 0.4, opacity: 0.88 }}>
-                Active dashboard
+      <Box sx={{ width: '100%', maxWidth: 1560, mx: 'auto', px: { xs: 2, xl: 3 }, pb: 4 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 1, pt: 1, pb: 2 }}>
+          <Button
+            onClick={handleChildSwitcherOpen}
+            variant="outlined"
+            disabled={hook.children.length <= 1}
+            endIcon={hook.children.length > 1 ? <KeyboardArrowDownIcon sx={{ fontSize: 18 }} /> : null}
+            sx={{
+              minHeight: 40,
+              px: 1.5,
+              borderRadius: 9999,
+              borderColor: colors.landing.borderLight,
+              bgcolor: colors.landing.surface,
+              color: colors.landing.heroText,
+              textTransform: 'none',
+              fontWeight: 600,
+              boxShadow: 'none',
+              '&:hover': {
+                bgcolor: colors.landing.sageLight,
+                borderColor: colors.landing.borderMedium,
+                boxShadow: 'none',
+              },
+            }}
+          >
+            <Avatar
+              src={childAvatar || undefined}
+              alt={childLabel}
+              sx={{
+                width: 28,
+                height: 28,
+                mr: 1,
+                bgcolor: colors.roles.careOwner.primary,
+                color: '#fff',
+                fontSize: '0.82rem',
+                border: `1px solid ${colors.landing.borderMedium}`,
+              }}
+            >
+              {childLabel.charAt(0).toUpperCase()}
+            </Avatar>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Typography sx={{ fontWeight: 600, fontSize: '0.92rem', color: colors.landing.heroText }}>
+                {childLabel}
               </Typography>
             </Box>
+          </Button>
 
-            <Avatar
-              src={activeChild.profilePhoto}
-              alt={activeChild.name}
-              sx={{
-                width: 48,
-                height: 48,
-                bgcolor: alpha(colors.landing.surface, 0.2),
-                color: colors.landing.surface,
-                fontWeight: 800,
-                border: `1px solid ${alpha(colors.landing.surface, 0.3)}`,
-              }}
-            >
-              {!activeChild.profilePhoto && activeChild.name?.[0]?.toUpperCase()}
-            </Avatar>
-          </Box>
-
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, mt: 1.5 }}>
-            <Button
-              size="small"
-              variant="outlined"
-              endIcon={<KeyboardArrowDownIcon />}
-              onClick={(event) => setSwitchAnchor(event.currentTarget)}
-              sx={{
-                minHeight: 34,
-                px: 1.25,
-                borderRadius: 2,
-                textTransform: 'none',
-                fontWeight: 700,
-                color: colors.landing.surface,
-                borderColor: alpha(colors.landing.surface, 0.55),
-                '&:hover': {
-                  borderColor: colors.landing.surface,
-                  bgcolor: alpha(colors.landing.surface, 0.08),
-                },
-              }}
-            >
-              Switch Child
-            </Button>
-
-            {activeChild ? (
-              <ChildManagementMenu
-                child={activeChild}
-                userRole={activeRole}
-                canAddData={canAddData}
-                onEditChild={hook.handleEditChild}
-                onInviteTeamMember={hook.handleInviteTeamMember}
-                onDeleteChild={hook.handleDeleteChild}
-              />
-            ) : null}
-          </Box>
-        </Box>
-
-        <Box
-          sx={{
-            p: 1.5,
-            borderRadius: 3,
-            bgcolor: colors.landing.surface,
-            border: `1px solid ${colors.landing.borderLight}`,
-            boxShadow: `0 10px 24px ${colors.landing.shadowSoft}`,
-          }}
-        >
-          <Typography sx={{ fontSize: '0.72rem', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: colors.landing.textMuted, mb: 1 }}>
-            Quick Log
-          </Typography>
-
-          <Stack spacing={1}>
-            {quickActions.map((action) => (
-              <Button
-                key={action.key}
-                fullWidth
-                variant="outlined"
-                onClick={() => handleQuickAction(action.key)}
-                startIcon={<Box component="span" sx={{ fontSize: '1rem', lineHeight: 1 }}>{action.emoji}</Box>}
-                sx={{
-                  minHeight: 48,
-                  px: 1.5,
-                  justifyContent: 'flex-start',
-                  borderRadius: 1.5,
-                  textTransform: 'none',
-                  fontWeight: 800,
-                  color: colors.landing.heroText,
-                  borderColor: action.border,
-                  bgcolor: action.surface,
-                  '&:hover': {
-                    borderColor: action.border,
-                    bgcolor: alpha(action.surface, 0.95),
-                  },
-                }}
-              >
-                {action.label}
-              </Button>
-            ))}
-
-            <Button
-              fullWidth
-              variant="outlined"
-              onClick={handleQuickNote}
-              startIcon={<NoteAltOutlinedIcon sx={{ fontSize: 18 }} />}
-              sx={{
-                minHeight: 48,
-                px: 1.5,
-                justifyContent: 'flex-start',
-                borderRadius: 1.5,
-                textTransform: 'none',
-                fontWeight: 800,
-                color: colors.landing.heroText,
-                borderColor: colors.brand.tint,
-                bgcolor: colors.landing.panelSoft,
-                '&:hover': {
-                  borderColor: colors.brand.deep,
-                  bgcolor: colors.landing.surface,
-                },
-              }}
-            >
-              Quick Note (auto-classified)
-            </Button>
-          </Stack>
-        </Box>
-
-        <Paper
-          variant="outlined"
-          sx={{
-            p: 1.5,
-            borderRadius: 3,
-            bgcolor: colors.landing.surface,
-            borderColor: colors.landing.borderLight,
-          }}
-        >
-          <Typography sx={{ fontSize: '0.72rem', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: colors.landing.textMuted, mb: 1 }}>
-            Today
-          </Typography>
-          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 1 }}>
-            {[
-              { key: 'meds', label: 'meds', value: todaySummary.meds, color: colors.brand.ink },
-              { key: 'meals', label: 'meals', value: todaySummary.meals, color: colors.semantic.warning },
-              { key: 'sleep', label: 'sleep', value: todaySummary.sleep, color: colors.brand.deep },
-            ].map((item) => (
-              <Box key={item.key} sx={{ textAlign: 'center' }}>
-                <Typography sx={{ fontSize: '1.2rem', fontWeight: 800, color: item.color, lineHeight: 1 }}>
-                  {item.value}
-                </Typography>
-                <Typography sx={{ fontSize: '0.72rem', color: colors.landing.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                  {item.label}
-                </Typography>
-              </Box>
-            ))}
-          </Box>
-        </Paper>
-
-        <Box sx={{ pt: 0.5 }}>
-          <Typography sx={{ fontSize: '0.72rem', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: colors.landing.textMuted, mb: 1 }}>
-            Navigation
-          </Typography>
-
-          <Stack spacing={1}>
-            <Button
-              fullWidth
-              variant="outlined"
-              startIcon={<TimelineIcon sx={{ fontSize: 18 }} />}
-              onClick={handleScrollTimeline}
-              sx={{
-                minHeight: 44,
-                borderRadius: 1.5,
-                textTransform: 'none',
-                fontWeight: 700,
-                color: colors.landing.heroText,
-                borderColor: colors.landing.borderLight,
-                bgcolor: colors.landing.surface,
-              }}
-            >
-              Timeline
-            </Button>
-            <Button
-              fullWidth
-              variant="outlined"
-              startIcon={<ReportsIcon sx={{ fontSize: 18 }} />}
-              onClick={() => onDailyReport?.(activeChild)}
-              sx={{
-                minHeight: 44,
-                borderRadius: 1.5,
-                textTransform: 'none',
-                fontWeight: 700,
-                color: colors.landing.heroText,
-                borderColor: colors.landing.borderLight,
-                bgcolor: colors.landing.surface,
-              }}
-            >
-              Reports
-            </Button>
-            <Button
-              fullWidth
-              variant="outlined"
-              startIcon={<BuildOutlinedIcon sx={{ fontSize: 18 }} />}
-              onClick={() => onOpenMedicalLog?.(activeChild)}
-              sx={{
-                minHeight: 44,
-                borderRadius: 1.5,
-                textTransform: 'none',
-                fontWeight: 700,
-                color: colors.landing.heroText,
-                borderColor: colors.landing.borderLight,
-                bgcolor: colors.landing.surface,
-              }}
-            >
-              Tools
-            </Button>
-          </Stack>
-        </Box>
-
-        {hook.children.length > 1 ? (
           <Menu
-            anchorEl={switchAnchor}
-            open={Boolean(switchAnchor)}
-            onClose={() => setSwitchAnchor(null)}
-            PaperProps={{ sx: { minWidth: 220, borderRadius: 3 } }}
+            anchorEl={childSwitcherAnchor}
+            open={Boolean(childSwitcherAnchor)}
+            onClose={handleChildSwitcherClose}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+            PaperProps={{
+              sx: {
+                mt: 1,
+                minWidth: 250,
+                borderRadius: 3,
+                border: `1px solid ${colors.landing.borderLight}`,
+                boxShadow: `0 24px 60px ${colors.landing.shadowPanel}`,
+                bgcolor: 'rgba(255,255,255,0.96)',
+                backdropFilter: 'blur(16px)',
+              },
+            }}
           >
-            {otherChildren.map((child) => (
-              <MenuItem
-                key={child.id}
-                selected={child.id === activeChild.id}
-                onClick={() => {
-                  setActiveChildId(child.id);
-                  setSwitchAnchor(null);
-                }}
-              >
-                {child.name}
-              </MenuItem>
-            ))}
-            {onAddChildClick ? (
-              <>
-                <Divider />
-                <MenuItem
-                  onClick={() => {
-                    setSwitchAnchor(null);
-                    onAddChildClick();
+            {hook.children.map((child) => (
+              <MenuItem key={child.id} onClick={() => handleSelectChild(child.id)} sx={{ gap: 1.25, py: 1.25, px: 1.5, minHeight: 48 }}>
+                <Avatar
+                  src={child.profilePhoto || child.photoURL || child.avatarUrl || undefined}
+                  sx={{
+                    width: 28,
+                    height: 28,
+                    bgcolor: colors.roles.careOwner.primary,
+                    color: '#fff',
+                    fontSize: '0.78rem',
                   }}
                 >
-                  <AddIcon fontSize="small" sx={{ mr: 1 }} />
-                  Add Child
-                </MenuItem>
-              </>
-            ) : null}
+                  {(child.name || 'C').charAt(0).toUpperCase()}
+                </Avatar>
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography sx={{ fontWeight: 600, color: colors.landing.heroText, lineHeight: 1.1 }}>
+                    {child.name}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: colors.landing.textMuted }}>
+                    Switch profile
+                  </Typography>
+                </Box>
+              </MenuItem>
+            ))}
+            <Divider sx={{ my: 0.5 }} />
+            <MenuItem onClick={handleAddChild} sx={{ gap: 1.25, py: 1.25, px: 1.5, minHeight: 48 }}>
+              <ListItemIcon sx={{ minWidth: 32 }}>
+                <PeopleAltOutlinedIcon sx={{ fontSize: 18, color: colors.brand.ink }} />
+              </ListItemIcon>
+              Add child
+            </MenuItem>
           </Menu>
-        ) : null}
-      </Paper>
 
-      <Box
-        ref={mainRef}
-        sx={{
-          flex: 1,
-          minWidth: 0,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 1.5,
-          minHeight: { xs: 'auto', md: 'calc(100vh - 140px)' },
-          maxHeight: { xs: 'none', md: 'calc(100vh - 140px)' },
-          overflowY: { xs: 'visible', md: 'auto' },
-          pr: { xs: 0, md: 0.5 },
-          pb: 2,
-        }}
-      >
-        <Paper
-          elevation={0}
+          <ChildManagementMenu
+            child={activeChild}
+            onEditChild={hook.handleEditChild}
+            onInviteTeamMember={hook.handleInviteTeamMember}
+            onDeleteChild={hook.handleDeleteChild}
+            userRole={hook.getUserRoleForChild?.(activeChild.id)}
+          />
+        </Box>
+
+        <Box
           sx={{
-            p: { xs: 2, md: 2.5 },
-            borderRadius: 4,
-            bgcolor: colors.landing.surface,
-            border: `1px solid ${colors.landing.borderLight}`,
-            boxShadow: `0 14px 34px ${colors.landing.shadowSoft}`,
+            display: 'grid',
+            gridTemplateColumns: { lg: '260px minmax(0, 1fr) 300px' },
+            gap: { lg: 2.5 },
+            alignItems: 'start',
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: { xs: 'flex-start', sm: 'center' }, justifyContent: 'space-between', gap: 2, flexDirection: { xs: 'column', sm: 'row' }, mb: 1.75 }}>
-            <Box>
-              <Typography sx={{ fontSize: { xs: '1.4rem', md: '1.75rem' }, fontWeight: 800, letterSpacing: '-0.03em', color: colors.landing.heroText, lineHeight: 1.1 }}>
-                Timeline
-              </Typography>
-              <Typography sx={{ fontSize: '0.92rem', color: colors.landing.bodyText, mt: 0.4 }}>
-                Search and review daily logs for {activeChild.name}.
-              </Typography>
-            </Box>
+          <Paper
+            variant="outlined"
+            sx={{
+              display: { xs: 'none', lg: 'block' },
+              position: 'sticky',
+              top: 76,
+              borderRadius: 3,
+              bgcolor: colors.landing.surface,
+              borderColor: colors.landing.borderLight,
+              boxShadow: `0 4px 6px -1px ${colors.landing.shadowSoft}`,
+              p: 2,
+            }}
+          >
+            <Typography sx={{ fontSize: '0.8rem', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: colors.landing.textMuted, mb: 1.5 }}>
+              Daily Stats
+            </Typography>
+            <Stack spacing={1.25}>
+              {[
+                { label: 'Meds', value: todayStats.meds, color: colors.semantic.success },
+                { label: 'Meals', value: todayStats.meals, color: colors.semantic.warning },
+                { label: 'Sleep', value: todayStats.sleep, color: colors.brand.deep },
+              ].map((item) => (
+                <Paper
+                  key={item.label}
+                  variant="outlined"
+                  sx={{
+                    p: 1.5,
+                    borderRadius: 2,
+                    borderColor: colors.landing.borderLight,
+                    bgcolor: colors.landing.surface,
+                    boxShadow: `0 4px 6px -1px ${colors.landing.shadowSoft}`,
+                  }}
+                >
+                  <Typography sx={{ color: colors.landing.textMuted, fontSize: '0.78rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                    {item.label}
+                  </Typography>
+                  <Typography sx={{ color: item.color, fontSize: '1.75rem', fontWeight: 700, lineHeight: 1.1 }}>
+                    {item.value}
+                  </Typography>
+                </Paper>
+              ))}
+            </Stack>
+          </Paper>
 
-            <Button
-              variant="contained"
-              onClick={handleToday}
+          <Box sx={{ minWidth: 0, maxWidth: 800, width: '100%', mx: 'auto' }}>
+            <Paper
+              variant="outlined"
               sx={{
-                borderRadius: 1.5,
-                minHeight: 44,
-                px: 2,
-                textTransform: 'none',
-                fontWeight: 800,
-                bgcolor: colors.brand.ink,
-                color: colors.landing.heroText,
-                boxShadow: `0 8px 20px ${colors.landing.shadowHero}`,
-                '&:hover': {
-                  bgcolor: colors.brand.navy,
-                },
+                borderRadius: 3,
+                bgcolor: colors.landing.surface,
+                borderColor: colors.landing.borderLight,
+                boxShadow: `0 4px 6px -1px ${colors.landing.shadowSoft}`,
+                p: { xs: 1.5, md: 2 },
+                mb: 2,
               }}
             >
-              Today
-            </Button>
+              <Stack direction="row" spacing={1} sx={{ overflowX: 'auto', pb: 0.25 }}>
+                {Object.entries(actionPalette).map(([key, action]) => (
+                  <Button
+                    key={key}
+                    onClick={() => handleQuickAction(key)}
+                    startIcon={action.icon}
+                    variant="outlined"
+                    sx={{
+                      minHeight: 44,
+                      px: 2,
+                      borderRadius: 2,
+                      whiteSpace: 'nowrap',
+                      textTransform: 'none',
+                      fontWeight: 700,
+                      color: colors.landing.heroText,
+                      borderColor: action.color,
+                      bgcolor: alpha(action.color, 0.06),
+                      boxShadow: 'none',
+                      '&:hover': {
+                        bgcolor: alpha(action.color, 0.12),
+                        borderColor: action.color,
+                        boxShadow: 'none',
+                      },
+                    }}
+                  >
+                    {action.label}
+                  </Button>
+                ))}
+              </Stack>
+            </Paper>
+
+            <Paper
+              variant="outlined"
+              sx={{
+                borderRadius: 3,
+                bgcolor: colors.landing.surface,
+                borderColor: colors.landing.borderLight,
+                boxShadow: `0 4px 6px -1px ${colors.landing.shadowSoft}`,
+                p: { xs: 1.5, md: 2 },
+              }}
+            >
+              <TimelineFilters
+                compact
+                mobileLayout={false}
+                filters={timelineFilters}
+                onFiltersChange={setTimelineFilters}
+                selectedDate={selectedDate}
+                onDateChange={setSelectedDate}
+                hideDateFilter
+                sx={{ mb: 1.5 }}
+              />
+
+              <UnifiedTimeline
+                child={activeChild}
+                selectedDate={selectedDate}
+                filters={timelineFilters}
+                onFiltersChange={setTimelineFilters}
+                showFilters={false}
+                showDaySummary
+              />
+            </Paper>
           </Box>
 
-          <Box sx={{ mb: 1.5 }}>
-            <TimelineFilters
-              compact
-              mobileLayout={false}
-              hideDateFilter
-              selectedDate={selectedDate}
-              filters={filters}
-              onFiltersChange={setFilters}
-            />
-          </Box>
+          <Stack
+            spacing={2}
+            sx={{
+              display: { xs: 'none', lg: 'block' },
+              position: 'sticky',
+              top: 76,
+              alignSelf: 'start',
+            }}
+          >
+            <Paper
+              variant="outlined"
+              sx={{
+                borderRadius: 3,
+                bgcolor: colors.landing.surface,
+                borderColor: colors.landing.borderLight,
+                boxShadow: `0 4px 6px -1px ${colors.landing.shadowSoft}`,
+                p: 2,
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+                <CalendarTodayIcon sx={{ fontSize: 18, color: colors.brand.ink }} />
+                <Typography sx={{ fontSize: '0.8rem', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: colors.landing.textMuted }}>
+                  Mini-Calendar
+                </Typography>
+              </Box>
+              <MiniCalendar
+                entries={activeChildEntries}
+                currentMonth={selectedDate}
+                selectedDate={selectedDate}
+                onDayClick={(day, dayEntries, date) => setSelectedDate(date)}
+              />
+            </Paper>
 
-          <UnifiedTimeline
-            child={activeChild}
-            selectedDate={selectedDate}
-            filters={filters}
-            onFiltersChange={setFilters}
-            showFilters={false}
-            showDaySummary
-            mobileTimeLayout={false}
-          />
-        </Paper>
+            <Paper
+              variant="outlined"
+              sx={{
+                borderRadius: 3,
+                bgcolor: colors.landing.surface,
+                borderColor: colors.landing.borderLight,
+                boxShadow: `0 4px 6px -1px ${colors.landing.shadowSoft}`,
+                p: 2,
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+                <CategoryOutlinedIcon sx={{ fontSize: 18, color: colors.brand.deep }} />
+                <Typography sx={{ fontSize: '0.8rem', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: colors.landing.textMuted }}>
+                  Quick Tags
+                </Typography>
+              </Box>
+              <Stack direction="row" flexWrap="wrap" gap={1}>
+                {quickTagOptions.map((tag) => (
+                  <Chip
+                    key={tag.key}
+                    label={`${tag.icon} ${tag.label}`}
+                    variant="outlined"
+                    sx={{
+                      borderRadius: 2,
+                      borderColor: colors.landing.borderLight,
+                      bgcolor: colors.landing.sageLight,
+                      color: colors.landing.heroText,
+                      fontWeight: 600,
+                    }}
+                  />
+                ))}
+              </Stack>
+            </Paper>
+          </Stack>
+        </Box>
       </Box>
     </Box>
   );

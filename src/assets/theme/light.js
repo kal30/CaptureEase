@@ -118,13 +118,9 @@ const theme = createTheme({
   },
   typography: {
     fontSize: 16,
-    fontFamily: "'Outfit', 'Inter', 'Roboto', 'Helvetica', 'Arial', sans-serif",
+    fontFamily: "'Outfit', sans-serif",
     allVariants: {
       letterSpacing: '-0.015em',
-    },
-    // Outfit for special UI elements (buttons, headers, etc.)
-    hero: {
-      fontFamily: "'Outfit', 'Inter', 'Roboto', sans-serif",
     },
     // App UI typography variants
     sectionHeader: {
@@ -149,7 +145,7 @@ const theme = createTheme({
         md: "3rem",
         lg: "3.5rem",
       },
-      fontWeight: 700,
+      fontWeight: 800,
       lineHeight: 1.2,
       letterSpacing: "-0.02em",
       color: colors.landing.bodyText,
@@ -161,7 +157,7 @@ const theme = createTheme({
         md: "2.25rem",
         lg: "2.5rem",
       },
-      fontWeight: 600,
+      fontWeight: 800,
       lineHeight: 1.3,
       letterSpacing: "-0.02em",
       color: colors.landing.bodyText,
@@ -172,7 +168,7 @@ const theme = createTheme({
         sm: "1.75rem",
         md: "2rem",
       },
-      fontWeight: 600,
+      fontWeight: 800,
       lineHeight: 1.4,
       letterSpacing: "-0.02em",
       color: colors.landing.bodyText,
@@ -205,18 +201,20 @@ const theme = createTheme({
     body1: {
       fontSize: "1rem",
       lineHeight: 1.6,
+      fontWeight: 400,
       color: colors.landing.bodyText,
     },
     body2: {
       fontSize: "0.875rem",
       lineHeight: 1.5,
+      fontWeight: 400,
       color: colors.semantic.neutral,
     },
     button: {
       textTransform: "none",
       fontSize: "0.95rem",
       fontWeight: 600,
-      letterSpacing: "-0.02em",
+      letterSpacing: "-0.01em",
       fontFamily: brand.typography.buttonFontFamily,
     },
     caption: {
@@ -226,9 +224,17 @@ const theme = createTheme({
     },
   },
   shape: {
-    borderRadius: 14,
+    borderRadius: 12,
   },
   components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        body: {
+          backgroundColor: colors.landing.pageBackground,
+          fontFamily: "'Outfit', sans-serif",
+        },
+      },
+    },
     MuiToolbar: {
       styleOverrides: {
         root: {
@@ -252,12 +258,13 @@ const theme = createTheme({
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: "18px",
+          borderRadius: "12px",
           backgroundColor: colors.app.cards.background,
-          boxShadow: `0 2px 6px ${colors.app.cards.shadowSoft}`,
+          border: `1px solid ${colors.landing.borderLight}`,
+          boxShadow: `0 4px 6px -1px ${colors.app.cards.shadowSoft}`,
           transition: "box-shadow 120ms ease",
           "&:hover": {
-            boxShadow: `0 4px 12px ${colors.app.cards.shadowHover}`,
+            boxShadow: `0 8px 16px -4px ${colors.app.cards.shadowHover}`,
           },
         },
       },
@@ -265,9 +272,10 @@ const theme = createTheme({
     MuiPaper: {
       styleOverrides: {
         root: {
-          borderRadius: "18px",
+          borderRadius: "12px",
           backgroundColor: colors.app.cards.background,
-          boxShadow: `0 1px 2px ${colors.app.cards.shadowPanel}`,
+          border: `1px solid ${colors.landing.borderLight}`,
+          boxShadow: `0 4px 6px -1px ${colors.app.cards.shadowPanel}`,
         },
       },
     },
@@ -275,7 +283,7 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           "& .MuiOutlinedInput-root": {
-            borderRadius: "14px",
+            borderRadius: "12px",
             backgroundColor: colors.app.cards.background,
             transition: "all 0.2s ease-in-out",
             "& fieldset": {

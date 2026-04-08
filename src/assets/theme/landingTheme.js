@@ -38,9 +38,9 @@ export const landingTypography = {
   // Landing page hero styles
   heroMain: {
     fontSize: { xs: "2.1rem", sm: "2.35rem", md: "2.7rem", lg: "3rem" },
-    fontFamily: '"Inter", sans-serif',
-    fontWeight: 600,
-    letterSpacing: "-0.03em",
+    fontFamily: "'Outfit', sans-serif",
+    fontWeight: 800,
+    letterSpacing: "-0.02em",
     textTransform: "none",
     lineHeight: { xs: 1.12, md: 1.08, lg: 1.06 },
     marginBottom: { xs: 0.75, md: 1, lg: 1.1 },
@@ -50,7 +50,7 @@ export const landingTypography = {
   },
   heroSubtitle: {
     marginTop: { xs: 1, md: 1.5, lg: 2 },
-    fontFamily: '"Inter", sans-serif',
+    fontFamily: "'Outfit', sans-serif",
     fontWeight: 600,
     lineHeight: 1.2,
     textTransform: "none",
@@ -64,14 +64,14 @@ export const landingTypography = {
     lineHeight: { xs: 1.58, md: 1.62, lg: 1.66 },
     color: landingColors.bodyText,
     textAlign: { xs: "center", md: "left" },
-    fontFamily: '"Inter", sans-serif',
+    fontFamily: "'Outfit', sans-serif",
     fontWeight: 400,
     maxWidth: { xs: "100%", md: "40rem", lg: "42rem" },
     mx: { xs: "auto", md: 0 },
   },
 
   brandAccent: {
-    fontFamily: '"Inter", sans-serif',
+    fontFamily: "'Outfit', sans-serif",
     fontWeight: 700,
     letterSpacing: "-0.02em",
   },

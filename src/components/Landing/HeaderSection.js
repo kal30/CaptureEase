@@ -19,9 +19,10 @@ const landingPrimaryButtonStyles = {
   px: { xs: 3.5, md: 4.5 },
   py: { xs: 1.25, md: 1.35 },
   textTransform: "none",
-  borderRadius: "9999px",
+  borderRadius: "12px",
   fontSize: { xs: "1rem", md: "1.05rem" },
   fontWeight: 700,
+  letterSpacing: "-0.01em",
   color: landingColors.deepNavy,
   backgroundColor: landingColors.cyanPop,
   boxShadow: `0 10px 22px ${landingColors.shadowHero}`,
@@ -38,9 +39,10 @@ const landingSecondaryButtonStyles = {
   px: { xs: 3.5, md: 4.5 },
   py: { xs: 1.25, md: 1.35 },
   textTransform: "none",
-  borderRadius: "9999px",
+  borderRadius: "12px",
   fontSize: { xs: "1rem", md: "1.05rem" },
   fontWeight: 700,
+  letterSpacing: "-0.01em",
   color: landingColors.deepNavy,
   borderColor: landingColors.borderMedium,
   backgroundColor: landingColors.surface,
@@ -62,6 +64,7 @@ const landingFormButtonStyles = {
   borderRadius: "12px",
   fontWeight: 700,
   fontSize: "1rem",
+  letterSpacing: "-0.01em",
   color: landingColors.heroText,
   backgroundColor: landingColors.surfaceSoft,
   border: `1px solid ${landingColors.borderMedium}`,
@@ -75,8 +78,9 @@ const landingFormButtonStyles = {
 
 const lifelogWordStyles = {
   color: landingColors.deepNavy,
-  fontWeight: 800,
-  letterSpacing: "-0.03em",
+  display: "inline-flex",
+  alignItems: "baseline",
+  gap: 0,
   whiteSpace: "nowrap",
 };
 
@@ -125,14 +129,14 @@ const HeaderSection = () => {
         pb: { xs: 4, md: 6 },
       }}
     >
-      <Container maxWidth="xl" sx={{ px: { xs: 2.5, md: 4, lg: 6 } }}>
+      <Container maxWidth="lg" sx={{ px: { xs: 2.5, md: 4, lg: 0 } }}>
         <Box
           sx={{
             display: "grid",
-            gridTemplateColumns: { xs: "1fr", md: "1.2fr 0.8fr" },
+            gridTemplateColumns: { xs: "1fr", lg: "minmax(0, 1.05fr) minmax(380px, 0.95fr)" },
             alignItems: "center",
-            gap: { xs: 4, md: 6, lg: 8 },
-            maxWidth: 1260,
+            gap: { xs: 4, md: 6, lg: 7 },
+            maxWidth: 1120,
             mx: "auto",
           }}
         >
@@ -142,11 +146,11 @@ const HeaderSection = () => {
             <Typography
               component="h1"
               sx={{
-                fontFamily: '"Inter", sans-serif',
-                fontSize: { xs: "2.35rem", sm: "2.8rem", md: "3.15rem", lg: "3.65rem" },
+                fontFamily: "'Outfit', sans-serif",
+                fontSize: { xs: "2.35rem", sm: "2.8rem", md: "3.15rem", lg: "3.5rem" },
                 lineHeight: { xs: 1.08, md: 1.04, lg: 1.02 },
-                letterSpacing: "-0.05em",
-                fontWeight: 700,
+                letterSpacing: "-0.02em",
+                fontWeight: 800,
                 color: landingColors.heroText,
                 maxWidth: { xs: "100%", md: 720, lg: 760 },
                 textWrap: "balance",
@@ -167,12 +171,19 @@ const HeaderSection = () => {
                 lineHeight: { xs: 1.6, md: 1.65, lg: 1.7 },
                 textAlign: "left",
                 mx: 0,
+                fontFamily: "'Outfit', sans-serif",
+                fontWeight: 400,
               }}
             >
               For years I scrambled to remember what happened before every therapy appointment.
               Behaviors, triggers, good days, hard days - all buried in phone notes. I built{" "}
               <Box component="span" sx={lifelogWordStyles}>
-                Lifelog
+                <Box component="span" sx={{ fontWeight: 700 }}>
+                  life
+                </Box>
+                <Box component="span" sx={{ fontWeight: 400 }}>
+                  log
+                </Box>
               </Box>{" "}
               so no parent has to do that anymore.
             </Typography>
@@ -186,6 +197,8 @@ const HeaderSection = () => {
                 lineHeight: { xs: 1.6, md: 1.65, lg: 1.7 },
                 textAlign: "left",
                 mx: 0,
+                fontFamily: "'Outfit', sans-serif",
+                fontWeight: 400,
               }}
             >
               Everyone caring for your child sees the same timeline in real time. A caregiver logs
@@ -239,7 +252,7 @@ const HeaderSection = () => {
                   letterSpacing: "0.1em",
                   textTransform: "uppercase",
                   color: landingColors.textMuted,
-                  fontFamily: '"Inter", sans-serif',
+                  fontFamily: "'Outfit', sans-serif",
                   mb: 1.5,
                 }}
               >
@@ -257,18 +270,18 @@ const HeaderSection = () => {
                   gap: 1,
                 }}
               >
-                <TextField
-                  type="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  fullWidth
-                  size="small"
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      height: 48,
-                      borderRadius: "12px",
-                    },
+                  <TextField
+                    type="email"
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    fullWidth
+                    size="small"
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        height: 48,
+                        borderRadius: "12px",
+                      },
                     "& .MuiOutlinedInput-input": {
                       py: 0,
                       px: 1.75,
@@ -301,15 +314,15 @@ const HeaderSection = () => {
           <Box
             sx={{
               display: "flex",
-              justifyContent: { xs: "center", md: "flex-end" },
+              justifyContent: { xs: "center", lg: "flex-end" },
               alignItems: "center",
-              pt: { xs: 0, md: 1 },
+              pt: { xs: 0, lg: 1 },
             }}
           >
             <Box
               sx={{
                 width: "100%",
-                maxWidth: { xs: 560, md: 560, lg: 600 },
+                maxWidth: { xs: 560, md: 540, lg: 520 },
               }}
             >
               <Box

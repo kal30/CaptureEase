@@ -27,11 +27,11 @@ const brand = {
   },
 
   typography: {
-    buttonFontFamily: "'Outfit','Inter','Roboto',sans-serif",
+    buttonFontFamily: "'Outfit', sans-serif",
   },
 
   radii: {
-    button: 14,
+    button: 12,
   },
 };
 

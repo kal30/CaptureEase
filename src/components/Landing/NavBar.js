@@ -153,6 +153,7 @@ const Navbar = () => {
                 sx={{
                   fontSize: { xs: "1.45rem", md: "1.7rem", lg: "1.9rem" },
                   fontWeight: 700,
+                  fontFamily: "'Outfit', sans-serif",
                   letterSpacing: "-0.05em",
                   color: colors.landing.heroText,
                   textTransform: "lowercase",
@@ -166,6 +167,7 @@ const Navbar = () => {
                 sx={{
                   fontSize: { xs: "1.45rem", md: "1.7rem", lg: "1.9rem" },
                   fontWeight: 400,
+                  fontFamily: "'Outfit', sans-serif",
                   letterSpacing: "-0.05em",
                   color: colors.landing.heroText,
                   textTransform: "lowercase",
@@ -180,7 +182,7 @@ const Navbar = () => {
           <Box
             sx={{
               justifySelf: "center",
-              display: { xs: "none", md: canSeeSwitchChild ? "block" : "none" },
+              display: { xs: "none", md: isDashboardRoute ? "none" : canSeeSwitchChild ? "block" : "none" },
             }}
           >
             <Button

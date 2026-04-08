@@ -6,6 +6,7 @@ import { auth } from "../services/firebase";
 import { useChildContext } from "../contexts/ChildContext";
 import { getTimelineEntries, TIMELINE_TYPES } from "../services/timelineService";
 import { useRole } from "../contexts/RoleContext";
+import { archiveChild } from "../services/childService";
 import { useDailyCareStatus } from "./useDailyCareStatus";
 import { listenForFollowUps, initializeNotificationsForPendingFollowUps, processQuickResponses, startQuickResponseListener } from "../services/followUpService";
 import { analyzeOtherIncidentPatterns, getIncidents } from "../services/incidentService";
@@ -530,6 +531,25 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
     setShowEditChildModal(true);
   };
 
+  const handleDeleteChild = async (child) => {
+    if (!child?.id) {
+      return;
+    }
+
+    const confirmed = window.confirm(`Archive ${child.name}?`);
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await archiveChild(child.id);
+      await refreshRoles();
+    } catch (error) {
+      console.error("Error archiving child:", error);
+      alert(error?.message || "Unable to archive child right now.");
+    }
+  };
+
 
   const handleAddChildSuccess = () => {
     setShowAddChildModal(false);
@@ -881,6 +901,7 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
     toggleCard,
     handleQuickDataEntry,
     handleEditChild,
+    handleDeleteChild,
     handleDailyReport,
     handleMessages,
     handleGroupActionClick,
