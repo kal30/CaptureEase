@@ -12,7 +12,6 @@ import {
   Settings as SettingsIcon,
   Delete as DeleteIcon,
 } from '@mui/icons-material';
-import { alpha } from '@mui/material/styles';
 import { USER_ROLES } from '../../constants/roles';
 import colors from '../../assets/theme/colors';
 
@@ -68,22 +67,21 @@ const ChildManagementMenu = ({
       <IconButton
         size="small"
         onClick={handleMenuOpen}
-      sx={{
-        ml: 1,
-        width: 28,
-        height: 28,
-        bgcolor: colors.landing.panelSoft,
-        color: colors.brand.deep,
-        border: `1px solid ${alpha(colors.brand.tint, 0.28)}`,
-        "&:hover": {
-          bgcolor: colors.landing.sageLight,
-          transform: "scale(1.05)",
-        },
-        transition: "all 0.2s ease",
-      }}
+        sx={{
+          ml: 1,
+          width: 32,
+          height: 32,
+          bgcolor: colors.landing.surface,
+          color: colors.brand.deep,
+          border: `1px solid ${colors.landing.borderLight}`,
+          "&:hover": {
+            bgcolor: colors.landing.sageLight,
+          },
+          transition: "background-color 0.2s ease, border-color 0.2s ease",
+        }}
         title="Manage child settings"
       >
-        <SettingsIcon sx={{ fontSize: 16 }} />
+        <SettingsIcon sx={{ fontSize: 17 }} />
       </IconButton>
 
       <Menu
@@ -103,8 +101,12 @@ const ChildManagementMenu = ({
           paper: {
             elevation: 8,
             sx: {
-              borderRadius: 2,
-              minWidth: 180,
+              borderRadius: '12px',
+              minWidth: 200,
+              border: `1px solid ${colors.landing.borderLight}`,
+              boxShadow: `0 24px 60px ${colors.landing.shadowPanel}`,
+              bgcolor: 'rgba(255,255,255,0.98)',
+              backdropFilter: 'blur(16px)',
             }
           }
         }}

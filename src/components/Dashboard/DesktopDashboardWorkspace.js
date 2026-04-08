@@ -176,17 +176,17 @@ const DesktopDashboardWorkspace = ({
         px: { xs: 0, lg: 0 },
       }}
     >
-      <Box sx={{ width: '100%', maxWidth: 1560, mx: 'auto', px: { xs: 2, xl: 3 }, pb: 4 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 1, pt: 1, pb: 2 }}>
+      <Box sx={{ width: '100%', maxWidth: 1520, mx: 'auto', px: { xs: 2, xl: 3 }, pb: 4 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 1, pt: 0.5, pb: 1.5 }}>
           <Button
             onClick={handleChildSwitcherOpen}
             variant="outlined"
             disabled={hook.children.length <= 1}
             endIcon={hook.children.length > 1 ? <KeyboardArrowDownIcon sx={{ fontSize: 18 }} /> : null}
             sx={{
-              minHeight: 40,
-              px: 1.5,
-              borderRadius: 9999,
+              minHeight: 38,
+              px: 1.25,
+              borderRadius: '12px',
               borderColor: colors.landing.borderLight,
               bgcolor: colors.landing.surface,
               color: colors.landing.heroText,
@@ -204,12 +204,12 @@ const DesktopDashboardWorkspace = ({
               src={childAvatar || undefined}
               alt={childLabel}
               sx={{
-                width: 28,
-                height: 28,
+                width: 26,
+                height: 26,
                 mr: 1,
                 bgcolor: colors.roles.careOwner.primary,
                 color: '#fff',
-                fontSize: '0.82rem',
+                fontSize: '0.8rem',
                 border: `1px solid ${colors.landing.borderMedium}`,
               }}
             >
@@ -232,7 +232,7 @@ const DesktopDashboardWorkspace = ({
               sx: {
                 mt: 1,
                 minWidth: 250,
-                borderRadius: 3,
+                borderRadius: '12px',
                 border: `1px solid ${colors.landing.borderLight}`,
                 boxShadow: `0 24px 60px ${colors.landing.shadowPanel}`,
                 bgcolor: 'rgba(255,255,255,0.96)',
@@ -285,21 +285,21 @@ const DesktopDashboardWorkspace = ({
         <Box
           sx={{
             display: 'grid',
-            gridTemplateColumns: { lg: '260px minmax(0, 1fr) 300px' },
-            gap: { lg: 2.5 },
+            gridTemplateColumns: { lg: '250px minmax(0, 1fr) 290px' },
+            gap: { lg: 2.25 },
             alignItems: 'start',
           }}
         >
           <Paper
             variant="outlined"
-            sx={{
-              display: { xs: 'none', lg: 'block' },
-              position: 'sticky',
-              top: 76,
-              borderRadius: 3,
-              bgcolor: colors.landing.surface,
-              borderColor: colors.landing.borderLight,
-              boxShadow: `0 4px 6px -1px ${colors.landing.shadowSoft}`,
+              sx={{
+                display: { xs: 'none', lg: 'block' },
+                position: 'sticky',
+                top: 76,
+                borderRadius: '12px',
+                bgcolor: colors.landing.surface,
+                borderColor: colors.landing.borderLight,
+                boxShadow: `0 4px 6px -1px ${colors.landing.shadowSoft}`,
               p: 2,
             }}
           >
@@ -317,7 +317,7 @@ const DesktopDashboardWorkspace = ({
                   variant="outlined"
                   sx={{
                     p: 1.5,
-                    borderRadius: 2,
+                    borderRadius: '12px',
                     borderColor: colors.landing.borderLight,
                     bgcolor: colors.landing.surface,
                     boxShadow: `0 4px 6px -1px ${colors.landing.shadowSoft}`,
@@ -338,7 +338,7 @@ const DesktopDashboardWorkspace = ({
             <Paper
               variant="outlined"
               sx={{
-                borderRadius: 3,
+                borderRadius: '12px',
                 bgcolor: colors.landing.surface,
                 borderColor: colors.landing.borderLight,
                 boxShadow: `0 4px 6px -1px ${colors.landing.shadowSoft}`,
@@ -356,7 +356,7 @@ const DesktopDashboardWorkspace = ({
                     sx={{
                       minHeight: 44,
                       px: 2,
-                      borderRadius: 2,
+                      borderRadius: '12px',
                       whiteSpace: 'nowrap',
                       textTransform: 'none',
                       fontWeight: 700,
@@ -380,7 +380,7 @@ const DesktopDashboardWorkspace = ({
             <Paper
               variant="outlined"
               sx={{
-                borderRadius: 3,
+                borderRadius: '12px',
                 bgcolor: colors.landing.surface,
                 borderColor: colors.landing.borderLight,
                 boxShadow: `0 4px 6px -1px ${colors.landing.shadowSoft}`,
@@ -421,7 +421,7 @@ const DesktopDashboardWorkspace = ({
             <Paper
               variant="outlined"
               sx={{
-                borderRadius: 3,
+                borderRadius: '12px',
                 bgcolor: colors.landing.surface,
                 borderColor: colors.landing.borderLight,
                 boxShadow: `0 4px 6px -1px ${colors.landing.shadowSoft}`,
