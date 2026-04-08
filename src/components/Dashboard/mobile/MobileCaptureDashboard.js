@@ -14,8 +14,6 @@ import {
   Typography,
 } from '@mui/material';
 import {
-  Assignment as ReportsIcon,
-  BuildOutlined as ToolsIcon,
   AutoAwesomeOutlined as AutoAwesomeIcon,
   DeleteOutline as DeleteIcon,
   EditOutlined as EditIcon,
@@ -26,7 +24,6 @@ import {
   KeyboardArrowDown as KeyboardArrowDownIcon,
   SettingsOutlined as SettingsIcon,
   Search as SearchIcon,
-  Timeline as TimelineIcon,
   PriorityHigh as PriorityHighIcon,
 } from '@mui/icons-material';
 import { alpha } from '@mui/material/styles';
@@ -118,7 +115,6 @@ const MobileCaptureDashboard = ({
   const [searchText, setSearchText] = useState('');
   const [activeEntryType, setActiveEntryType] = useState(null);
   const [selectedDate] = useState(new Date());
-  const [toolsAnchor, setToolsAnchor] = useState(null);
   const [childMenuAnchor, setChildMenuAnchor] = useState(null);
   const [careTeamCount, setCareTeamCount] = useState(null);
   const [pullDistance, setPullDistance] = useState(0);
@@ -327,18 +323,6 @@ const MobileCaptureDashboard = ({
     onQuickEntry?.(activeChild, 'quick_note');
   };
 
-  const handleTimelineClick = () => {
-    timelineRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-
-  const handleToolsOpen = (event) => {
-    setToolsAnchor(event.currentTarget);
-  };
-
-  const handleToolsClose = () => {
-    setToolsAnchor(null);
-  };
-
   const handleChildMenuOpen = (event) => {
     setChildMenuAnchor(event.currentTarget);
   };
@@ -357,30 +341,6 @@ const MobileCaptureDashboard = ({
     handleChildMenuClose();
     onInviteTeamMember?.(activeChild?.id);
   };
-
-  const toolsMenuItems = [
-    {
-      label: 'Prep for therapy',
-      onClick: () => onDailyReport?.(activeChild),
-      icon: <AutoAwesomeIcon sx={{ fontSize: 17 }} />,
-    },
-    {
-      label: 'Import .xlsx or .docx',
-      onClick: () => onImportLogs?.(activeChild),
-      icon: <FileUploadIcon sx={{ fontSize: 17 }} />,
-    },
-    {
-      label: 'Edit Child Profile',
-      onClick: () => onEditChild?.(activeChild),
-      icon: <EditIcon sx={{ fontSize: 17 }} />,
-    },
-    {
-      label: 'Delete Child Profile',
-      onClick: () => onDeleteChild?.(activeChild),
-      icon: <DeleteIcon sx={{ fontSize: 17 }} />,
-      danger: true,
-    },
-  ];
 
   return (
     <Box
@@ -438,14 +398,14 @@ const MobileCaptureDashboard = ({
       >
         <Box
           sx={{
-            p: 2,
+            p: 1.25,
             backgroundColor: colors.landing.panelSoft,
             color: colors.landing.heroText,
             position: 'relative',
-            minHeight: 96,
+            minHeight: 72,
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1.1, mt: 0.75 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, mt: 0.2 }}>
             <Button
               onClick={handleChildSwitcherClick}
               aria-label={children.length > 1 ? 'Switch child' : activeChild.name}
@@ -467,12 +427,12 @@ const MobileCaptureDashboard = ({
                   src={activeChildPhoto}
                   alt={activeChild.name}
                   sx={{
-                    width: 32,
-                    height: 32,
+                    width: 30,
+                    height: 30,
                     border: `1px solid ${colors.landing.borderMedium}`,
                     bgcolor: colors.roles.careOwner.primary,
                     color: colors.landing.surface,
-                    fontSize: '0.85rem',
+                    fontSize: '0.82rem',
                     fontWeight: 800,
                     flexShrink: 0,
                   }}
@@ -482,9 +442,9 @@ const MobileCaptureDashboard = ({
                 <Stack direction="row" alignItems="center" spacing={0.35} sx={{ minWidth: 0 }}>
                   <Typography
                     sx={{
-                      fontSize: '1.35rem',
+                      fontSize: '1.18rem',
                       fontWeight: 900,
-                      lineHeight: 1.05,
+                      lineHeight: 1.08,
                       letterSpacing: '-0.03em',
                       color: colors.landing.heroText,
                       whiteSpace: 'nowrap',
@@ -506,9 +466,9 @@ const MobileCaptureDashboard = ({
               aria-label="Child actions"
               sx={{
                 flexShrink: 0,
-                width: 40,
-                height: 40,
-                minWidth: 40,
+                width: 36,
+                height: 36,
+                minWidth: 36,
                 p: 0,
                 borderRadius: '12px',
                 bgcolor: colors.landing.surface,
@@ -523,7 +483,7 @@ const MobileCaptureDashboard = ({
                 },
               }}
             >
-              <SettingsIcon sx={{ fontSize: 20 }} />
+              <SettingsIcon sx={{ fontSize: 18 }} />
             </Button>
           </Box>
         </Box>
@@ -756,71 +716,6 @@ const MobileCaptureDashboard = ({
         </Box>
       </Paper>
 
-      <Paper
-        elevation={6}
-        sx={{
-          position: 'fixed',
-          left: 0,
-          right: 0,
-          bottom: 0,
-          zIndex: 1300,
-          borderRadius: 0,
-          borderTop: `1px solid ${colors.landing.borderLight}`,
-          bgcolor: colors.landing.surface,
-          boxShadow: `0 -10px 30px ${colors.landing.shadowSoft}`,
-        }}
-      >
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' }}>
-          <Button
-            onClick={handleTimelineClick}
-            sx={{
-              minHeight: 62,
-              borderRadius: 0,
-              textTransform: 'none',
-              fontWeight: 800,
-              color: colors.landing.heroText,
-            }}
-          >
-            <Stack spacing={0.2} alignItems="center">
-              <TimelineIcon sx={{ fontSize: 20 }} />
-              <Typography sx={{ fontSize: '0.9rem', fontWeight: 700 }}>Timeline</Typography>
-            </Stack>
-          </Button>
-
-          <Button
-            onClick={() => onDailyReport?.(activeChild)}
-            sx={{
-              minHeight: 62,
-              borderRadius: 0,
-              textTransform: 'none',
-              fontWeight: 800,
-              color: colors.landing.heroText,
-            }}
-          >
-            <Stack spacing={0.2} alignItems="center">
-              <ReportsIcon sx={{ fontSize: 20 }} />
-              <Typography sx={{ fontSize: '0.9rem', fontWeight: 700 }}>Reports</Typography>
-            </Stack>
-          </Button>
-
-          <Button
-            onClick={handleToolsOpen}
-            sx={{
-              minHeight: 62,
-              borderRadius: 0,
-              textTransform: 'none',
-              fontWeight: 800,
-              color: colors.landing.heroText,
-            }}
-          >
-            <Stack spacing={0.2} alignItems="center">
-              <ToolsIcon sx={{ fontSize: 20 }} />
-              <Typography sx={{ fontSize: '0.9rem', fontWeight: 700 }}>Tools</Typography>
-            </Stack>
-          </Button>
-        </Box>
-      </Paper>
-
       <Popover
         open={Boolean(childMenuAnchor)}
         anchorEl={childMenuAnchor}
@@ -969,32 +864,6 @@ const MobileCaptureDashboard = ({
         </Box>
       </Popover>
 
-      <Popover
-        open={Boolean(toolsAnchor)}
-        anchorEl={toolsAnchor}
-        onClose={handleToolsClose}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-        transformOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-        disableScrollLock
-      >
-        <Box sx={{ p: 0.75, minWidth: 220 }}>
-          {toolsMenuItems.map((item) => (
-            <MenuItem
-              key={item.label}
-              onClick={() => {
-                handleToolsClose();
-                item.onClick?.();
-              }}
-              sx={{ gap: 1.1, py: 1 }}
-            >
-              <ListItemIcon sx={{ minWidth: 34 }}>
-                {item.icon}
-              </ListItemIcon>
-              <Typography sx={{ fontWeight: 700 }}>{item.label}</Typography>
-            </MenuItem>
-          ))}
-        </Box>
-      </Popover>
     </Box>
   );
 };
