@@ -331,6 +331,7 @@ const PanelDashboard = () => {
               onOpenFoodLog={hook.handleOpenFoodLog}
               onOpenBathroomLog={hook.handleOpenBathroomLog}
               onOpenMedicalLog={handleOpenMedicalLog}
+              onImportLogs={handleImportLogsClick}
               onAddChildClick={() => hook.setShowAddChildModal(true)}
             />
           )}

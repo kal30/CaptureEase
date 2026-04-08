@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Avatar,
   Box,
@@ -17,6 +17,7 @@ import {
   CategoryOutlined as CategoryOutlinedIcon,
   KeyboardArrowDown as KeyboardArrowDownIcon,
   PeopleAltOutlined as PeopleAltOutlinedIcon,
+  NoteAltOutlined as NoteAltOutlinedIcon,
   RestaurantOutlined as RestaurantOutlinedIcon,
   BedtimeOutlined as BedtimeOutlinedIcon,
   MedicationOutlined as MedicationOutlinedIcon,
@@ -83,12 +84,15 @@ const getChildLabel = (child) => child?.name || 'Select child';
 
 const DesktopDashboardWorkspace = ({
   hook,
+  onQuickEntry,
   onAddChildClick,
   onOpenSleepLog,
   onOpenFoodLog,
   onOpenBathroomLog,
+  onImportLogs,
 }) => {
   const { activeChildId, setActiveChildId } = useDashboardView();
+  const switchChildButtonRef = useRef(null);
   const [childSwitcherAnchor, setChildSwitcherAnchor] = useState(null);
   const [customQuickTags, setCustomQuickTags] = useState([]);
   const [timelineFilters, setTimelineFilters] = useState({});
@@ -122,7 +126,7 @@ const DesktopDashboardWorkspace = ({
 
   const handleChildSwitcherOpen = (event) => {
     if (hook.children.length > 1) {
-      setChildSwitcherAnchor(event.currentTarget);
+      setChildSwitcherAnchor(event?.currentTarget || switchChildButtonRef.current);
     }
   };
 
@@ -138,6 +142,12 @@ const DesktopDashboardWorkspace = ({
   const handleAddChild = () => {
     handleChildSwitcherClose();
     onAddChildClick?.();
+  };
+
+  const handleOpenSwitchChild = () => {
+    if (hook.children.length > 1) {
+      setChildSwitcherAnchor(switchChildButtonRef.current);
+    }
   };
 
   const handleQuickAction = (actionKey) => {
@@ -161,6 +171,11 @@ const DesktopDashboardWorkspace = ({
     }
   };
 
+  const handleQuickNote = () => {
+    if (!activeChild) return;
+    onQuickEntry?.(activeChild, 'quick_note');
+  };
+
   if (!activeChild) {
     return null;
   }
@@ -179,13 +194,14 @@ const DesktopDashboardWorkspace = ({
       <Box sx={{ width: '100%', maxWidth: 1520, mx: 'auto', px: { xs: 2, xl: 3 }, pb: 4 }}>
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 1, pt: 0.5, pb: 1.5 }}>
           <Button
+            ref={switchChildButtonRef}
             onClick={handleChildSwitcherOpen}
             variant="outlined"
             disabled={hook.children.length <= 1}
             endIcon={hook.children.length > 1 ? <KeyboardArrowDownIcon sx={{ fontSize: 18 }} /> : null}
             sx={{
-              minHeight: 38,
-              px: 1.25,
+              minHeight: 42,
+              px: 1.5,
               borderRadius: '12px',
               borderColor: colors.landing.borderLight,
               bgcolor: colors.landing.surface,
@@ -215,7 +231,10 @@ const DesktopDashboardWorkspace = ({
             >
               {childLabel.charAt(0).toUpperCase()}
             </Avatar>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1 }}>
+              <Typography sx={{ fontSize: '0.7rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: colors.landing.textMuted, fontWeight: 700 }}>
+                Switch Child
+              </Typography>
               <Typography sx={{ fontWeight: 600, fontSize: '0.92rem', color: colors.landing.heroText }}>
                 {childLabel}
               </Typography>
@@ -273,12 +292,17 @@ const DesktopDashboardWorkspace = ({
             </MenuItem>
           </Menu>
 
-          <ChildManagementMenu
+            <ChildManagementMenu
             child={activeChild}
             onEditChild={hook.handleEditChild}
             onInviteTeamMember={hook.handleInviteTeamMember}
             onDeleteChild={hook.handleDeleteChild}
+            onSwitchChild={handleOpenSwitchChild}
+            onPrepForTherapy={hook.handleShowCareReport}
+            onImportLogs={onImportLogs}
+            onStartChat={hook.handleMessages}
             userRole={hook.getUserRoleForChild?.(activeChild.id)}
+            careTeamCount={Array.isArray(activeChild?.users?.members) ? activeChild.users.members.length : 0}
           />
         </Box>
 
@@ -375,6 +399,32 @@ const DesktopDashboardWorkspace = ({
                   </Button>
                 ))}
               </Stack>
+
+              <Button
+                onClick={handleQuickNote}
+                startIcon={<NoteAltOutlinedIcon sx={{ fontSize: 18 }} />}
+                variant="outlined"
+                sx={{
+                  mt: 1.5,
+                  width: '100%',
+                  minHeight: 46,
+                  px: 2,
+                  borderRadius: '12px',
+                  borderColor: colors.landing.borderLight,
+                  bgcolor: colors.landing.surface,
+                  color: colors.landing.heroText,
+                  textTransform: 'none',
+                  fontWeight: 700,
+                  boxShadow: 'none',
+                  '&:hover': {
+                    bgcolor: colors.landing.sageLight,
+                    borderColor: colors.landing.borderMedium,
+                    boxShadow: 'none',
+                  },
+                }}
+              >
+                Quick Note (Auto-classified)
+              </Button>
             </Paper>
 
             <Paper
