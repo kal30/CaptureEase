@@ -20,13 +20,13 @@ import {
   DeleteOutline as DeleteIcon,
   EditOutlined as EditIcon,
   FileUpload as FileUploadIcon,
-  ForumOutlined as ForumIcon,
+  GroupsOutlined as GroupsIcon,
+  PersonAddAlt1Outlined as PersonAddIcon,
   NoteAltOutlined as NoteAltOutlinedIcon,
   KeyboardArrowDown as KeyboardArrowDownIcon,
+  SettingsOutlined as SettingsIcon,
   Search as SearchIcon,
-  MedicalServicesOutlined as MedicalServicesOutlinedIcon,
   Timeline as TimelineIcon,
-  Add as AddIcon,
   PriorityHigh as PriorityHighIcon,
 } from '@mui/icons-material';
 import { alpha } from '@mui/material/styles';
@@ -110,11 +110,11 @@ const MobileCaptureDashboard = ({
   onOpenFoodLog,
   onOpenBathroomLog,
   onOpenMedicalLog,
+  onInviteTeamMember,
   onMessages,
-  onAddChildClick,
   onImportLogs,
 }) => {
-  const { activeChildId } = useDashboardView();
+  const { activeChildId, goToSwitchboard } = useDashboardView();
   const [searchText, setSearchText] = useState('');
   const [activeEntryType, setActiveEntryType] = useState(null);
   const [selectedDate] = useState(new Date());
@@ -347,26 +347,38 @@ const MobileCaptureDashboard = ({
     setChildMenuAnchor(null);
   };
 
+  const handleChildSwitcherClick = () => {
+    if (children.length > 1) {
+      goToSwitchboard?.();
+    }
+  };
+
+  const handleAddCaregiver = () => {
+    handleChildMenuClose();
+    onInviteTeamMember?.(activeChild?.id);
+  };
+
   const toolsMenuItems = [
     {
-      label: 'Medical log',
-      onClick: () => onOpenMedicalLog?.(activeChild),
-      icon: <MedicalServicesOutlinedIcon sx={{ fontSize: 17 }} />,
-    },
-    {
-      label: 'Import logs',
-      onClick: () => onImportLogs?.(activeChild),
-      icon: <AddIcon sx={{ fontSize: 17, transform: 'rotate(45deg)' }} />,
-    },
-    {
-      label: 'Daily report',
+      label: 'Prep for therapy',
       onClick: () => onDailyReport?.(activeChild),
-      icon: <ReportsIcon sx={{ fontSize: 17 }} />,
+      icon: <AutoAwesomeIcon sx={{ fontSize: 17 }} />,
     },
     {
-      label: 'Add child',
-      onClick: () => onAddChildClick?.(),
-      icon: <AddIcon sx={{ fontSize: 17 }} />,
+      label: 'Import .xlsx or .docx',
+      onClick: () => onImportLogs?.(activeChild),
+      icon: <FileUploadIcon sx={{ fontSize: 17 }} />,
+    },
+    {
+      label: 'Edit Child Profile',
+      onClick: () => onEditChild?.(activeChild),
+      icon: <EditIcon sx={{ fontSize: 17 }} />,
+    },
+    {
+      label: 'Delete Child Profile',
+      onClick: () => onDeleteChild?.(activeChild),
+      icon: <DeleteIcon sx={{ fontSize: 17 }} />,
+      danger: true,
     },
   ];
 
@@ -433,22 +445,71 @@ const MobileCaptureDashboard = ({
             minHeight: 96,
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1.5, mt: 0.75 }}>
-            <Box sx={{ minWidth: 0 }}>
-              <Typography sx={{ fontSize: '1.35rem', fontWeight: 900, lineHeight: 1.05, letterSpacing: '-0.03em', color: colors.landing.heroText }}>
-                {activeChild.name}
-              </Typography>
-            </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1.1, mt: 0.75 }}>
+            <Button
+              onClick={handleChildSwitcherClick}
+              aria-label={children.length > 1 ? 'Switch child' : activeChild.name}
+              disableRipple={children.length <= 1}
+              sx={{
+                minWidth: 0,
+                p: 0,
+                borderRadius: '12px',
+                textTransform: 'none',
+                color: colors.landing.heroText,
+                cursor: children.length > 1 ? 'pointer' : 'default',
+                '&:hover': {
+                  bgcolor: 'transparent',
+                },
+              }}
+            >
+              <Stack direction="row" alignItems="center" spacing={0.9} sx={{ minWidth: 0 }}>
+                <Avatar
+                  src={activeChildPhoto}
+                  alt={activeChild.name}
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    border: `1px solid ${colors.landing.borderMedium}`,
+                    bgcolor: colors.roles.careOwner.primary,
+                    color: colors.landing.surface,
+                    fontSize: '0.85rem',
+                    fontWeight: 800,
+                    flexShrink: 0,
+                  }}
+                >
+                  {!activeChildPhoto ? activeChild.name?.[0]?.toUpperCase() : null}
+                </Avatar>
+                <Stack direction="row" alignItems="center" spacing={0.35} sx={{ minWidth: 0 }}>
+                  <Typography
+                    sx={{
+                      fontSize: '1.35rem',
+                      fontWeight: 900,
+                      lineHeight: 1.05,
+                      letterSpacing: '-0.03em',
+                      color: colors.landing.heroText,
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}
+                  >
+                    {activeChild.name}
+                  </Typography>
+                  {children.length > 1 ? (
+                    <KeyboardArrowDownIcon sx={{ fontSize: 18, color: colors.landing.textMuted, flexShrink: 0 }} />
+                  ) : null}
+                </Stack>
+              </Stack>
+            </Button>
 
             <Button
               onClick={handleChildMenuOpen}
               aria-label="Child actions"
-              endIcon={<KeyboardArrowDownIcon sx={{ fontSize: 18 }} />}
               sx={{
                 flexShrink: 0,
-                minHeight: 42,
-                px: 1.1,
-                py: 0.5,
+                width: 40,
+                height: 40,
+                minWidth: 40,
+                p: 0,
                 borderRadius: '12px',
                 bgcolor: colors.landing.surface,
                 color: colors.landing.heroText,
@@ -462,22 +523,7 @@ const MobileCaptureDashboard = ({
                 },
               }}
             >
-              <Avatar
-                src={activeChildPhoto}
-                alt={activeChild.name}
-                sx={{
-                  width: 32,
-                  height: 32,
-                  mr: 0.8,
-                  border: `1px solid ${colors.landing.borderMedium}`,
-                  bgcolor: colors.roles.careOwner.primary,
-                  color: colors.landing.surface,
-                  fontSize: '0.85rem',
-                  fontWeight: 800,
-                }}
-              >
-                {!activeChildPhoto ? activeChild.name?.[0]?.toUpperCase() : null}
-              </Avatar>
+              <SettingsIcon sx={{ fontSize: 20 }} />
             </Button>
           </Box>
         </Box>
@@ -828,6 +874,24 @@ const MobileCaptureDashboard = ({
             </Typography>
           </Box>
 
+          <Box sx={{ px: 1.25, pt: 0.25, pb: 0.9 }}>
+            <Typography sx={{ fontSize: '0.74rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.14em', color: colors.landing.textMuted }}>
+              Care Team
+            </Typography>
+          </Box>
+
+          {onInviteTeamMember ? (
+            <MenuItem
+              onClick={handleAddCaregiver}
+              sx={{ gap: 1.1, py: 1.25, px: 1.5, minHeight: 48, borderRadius: '12px' }}
+            >
+              <ListItemIcon sx={{ minWidth: 34 }}>
+                <PersonAddIcon sx={{ fontSize: 17, color: colors.brand.ink }} />
+              </ListItemIcon>
+              <Typography sx={{ fontWeight: 700 }}>Add caregiver</Typography>
+            </MenuItem>
+          ) : null}
+
           {onMessages && (careTeamCount ?? 0) > 1 ? (
             <MenuItem
               onClick={() => {
@@ -837,11 +901,17 @@ const MobileCaptureDashboard = ({
               sx={{ gap: 1.1, py: 1.25, px: 1.5, minHeight: 48, borderRadius: '12px' }}
             >
               <ListItemIcon sx={{ minWidth: 34 }}>
-                <ForumIcon sx={{ fontSize: 17, color: colors.brand.ink }} />
+                <GroupsIcon sx={{ fontSize: 17, color: colors.brand.ink }} />
               </ListItemIcon>
               <Typography sx={{ fontWeight: 700 }}>Start chat</Typography>
             </MenuItem>
           ) : null}
+
+          <Box sx={{ px: 1.25, pt: 0.8, pb: 0.9 }}>
+            <Typography sx={{ fontSize: '0.74rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.14em', color: colors.landing.textMuted }}>
+              Tools
+            </Typography>
+          </Box>
 
           <MenuItem
             onClick={() => {
@@ -879,7 +949,7 @@ const MobileCaptureDashboard = ({
             <ListItemIcon sx={{ minWidth: 34 }}>
               <EditIcon sx={{ fontSize: 17, color: colors.brand.ink }} />
             </ListItemIcon>
-            <Typography sx={{ fontWeight: 700 }}>Edit child</Typography>
+            <Typography sx={{ fontWeight: 700 }}>Edit Child Profile</Typography>
           </MenuItem>
 
           {typeof onDeleteChild === 'function' ? (
@@ -893,7 +963,7 @@ const MobileCaptureDashboard = ({
               <ListItemIcon sx={{ minWidth: 34 }}>
                 <DeleteIcon sx={{ fontSize: 17, color: 'error.main' }} />
               </ListItemIcon>
-              <Typography sx={{ fontWeight: 700, color: 'error.main' }}>Delete child</Typography>
+              <Typography sx={{ fontWeight: 700, color: 'error.main' }}>Delete Child Profile</Typography>
             </MenuItem>
           ) : null}
         </Box>
