@@ -11,6 +11,7 @@ import {
   Stack,
   Slide,
   Avatar,
+  TextField,
 } from '@mui/material';
 import {
   Close as CloseIcon,
@@ -34,6 +35,13 @@ import {
   getQuickTagGroups,
   getQuickTagPlaceholder,
 } from '../../constants/logTypeRegistry';
+import {
+  QUICK_TAG_EMOJI_CHOICES,
+  createCustomQuickTag,
+  getAllQuickTagOptions,
+  loadCustomQuickTags,
+  saveCustomQuickTags,
+} from '../../utils/quickTags';
 
 const getTimeInputValue = (date = new Date()) =>
   new Date(date).toTimeString().slice(0, 5);
@@ -69,13 +77,43 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
   const [selectedTags, setSelectedTags] = useState([]);
   const [importantMoment, setImportantMoment] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [customQuickTags, setCustomQuickTags] = useState([]);
+  const [tagDraftOpen, setTagDraftOpen] = useState(false);
+  const [tagDraftLabel, setTagDraftLabel] = useState('');
+  const [tagDraftEmoji, setTagDraftEmoji] = useState(QUICK_TAG_EMOJI_CHOICES[0]);
   const timeInputRef = useRef(null);
   const quickTagTouchStartYRef = useRef(null);
+
+  useEffect(() => {
+    setCustomQuickTags(loadCustomQuickTags(user?.uid));
+  }, [user?.uid]);
+
+  const quickTagGroups = useMemo(() => {
+    const builtInGroups = getQuickTagGroups();
+    const customGroup = customQuickTags.length > 0
+      ? {
+          id: 'custom-tags',
+          label: 'Your tags',
+          items: customQuickTags,
+        }
+      : null;
+
+    return [...builtInGroups, customGroup].filter(Boolean);
+  }, [customQuickTags]);
+
+  const quickTagLookup = useMemo(() => {
+    const registry = new Map();
+    getAllQuickTagOptions(customQuickTags).forEach((tag) => {
+      registry.set(tag.key, tag);
+    });
+    return registry;
+  }, [customQuickTags]);
 
   const selectedTagCategory = useMemo(() => {
     const primaryTag = selectedTags[0];
     return primaryTag ? QUICK_TAG_CATEGORY_MAP[primaryTag] || null : null;
   }, [selectedTags]);
+  const primaryTagMeta = selectedTags.length > 0 ? quickTagLookup.get(selectedTags[0]) : null;
 
   const noteText = noteData?.text || '';
 
@@ -101,6 +139,33 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
 
   const handleQuickTagSelect = (tagKey) => {
     toggleQuickTag(tagKey);
+  };
+
+  const handleCreateQuickTag = () => {
+    const label = tagDraftLabel.trim();
+    if (!label) {
+      return;
+    }
+
+    const nextTag = createCustomQuickTag(label, tagDraftEmoji);
+    if (!nextTag.key) {
+      return;
+    }
+
+    setCustomQuickTags((prev) => {
+      const existingIndex = prev.findIndex((tag) => tag.key === nextTag.key);
+      const nextTags = existingIndex >= 0
+        ? prev.map((tag) => (tag.key === nextTag.key ? { ...tag, label: nextTag.label, icon: nextTag.icon } : tag))
+        : [...prev, nextTag];
+
+      saveCustomQuickTags(user?.uid, nextTags);
+      return nextTags;
+    });
+
+    setSelectedTags((prev) => (prev.includes(nextTag.key) ? prev : [...prev, nextTag.key]));
+    setTagDraftLabel('');
+    setTagDraftEmoji(QUICK_TAG_EMOJI_CHOICES[0]);
+    setTagDraftOpen(false);
   };
 
   const closeQuickTags = () => {
@@ -348,12 +413,19 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
               }}
             >
               {selectedTags.map((tag) => {
+                const tagMeta = quickTagLookup.get(tag);
                 const categoryKey = QUICK_TAG_CATEGORY_MAP[tag] || 'log';
-                const categoryColors = CATEGORY_COLORS[categoryKey] || CATEGORY_COLORS.log;
+                const categoryColors = tagMeta?.custom
+                  ? {
+                      bg: '#F8FAFC',
+                      text: '#334155',
+                      border: '#C7D9C4',
+                    }
+                  : (CATEGORY_COLORS[categoryKey] || CATEGORY_COLORS.log);
                 return (
                   <Chip
                     key={tag}
-                    label={tag}
+                    label={tagMeta?.label || tag}
                     onDelete={() => toggleQuickTag(tag)}
                     sx={{
                       borderRadius: '999px',
@@ -440,11 +512,11 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
                 '& .MuiButton-endIcon': {
                   ml: 0.35,
                 },
-              }}
-            >
+                }}
+              >
               {selectedTags.length > 0
                 ? selectedTags.length === 1
-                  ? `Tags: ${selectedTags[0]}`
+                  ? `Tags: ${primaryTagMeta?.label || selectedTags[0]}`
                   : `Tags (${selectedTags.length})`
               : 'Add context to your note'}
             </Button>
@@ -592,7 +664,7 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
                 </Typography>
 
                 <Stack spacing={1} sx={{ width: '100%' }}>
-                {getQuickTagGroups().map((group, groupIndex) => (
+              {quickTagGroups.map((group, groupIndex) => (
                   <Box
                     key={groupIndex}
                       sx={{
@@ -652,6 +724,125 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
                     </Box>
                   ))}
                 </Stack>
+
+                {!tagDraftOpen ? (
+                  <Button
+                    fullWidth
+                    variant="outlined"
+                    onClick={() => setTagDraftOpen(true)}
+                    sx={{
+                      mt: 1.25,
+                      minHeight: 46,
+                      borderRadius: '12px',
+                      borderWidth: '2px',
+                      borderColor: '#C7D9C4',
+                      color: '#334155',
+                      bgcolor: '#ffffff',
+                      textTransform: 'none',
+                      fontWeight: 800,
+                      '&:hover': {
+                        borderWidth: '2px',
+                        borderColor: '#B8D3B5',
+                        bgcolor: '#F7FBF9',
+                      },
+                    }}
+                  >
+                    + New
+                  </Button>
+                ) : (
+                  <Box
+                    sx={{
+                      mt: 1.25,
+                      p: 1.2,
+                      borderRadius: '14px',
+                      border: '1px solid #E2E8F0',
+                      bgcolor: '#F8FAFC',
+                    }}
+                  >
+                    <Typography sx={{ fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748B', mb: 1 }}>
+                      Add your own tag
+                    </Typography>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      value={tagDraftLabel}
+                      onChange={(event) => setTagDraftLabel(event.target.value)}
+                      placeholder="1-2 words"
+                      helperText="Keep it short so it stays quick."
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '12px',
+                          bgcolor: '#ffffff',
+                        },
+                      }}
+                    />
+
+                    <Box sx={{ mt: 1 }}>
+                      <Typography sx={{ fontSize: '0.72rem', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748B', mb: 0.75 }}>
+                        Pick an emoji
+                      </Typography>
+                      <Stack direction="row" spacing={0.75} sx={{ flexWrap: 'wrap' }}>
+                        {QUICK_TAG_EMOJI_CHOICES.map((emoji) => (
+                          <Chip
+                            key={emoji}
+                            label={emoji}
+                            onClick={() => setTagDraftEmoji(emoji)}
+                            sx={{
+                              width: 40,
+                              height: 40,
+                              borderRadius: '12px',
+                              border: `1px solid ${tagDraftEmoji === emoji ? '#8FC9C0' : '#E2E8F0'}`,
+                              bgcolor: tagDraftEmoji === emoji ? '#EAF4F2' : '#ffffff',
+                              fontSize: '1rem',
+                            }}
+                          />
+                        ))}
+                      </Stack>
+                    </Box>
+
+                    <Box sx={{ display: 'flex', gap: 1, mt: 1.2 }}>
+                      <Button
+                        fullWidth
+                        variant="text"
+                        onClick={() => {
+                          setTagDraftOpen(false);
+                          setTagDraftLabel('');
+                          setTagDraftEmoji(QUICK_TAG_EMOJI_CHOICES[0]);
+                        }}
+                        sx={{
+                          textTransform: 'none',
+                          borderRadius: '12px',
+                          color: '#64748B',
+                          fontWeight: 700,
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        fullWidth
+                        variant="contained"
+                        onClick={handleCreateQuickTag}
+                        disabled={!tagDraftLabel.trim()}
+                        sx={{
+                          textTransform: 'none',
+                          borderRadius: '12px',
+                          bgcolor: '#8FC9C0',
+                          color: '#0F172A',
+                          fontWeight: 800,
+                          '&:hover': {
+                            bgcolor: '#7EB8AF',
+                          },
+                          '&.Mui-disabled': {
+                            bgcolor: '#E2E8F0',
+                            color: '#94A3B8',
+                          },
+                        }}
+                      >
+                        Add tag
+                      </Button>
+                    </Box>
+                  </Box>
+                )}
 
                 <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1.5 }}>
                   <Button

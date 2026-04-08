@@ -350,6 +350,28 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
       );
     }
 
+    if (filters.importantOnly) {
+      filteredEntries = filteredEntries.filter(entry => (
+        entry.importantMoment ||
+        entry.isImportantMoment ||
+        entry.importance === 'important'
+      ));
+    }
+
+    if (filters.tagFilters?.length > 0) {
+      const activeTagFilters = filters.tagFilters
+        .map((tag) => String(tag || '').trim().toLowerCase())
+        .filter(Boolean);
+
+      filteredEntries = filteredEntries.filter(entry => {
+        const entryTags = Array.isArray(entry.tags)
+          ? entry.tags.map((tag) => String(tag || '').trim().toLowerCase()).filter(Boolean)
+          : [];
+
+        return entryTags.some((tag) => activeTagFilters.includes(tag));
+      });
+    }
+
     // Filter by user roles
     if (filters.userRoles?.length > 0) {
       filteredEntries = filteredEntries.filter(entry => 

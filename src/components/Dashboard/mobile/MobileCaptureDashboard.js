@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { onAuthStateChanged } from 'firebase/auth';
 import {
   Avatar,
   Box,
@@ -6,11 +7,14 @@ import {
   Button,
   Chip,
   ListItemIcon,
+  Drawer,
   Paper,
   Popover,
   MenuItem,
   Stack,
   TextField,
+  FormControlLabel,
+  Switch,
   Typography,
 } from '@mui/material';
 import {
@@ -19,6 +23,7 @@ import {
   EditOutlined as EditIcon,
   FileUpload as FileUploadIcon,
   GroupsOutlined as GroupsIcon,
+  FilterListRounded as FilterListRoundedIcon,
   PersonAddAlt1Outlined as PersonAddIcon,
   NoteAltOutlined as NoteAltOutlinedIcon,
   KeyboardArrowDown as KeyboardArrowDownIcon,
@@ -31,6 +36,8 @@ import { useDashboardView } from '../shared/DashboardViewContext';
 import UnifiedTimeline from '../../Timeline/UnifiedTimeline';
 import { getChildCareTeam } from '../../../services/childAccessService';
 import { getLogTypeByEntry } from '../../../constants/logTypeRegistry';
+import { auth } from '../../../services/firebase';
+import { getQuickTagDisplay, loadCustomQuickTags } from '../../../utils/quickTags';
 import colors from '../../../assets/theme/colors';
 
 const countTodayEntries = (entries = []) => {
@@ -119,6 +126,10 @@ const MobileCaptureDashboard = ({
   const [childMenuAnchor, setChildMenuAnchor] = useState(null);
   const [switchMenuAnchor, setSwitchMenuAnchor] = useState(null);
   const [careTeamCount, setCareTeamCount] = useState(null);
+  const [customQuickTags, setCustomQuickTags] = useState([]);
+  const [timelineFilterSheetOpen, setTimelineFilterSheetOpen] = useState(false);
+  const [timelineImportantOnly, setTimelineImportantOnly] = useState(false);
+  const [timelineTagFilters, setTimelineTagFilters] = useState([]);
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const timelineRef = useRef(null);
@@ -133,6 +144,7 @@ const MobileCaptureDashboard = ({
     () => children.find((child) => child.id === activeChildId) || children[0] || null,
     [activeChildId, children]
   );
+  const activeChildEntries = useMemo(() => allEntries[activeChild?.id] || [], [allEntries, activeChild?.id]);
   const activeChildPhoto = activeChild?.profilePhoto || activeChild?.photoURL || activeChild?.avatarUrl || '';
   const activeChildWarningLabel = useMemo(() => {
     const medicalProfile = activeChild?.medicalProfile || {};
@@ -163,7 +175,18 @@ const MobileCaptureDashboard = ({
   useEffect(() => {
     setSearchText('');
     setActiveEntryType(null);
+    setTimelineImportantOnly(false);
+    setTimelineTagFilters([]);
+    setTimelineFilterSheetOpen(false);
   }, [activeChild?.id]);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCustomQuickTags(loadCustomQuickTags(user?.uid));
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     const node = rootRef.current;
@@ -292,11 +315,37 @@ const MobileCaptureDashboard = ({
   }, [activeChild?.id, allEntries]);
   const hasTimelineEntries = (allEntries[activeChild?.id] || []).length > 0;
   const shouldGuideToQuickLog = !hasTimelineEntries;
+  const timelineAdvancedFilterCount = (timelineImportantOnly ? 1 : 0) + timelineTagFilters.length;
+
+  const availableTimelineTags = useMemo(() => {
+    const tagMap = new Map();
+
+    activeChildEntries.forEach((entry) => {
+      (Array.isArray(entry.tags) ? entry.tags : []).forEach((tag) => {
+        const key = String(tag || '').trim();
+        if (!key || tagMap.has(key)) {
+          return;
+        }
+
+        tagMap.set(key, getQuickTagDisplay(key, customQuickTags));
+      });
+    });
+
+    customQuickTags.forEach((tag) => {
+      if (!tagMap.has(tag.key)) {
+        tagMap.set(tag.key, tag);
+      }
+    });
+
+    return Array.from(tagMap.values()).sort((a, b) => a.label.localeCompare(b.label));
+  }, [activeChildEntries, customQuickTags]);
 
   const timelineFiltersValue = useMemo(() => ({
     searchText: searchText || undefined,
     entryTypes: activeEntryType ? [activeEntryType] : undefined,
-  }), [activeEntryType, searchText]);
+    importantOnly: timelineImportantOnly || undefined,
+    tagFilters: timelineTagFilters.length > 0 ? timelineTagFilters : undefined,
+  }), [activeEntryType, searchText, timelineImportantOnly, timelineTagFilters]);
 
   if (!activeChild) {
     return null;
@@ -344,6 +393,14 @@ const MobileCaptureDashboard = ({
   const handleAddCaregiver = () => {
     handleChildMenuClose();
     onInviteTeamMember?.(activeChild?.id);
+  };
+
+  const toggleTimelineTagFilter = (tagKey) => {
+    setTimelineTagFilters((prev) => (
+      prev.includes(tagKey)
+        ? prev.filter((key) => key !== tagKey)
+        : [...prev, tagKey]
+    ));
   };
 
   return (
@@ -685,6 +742,27 @@ const MobileCaptureDashboard = ({
                 />
               );
             })}
+            <Chip
+              icon={<FilterListRoundedIcon sx={{ fontSize: 18 }} />}
+              label={timelineAdvancedFilterCount > 0 ? `Filters (${timelineAdvancedFilterCount})` : 'Filters'}
+              onClick={() => setTimelineFilterSheetOpen(true)}
+              sx={{
+                flex: '0 0 auto',
+                height: 36,
+                borderRadius: 9999,
+                fontWeight: 800,
+                px: 1,
+                color: timelineAdvancedFilterCount > 0 ? colors.landing.heroText : colors.landing.textMuted,
+                bgcolor: timelineAdvancedFilterCount > 0 ? colors.brand.cyanPop : colors.landing.surface,
+                border: `1px solid ${timelineAdvancedFilterCount > 0 ? colors.brand.cyanPop : colors.landing.borderLight}`,
+                '& .MuiChip-label': {
+                  px: 1.1,
+                },
+                '&:hover': {
+                  bgcolor: timelineAdvancedFilterCount > 0 ? colors.brand.cyanPop : colors.landing.surfaceSoft,
+                },
+              }}
+            />
           </Stack>
         </Box>
 
@@ -912,6 +990,159 @@ const MobileCaptureDashboard = ({
           </MenuItem>
         </Box>
       </Popover>
+
+      <Drawer
+        anchor="bottom"
+        open={timelineFilterSheetOpen}
+        onClose={() => setTimelineFilterSheetOpen(false)}
+        PaperProps={{
+          sx: {
+            borderRadius: '20px 20px 0 0',
+            borderTop: `1px solid ${colors.landing.borderLight}`,
+            bgcolor: colors.landing.surface,
+            maxHeight: '72vh',
+            pb: 'env(safe-area-inset-bottom)',
+          },
+        }}
+      >
+        <Box sx={{ px: 1.75, pt: 1.5, pb: 1.75 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, mb: 1.25 }}>
+            <Box>
+              <Typography sx={{ fontSize: '0.78rem', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: colors.landing.textMuted }}>
+                Filters
+              </Typography>
+              <Typography sx={{ fontSize: '1rem', fontWeight: 800, color: colors.landing.heroText }}>
+                Important moments and tags
+              </Typography>
+            </Box>
+            <Button
+              variant="text"
+              onClick={() => {
+                setTimelineImportantOnly(false);
+                setTimelineTagFilters([]);
+              }}
+              sx={{
+                textTransform: 'none',
+                color: colors.landing.textMuted,
+                fontWeight: 700,
+              }}
+            >
+              Clear
+            </Button>
+          </Box>
+
+          <Paper
+            variant="outlined"
+            sx={{
+              p: 1.25,
+              borderRadius: '16px',
+              borderColor: colors.landing.borderLight,
+              bgcolor: colors.landing.sageLight,
+              mb: 1.25,
+            }}
+          >
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={timelineImportantOnly}
+                  onChange={(event) => setTimelineImportantOnly(event.target.checked)}
+                  color="primary"
+                />
+              }
+              label="Show only important / flagged"
+              sx={{
+                m: 0,
+                alignItems: 'center',
+                gap: 1,
+                '& .MuiFormControlLabel-label': {
+                  fontWeight: 700,
+                  color: colors.landing.heroText,
+                },
+              }}
+            />
+          </Paper>
+
+          <Typography sx={{ fontSize: '0.76rem', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: colors.landing.textMuted, mb: 0.9 }}>
+            Tags
+          </Typography>
+
+          <Box
+            sx={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 0.8,
+              maxHeight: '32vh',
+              overflowY: 'auto',
+              pr: 0.25,
+              pb: 0.5,
+            }}
+          >
+            {availableTimelineTags.length > 0 ? (
+              availableTimelineTags.map((tag) => {
+                const selected = timelineTagFilters.includes(tag.key);
+                return (
+                  <Chip
+                    key={tag.key}
+                    label={`${tag.icon || '🏷️'} ${tag.label}`}
+                    onClick={() => toggleTimelineTagFilter(tag.key)}
+                    sx={{
+                      flex: '0 0 auto',
+                      height: 38,
+                      borderRadius: 9999,
+                      fontWeight: 800,
+                      px: 1,
+                      color: selected ? colors.landing.heroText : colors.landing.textMuted,
+                      bgcolor: selected ? colors.brand.cyanPop : colors.landing.surface,
+                      border: `1px solid ${selected ? colors.brand.cyanPop : colors.landing.borderLight}`,
+                      '& .MuiChip-label': {
+                        px: 1.1,
+                      },
+                    }}
+                  />
+                );
+              })
+            ) : (
+              <Typography sx={{ color: colors.landing.textMuted, fontSize: '0.92rem' }}>
+                No tags yet. Create one in Quick Note to start filtering by it.
+              </Typography>
+            )}
+          </Box>
+
+          <Box sx={{ display: 'flex', gap: 1, mt: 1.5 }}>
+            <Button
+              fullWidth
+              variant="outlined"
+              onClick={() => setTimelineFilterSheetOpen(false)}
+              sx={{
+                borderRadius: '12px',
+                textTransform: 'none',
+                fontWeight: 800,
+                borderColor: colors.landing.borderLight,
+                color: colors.landing.textMuted,
+              }}
+            >
+              Close
+            </Button>
+            <Button
+              fullWidth
+              variant="contained"
+              onClick={() => setTimelineFilterSheetOpen(false)}
+              sx={{
+                borderRadius: '12px',
+                textTransform: 'none',
+                fontWeight: 800,
+                bgcolor: colors.brand.ink,
+                color: colors.landing.heroText,
+                '&:hover': {
+                  bgcolor: colors.brand.navy,
+                },
+              }}
+            >
+              Done
+            </Button>
+          </Box>
+        </Box>
+      </Drawer>
 
     </Box>
   );
