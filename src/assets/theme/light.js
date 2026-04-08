@@ -163,6 +163,7 @@ const theme = createTheme({
       },
       fontWeight: 600,
       lineHeight: 1.3,
+      letterSpacing: "-0.02em",
       color: colors.landing.bodyText,
     },
     h3: {
@@ -173,6 +174,7 @@ const theme = createTheme({
       },
       fontWeight: 600,
       lineHeight: 1.4,
+      letterSpacing: "-0.02em",
       color: colors.landing.bodyText,
     },
     h4: {
@@ -183,18 +185,21 @@ const theme = createTheme({
       },
       fontWeight: 600,
       lineHeight: 1.4,
+      letterSpacing: "-0.02em",
       color: colors.landing.bodyText,
     },
     h5: {
       fontSize: "1.25rem",
       fontWeight: 600,
       lineHeight: 1.4,
+      letterSpacing: "-0.02em",
       color: colors.landing.bodyText,
     },
     h6: {
       fontSize: "1.125rem",
       fontWeight: 600,
       lineHeight: 1.4,
+      letterSpacing: "-0.02em",
       color: colors.landing.bodyText,
     },
     body1: {
@@ -211,7 +216,7 @@ const theme = createTheme({
       textTransform: "none",
       fontSize: "0.95rem",
       fontWeight: 600,
-      letterSpacing: "0.025em",
+      letterSpacing: "-0.02em",
       fontFamily: brand.typography.buttonFontFamily,
     },
     caption: {

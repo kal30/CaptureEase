@@ -8,6 +8,7 @@ const getMuiButtonTheme = (brand) => ({
       padding: "12px 24px",
       fontSize: "0.95rem",
       fontWeight: 600,
+      letterSpacing: "-0.02em",
       textTransform: "none",
       transition: "background-color 120ms ease, transform 120ms ease",
       minHeight: 44,
