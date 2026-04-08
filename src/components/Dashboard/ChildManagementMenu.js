@@ -32,6 +32,7 @@ const ChildManagementMenu = ({
   const canManage = userRole === USER_ROLES.CARE_OWNER || userRole === USER_ROLES.CARE_PARTNER;
   const canInvite = userRole === USER_ROLES.CARE_OWNER; // Only Care Owner can invite
   const canEdit = userRole === USER_ROLES.CARE_OWNER || userRole === USER_ROLES.CARE_PARTNER;
+  const canDelete = canManage && typeof onDeleteChild === 'function';
   
   if (!canManage) return null;
 
@@ -126,15 +127,17 @@ const ChildManagementMenu = ({
           </MenuItem>
         )}
         
-        <MenuItem 
-          onClick={handleDeleteChild}
-          sx={{ color: 'error.main' }}
-        >
-          <ListItemIcon>
-            <DeleteIcon fontSize="small" sx={{ color: 'error.main' }} />
-          </ListItemIcon>
-          <ListItemText>Delete Child</ListItemText>
-        </MenuItem>
+        {canDelete ? (
+          <MenuItem
+            onClick={handleDeleteChild}
+            sx={{ color: 'error.main' }}
+          >
+            <ListItemIcon>
+              <DeleteIcon fontSize="small" sx={{ color: 'error.main' }} />
+            </ListItemIcon>
+            <ListItemText>Delete Child</ListItemText>
+          </MenuItem>
+        ) : null}
       </Menu>
     </>
   );

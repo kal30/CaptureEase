@@ -21,12 +21,10 @@ import CloseIcon from "@mui/icons-material/Close";
 
 // Hooks and Services
 import { usePanelDashboard } from "../hooks/usePanelDashboard";
-import usePWAInstallPrompt from "../hooks/usePWAInstallPrompt";
-import { getActionGroups } from "../constants/actionGroups";
 
 // Components
 import MobileDashboardFlow from "../components/Dashboard/MobileDashboardFlow";
-import DesktopDashboardOverview from "../components/Dashboard/DesktopDashboardOverview";
+import DesktopDashboardWorkspace from "../components/Dashboard/DesktopDashboardWorkspace";
 import QuickCheckIn from "../components/Mobile/QuickCheckIn";
 import AddChildModal from "../components/Dashboard/AddChildModal";
 import EditChildModal from "../components/Dashboard/EditChildModal";
@@ -43,7 +41,6 @@ import { ImportLogsModal, extractTextFromImportFile, parseImportedLogs } from ".
 import DailyCareReport from "../components/Reports/DailyCareReport";
 import { DashboardViewProvider } from "../components/Dashboard/shared/DashboardViewContext";
 import RenderDebugOverlay from "../components/Dashboard/shared/RenderDebugOverlay";
-import InstallPromptBanner from "../components/UI/InstallPromptBanner";
 import { trackRenderDebug, useMountDebug } from "../utils/renderDebug";
 import colors from "../assets/theme/colors";
 
@@ -52,8 +49,6 @@ const PanelDashboard = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const isDesktop = !isMobile;
   const hook = usePanelDashboard({ activeChildOnly: isMobile });
-  const actionGroups = getActionGroups(hook.theme);
-  const pwaInstallPrompt = usePWAInstallPrompt();
   const importFileInputRef = useRef(null);
   const [showImportModal, setShowImportModal] = useState(false);
   const [importRows, setImportRows] = useState([]);
@@ -226,14 +221,6 @@ const PanelDashboard = () => {
   return (
     <Container maxWidth="xl" sx={{ mt: { xs: 2, md: 4 }, mb: { xs: 3, md: 4 } }}>
       <RenderDebugOverlay />
-      {pwaInstallPrompt.shouldShowPrompt ? (
-        <InstallPromptBanner
-          canInstall={pwaInstallPrompt.canInstall}
-          isIOS={pwaInstallPrompt.isIOS}
-          onInstall={pwaInstallPrompt.promptInstall}
-          onDismiss={pwaInstallPrompt.dismissPrompt}
-        />
-      ) : null}
       {hook.children.length === 0 ? (
         <Box
           sx={{
@@ -304,6 +291,7 @@ const PanelDashboard = () => {
               incidents={hook.incidents}
               onQuickEntry={hook.handleQuickDataEntry}
               onEditChild={hook.handleEditChild}
+              onDeleteChild={hook.handleDeleteChild}
               onInviteTeamMember={hook.handleInviteTeamMember}
               onDailyReport={hook.handleShowCareReport}
               onTrack={hook.handleTrack}
@@ -333,15 +321,15 @@ const PanelDashboard = () => {
               showBathroomLogSheet={hook.showBathroomLogSheet}
             />
           ) : (
-            <DesktopDashboardOverview
+            <DesktopDashboardWorkspace
               hook={hook}
-              actionGroups={actionGroups}
-              onAddChildClick={() => hook.setShowAddChildModal(true)}
-              onImportLogs={handleImportLogsClick}
-              onTrack={hook.handleTrack}
+              onQuickEntry={hook.handleQuickDataEntry}
+              onDailyReport={hook.handleShowCareReport}
+              onOpenSleepLog={hook.handleOpenSleepLog}
               onOpenFoodLog={hook.handleOpenFoodLog}
               onOpenBathroomLog={hook.handleOpenBathroomLog}
               onOpenMedicalLog={handleOpenMedicalLog}
+              onAddChildClick={() => hook.setShowAddChildModal(true)}
             />
           )}
         </DashboardViewProvider>

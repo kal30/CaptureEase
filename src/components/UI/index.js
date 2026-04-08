@@ -17,7 +17,6 @@ export { default as MonthNavigationControls } from "./MonthNavigationControls";
 export { default as DailyLogEntry } from "./DailyLogEntry";
 export { default as NotificationBadge } from "./NotificationBadge";
 export { default as NotificationPermissionPrompt } from "./NotificationPermissionPrompt";
-export { default as InstallPromptBanner } from "./InstallPromptBanner";
 
 // Progressive Disclosure Components
 export { default as ProgressiveDisclosure } from "./ProgressiveDisclosure";

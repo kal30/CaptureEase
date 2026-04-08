@@ -44,6 +44,15 @@ export const DashboardViewProvider = ({
     }
   }, [activeChildId, onActiveChildChange]);
 
+  useEffect(() => {
+    const handleOpenSwitchboard = () => {
+      setMobileView('switchboard');
+    };
+
+    window.addEventListener('captureez:open-switchboard', handleOpenSwitchboard);
+    return () => window.removeEventListener('captureez:open-switchboard', handleOpenSwitchboard);
+  }, []);
+
   const value = useMemo(() => ({
     activeChildId,
     setActiveChildId,

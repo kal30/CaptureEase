@@ -18,6 +18,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SaveIcon from '@mui/icons-material/Save';
 import CloseIcon from '@mui/icons-material/Close';
+import FavoriteBorderOutlinedIcon from '@mui/icons-material/FavoriteBorderOutlined';
 import { doc, updateDoc } from 'firebase/firestore';
 import { getEntryTypeMeta, mapLegacyType, ENTRY_TYPE } from "../../constants/timeline";
 import { getLogTypeByCategory, getLogTypeByEntry } from "../../constants/logTypeRegistry";
@@ -566,96 +567,70 @@ const UnifiedTimeline = ({
       {visibleEntries.length === 0 ? (
         // Empty state
         mobileTimeLayout ? (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.4 }}>
-            <Box
-              onClick={onEmptyStateClick}
-              onKeyDown={(event) => {
-                if ((event.key === 'Enter' || event.key === ' ') && onEmptyStateClick) {
-                  event.preventDefault();
-                  onEmptyStateClick();
-                }
-              }}
-              role={onEmptyStateClick ? 'button' : undefined}
-              tabIndex={onEmptyStateClick ? 0 : undefined}
-              sx={{
-                p: 2,
-                borderRadius: 0.35,
-                background: `linear-gradient(135deg, ${colors.app.cards.background} 0%, ${colors.app.cards.shadowPanel} 100%)`,
-                border: `1px solid ${colors.app.cards.border}`,
-                boxShadow: 'none',
-                textAlign: 'center',
-                cursor: onEmptyStateClick ? 'pointer' : 'default',
-              }}
-            >
-              <Typography sx={{ fontSize: '1.05rem', fontWeight: 800, color: 'text.primary', mb: 0.35 }}>
-                Nothing logged yet today
-                <Box component="span" sx={{ ml: 0.5, color: colors.semantic.warning }}>💛</Box>
-              </Typography>
-              <Typography sx={{ fontSize: '0.92rem', color: 'text.secondary', mb: 1.25 }}>
-                Start with:
-              </Typography>
-              <Stack direction="row" spacing={0.75} sx={{ justifyContent: 'center', flexWrap: 'wrap' }}>
-                {[
-                  { label: 'Log Behavior', icon: '🛡️', color: colors.app.timeline.incident, bg: colors.app.incident.behavior },
-                  { label: 'Log Sleep', icon: '🌙', color: colors.app.timeline.dailyHabit, bg: colors.app.dailyCare.background },
-                  { label: 'Quick Note', icon: '📝', color: colors.app.timeline.journal, bg: colors.app.journal.chipBg },
-                ].map((item) => (
-                  <Box
-                    key={item.label}
-                    sx={{
-                      px: 1.05,
-                      py: 0.58,
-                      borderRadius: 0.35,
-                      border: `1px solid ${colors.app.cards.border}`,
-                      backgroundColor: colors.app.cards.background,
-                      fontSize: '0.82rem',
-                      fontWeight: 700,
-                      color: 'text.primary',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 0.55,
-                    }}
-                  >
-                    <Avatar
-                      sx={{
-                        width: 20,
-                        height: 20,
-                        fontSize: '0.78rem',
-                        bgcolor: item.bg,
-                        color: item.color,
-                      }}
-                    >
-                      {item.icon}
-                    </Avatar>
-                    {item.label}
-                  </Box>
-                ))}
-              </Stack>
-            </Box>
-
+          <Box
+            onClick={onEmptyStateClick}
+            onKeyDown={(event) => {
+              if ((event.key === "Enter" || event.key === " ") && onEmptyStateClick) {
+                event.preventDefault();
+                onEmptyStateClick();
+              }
+            }}
+            role={onEmptyStateClick ? "button" : undefined}
+            tabIndex={onEmptyStateClick ? 0 : undefined}
+            sx={{
+              minHeight: mobileTimelineMinHeight,
+              textAlign: "center",
+              py: { xs: 1.75, md: 2.25 },
+              px: { xs: 1.5, md: 2 },
+              borderRadius: '14px',
+              cursor: onEmptyStateClick ? "pointer" : "default",
+              transition: "background-color 0.2s ease, box-shadow 0.2s ease",
+              "&:hover": onEmptyStateClick
+                ? {
+                    backgroundColor: "action.hover",
+                    boxShadow: `0 2px 8px ${colors.app.cards.shadowPanel}`,
+                  }
+                : undefined,
+              "&:focus-visible": onEmptyStateClick
+                ? {
+                    outline: "2px solid",
+                    outlineColor: "primary.main",
+                    outlineOffset: 2,
+                  }
+                : undefined,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 1,
+              maxWidth: 520,
+              mx: 'auto',
+            }}
+          >
             <Box
               sx={{
-                minHeight: 92,
-                p: 2,
-                borderRadius: 0.35,
-                backgroundColor: colors.app.cards.background,
-                border: `1px solid ${colors.app.cards.border}`,
-                boxShadow: 'none',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                textAlign: 'center',
+                width: 46,
+                height: 46,
+                borderRadius: '50%',
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: colors.landing.pastelAqua,
+                color: colors.landing.heroText,
+                fontSize: "1.2rem",
+                fontWeight: 700,
               }}
             >
-              <Box>
-                <Typography sx={{ fontSize: '0.98rem', fontWeight: 800, color: 'text.primary', mb: 0.35 }}>
-                  Timeline starts after the first log
-                </Typography>
-                <Typography sx={{ fontSize: '0.84rem', color: 'text.secondary' }}>
-                  Your entries for today will appear here in time order.
-                </Typography>
-              </Box>
+              <FavoriteBorderOutlinedIcon sx={{ fontSize: 24 }} />
             </Box>
+            <Typography variant="body1" sx={{ fontWeight: 700, mb: 0.25, color: colors.landing.heroText }}>
+              No entries yet today
+            </Typography>
+            <Typography variant="caption" sx={{ fontSize: "0.76rem", lineHeight: 1.25, color: colors.landing.textMuted }}>
+              {Object.keys(filters).length > 0
+                ? "Try adjusting your filters or select a different date"
+                : "Tap to log something"}
+            </Typography>
           </Box>
         ) : (
           <Box
@@ -673,7 +648,7 @@ const UnifiedTimeline = ({
               textAlign: "center",
               py: { xs: 1.75, md: 2.25 },
               px: { xs: 1.5, md: 2 },
-              borderRadius: 0.35,
+              borderRadius: '14px',
               cursor: onEmptyStateClick ? "pointer" : "default",
               transition: "background-color 0.2s ease, box-shadow 0.2s ease",
               "&:hover": onEmptyStateClick
@@ -695,7 +670,7 @@ const UnifiedTimeline = ({
               sx={{
                 width: 48,
                 height: 48,
-                borderRadius: 0.35,
+                borderRadius: '14px',
                 display: "inline-flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -727,6 +702,7 @@ const UnifiedTimeline = ({
               minHeight: mobileTimelineMinHeight,
               px: { xs: 0, md: 0.5 },
               backgroundColor: colors.app.cards.background,
+              borderRadius: '14px',
             }}
           >
             <Stack spacing={1.25} role="list">
