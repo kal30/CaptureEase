@@ -110,12 +110,14 @@ const MobileCaptureDashboard = ({
   onInviteTeamMember,
   onMessages,
   onImportLogs,
+  onAddChildClick,
 }) => {
   const { activeChildId, goToSwitchboard } = useDashboardView();
   const [searchText, setSearchText] = useState('');
   const [activeEntryType, setActiveEntryType] = useState(null);
   const [selectedDate] = useState(new Date());
   const [childMenuAnchor, setChildMenuAnchor] = useState(null);
+  const [switchMenuAnchor, setSwitchMenuAnchor] = useState(null);
   const [careTeamCount, setCareTeamCount] = useState(null);
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -331,10 +333,12 @@ const MobileCaptureDashboard = ({
     setChildMenuAnchor(null);
   };
 
-  const handleChildSwitcherClick = () => {
-    if (children.length > 1) {
-      goToSwitchboard?.();
-    }
+  const handleSwitchMenuOpen = (event) => {
+    setSwitchMenuAnchor(event.currentTarget);
+  };
+
+  const handleSwitchMenuClose = () => {
+    setSwitchMenuAnchor(null);
   };
 
   const handleAddCaregiver = () => {
@@ -407,19 +411,16 @@ const MobileCaptureDashboard = ({
         >
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, mt: 0.2 }}>
             <Button
-              onClick={handleChildSwitcherClick}
-              aria-label={children.length > 1 ? 'Switch child' : activeChild.name}
-              disableRipple={children.length <= 1}
+              onClick={handleSwitchMenuOpen}
+              aria-label={children.length > 1 ? 'Switch child' : 'Add child'}
               sx={{
                 minWidth: 0,
                 p: 0,
                 borderRadius: '12px',
                 textTransform: 'none',
                 color: colors.landing.heroText,
-                cursor: children.length > 1 ? 'pointer' : 'default',
-                '&:hover': {
-                  bgcolor: 'transparent',
-                },
+                cursor: 'pointer',
+                '&:hover': { bgcolor: 'transparent' },
               }}
             >
               <Stack direction="row" alignItems="center" spacing={0.9} sx={{ minWidth: 0 }}>
@@ -454,9 +455,7 @@ const MobileCaptureDashboard = ({
                   >
                     {activeChild.name}
                   </Typography>
-                  {children.length > 1 ? (
-                    <KeyboardArrowDownIcon sx={{ fontSize: 18, color: colors.landing.textMuted, flexShrink: 0 }} />
-                  ) : null}
+                  <KeyboardArrowDownIcon sx={{ fontSize: 18, color: colors.landing.textMuted, flexShrink: 0 }} />
                 </Stack>
               </Stack>
             </Button>
@@ -861,6 +860,56 @@ const MobileCaptureDashboard = ({
               <Typography sx={{ fontWeight: 700, color: 'error.main' }}>Delete Child Profile</Typography>
             </MenuItem>
           ) : null}
+        </Box>
+      </Popover>
+
+      <Popover
+        open={Boolean(switchMenuAnchor)}
+        anchorEl={switchMenuAnchor}
+        onClose={handleSwitchMenuClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+        disableScrollLock
+        PaperProps={{
+          sx: {
+            mt: 0.8,
+            borderRadius: '18px',
+            bgcolor: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(16px)',
+            boxShadow: `0 24px 60px ${colors.landing.shadowPanel}`,
+            border: `1px solid ${colors.landing.borderLight}`,
+            overflow: 'hidden',
+          },
+        }}
+      >
+        <Box sx={{ p: 0.75, minWidth: 220 }}>
+          {children.length > 1 ? (
+            <MenuItem
+              onClick={() => {
+                handleSwitchMenuClose();
+                goToSwitchboard?.();
+              }}
+              sx={{ gap: 1.1, py: 1.25, px: 1.5, minHeight: 48, borderRadius: '12px' }}
+            >
+              <ListItemIcon sx={{ minWidth: 34 }}>
+                <GroupsIcon sx={{ fontSize: 17, color: colors.brand.ink }} />
+              </ListItemIcon>
+              <Typography sx={{ fontWeight: 700 }}>Switch profile</Typography>
+            </MenuItem>
+          ) : null}
+
+          <MenuItem
+            onClick={() => {
+              handleSwitchMenuClose();
+              onAddChildClick?.();
+            }}
+            sx={{ gap: 1.1, py: 1.25, px: 1.5, minHeight: 48, borderRadius: '12px' }}
+          >
+            <ListItemIcon sx={{ minWidth: 34 }}>
+              <PersonAddIcon sx={{ fontSize: 17, color: colors.brand.ink }} />
+            </ListItemIcon>
+            <Typography sx={{ fontWeight: 700 }}>Add child</Typography>
+          </MenuItem>
         </Box>
       </Popover>
 
