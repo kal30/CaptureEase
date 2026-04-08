@@ -94,7 +94,7 @@ const quickActions = [
     key: 'toilet',
     label: 'Toilet',
     emoji: '🚽',
-    border: colors.semantic.neutral,
+    border: colors.app.tertiary.main,
   },
 ];
 
@@ -102,7 +102,7 @@ const timelineFilters = [
   { key: 'medication', label: 'Meds', emoji: '💊', color: colors.semantic.success },
   { key: 'sleep', label: 'Sleep', emoji: '😴', color: colors.brand.deep },
   { key: 'food', label: 'Food', emoji: '🍽️', color: colors.semantic.warning },
-  { key: 'bathroom', label: 'Toilet', emoji: '🚽', color: colors.semantic.success },
+  { key: 'bathroom', label: 'Toilet', emoji: '🚽', color: colors.app.tertiary.main },
 ];
 
 const isSameDay = (dateA, dateB) => (
@@ -796,17 +796,17 @@ const MobileCaptureDashboard = ({
                   sx={{
                     flex: '0 0 auto',
                     height: 36,
-                    borderRadius: 9999,
+                    borderRadius: '12px',
                     fontWeight: 800,
                     px: 1,
-                    color: active ? colors.landing.heroText : filter.color,
-                    bgcolor: active ? filter.color : colors.landing.surface,
-                    border: `1px solid ${filter.color}`,
+                    color: active ? filter.color : colors.landing.textMuted,
+                    bgcolor: active ? alpha(filter.color, 0.16) : colors.landing.surface,
+                    border: `2px solid ${active ? filter.color : colors.landing.borderLight}`,
                     '& .MuiChip-label': {
-                      px: 1.1,
+                      px: 1.5,
                     },
                     '&:hover': {
-                      bgcolor: active ? filter.color : alpha(filter.color, 0.08),
+                      bgcolor: active ? alpha(filter.color, 0.2) : colors.landing.surfaceSoft,
                     },
                   }}
                 />
@@ -814,22 +814,22 @@ const MobileCaptureDashboard = ({
             })}
             <Chip
               icon={<FilterListRoundedIcon sx={{ fontSize: 18 }} />}
-              label={timelineAdvancedFilterCount > 0 ? `Filters (${timelineAdvancedFilterCount})` : 'Filters'}
+              label="Filters"
               onClick={() => setTimelineFilterSheetOpen(true)}
               sx={{
                 flex: '0 0 auto',
                 height: 36,
-                borderRadius: 9999,
+                borderRadius: '12px',
                 fontWeight: 800,
                 px: 1,
                 color: timelineAdvancedFilterCount > 0 ? colors.landing.heroText : colors.landing.textMuted,
-                bgcolor: timelineAdvancedFilterCount > 0 ? colors.brand.cyanPop : colors.landing.surface,
-                border: `1px solid ${timelineAdvancedFilterCount > 0 ? colors.brand.cyanPop : colors.landing.borderLight}`,
+                bgcolor: timelineAdvancedFilterCount > 0 ? alpha(colors.brand.cyanPop, 0.16) : colors.landing.surface,
+                border: `2px solid ${timelineAdvancedFilterCount > 0 ? colors.brand.cyanPop : colors.landing.borderLight}`,
                 '& .MuiChip-label': {
-                  px: 1.1,
+                  px: 1.5,
                 },
                 '&:hover': {
-                  bgcolor: timelineAdvancedFilterCount > 0 ? colors.brand.cyanPop : colors.landing.surfaceSoft,
+                  bgcolor: timelineAdvancedFilterCount > 0 ? alpha(colors.brand.cyanPop, 0.2) : colors.landing.surfaceSoft,
                 },
               }}
             />
