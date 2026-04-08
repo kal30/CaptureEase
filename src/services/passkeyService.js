@@ -1,9 +1,10 @@
 import { startRegistration, startAuthentication } from '@simplewebauthn/browser';
 import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from './firebase';
+import { PRODUCT_NAME_TITLE } from '../constants/config';
 
 // Configuration for WebAuthn
-const rpName = 'CaptureEz';
+const rpName = PRODUCT_NAME_TITLE;
 const rpID = window.location.hostname;
 
 /**

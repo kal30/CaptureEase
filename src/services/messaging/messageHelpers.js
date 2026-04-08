@@ -3,6 +3,7 @@
 
 import { sendMessage } from './messageService.js';
 import { MessageTypes, MessagePriority } from '../../models/messaging.js';
+import { PRODUCT_NAME } from '../../constants/config';
 
 /**
  * Shares an incident to a conversation
@@ -179,7 +180,7 @@ export const sendSystemMessage = async (conversationId, text, metadata = {}) => 
     const result = await sendMessage({
       conversationId,
       senderId: 'system',
-      senderName: 'CaptureEz',
+      senderName: PRODUCT_NAME,
       text,
       type: MessageTypes.SYSTEM,
       metadata: {

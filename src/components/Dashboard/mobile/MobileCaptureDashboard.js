@@ -6,6 +6,7 @@ import {
   CircularProgress,
   Button,
   Chip,
+  IconButton,
   ListItemIcon,
   Drawer,
   Paper,
@@ -509,14 +510,15 @@ const MobileCaptureDashboard = ({
       >
         <Box
           sx={{
-            p: 1.25,
-            backgroundColor: colors.landing.panelSoft,
+            px: 1.1,
+            py: 0.85,
+            backgroundColor: colors.landing.surfaceSoft,
             color: colors.landing.heroText,
             position: 'relative',
-            minHeight: 72,
+            minHeight: 44,
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, mt: 0.2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
             <Button
               onClick={handleSwitchMenuOpen}
               aria-label={children.length > 1 ? 'Switch child' : 'Add child'}
@@ -530,18 +532,18 @@ const MobileCaptureDashboard = ({
                 '&:hover': { bgcolor: 'transparent' },
               }}
             >
-              <Stack direction="row" alignItems="center" spacing={0.9} sx={{ minWidth: 0 }}>
+              <Stack direction="row" alignItems="center" spacing={0.7} sx={{ minWidth: 0 }}>
                 <Avatar
                   src={activeChildPhoto}
                   alt={activeChild.name}
                   sx={{
-                    width: 30,
-                    height: 30,
+                    width: 26,
+                    height: 26,
                     border: `1px solid ${colors.landing.borderMedium}`,
                     bgcolor: colors.roles.careOwner.primary,
                     color: colors.landing.surface,
-                    fontSize: '0.82rem',
-                    fontWeight: 800,
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
                     flexShrink: 0,
                   }}
                 >
@@ -550,10 +552,11 @@ const MobileCaptureDashboard = ({
                 <Stack direction="row" alignItems="center" spacing={0.35} sx={{ minWidth: 0 }}>
                   <Typography
                     sx={{
-                      fontSize: '1.18rem',
-                      fontWeight: 900,
-                      lineHeight: 1.08,
-                      letterSpacing: '-0.03em',
+                      fontFamily: 'Outfit, sans-serif',
+                      fontSize: '1.03rem',
+                      fontWeight: 600,
+                      lineHeight: 1.05,
+                      letterSpacing: '-0.015em',
                       color: colors.landing.heroText,
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
@@ -567,30 +570,24 @@ const MobileCaptureDashboard = ({
               </Stack>
             </Button>
 
-            <Button
+            <IconButton
               onClick={handleChildMenuOpen}
               aria-label="Child actions"
               sx={{
                 flexShrink: 0,
-                width: 36,
-                height: 36,
-                minWidth: 36,
+                width: 28,
+                height: 28,
                 p: 0,
-                borderRadius: '12px',
-                bgcolor: colors.landing.surface,
-                color: colors.landing.heroText,
-                border: `1px solid ${colors.landing.borderMedium}`,
-                boxShadow: `0 4px 12px ${colors.landing.shadowSoft}`,
-                textTransform: 'none',
-                fontWeight: 800,
+                borderRadius: '9999px',
+                color: '#64748B',
+                bgcolor: 'transparent',
                 '&:hover': {
-                  bgcolor: colors.landing.surfaceSoft,
-                  borderColor: colors.landing.borderMedium,
+                  bgcolor: 'transparent',
                 },
               }}
             >
-              <SettingsIcon sx={{ fontSize: 18 }} />
-            </Button>
+              <SettingsIcon sx={{ fontSize: 18, color: '#64748B' }} />
+            </IconButton>
           </Box>
         </Box>
 
@@ -823,13 +820,13 @@ const MobileCaptureDashboard = ({
                 fontWeight: 800,
                 px: 1,
                 color: timelineAdvancedFilterCount > 0 ? colors.landing.heroText : colors.landing.textMuted,
-                bgcolor: timelineAdvancedFilterCount > 0 ? alpha(colors.brand.cyanPop, 0.16) : colors.landing.surface,
-                border: `2px solid ${timelineAdvancedFilterCount > 0 ? colors.brand.cyanPop : colors.landing.borderLight}`,
+                bgcolor: timelineAdvancedFilterCount > 0 ? alpha(colors.landing.cyanPop, 0.16) : colors.landing.surface,
+                border: `2px solid ${timelineAdvancedFilterCount > 0 ? colors.landing.cyanPop : colors.landing.borderLight}`,
                 '& .MuiChip-label': {
                   px: 1.5,
                 },
                 '&:hover': {
-                  bgcolor: timelineAdvancedFilterCount > 0 ? alpha(colors.brand.cyanPop, 0.2) : colors.landing.surfaceSoft,
+                  bgcolor: timelineAdvancedFilterCount > 0 ? alpha(colors.landing.cyanPop, 0.2) : colors.landing.surfaceSoft,
                 },
               }}
             />

@@ -3,7 +3,7 @@ import { collection, addDoc, doc, setDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 
 /**
- * Test Data Generator for CaptureEz
+ * Test Data Generator for lifelog
  * Creates realistic test data including users, children, and activity data with media
  */
 

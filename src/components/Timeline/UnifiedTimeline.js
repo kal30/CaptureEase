@@ -366,11 +366,11 @@ const UnifiedTimeline = ({
         };
       }
 
-      if (typeof value === 'object') {
+      if (value && typeof value === 'object') {
         const url = value.url || value.downloadURL || value.mediaURL || '';
         if (!url) return null;
         const mimeType = value.mimeType || '';
-        const type = value.type
+        const type = value?.type
           || (mimeType.startsWith('video/')
             ? 'video'
             : mimeType.startsWith('audio/')
@@ -731,11 +731,15 @@ const UnifiedTimeline = ({
               borderRadius: '14px',
             }}
           >
-            <Stack spacing={1.25} role="list">
-              {visibleEntries.map((entry, entryIndex) => {
-                const timestamp = new Date(entry.timestamp);
-                const timeString = timestamp.toLocaleTimeString([], {
-                  hour: "2-digit",
+              <Stack spacing={1.25} role="list">
+                {visibleEntries.map((entry, entryIndex) => {
+                  if (!entry) {
+                    return null;
+                  }
+
+                  const timestamp = new Date(entry.timestamp);
+                  const timeString = timestamp.toLocaleTimeString([], {
+                    hour: "2-digit",
                   minute: "2-digit",
                 });
                 const presentation = getEntryPresentation(entry);
@@ -1089,6 +1093,10 @@ const UnifiedTimeline = ({
             >
               <Stack spacing={0} role="list">
                 {visibleEntries.map((entry, entryIndex) => {
+                  if (!entry) {
+                    return null;
+                  }
+
                   const timestamp = new Date(entry.timestamp);
                   const timeString = timestamp.toLocaleTimeString([], {
                     hour: "2-digit",

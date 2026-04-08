@@ -2,7 +2,7 @@ import { alpha } from "@mui/material/styles";
 import colors from "./colors";
 
 /**
- * Role-Based Color System for CaptureEz
+ * Role-Based Color System for lifelog
  * Provides distinct, user-friendly colors for each care team role
  * while maintaining accessibility and professional appearance
  */

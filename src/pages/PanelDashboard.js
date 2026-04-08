@@ -43,6 +43,7 @@ import { DashboardViewProvider } from "../components/Dashboard/shared/DashboardV
 import RenderDebugOverlay from "../components/Dashboard/shared/RenderDebugOverlay";
 import { trackRenderDebug, useMountDebug } from "../utils/renderDebug";
 import colors from "../assets/theme/colors";
+import { PRODUCT_NAME_TITLE } from "../constants/config";
 
 const PanelDashboard = () => {
   const theme = useTheme();
@@ -254,7 +255,7 @@ const PanelDashboard = () => {
                 fontSize: { xs: '1.75rem', md: '2.1rem' },
               }}
             >
-              Welcome to CaptureEz — let&apos;s add your first child
+              Welcome to {PRODUCT_NAME_TITLE} — let&apos;s add your first child
             </Typography>
             <Button
               variant="contained"

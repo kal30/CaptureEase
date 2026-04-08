@@ -341,17 +341,17 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
     );
 
     // Apply filters
-    let filteredEntries = sortedEntries;
+    let filteredEntries = sortedEntries.filter(Boolean);
 
     // Filter by entry types
     if (filters.entryTypes?.length > 0) {
-      filteredEntries = filteredEntries.filter(entry => 
-        filters.entryTypes.includes(entry.type)
-      );
+      filteredEntries = filteredEntries.filter(entry => (
+        entry && filters.entryTypes.includes(entry.type)
+      ));
     }
 
     if (filters.importantOnly) {
-      filteredEntries = filteredEntries.filter(entry => (
+      filteredEntries = filteredEntries.filter(entry => entry && (
         entry.importantMoment ||
         entry.isImportantMoment ||
         entry.importance === 'important'
@@ -364,6 +364,10 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
         .filter(Boolean);
 
       filteredEntries = filteredEntries.filter(entry => {
+        if (!entry) {
+          return false;
+        }
+
         const entryTags = Array.isArray(entry.tags)
           ? entry.tags.map((tag) => String(tag || '').trim().toLowerCase()).filter(Boolean)
           : [];
@@ -374,15 +378,19 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
 
     // Filter by user roles
     if (filters.userRoles?.length > 0) {
-      filteredEntries = filteredEntries.filter(entry => 
-        filters.userRoles.includes(entry.userRole)
-      );
+      filteredEntries = filteredEntries.filter(entry => (
+        entry && filters.userRoles.includes(entry.userRole)
+      ));
     }
 
     // Filter by search text (case-insensitive search across relevant fields)
     if (filters.searchText?.trim()) {
       const searchTerm = filters.searchText.toLowerCase().trim();
       filteredEntries = filteredEntries.filter(entry => {
+        if (!entry) {
+          return false;
+        }
+
         const searchableText = [
           entry.text,
           entry.description,
@@ -409,10 +417,10 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
     // Generate summary statistics
     const summary = {
       totalEntries: filteredEntries.length,
-      incidentCount: filteredEntries.filter(e => e.type === 'incident').length,
-      journalCount: filteredEntries.filter(e => e.collection === 'dailyLogs').length,
-      dailyHabitCount: filteredEntries.filter(e => e.type === 'dailyHabit').length,
-      therapyNoteCount: filteredEntries.filter(e => e.type === 'therapyNote').length,
+      incidentCount: filteredEntries.filter(e => e?.type === 'incident').length,
+      journalCount: filteredEntries.filter(e => e?.collection === 'dailyLogs').length,
+      dailyHabitCount: filteredEntries.filter(e => e?.type === 'dailyHabit').length,
+      therapyNoteCount: filteredEntries.filter(e => e?.type === 'therapyNote').length,
       lastActivityTime: filteredEntries.length > 0 
         ? new Date(filteredEntries[0].timestamp).toLocaleTimeString([], { 
             hour: '2-digit', 
@@ -421,16 +429,16 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
         : null,
       byTimePeriod: {
         morning: {
-          hasIncidents: filteredEntries.some(e => e.type === 'incident' && getTimePeriod(e.timestamp) === 'morning'),
-          hasJournalEntries: filteredEntries.some(e => e.collection === 'dailyLogs' && getTimePeriod(e.timestamp) === 'morning')
+          hasIncidents: filteredEntries.some(e => e?.type === 'incident' && getTimePeriod(e.timestamp) === 'morning'),
+          hasJournalEntries: filteredEntries.some(e => e?.collection === 'dailyLogs' && getTimePeriod(e.timestamp) === 'morning')
         },
         afternoon: {
-          hasIncidents: filteredEntries.some(e => e.type === 'incident' && getTimePeriod(e.timestamp) === 'afternoon'),
-          hasJournalEntries: filteredEntries.some(e => e.collection === 'dailyLogs' && getTimePeriod(e.timestamp) === 'afternoon')
+          hasIncidents: filteredEntries.some(e => e?.type === 'incident' && getTimePeriod(e.timestamp) === 'afternoon'),
+          hasJournalEntries: filteredEntries.some(e => e?.collection === 'dailyLogs' && getTimePeriod(e.timestamp) === 'afternoon')
         },
         evening: {
-          hasIncidents: filteredEntries.some(e => e.type === 'incident' && getTimePeriod(e.timestamp) === 'evening'),
-          hasJournalEntries: filteredEntries.some(e => e.collection === 'dailyLogs' && getTimePeriod(e.timestamp) === 'evening')
+          hasIncidents: filteredEntries.some(e => e?.type === 'incident' && getTimePeriod(e.timestamp) === 'evening'),
+          hasJournalEntries: filteredEntries.some(e => e?.collection === 'dailyLogs' && getTimePeriod(e.timestamp) === 'evening')
         }
       }
     };

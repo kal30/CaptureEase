@@ -25,6 +25,7 @@ import {
   TrendingUp as TrendingIcon
 } from '@mui/icons-material';
 import { useTheme, alpha } from '@mui/material/styles';
+import { PRODUCT_NAME } from '../../constants/config';
 
 const DRAWER_WIDTH = 280;
 
@@ -62,7 +63,7 @@ const TabletDashboard = ({ children, user }) => {
         {/* Sidebar Header */}
         <Box sx={{ p: 3, borderBottom: `1px solid ${theme.palette.divider}` }}>
           <Typography variant="h5" sx={{ fontWeight: 700, color: theme.palette.primary.main }}>
-            CaptureEz
+            {PRODUCT_NAME}
           </Typography>
           <Typography variant="body2" color="text.secondary">
             Tablet Dashboard
