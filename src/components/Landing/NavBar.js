@@ -12,9 +12,14 @@ import {
   Avatar,
   Tooltip,
   IconButton,
+  Menu,
+  MenuItem,
+  ListItemIcon,
 } from "@mui/material";
 import { useRole } from "../../contexts/RoleContext";
 import GroupIcon from "@mui/icons-material/Group";
+import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
+import LogoutIcon from "@mui/icons-material/Logout";
 import AddToHomeScreenIcon from "@mui/icons-material/AddToHomeScreen";
 import PhoneIphoneIcon from "@mui/icons-material/PhoneIphone";
 import usePWAInstallPrompt from "../../hooks/usePWAInstallPrompt";
@@ -28,6 +33,7 @@ const Navbar = () => {
   const [authReady, setAuthReady] = useState(false);
   const { childrenWithAccess } = useRole();
   const pwaInstallPrompt = usePWAInstallPrompt();
+  const [userMenuAnchor, setUserMenuAnchor] = useState(null);
   const isDashboardRoute = location.pathname.startsWith("/dashboard");
   const canSeeSwitchChild = isLoggedIn && (childrenWithAccess?.length || 0) > 1;
   const showInstallAction = !pwaInstallPrompt.isInstalled && (pwaInstallPrompt.canInstall || pwaInstallPrompt.isIOS);
@@ -70,6 +76,24 @@ const Navbar = () => {
     if (pwaInstallPrompt.isIOS) {
       window.alert("On iPhone or iPad, tap Share, then choose Add to Home Screen.");
     }
+  };
+
+  const handleUserMenuOpen = (event) => {
+    setUserMenuAnchor(event.currentTarget);
+  };
+
+  const handleUserMenuClose = () => {
+    setUserMenuAnchor(null);
+  };
+
+  const handleProfile = () => {
+    handleUserMenuClose();
+    navigate("/profile");
+  };
+
+  const handleLogoutClick = async () => {
+    handleUserMenuClose();
+    await handleLogout();
   };
 
   return (
@@ -222,35 +246,38 @@ const Navbar = () => {
                     </Tooltip>
                   ) : null}
                   <Button
-                    variant="text"
-                    onClick={handleLogout}
+                    onClick={handleUserMenuOpen}
+                    aria-label="Profile options"
                     sx={{
-                      color: colors.landing.textMuted,
-                      textTransform: "none",
-                      fontWeight: 700,
-                      px: 1,
-                      minWidth: "auto",
-                    }}
-                  >
-                    Logout
-                  </Button>
-                  <Avatar
-                    alt={auth.currentUser?.displayName || "User"}
-                    src={auth.currentUser?.photoURL || undefined}
-                    sx={{
-                      width: 32,
-                      height: 32,
+                      minWidth: 0,
+                      p: 0,
                       ml: 0.5,
-                      bgcolor: colors.landing.cyanPop,
-                      color: colors.landing.deepNavy,
-                      fontSize: "0.88rem",
-                      fontWeight: 700,
-                      border: `1px solid ${colors.landing.borderMedium}`,
-                      boxShadow: "0 4px 10px rgba(15, 23, 42, 0.08)",
+                      borderRadius: "9999px",
+                      bgcolor: "transparent",
+                      boxShadow: "none",
+                      "&:hover": {
+                        bgcolor: "transparent",
+                        boxShadow: "none",
+                      },
                     }}
                   >
-                    {userAvatarLabel}
-                  </Avatar>
+                    <Avatar
+                      alt={auth.currentUser?.displayName || "User"}
+                      src={auth.currentUser?.photoURL || undefined}
+                      sx={{
+                        width: 32,
+                        height: 32,
+                        bgcolor: colors.landing.cyanPop,
+                        color: colors.landing.deepNavy,
+                        fontSize: "0.88rem",
+                        fontWeight: 700,
+                        border: `1px solid ${colors.landing.borderMedium}`,
+                        boxShadow: "0 4px 10px rgba(15, 23, 42, 0.08)",
+                      }}
+                    >
+                      {userAvatarLabel}
+                    </Avatar>
+                  </Button>
                 </>
               ) : (
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -302,6 +329,36 @@ const Navbar = () => {
           </Box>
         </Container>
       </Toolbar>
+      <Menu
+        anchorEl={userMenuAnchor}
+        open={Boolean(userMenuAnchor)}
+        onClose={handleUserMenuClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        PaperProps={{
+          sx: {
+            mt: 1,
+            minWidth: 220,
+            borderRadius: '18px',
+            border: `1px solid ${colors.landing.borderLight}`,
+            boxShadow: `0 24px 60px ${colors.landing.shadowPanel}`,
+            bgcolor: 'rgba(255, 255, 255, 0.98)',
+          },
+        }}
+      >
+          <MenuItem onClick={handleProfile} sx={{ gap: 1.1, py: 1.25, px: 1.5, minHeight: 48 }}>
+            <ListItemIcon sx={{ minWidth: 34 }}>
+              <PersonOutlineIcon sx={{ fontSize: 18, color: colors.brand.ink }} />
+            </ListItemIcon>
+          Profile page
+          </MenuItem>
+        <MenuItem onClick={handleLogoutClick} sx={{ gap: 1.1, py: 1.25, px: 1.5, minHeight: 48 }}>
+          <ListItemIcon sx={{ minWidth: 34 }}>
+            <LogoutIcon sx={{ fontSize: 18, color: colors.landing.textMuted }} />
+          </ListItemIcon>
+          Logout
+        </MenuItem>
+      </Menu>
     </AppBar>
   );
 };

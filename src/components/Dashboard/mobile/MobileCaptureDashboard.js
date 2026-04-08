@@ -89,7 +89,7 @@ const quickActions = [
 
 const timelineFilters = [
   { key: null, label: 'All', emoji: null, filled: true, color: colors.brand.ink },
-  { key: 'medication', label: 'Meds', emoji: '💊', color: colors.brand.ink },
+  { key: 'medication', label: 'Meds', emoji: '💊', color: colors.semantic.success },
   { key: 'sleep', label: 'Sleep', emoji: '😴', color: colors.brand.deep },
   { key: 'food', label: 'Food', emoji: '🍽️', color: colors.semantic.warning },
   { key: 'bathroom', label: 'Toilet', emoji: '🚽', color: colors.semantic.success },
