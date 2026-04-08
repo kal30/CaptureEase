@@ -33,6 +33,9 @@ import {
   PriorityHigh as PriorityHighIcon,
 } from '@mui/icons-material';
 import { alpha } from '@mui/material/styles';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { useDashboardView } from '../shared/DashboardViewContext';
 import UnifiedTimeline from '../../Timeline/UnifiedTimeline';
 import { getChildCareTeam } from '../../../services/childAccessService';
@@ -40,7 +43,6 @@ import { getLogTypeByEntry } from '../../../constants/logTypeRegistry';
 import { auth } from '../../../services/firebase';
 import { getAllQuickTagOptions, getQuickTagDisplay, loadCustomQuickTags } from '../../../utils/quickTags';
 import colors from '../../../assets/theme/colors';
-import MiniCalendar from '../../UI/MiniCalendar';
 
 const countTodayEntries = (entries = []) => {
   const todayStart = new Date();
@@ -97,7 +99,6 @@ const quickActions = [
 ];
 
 const timelineFilters = [
-  { key: null, label: 'All', emoji: null, filled: true, color: colors.brand.ink },
   { key: 'medication', label: 'Meds', emoji: '💊', color: colors.semantic.success },
   { key: 'sleep', label: 'Sleep', emoji: '😴', color: colors.brand.deep },
   { key: 'food', label: 'Food', emoji: '🍽️', color: colors.semantic.warning },
@@ -111,10 +112,15 @@ const isSameDay = (dateA, dateB) => (
   && dateA.getDate() === dateB.getDate()
 );
 
-const getYesterday = (date = new Date()) => {
-  const nextDate = new Date(date);
-  nextDate.setDate(nextDate.getDate() - 1);
-  return nextDate;
+const getTimelineHeaderLabel = (date = new Date()) => {
+  if (isSameDay(date, new Date())) {
+    return 'Today';
+  }
+
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+  });
 };
 
 const MobileCaptureDashboard = ({
@@ -136,7 +142,7 @@ const MobileCaptureDashboard = ({
 }) => {
   const { activeChildId, goToSwitchboard } = useDashboardView();
   const [searchText, setSearchText] = useState('');
-  const [activeEntryType, setActiveEntryType] = useState(null);
+  const [activeEntryTypes, setActiveEntryTypes] = useState([]);
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [childMenuAnchor, setChildMenuAnchor] = useState(null);
   const [switchMenuAnchor, setSwitchMenuAnchor] = useState(null);
@@ -190,7 +196,7 @@ const MobileCaptureDashboard = ({
 
   useEffect(() => {
     setSearchText('');
-    setActiveEntryType(null);
+    setActiveEntryTypes([]);
     setTimelineImportantOnly(false);
     setTimelineTagFilters([]);
     setTimelineFilterSheetOpen(false);
@@ -335,7 +341,8 @@ const MobileCaptureDashboard = ({
   const shouldGuideToQuickLog = !hasTimelineEntries;
   const timelineAdvancedFilterCount = (timelineImportantOnly ? 1 : 0)
     + timelineTagFilters.length
-    + (!isSameDay(selectedDate, new Date()) ? 1 : 0);
+    + (!isSameDay(selectedDate, new Date()) ? 1 : 0)
+    + activeEntryTypes.length;
 
   const availableTimelineTags = useMemo(() => {
     const tagMap = new Map();
@@ -362,10 +369,10 @@ const MobileCaptureDashboard = ({
 
   const timelineFiltersValue = useMemo(() => ({
     searchText: searchText || undefined,
-    entryTypes: activeEntryType ? [activeEntryType] : undefined,
+    entryTypes: activeEntryTypes.length > 0 ? activeEntryTypes : undefined,
     importantOnly: timelineImportantOnly || undefined,
     tagFilters: timelineTagFilters.length > 0 ? timelineTagFilters : undefined,
-  }), [activeEntryType, searchText, timelineImportantOnly, timelineTagFilters]);
+  }), [activeEntryTypes, searchText, timelineImportantOnly, timelineTagFilters]);
 
   if (!activeChild) {
     return null;
@@ -392,6 +399,16 @@ const MobileCaptureDashboard = ({
 
   const handleQuickNote = () => {
     onQuickEntry?.(activeChild, 'quick_note');
+  };
+
+  const toggleTimelineEntryType = (typeKey) => {
+    setActiveEntryTypes((prev) => {
+      if (prev.includes(typeKey)) {
+        return prev.filter((key) => key !== typeKey);
+      }
+
+      return [...prev, typeKey];
+    });
   };
 
   const handleChildMenuOpen = (event) => {
@@ -706,9 +723,29 @@ const MobileCaptureDashboard = ({
         }}
       >
         <Box sx={{ p: 1.35, borderBottom: `1px solid ${colors.landing.borderLight}` }}>
-          <Typography sx={{ fontSize: '0.72rem', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: colors.landing.textMuted, mb: 1 }}>
-            Timeline
-          </Typography>
+          <Button
+            onClick={handleTimelineDatePickerOpen}
+            startIcon={<CalendarTodayIcon sx={{ fontSize: 16 }} />}
+            endIcon={<KeyboardArrowDownIcon sx={{ fontSize: 18 }} />}
+            sx={{
+              px: 0,
+              py: 0.25,
+              minWidth: 0,
+              mb: 1,
+              color: colors.landing.heroText,
+              textTransform: 'none',
+              fontWeight: 900,
+              fontSize: '1rem',
+              letterSpacing: '-0.02em',
+              justifyContent: 'flex-start',
+              alignItems: 'center',
+              '&:hover': {
+                bgcolor: 'transparent',
+              },
+            }}
+          >
+            {getTimelineHeaderLabel(selectedDate)}
+          </Button>
           <TextField
             fullWidth
             placeholder="Search..."
@@ -750,12 +787,12 @@ const MobileCaptureDashboard = ({
             }}
           >
             {timelineFilters.map((filter) => {
-              const active = filter.key === activeEntryType || (filter.key === null && !activeEntryType);
+              const active = activeEntryTypes.includes(filter.key);
               return (
                 <Chip
                   key={filter.label}
                   label={filter.emoji ? `${filter.emoji} ${filter.label}` : filter.label}
-                  onClick={() => setActiveEntryType(filter.key)}
+                  onClick={() => toggleTimelineEntryType(filter.key)}
                   sx={{
                     flex: '0 0 auto',
                     height: 36,
@@ -816,8 +853,7 @@ const MobileCaptureDashboard = ({
             filters={timelineFiltersValue}
             onFiltersChange={(nextFilters) => {
               setSearchText(nextFilters?.searchText || '');
-              const nextEntryTypes = nextFilters?.entryTypes || [];
-              setActiveEntryType(nextEntryTypes[0] || null);
+              setActiveEntryTypes(nextFilters?.entryTypes || []);
             }}
             showFilters={false}
             showDaySummary={false}
@@ -1066,62 +1102,6 @@ const MobileCaptureDashboard = ({
             </Button>
           </Box>
 
-          <Box
-            sx={{
-              p: 1.25,
-              borderRadius: '16px',
-              border: `1px solid ${colors.landing.borderLight}`,
-              bgcolor: colors.landing.surface,
-              mb: 1.25,
-            }}
-          >
-            <Typography sx={{ fontSize: '0.76rem', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: colors.landing.textMuted, mb: 0.9 }}>
-              Date
-            </Typography>
-            <Stack direction="row" spacing={0.75} sx={{ flexWrap: 'wrap', gap: 0.75 }}>
-              <Chip
-                label="Today"
-                onClick={() => handleTimelineDatePreset(new Date())}
-                sx={{
-                  height: 36,
-                  borderRadius: 9999,
-                  fontWeight: 800,
-                  bgcolor: isSameDay(selectedDate, new Date()) ? colors.brand.ink : colors.landing.surface,
-                  color: isSameDay(selectedDate, new Date()) ? colors.landing.heroText : colors.landing.textMuted,
-                  border: `1px solid ${isSameDay(selectedDate, new Date()) ? colors.brand.ink : colors.landing.borderLight}`,
-                }}
-              />
-              <Chip
-                label="Yesterday"
-                onClick={() => handleTimelineDatePreset(getYesterday())}
-                sx={{
-                  height: 36,
-                  borderRadius: 9999,
-                  fontWeight: 800,
-                  bgcolor: isSameDay(selectedDate, getYesterday()) ? colors.brand.cyanPop : colors.landing.surface,
-                  color: isSameDay(selectedDate, getYesterday()) ? colors.landing.heroText : colors.landing.textMuted,
-                  border: `1px solid ${isSameDay(selectedDate, getYesterday()) ? colors.brand.cyanPop : colors.landing.borderLight}`,
-                }}
-              />
-              <Chip
-                icon={<CalendarTodayIcon sx={{ fontSize: 17 }} />}
-                label={selectedDate?.toLocaleDateString() || 'Pick date'}
-                onClick={handleTimelineDatePickerOpen}
-                sx={{
-                  height: 36,
-                  borderRadius: 9999,
-                  fontWeight: 800,
-                  bgcolor: colors.landing.surface,
-                  color: colors.landing.textMuted,
-                  border: `1px solid ${colors.landing.borderLight}`,
-                  '& .MuiChip-icon': {
-                    color: colors.brand.deep,
-                  },
-                }}
-              />
-            </Stack>
-          </Box>
-
           <Paper
             variant="outlined"
             sx={{
@@ -1234,8 +1214,8 @@ const MobileCaptureDashboard = ({
         anchorEl={timelineDatePickerAnchor}
         onClose={handleTimelineDatePickerClose}
         disableScrollLock
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-        transformOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'left' }}
         PaperProps={{
           sx: {
             borderRadius: '18px',
@@ -1245,16 +1225,29 @@ const MobileCaptureDashboard = ({
           },
         }}
       >
-        <Box sx={{ p: 1 }}>
-          <MiniCalendar
-            entries={activeChildEntries}
-            currentMonth={selectedDate || new Date()}
-            selectedDate={selectedDate}
-            onDayClick={(day, dayEntries, date) => {
-              handleTimelineDatePreset(date);
+        <LocalizationProvider dateAdapter={AdapterDateFns}>
+          <DateCalendar
+            value={selectedDate}
+            onChange={(newDate) => {
+              if (newDate) {
+                handleTimelineDatePreset(newDate);
+              }
+            }}
+            sx={{
+              '& .MuiPickersDay-root.Mui-selected': {
+                bgcolor: colors.brand.cyanPop,
+                color: colors.landing.heroText,
+              },
+              '& .MuiPickersDay-root.Mui-selected:hover': {
+                bgcolor: colors.brand.cyanPop,
+              },
+              '& .MuiPickersCalendarHeader-label': {
+                color: colors.landing.heroText,
+                fontWeight: 800,
+              },
             }}
           />
-        </Box>
+        </LocalizationProvider>
       </Popover>
 
     </Box>
