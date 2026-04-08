@@ -611,25 +611,33 @@ const UnifiedTimeline = ({
               sx={{
                 width: 46,
                 height: 46,
-                borderRadius: '50%',
+                borderRadius: '9999px',
                 display: "inline-flex",
                 alignItems: "center",
                 justifyContent: "center",
-                backgroundColor: colors.landing.pastelAqua,
-                color: colors.landing.heroText,
-                fontSize: "1.2rem",
-                fontWeight: 700,
+                backgroundColor: colors.landing.sageLight,
+                color: colors.brand.ink,
+                border: `1px solid ${colors.landing.borderLight}`,
+                boxShadow: `0 8px 18px ${colors.landing.shadowSoft}`,
               }}
             >
               <FavoriteBorderOutlinedIcon sx={{ fontSize: 24 }} />
             </Box>
-            <Typography variant="body1" sx={{ fontWeight: 700, mb: 0.25, color: colors.landing.heroText }}>
-              No entries yet today
+            <Typography variant="body1" sx={{ fontWeight: 700, mb: 0.25, color: colors.landing.heroText, textAlign: 'center' }}>
+              Aravindh&apos;s day is a blank canvas!
             </Typography>
-            <Typography variant="caption" sx={{ fontSize: "0.76rem", lineHeight: 1.25, color: colors.landing.textMuted }}>
-              {Object.keys(filters).length > 0
-                ? "Try adjusting your filters or select a different date"
-                : "Tap to log something"}
+            <Typography
+              variant="caption"
+              sx={{
+                fontSize: "0.76rem",
+                lineHeight: 1.45,
+                color: colors.landing.textMuted,
+                maxWidth: 250,
+                mx: "auto",
+                textAlign: 'center',
+              }}
+            >
+              Whenever you're ready, use the buttons above to record a moment.
             </Typography>
           </Box>
         ) : (
@@ -670,26 +678,44 @@ const UnifiedTimeline = ({
               sx={{
                 width: 48,
                 height: 48,
-                borderRadius: '14px',
+                borderRadius: '9999px',
                 display: "inline-flex",
                 alignItems: "center",
                 justifyContent: "center",
-                backgroundColor: colors.app.cards.shadowPanel,
-                color: "text.disabled",
+                backgroundColor: colors.landing.sageLight,
+                color: colors.brand.ink,
+                border: `1px solid ${colors.landing.borderLight}`,
+                boxShadow: `0 8px 18px ${colors.landing.shadowSoft}`,
                 mb: 0.75,
-                fontSize: "1.2rem",
-                fontWeight: 700,
               }}
             >
-              +
+              <FavoriteBorderOutlinedIcon sx={{ fontSize: 24 }} />
             </Box>
-            <Typography variant="body1" sx={{ fontWeight: 700, mb: 0.25 }} color="text.secondary">
-              No entries yet today
+            <Typography
+              variant="body1"
+              sx={{
+                fontWeight: 700,
+                mb: 0.5,
+                color: colors.landing.heroText,
+                fontSize: '1.05rem',
+                lineHeight: 1.25,
+                textAlign: 'center',
+              }}
+            >
+              Aravindh&apos;s day is a blank canvas!
             </Typography>
-            <Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.76rem", lineHeight: 1.25 }}>
-              {Object.keys(filters).length > 0
-                ? "Try adjusting your filters or select a different date"
-                : "Tap to log something"}
+            <Typography
+              variant="caption"
+              sx={{
+                fontSize: "0.76rem",
+                lineHeight: 1.45,
+                color: colors.landing.textMuted,
+                maxWidth: 250,
+                mx: "auto",
+                textAlign: 'center',
+              }}
+            >
+              Whenever you're ready, use the buttons above to record a moment.
             </Typography>
           </Box>
         )

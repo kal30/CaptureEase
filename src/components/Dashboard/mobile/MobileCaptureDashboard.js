@@ -292,6 +292,8 @@ const MobileCaptureDashboard = ({
     }
     return countTodayEntries(allEntries[activeChild.id] || []);
   }, [activeChild?.id, allEntries]);
+  const hasTimelineEntries = (allEntries[activeChild?.id] || []).length > 0;
+  const shouldGuideToQuickLog = !hasTimelineEntries;
 
   const timelineFiltersValue = useMemo(() => ({
     searchText: searchText || undefined,
@@ -500,6 +502,16 @@ const MobileCaptureDashboard = ({
                   display: 'flex',
                   flexDirection: 'column',
                   gap: 0.65,
+                  position: 'relative',
+                  animation: shouldGuideToQuickLog ? 'quickLogPulse 2.8s ease-in-out infinite' : 'none',
+                  '@keyframes quickLogPulse': {
+                    '0%, 100%': {
+                      boxShadow: `0 4px 10px ${colors.landing.shadowSoft}, 0 0 0 0 ${alpha(colors.brand.ink, 0.0)}`,
+                    },
+                    '50%': {
+                      boxShadow: `0 8px 18px ${colors.landing.shadowSoft}, 0 0 0 10px ${alpha(colors.brand.ink, 0.05)}`,
+                    },
+                  },
                   '&:hover': {
                     borderColor: action.border,
                     borderWidth: '2px',
@@ -528,6 +540,8 @@ const MobileCaptureDashboard = ({
               color: colors.landing.heroText,
               borderColor: colors.brand.tealBlue,
               bgcolor: colors.landing.surface,
+              position: 'relative',
+              animation: shouldGuideToQuickLog ? 'quickLogPulse 2.8s ease-in-out infinite' : 'none',
               '&:hover': {
                 borderColor: colors.brand.deep,
                 borderWidth: '2px',
