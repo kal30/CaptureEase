@@ -9,7 +9,7 @@ const colors = {
     ice: "#F4F1F8",
   },
   landing: {
-    pageBackground: "#F3F7F5",
+    pageBackground: "#F8FAFC",
     heroText: "#0F172A",
     bodyText: "#334155",
     textStrong: "#0F172A",
@@ -33,9 +33,9 @@ const colors = {
     borderFocus: "#8FC9C0",
     borderActive: "#5BAFA7",
     lavenderDark: "#B6A7D9",
-    shadowSoft: "rgba(15, 23, 42, 0.04)",
+    shadowSoft: "rgba(0, 0, 0, 0.05)",
     shadowMedium: "rgba(15, 23, 42, 0.05)",
-    shadowPanel: "rgba(15, 23, 42, 0.08)",
+    shadowPanel: "rgba(0, 0, 0, 0.05)",
     shadowStrong: "rgba(15, 23, 42, 0.12)",
     shadowHero: "rgba(143, 201, 192, 0.22)",
     shadowHeroStrong: "rgba(15, 23, 42, 0.14)",
@@ -135,7 +135,7 @@ const colors = {
     },
   },
   app: {
-    container: "#fff8ed",
+    container: "#F8FAFC",
     tertiary: {
       main: "#7C6F57",
       light: "#A49592",
@@ -207,9 +207,9 @@ const colors = {
     },
     cards: {
       background: "#FFFFFF",
-      shadowSoft: "rgba(0,0,0,0.04)",
-      shadowHover: "rgba(0,0,0,0.06)",
-      shadowPanel: "rgba(17,24,39,0.04)",
+      shadowSoft: "rgba(0,0,0,0.05)",
+      shadowHover: "rgba(0,0,0,0.08)",
+      shadowPanel: "rgba(0,0,0,0.05)",
       border: "#E8E2D9",
       modalShadow: "rgba(0, 0, 0, 0.15)",
       paperShadow: "rgba(0, 0, 0, 0.03)",

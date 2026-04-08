@@ -147,7 +147,7 @@ const Navbar = () => {
               },
             }}
           >
-            <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.5 }}>
+            <Box sx={{ display: "flex", alignItems: "baseline" }}>
               <Typography
                 component="span"
                 sx={{
@@ -159,18 +159,21 @@ const Navbar = () => {
                   lineHeight: 1,
                 }}
               >
-                lifelog
+                life
               </Typography>
-              <Box
+              <Typography
                 component="span"
                 sx={{
-                  width: 10,
-                  height: 10,
-                  borderRadius: "50%",
-                  bgcolor: colors.landing.cyanPop,
-                  boxShadow: `0 0 0 4px ${colors.landing.cyanPop}22`,
+                  fontSize: { xs: "1.45rem", md: "1.7rem", lg: "1.9rem" },
+                  fontWeight: 400,
+                  letterSpacing: "-0.05em",
+                  color: colors.landing.heroText,
+                  textTransform: "lowercase",
+                  lineHeight: 1,
                 }}
-              />
+              >
+                log
+              </Typography>
             </Box>
           </Button>
 

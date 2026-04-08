@@ -27,7 +27,7 @@ const brand = {
   },
 
   typography: {
-    buttonFontFamily: "'Harmattan','Poppins','Inter','Roboto',sans-serif",
+    buttonFontFamily: "'Outfit','Inter','Roboto',sans-serif",
   },
 
   radii: {

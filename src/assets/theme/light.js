@@ -11,7 +11,7 @@ const theme = createTheme({
   palette: {
     mode: "light",
     background: {
-      default: colors.semantic.surface,
+      default: colors.landing.pageBackground,
       paper: colors.semantic.surface,
       container: colors.app.container,
     },
@@ -118,10 +118,13 @@ const theme = createTheme({
   },
   typography: {
     fontSize: 16,
-    fontFamily: "'Lancelot', 'Roboto', 'Helvetica', 'Arial', sans-serif",
-    // Poppins for special UI elements (buttons, headers, etc.)
+    fontFamily: "'Outfit', 'Inter', 'Roboto', 'Helvetica', 'Arial', sans-serif",
+    allVariants: {
+      letterSpacing: '-0.015em',
+    },
+    // Outfit for special UI elements (buttons, headers, etc.)
     hero: {
-      fontFamily: "'Poppins', 'Inter', 'Roboto', sans-serif",
+      fontFamily: "'Outfit', 'Inter', 'Roboto', sans-serif",
     },
     // App UI typography variants
     sectionHeader: {
