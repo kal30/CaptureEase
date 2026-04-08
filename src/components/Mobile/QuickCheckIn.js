@@ -726,29 +726,33 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
                 </Stack>
 
                 {!tagDraftOpen ? (
-                  <Button
-                    fullWidth
-                    variant="outlined"
-                    onClick={() => setTagDraftOpen(true)}
-                    sx={{
-                      mt: 1.25,
-                      minHeight: 46,
-                      borderRadius: '12px',
-                      borderWidth: '2px',
-                      borderColor: '#C7D9C4',
-                      color: '#334155',
-                      bgcolor: '#ffffff',
-                      textTransform: 'none',
-                      fontWeight: 800,
-                      '&:hover': {
-                        borderWidth: '2px',
-                        borderColor: '#B8D3B5',
-                        bgcolor: '#F7FBF9',
-                      },
-                    }}
-                  >
-                    + New
-                  </Button>
+                  <Box sx={{ mt: 1.25, display: 'flex', justifyContent: 'flex-end' }}>
+                    <Button
+                      onClick={() => setTagDraftOpen(true)}
+                      aria-label="Add a new quick tag"
+                      variant="outlined"
+                      sx={{
+                        minWidth: 40,
+                        width: 40,
+                        height: 40,
+                        borderRadius: '12px',
+                        borderWidth: '1px',
+                        borderColor: '#C7D9C4',
+                        color: '#334155',
+                        bgcolor: '#ffffff',
+                        textTransform: 'none',
+                        fontWeight: 900,
+                        boxShadow: '0 2px 8px rgba(15, 23, 42, 0.06)',
+                        '&:hover': {
+                          borderWidth: '1px',
+                          borderColor: '#B8D3B5',
+                          bgcolor: '#F7FBF9',
+                        },
+                      }}
+                    >
+                      +
+                    </Button>
+                  </Box>
                 ) : (
                   <Box
                     sx={{
