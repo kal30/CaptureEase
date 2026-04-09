@@ -20,6 +20,7 @@ import {
 } from '@mui/icons-material';
 import { alpha, useTheme } from '@mui/material/styles';
 import ResponsiveLayout from '../components/Layout/ResponsiveLayout';
+import MobileLayout from '../components/Layout/MobileLayout';
 import { USER_ROLES, ROLE_DISPLAY } from '../constants/roles';
 import { getRoleColor } from '../assets/theme/roleColors';
 
@@ -94,9 +95,8 @@ const InviteRoleSelectionPage = () => {
     setExpandedCard(expandedCard === roleKey ? null : roleKey);
   };
 
-  return (
-    <ResponsiveLayout pageTitle="Invite" showBottomNav={false}>
-      <Container maxWidth="sm" sx={{ mt: { xs: 1.5, md: 2 }, mb: 4, px: { xs: 1.5, sm: 2 } }}>
+  const inviteContent = (
+    <Container maxWidth="sm" sx={{ mt: { xs: 1.5, md: 2 }, mb: 4, px: { xs: 1.5, sm: 2 } }}>
         {/* Header */}
         <Box sx={{ textAlign: 'center', mb: { xs: 2.5, md: 4 } }}>
           <Typography
@@ -274,7 +274,20 @@ const InviteRoleSelectionPage = () => {
             </Typography>
           </Stack>
         </Box>
-      </Container>
+    </Container>
+  );
+
+  return (
+    <ResponsiveLayout
+      pageTitle="Invite"
+      showBottomNav={false}
+      customTablet={
+        <MobileLayout pageTitle="Invite" showBottomNav={false}>
+          {inviteContent}
+        </MobileLayout>
+      }
+    >
+      {inviteContent}
     </ResponsiveLayout>
   );
 };

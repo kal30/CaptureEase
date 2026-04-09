@@ -12,6 +12,10 @@ const functions = getFunctions(app, 'us-central1');
 
 // Get references to the callable Cloud Functions
 const sendInvitationEmailCallable = httpsCallable(functions, 'sendInvitationEmail');
+const resendInvitationEmailCallable = httpsCallable(functions, 'resendInvitationEmail');
+const editInvitationEmailCallable = httpsCallable(functions, 'editInvitationEmail');
+const cancelInvitationEmailCallable = httpsCallable(functions, 'cancelInvitationEmail');
+const listChildInvitationsCallable = httpsCallable(functions, 'listChildInvitations');
 
 
 // Function to send an invitation to a team member
@@ -37,6 +41,7 @@ export const sendInvitation = async (childId, email, role, specialization = null
     }
 
     const senderName = currentUser.displayName || currentUser.email || 'A parent';
+    const invitationId = doc(collection(db, "invitations")).id;
 
     // --- Fetch Child Name ---
     // This is crucial for the email content.
@@ -61,13 +66,13 @@ export const sendInvitation = async (childId, email, role, specialization = null
         childId,
         role,
         timestamp: Date.now(),
-        childName
+        childName,
+        invitationId,
     };
     const encodedToken = encodeURIComponent(btoa(JSON.stringify(tokenData)));
     const encodedChildName = encodeURIComponent(childName);
     const encodedRole = encodeURIComponent(role);
-    
-    const invitationLink = `${window.location.origin}/accept-invite?token=${encodedToken}&childName=${encodedChildName}&role=${encodedRole}`;
+    const invitationLink = `${window.location.origin}/accept-invite?token=${encodedToken}&childName=${encodedChildName}&role=${encodedRole}&invitationId=${encodeURIComponent(invitationId)}`;
 
     try {
         // 1. Check if the user already exists in Firebase Auth
@@ -124,31 +129,47 @@ export const sendInvitation = async (childId, email, role, specialization = null
                 // Send email via Cloud Function
                 const emailResult = await sendInvitationEmailCallable({
                     recipientEmail: email,
+                    invitationId,
+                    childId,
                     childName,
                     role,
                     senderName,
+                    senderUid: currentUser.uid,
                     invitationLink,
                     personalMessage // Pass the personal message
                 });
                 console.log('Email sent successfully:', emailResult.data);
                 // Optional: Send SMS notification (uncomment and provide recipientPhoneNumber if you collect it)
                 // await sendSmsNotificationCallable({ recipientPhoneNumber: '+15551234567', messageBody: `Hi! ${senderName} invited you to ${childName}'s CareTeam. Check your email.` });
-                return { status: "invited", message: `Invitation email sent to ${email}.` };
+                return {
+                    status: "invited",
+                    invitationId: emailResult.data?.invitationId || invitationId,
+                    messageId: emailResult.data?.messageId || null,
+                    message: `Invitation email sent to ${email}.`
+                };
             }
         } else {
             // User does not exist: Send invitation email via Cloud Function
             const emailResult = await sendInvitationEmailCallable({
                 recipientEmail: email,
+                invitationId,
+                childId,
                 childName,
                 role,
                 senderName,
+                senderUid: currentUser.uid,
                 invitationLink,
                 personalMessage // Pass the personal message
             });
             console.log('Email sent successfully:', emailResult.data);
             // Optional: Send SMS notification (uncomment and provide recipientPhoneNumber if you collect it)
             // await sendSmsNotificationCallable({ recipientPhoneNumber: '+15551234567', messageBody: `Hi! ${senderName} invited you to ${childName}'s CareTeam. Check your email.` });
-            return { status: "invited", message: `Invitation email sent to ${email}.` };
+            return {
+                status: "invited",
+                invitationId: emailResult.data?.invitationId || invitationId,
+                messageId: emailResult.data?.messageId || null,
+                message: `Invitation email sent to ${email}.`
+            };
         }
     } catch (error) {
         console.error("Error sending invitation:", error);
@@ -181,6 +202,7 @@ export const sendMultiChildInvitation = async (childIds, email, role, specializa
     }
 
     const senderName = currentUser.displayName || currentUser.email || 'A parent';
+    const invitationId = doc(collection(db, "invitations")).id;
 
     // Fetch all child names
     const children = [];
@@ -210,12 +232,13 @@ export const sendMultiChildInvitation = async (childIds, email, role, specializa
         childNames: children.map(c => c.name),
         role,
         timestamp: Date.now(),
-        specialization
+        specialization,
+        invitationId,
     };
     const invitationToken = btoa(JSON.stringify(tokenData));
     const encodedToken = encodeURIComponent(invitationToken);
 
-    const invitationLink = `${window.location.origin}/accept-invite?token=${encodedToken}`;
+    const invitationLink = `${window.location.origin}/accept-invite?token=${encodedToken}&invitationId=${encodeURIComponent(invitationId)}`;
 
     try {
         // Check if the user already exists
@@ -226,9 +249,12 @@ export const sendMultiChildInvitation = async (childIds, email, role, specializa
             // User exists: Still send invitation email (they can just log in and get access)
             const emailResult = await sendInvitationEmailCallable({
                 recipientEmail: email,
+                invitationId,
+                childIds: children.map(c => c.id),
                 childNames: children.map(c => c.name), // Pass array of child names
                 role,
                 senderName,
+                senderUid: currentUser.uid,
                 invitationLink,
                 personalMessage,
                 multiChild: true // Flag for multi-child email template
@@ -236,6 +262,8 @@ export const sendMultiChildInvitation = async (childIds, email, role, specializa
             console.log('Multi-child invitation email sent to existing user:', emailResult.data);
             return { 
                 status: "invited_existing_user", 
+                invitationId: emailResult.data?.invitationId || invitationId,
+                messageId: emailResult.data?.messageId || null,
                 message: `Invitation sent to existing user ${email} for ${children.length} children.`,
                 children: children.map(c => c.name)
             };
@@ -243,9 +271,12 @@ export const sendMultiChildInvitation = async (childIds, email, role, specializa
             // User doesn't exist: Send invitation to create account
             const emailResult = await sendInvitationEmailCallable({
                 recipientEmail: email,
+                invitationId,
+                childIds: children.map(c => c.id),
                 childNames: children.map(c => c.name),
                 role,
                 senderName,
+                senderUid: currentUser.uid,
                 invitationLink,
                 personalMessage,
                 multiChild: true
@@ -253,6 +284,8 @@ export const sendMultiChildInvitation = async (childIds, email, role, specializa
             console.log('Multi-child invitation email sent to new user:', emailResult.data);
             return { 
                 status: "invited_new_user", 
+                invitationId: emailResult.data?.invitationId || invitationId,
+                messageId: emailResult.data?.messageId || null,
                 message: `Invitation sent to ${email} for ${children.length} children.`,
                 children: children.map(c => c.name)
             };
@@ -261,4 +294,29 @@ export const sendMultiChildInvitation = async (childIds, email, role, specializa
         console.error("Error sending multi-child invitation:", error);
         throw error;
     }
+};
+
+export const listChildInvitations = async (childId) => {
+    const result = await listChildInvitationsCallable({ childId });
+    return result.data?.invitations || [];
+};
+
+export const resendInvitation = async (invitationId) => {
+    const result = await resendInvitationEmailCallable({ invitationId });
+    return result.data;
+};
+
+export const editInvitation = async (invitationId, recipientEmail, role, personalMessage = null) => {
+    const result = await editInvitationEmailCallable({
+        invitationId,
+        recipientEmail,
+        role,
+        personalMessage,
+    });
+    return result.data;
+};
+
+export const cancelInvitation = async (invitationId, reason = 'canceled by owner') => {
+    const result = await cancelInvitationEmailCallable({ invitationId, reason });
+    return result.data;
 };

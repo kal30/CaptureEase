@@ -39,7 +39,7 @@ const InvitationPage = () => {
         if (invitationSnap.exists()) {
           const invitationData = invitationSnap.data();
           // Support both old therapistEmail and new generic email field
-          const invitedEmail = invitationData.email || invitationData.therapistEmail;
+          const invitedEmail = invitationData.email || invitationData.recipientEmail || invitationData.therapistEmail;
           if (invitedEmail === currentUser.email) {
             setInvitation(invitationData);
           } else {
@@ -109,7 +109,7 @@ const InvitationPage = () => {
       );
 
       try {
-        const invitedEmail = invitation.email || invitation.therapistEmail;
+        const invitedEmail = invitation.email || invitation.recipientEmail || invitation.therapistEmail;
         await sendInvitationEmail({
           to: invitedEmail,
           subject: "Invitation Accepted",

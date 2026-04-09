@@ -190,6 +190,19 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Invitations - visible to the invited user or child owner
+    match /invitations/{invitationId} {
+      allow read: if isAuthenticated() && (
+        (resource.data.recipientEmail != null && request.auth.token.email == resource.data.recipientEmail) ||
+        (resource.data.childId != null && isChildOwner(resource.data.childId)) ||
+        (resource.data.childIds != null && resource.data.childIds.size() > 0 && (
+          hasChildAccess(request.auth.uid, resource.data.childIds[0])
+        ))
+      );
+
+      allow write: if false;
+    }
+
     // Children collection (minimal & deterministic)
     match /children/{childId} {
       // Read: only members of active children (with null guards)
