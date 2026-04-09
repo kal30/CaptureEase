@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import {
   Box,
-  AppBar,
-  Toolbar,
   Typography,
   IconButton,
   Avatar,
@@ -17,16 +15,15 @@ import {
   Person as PersonIcon,
   Add as AddIcon
 } from '@mui/icons-material';
-import { useTheme } from '@mui/material/styles';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '../../services/firebase';
 import colors from '../../assets/theme/colors';
 import BrandWordmark from '../UI/BrandWordmark';
 import { PRODUCT_NAME_TITLE } from '../../constants/config';
+import ResponsiveHeaderBar from './shared/ResponsiveHeaderBar';
 
 const MobileLayout = ({ children, pageTitle, showBottomNav = true }) => {
-  const theme = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const [user] = useAuthState(auth);
@@ -76,87 +73,61 @@ const MobileLayout = ({ children, pageTitle, showBottomNav = true }) => {
       pb: showBottomNav ? 7 : 0 // Space for bottom navigation
     }}>
       {/* Mobile App Bar */}
-      <AppBar 
+      <ResponsiveHeaderBar
         position={isDashboardRoute ? 'static' : 'sticky'}
-        elevation={0}
-        sx={{ 
-          bgcolor: colors.landing.surface,
-          color: colors.landing.heroText,
-          borderBottom: `1px solid ${colors.landing.borderLight}`,
-          backgroundImage: 'none',
-          boxShadow: '0 4px 16px rgba(15, 23, 42, 0.05)',
-          pt: 'env(safe-area-inset-top)',
-          zIndex: isDashboardRoute ? 'auto' : theme.zIndex.appBar,
-        }}
+        height={56}
+        boxShadow={isDashboardRoute ? 'none' : '0 4px 16px rgba(15, 23, 42, 0.05)'}
       >
-        <Toolbar
-          sx={{
-            minHeight: '56px !important',
-            height: '56px',
-            px: 1.25,
-          }}
-        >
-          <Box
-            sx={{
-              width: '100%',
-              display: 'grid',
-              gridTemplateColumns: 'auto 1fr auto',
-              alignItems: 'center',
-              gap: 1,
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', minWidth: 0 }}>
-              {isDashboardHome ? (
-                <BrandWordmark variant="compact" />
-              ) : (
-                <IconButton
-                  onClick={handleBack}
-                  aria-label="Go back"
-                  sx={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: 2.25,
-                    bgcolor: colors.landing.surfaceSoft,
-                    border: `1px solid ${colors.landing.borderLight}`,
-                    boxShadow: '0 4px 10px rgba(15, 23, 42, 0.05)',
-                    color: colors.landing.heroText,
-                    '&:hover': {
-                      bgcolor: colors.landing.panelSoft,
-                    },
-                  }}
-                >
-                  <ArrowBackIcon sx={{ fontSize: 20 }} />
-                </IconButton>
-              )}
-            </Box>
-
-            <Typography
-              variant="h6"
-              noWrap
+        <Box sx={{ display: 'flex', alignItems: 'center', minWidth: 0 }}>
+          {isDashboardHome ? (
+            <BrandWordmark variant="compact" />
+          ) : (
+            <IconButton
+              onClick={handleBack}
+              aria-label="Go back"
               sx={{
-                textAlign: 'center',
-                fontWeight: 700,
-                fontSize: '1rem',
-                letterSpacing: '-0.015em',
+                width: 40,
+                height: 40,
+                borderRadius: 2.25,
+                bgcolor: colors.landing.surfaceSoft,
+                border: `1px solid ${colors.landing.borderLight}`,
+                boxShadow: '0 4px 10px rgba(15, 23, 42, 0.05)',
                 color: colors.landing.heroText,
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
+                '&:hover': {
+                  bgcolor: colors.landing.panelSoft,
+                },
               }}
             >
-              {pageTitle || (isDashboardHome ? 'Dashboard' : PRODUCT_NAME_TITLE)}
-            </Typography>
+              <ArrowBackIcon sx={{ fontSize: 20 }} />
+            </IconButton>
+          )}
+        </Box>
 
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', minWidth: 0 }}>
-              <Avatar
-                sx={{ width: 32, height: 32, bgcolor: colors.brand.ink, color: colors.landing.heroText, fontWeight: 700 }}
-                src={user?.photoURL}
-              >
-                {user?.displayName?.[0] || user?.email?.[0] || 'U'}
-              </Avatar>
-            </Box>
-          </Box>
-        </Toolbar>
-      </AppBar>
+        <Typography
+          variant="h6"
+          noWrap
+          sx={{
+            textAlign: 'center',
+            fontWeight: 700,
+            fontSize: '1rem',
+            letterSpacing: '-0.015em',
+            color: colors.landing.heroText,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}
+        >
+          {pageTitle || (isDashboardHome ? 'Dashboard' : PRODUCT_NAME_TITLE)}
+        </Typography>
+
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', minWidth: 0 }}>
+          <Avatar
+            sx={{ width: 32, height: 32, bgcolor: colors.brand.ink, color: colors.landing.heroText, fontWeight: 700 }}
+            src={user?.photoURL}
+          >
+            {user?.displayName?.[0] || user?.email?.[0] || 'U'}
+          </Avatar>
+        </Box>
+      </ResponsiveHeaderBar>
 
       {/* Mobile Content */}
       <Box sx={{ p: 2 }}>

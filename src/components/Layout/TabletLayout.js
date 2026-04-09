@@ -1,8 +1,6 @@
 import React from 'react';
 import {
   Box,
-  AppBar,
-  Toolbar,
   Typography,
   IconButton,
   Avatar,
@@ -12,7 +10,6 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
-  Divider
 } from '@mui/material';
 import {
   NotificationsNone as NotificationsIcon,
@@ -28,6 +25,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '../../services/firebase';
 import colors from '../../assets/theme/colors';
+import { PRODUCT_NAME_TITLE } from '../../constants/config';
+import ResponsiveHeaderBar from './shared/ResponsiveHeaderBar';
 
 const DRAWER_WIDTH = 240;
 
@@ -65,7 +64,7 @@ const TabletLayout = ({ children, pageTitle, showSidebar = true }) => {
           {/* Sidebar Header */}
           <Box sx={{ p: 3, borderBottom: `1px solid ${theme.palette.divider}` }}>
             <Typography variant="h6" sx={{ fontWeight: 700, color: colors.landing.heroText }}>
-              lifelog
+              {PRODUCT_NAME_TITLE}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               {pageTitle}
@@ -129,33 +128,29 @@ const TabletLayout = ({ children, pageTitle, showSidebar = true }) => {
       {/* Main Content */}
       <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
         {/* Tablet App Bar */}
-        <AppBar 
-          position="static" 
-          elevation={0}
-          sx={{ 
-            bgcolor: colors.landing.pageBackground,
-            color: colors.landing.heroText,
-            borderBottom: `1px solid ${colors.landing.borderLight}`,
-            backgroundImage: `linear-gradient(180deg, ${colors.landing.pageBackground} 0%, ${colors.landing.panelSoft} 100%)`
-          }}
+        <ResponsiveHeaderBar
+          position="static"
+          height={56}
+          backgroundColor={colors.landing.pageBackground}
+          boxShadow="0 4px 16px rgba(15, 23, 42, 0.05)"
         >
-          <Toolbar>
-              <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 700, color: colors.landing.heroText }}>
-              {pageTitle || t('nav:dashboard')}
-            </Typography>
-            
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <IconButton>
-                <Badge badgeContent={3} color="error">
-                  <NotificationsIcon />
-                </Badge>
-              </IconButton>
-              <IconButton>
-                <SettingsIcon />
-              </IconButton>
-            </Box>
-          </Toolbar>
-        </AppBar>
+          <Typography variant="h6" sx={{ fontWeight: 700, color: colors.landing.heroText }}>
+            {pageTitle || t('nav:dashboard')}
+          </Typography>
+
+          <Box />
+
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <IconButton>
+              <Badge badgeContent={3} color="error">
+                <NotificationsIcon />
+              </Badge>
+            </IconButton>
+            <IconButton>
+              <SettingsIcon />
+            </IconButton>
+          </Box>
+        </ResponsiveHeaderBar>
 
         {/* Tablet Content */}
         <Box sx={{ flex: 1, p: 3, overflow: 'auto' }}>
