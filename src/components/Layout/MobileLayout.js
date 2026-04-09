@@ -6,14 +6,12 @@ import {
   Typography,
   IconButton,
   Avatar,
-  Badge,
   BottomNavigation,
   BottomNavigationAction,
   Fab
 } from '@mui/material';
 import {
-  Menu as MenuIcon,
-  NotificationsNone as NotificationsIcon,
+  ArrowBack as ArrowBackIcon,
   Home as HomeIcon,
   Timeline as TimelineIcon,
   Person as PersonIcon,
@@ -24,6 +22,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '../../services/firebase';
 import colors from '../../assets/theme/colors';
+import BrandWordmark from '../UI/BrandWordmark';
+import { PRODUCT_NAME_TITLE } from '../../constants/config';
 
 const MobileLayout = ({ children, pageTitle, showBottomNav = true }) => {
   const theme = useTheme();
@@ -31,6 +31,8 @@ const MobileLayout = ({ children, pageTitle, showBottomNav = true }) => {
   const location = useLocation();
   const [user] = useAuthState(auth);
   const [navValue, setNavValue] = useState(0);
+  const isDashboardRoute = location.pathname.startsWith('/dashboard');
+  const isDashboardHome = isDashboardRoute && (!pageTitle || pageTitle === 'Dashboard');
 
   // Determine current nav value based on route
   React.useEffect(() => {
@@ -58,6 +60,15 @@ const MobileLayout = ({ children, pageTitle, showBottomNav = true }) => {
     }
   };
 
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+
+    navigate('/dashboard');
+  };
+
   return (
     <Box sx={{ 
       minHeight: '100vh', 
@@ -66,37 +77,83 @@ const MobileLayout = ({ children, pageTitle, showBottomNav = true }) => {
     }}>
       {/* Mobile App Bar */}
       <AppBar 
-        position="sticky" 
+        position={isDashboardRoute ? 'static' : 'sticky'}
         elevation={0}
         sx={{ 
-          bgcolor: colors.landing.pageBackground,
+          bgcolor: colors.landing.surface,
           color: colors.landing.heroText,
           borderBottom: `1px solid ${colors.landing.borderLight}`,
-          backgroundImage: `linear-gradient(180deg, ${colors.landing.pageBackground} 0%, ${colors.landing.panelSoft} 100%)`
+          backgroundImage: 'none',
+          boxShadow: '0 4px 16px rgba(15, 23, 42, 0.05)',
+          pt: 'env(safe-area-inset-top)',
+          zIndex: isDashboardRoute ? 'auto' : theme.zIndex.appBar,
         }}
       >
-        <Toolbar sx={{ justifyContent: 'space-between', minHeight: '56px !important' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <IconButton size="small">
-              <MenuIcon />
-            </IconButton>
-            <Typography variant="h6" sx={{ fontWeight: 700, color: colors.landing.heroText }}>
-              {pageTitle || 'lifelog'}
-            </Typography>
-          </Box>
-          
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <IconButton size="small">
-              <Badge badgeContent={3} color="error">
-                <NotificationsIcon />
-              </Badge>
-            </IconButton>
-            <Avatar 
-              sx={{ width: 32, height: 32 }}
-              src={user?.photoURL}
+        <Toolbar
+          sx={{
+            minHeight: '56px !important',
+            height: '56px',
+            px: 1.25,
+          }}
+        >
+          <Box
+            sx={{
+              width: '100%',
+              display: 'grid',
+              gridTemplateColumns: 'auto 1fr auto',
+              alignItems: 'center',
+              gap: 1,
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', minWidth: 0 }}>
+              {isDashboardHome ? (
+                <BrandWordmark variant="compact" />
+              ) : (
+                <IconButton
+                  onClick={handleBack}
+                  aria-label="Go back"
+                  sx={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 2.25,
+                    bgcolor: colors.landing.surfaceSoft,
+                    border: `1px solid ${colors.landing.borderLight}`,
+                    boxShadow: '0 4px 10px rgba(15, 23, 42, 0.05)',
+                    color: colors.landing.heroText,
+                    '&:hover': {
+                      bgcolor: colors.landing.panelSoft,
+                    },
+                  }}
+                >
+                  <ArrowBackIcon sx={{ fontSize: 20 }} />
+                </IconButton>
+              )}
+            </Box>
+
+            <Typography
+              variant="h6"
+              noWrap
+              sx={{
+                textAlign: 'center',
+                fontWeight: 700,
+                fontSize: '1rem',
+                letterSpacing: '-0.015em',
+                color: colors.landing.heroText,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
             >
-              {user?.displayName?.[0] || 'U'}
-            </Avatar>
+              {pageTitle || (isDashboardHome ? 'Dashboard' : PRODUCT_NAME_TITLE)}
+            </Typography>
+
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', minWidth: 0 }}>
+              <Avatar
+                sx={{ width: 32, height: 32, bgcolor: colors.brand.ink, color: colors.landing.heroText, fontWeight: 700 }}
+                src={user?.photoURL}
+              >
+                {user?.displayName?.[0] || user?.email?.[0] || 'U'}
+              </Avatar>
+            </Box>
           </Box>
         </Toolbar>
       </AppBar>

@@ -14,6 +14,7 @@ import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import GoogleAuth from "../components/AuthProviders/GoogleAuth";
 import ResponsiveLayout from "../components/Layout/ResponsiveLayout";
 import colors from "../assets/theme/colors";
+import { PRODUCT_NAME_TITLE } from "../constants/config";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -93,7 +94,7 @@ const Login = () => {
           variant="h5"
           sx={{ mb: 1.5, fontWeight: "bold", color: "primary.main" }}
         >
-          Sign In to lifelog
+          Sign In to {PRODUCT_NAME_TITLE}
         </Typography>
         <Typography
           variant="body2"

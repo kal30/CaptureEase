@@ -32,12 +32,12 @@
 
   "defaultMessage": {
     "caregiver": {
-      "single": "Hi! I'd love for you to help track {{name}}'s daily progress in our CaptureEase app. You'll be able to log daily activities, behaviors, and milestones that help us understand {{name}} better. Looking forward to working together!",
-      "multi": "Hi! I'd love for you to help track daily progress for {{names}} in our CaptureEase app. You'll be able to log daily activities, behaviors, and milestones that help us understand progress better. Looking forward to working together!"
+      "single": "Hi! I'd love for you to help track {{name}}'s daily progress in our Lifelog app. You'll be able to log daily activities, behaviors, and milestones that help us understand {{name}} better. Looking forward to working together!",
+      "multi": "Hi! I'd love for you to help track daily progress for {{names}} in our Lifelog app. You'll be able to log daily activities, behaviors, and milestones that help us understand progress better. Looking forward to working together!"
     },
     "therapist": {
-      "single": "Hi! I'd like to invite you to view {{name}}'s progress in our CaptureEase app. You'll have access to timeline data, analytics, and progress tracking that might be helpful for our sessions. Thanks for being part of the care team!",
-      "multi": "Hi! I'd like to invite you to view progress for {{names}} in our CaptureEase app. You'll have access to timeline data, analytics, and progress tracking that might be helpful for your sessions. Thanks for being part of the care team!"
+      "single": "Hi! I'd like to invite you to view {{name}}'s progress in our Lifelog app. You'll have access to timeline data, analytics, and progress tracking that might be helpful for our sessions. Thanks for being part of the care team!",
+      "multi": "Hi! I'd like to invite you to view progress for {{names}} in our Lifelog app. You'll have access to timeline data, analytics, and progress tracking that might be helpful for your sessions. Thanks for being part of the care team!"
     }
   }
 }

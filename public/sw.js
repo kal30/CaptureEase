@@ -88,7 +88,7 @@ self.addEventListener('notificationclick', (event) => {
         followUpIndex: data.followUpIndex || 0,
       }).then(() =>
         self.registration.showNotification('Response Recorded! 🎉', {
-          body: 'Your feedback has been saved. Open lifelog to see details.',
+          body: 'Your feedback has been saved. Open Lifelog to see details.',
           icon: '/favicon.ico',
           badge: '/favicon.ico',
           tag: `response-${data.incidentId}`,

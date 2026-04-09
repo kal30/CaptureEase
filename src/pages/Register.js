@@ -18,6 +18,7 @@ import GoogleAuth from "../components/AuthProviders/GoogleAuth"; // Keep Google 
 import ResponsiveLayout from "../components/Layout/ResponsiveLayout";
 import { createUserProfile } from "../services/userService";
 import colors from "../assets/theme/colors";
+import { PRODUCT_NAME_TITLE } from "../constants/config";
 
 const Register = () => {
   const [email, setEmail] = useState("");
@@ -121,7 +122,7 @@ const Register = () => {
           variant="h5"
           sx={{ mb: 3, fontWeight: "bold", color: "primary.main" }}
         >
-          Sign Up for lifelog
+          Sign Up for {PRODUCT_NAME_TITLE}
         </Typography>
         {email && (
           <Alert severity="info" sx={{ width: "100%", mb: 2 }}>

@@ -12,8 +12,7 @@ import {
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import { sendContactEmail } from "../services/contactService";
 import colors from "../assets/theme/colors";
-
-const CONTACT_EMAIL = "support@lifelog.care";
+import { PRODUCT_SUPPORT_EMAIL } from "../constants/config";
 
 export default function ContactUs() {
   const [formData, setFormData] = useState({
@@ -144,7 +143,7 @@ export default function ContactUs() {
                   wordBreak: "break-word",
                 }}
               >
-                {CONTACT_EMAIL}
+                {PRODUCT_SUPPORT_EMAIL}
               </Typography>
             </Box>
 

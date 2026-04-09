@@ -3,6 +3,7 @@ import { Container, Grid, Typography, Box, Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import aboutImage from "../assets/image/landing/heroImage-Lifelog.png";
 import colors from "../assets/theme/colors";
+import { PRODUCT_NAME_TITLE } from "../constants/config";
 
 export default function About() {
   const navigate = useNavigate();
@@ -66,7 +67,7 @@ export default function About() {
             >
               At{" "}
               <Box component="span" sx={{ fontWeight: 700 }}>
-                lifelog
+                {PRODUCT_NAME_TITLE}
               </Box>
               , our mission is simple: make care communication effortless.
               Families and care teams should spend less time chasing updates and
@@ -88,7 +89,7 @@ export default function About() {
               We started after seeing how easily important details get lost in
               texts, emails, or memory.{" "}
               <Box component="span" sx={{ fontWeight: 700 }}>
-                lifelog
+                {PRODUCT_NAME_TITLE}
               </Box>{" "}
               helps you quickly capture moments and share them securely so
               everyone stays in sync.
@@ -143,7 +144,7 @@ export default function About() {
               Next, we aim to expand collaborations, add richer media logging,
               and bring more insights for care teams — all while keeping{" "}
               <Box component="span" sx={{ fontWeight: 700 }}>
-                lifelog
+                {PRODUCT_NAME_TITLE}
               </Box>{" "}
               simple and approachable.
             </Typography>

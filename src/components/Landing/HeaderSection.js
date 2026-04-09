@@ -12,6 +12,7 @@ import { getAuth } from "firebase/auth";
 import heroImage from "../../assets/image/landing/heroImage-Lifelog.png";
 import { saveFoundingFamilyEmail } from "../../services/foundingFamilyService";
 import { landingTypography, landingColors } from "../../assets/theme/landingTheme";
+import BrandWordmark from "../UI/BrandWordmark";
 
 const landingPrimaryButtonStyles = {
   width: { xs: "100%", sm: "auto" },
@@ -74,14 +75,6 @@ const landingFormButtonStyles = {
     borderColor: landingColors.borderFocus,
     boxShadow: `0 8px 20px ${landingColors.shadowMedium}`,
   },
-};
-
-const lifelogWordStyles = {
-  color: landingColors.deepNavy,
-  display: "inline-flex",
-  alignItems: "baseline",
-  gap: 0,
-  whiteSpace: "nowrap",
 };
 
 const HeaderSection = () => {
@@ -177,14 +170,14 @@ const HeaderSection = () => {
             >
               For years I scrambled to remember what happened before every therapy appointment.
               Behaviors, triggers, good days, hard days - all buried in phone notes. I built{" "}
-              <Box component="span" sx={lifelogWordStyles}>
-                <Box component="span" sx={{ fontWeight: 700 }}>
-                  life
-                </Box>
-                <Box component="span" sx={{ fontWeight: 400 }}>
-                  log
-                </Box>
-              </Box>{" "}
+                    <BrandWordmark
+                      variant="heroInline"
+                      color={landingColors.deepNavy}
+                      sx={{
+                        display: 'inline-flex',
+                  verticalAlign: 'baseline',
+                }}
+              />{" "}
               so no parent has to do that anymore.
             </Typography>
 

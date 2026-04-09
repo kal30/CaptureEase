@@ -28,6 +28,82 @@ We can update it as we go so the plan survives if the chat window closes.
 - [ ] Finalize the new teal / sage / lavender palette
 - [ ] Test the refreshed palette on landing, dashboard, and timeline
 
+## Centralization Backlog
+
+These are the shared UI pieces we should consolidate so desktop and mobile stop drifting apart.
+
+### Priority 1
+
+- [x] Brand wordmark
+  - `life` / `log` split
+  - Outfit font
+  - no dot
+  - use one shared `BrandWordmark` component
+- [x] Brand copy strings
+  - shared product title / tagline constants
+  - login / register / footer / about copy
+  - static SEO / PWA text aligned to the same brand
+- [ ] Mobile and desktop header pieces
+  - page title style
+  - back button style
+  - avatar style
+  - sticky vs non-sticky behavior
+- [ ] Child switcher UI
+  - desktop switcher
+  - mobile switcher sheet
+  - `Your role: ...` text
+  - avatar + chevron layout
+- [ ] Child actions menu
+  - add child
+  - add careteam
+  - prep for therapy
+  - import
+  - edit child
+  - delete child
+  - chat
+  - allergy warning section
+
+### Priority 2
+
+- [ ] Timeline header
+  - date label
+  - streak pill
+  - calendar dropdown
+  - search bar
+  - filters rail
+- [ ] Timeline chip styles
+  - entry-type chips
+  - tag chips
+  - active/inactive borders
+  - filter badge logic
+- [ ] Quick action buttons
+  - meds
+  - sleep
+  - food
+  - toilet
+  - quick note
+  - same sizing and palette rules
+- [ ] Role labels
+  - Care Owner
+  - Care Partner
+  - Caregiver
+  - Therapist
+  - shared formatting helper
+
+### Priority 3
+
+- [ ] Card styling
+  - radius
+  - shadow
+  - white surface
+  - border light
+  - selected states
+- [ ] Empty states
+  - blank canvas message
+  - no entries state
+  - no streak yet state
+  - no care team yet state
+
 ## Environment / Release Safety
 
 - [ ] Separate staging from production

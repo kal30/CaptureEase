@@ -5,9 +5,14 @@ import image1 from "../../assets/image/landing/DashboardSlideShow/LongProse.png"
 import image2 from "../../assets/image/landing/DashboardSlideShow/Dashboard.png";
 import image3 from "../../assets/image/landing/DashboardSlideShow/QuickCheckIn.png";
 import { landingColors } from "../../assets/theme/landingTheme";
+import { PRODUCT_NAME_TITLE } from "../../constants/config";
 
 const defaultItems = [
-  { src: image1, alt: "Why lifelog", caption: "Why lifelog" },
+  {
+    src: image1,
+    alt: `Why ${PRODUCT_NAME_TITLE}`,
+    caption: `Why ${PRODUCT_NAME_TITLE}`,
+  },
   { src: image2, alt: "Dashboard", caption: "Dashboard" },
   { src: image3, alt: "Quick Data Capture", caption: "Quick Data Capture" },
 ];

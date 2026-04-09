@@ -1,6 +1,7 @@
 import React from "react";
 import { Box, Typography, Link } from "@mui/material";
 import { landingColors } from "../../assets/theme/landingTheme";
+import { PRODUCT_NAME_TITLE, PRODUCT_TAGLINE } from "../../constants/config";
 
 const Footer = () => {
   return (
@@ -23,7 +24,7 @@ const Footer = () => {
           mb: 1,
         }}
       >
-        lifelog © {new Date().getFullYear()} - Caregiver-first timeline tracking
+        {PRODUCT_NAME_TITLE} © {new Date().getFullYear()} - {PRODUCT_TAGLINE}
       </Typography>
 
       <Box sx={{ display: "flex", justifyContent: "center", gap: 3, mt: 0.5 }}>

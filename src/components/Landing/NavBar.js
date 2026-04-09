@@ -1,6 +1,6 @@
 import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
 import { getAuth, signOut } from "firebase/auth";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   AppBar,
   Toolbar,
@@ -15,28 +15,56 @@ import {
   Menu,
   MenuItem,
   ListItemIcon,
+  Divider,
+  useMediaQuery,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import { useRole } from "../../contexts/RoleContext";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import GroupIcon from "@mui/icons-material/Group";
+import PersonAddAlt1OutlinedIcon from "@mui/icons-material/PersonAddAlt1Outlined";
+import AutoAwesomeOutlinedIcon from "@mui/icons-material/AutoAwesomeOutlined";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import LogoutIcon from "@mui/icons-material/Logout";
 import AddToHomeScreenIcon from "@mui/icons-material/AddToHomeScreen";
 import PhoneIphoneIcon from "@mui/icons-material/PhoneIphone";
 import usePWAInstallPrompt from "../../hooks/usePWAInstallPrompt";
 import colors from "../../assets/theme/colors";
+import { ACTIVE_CHILD_STORAGE_KEY } from "../Dashboard/shared/DashboardViewContext";
+import { getRoleDisplay } from "../../constants/roles";
+import { PRODUCT_NAME_TITLE } from "../../constants/config";
+import BrandWordmark from "../UI/BrandWordmark";
 
 const Navbar = () => {
   const auth = getAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const isDesktopDashboard = useMediaQuery("(min-width:1024px)");
   const [isLoggedIn, setIsLoggedIn] = useState(() => !!auth.currentUser);
   const [authReady, setAuthReady] = useState(false);
-  const { childrenWithAccess } = useRole();
+  const { childrenWithAccess, getUserRoleForChild } = useRole();
   const pwaInstallPrompt = usePWAInstallPrompt();
   const [userMenuAnchor, setUserMenuAnchor] = useState(null);
+  const [dashboardChildMenuAnchor, setDashboardChildMenuAnchor] = useState(null);
+  const [dashboardActionsAnchor, setDashboardActionsAnchor] = useState(null);
+  const [dashboardActiveChildId, setDashboardActiveChildId] = useState(() => {
+    if (typeof window === "undefined") return "";
+    return window.localStorage.getItem(ACTIVE_CHILD_STORAGE_KEY) || "";
+  });
   const isDashboardRoute = location.pathname.startsWith("/dashboard");
+  const isMobileDashboardHeader = isDashboardRoute && !isDesktopDashboard;
+  const useCompactDashboardHeader = isDashboardRoute && isDesktopDashboard;
   const canSeeSwitchChild = isLoggedIn && (childrenWithAccess?.length || 0) > 1;
-  const showInstallAction = !pwaInstallPrompt.isInstalled && (pwaInstallPrompt.canInstall || pwaInstallPrompt.isIOS);
+  const showInstallAction = !isDashboardRoute && !pwaInstallPrompt.isInstalled && (pwaInstallPrompt.canInstall || pwaInstallPrompt.isIOS);
+  const dashboardActiveChild = useMemo(
+    () => childrenWithAccess.find((child) => child.id === dashboardActiveChildId) || childrenWithAccess[0] || null,
+    [childrenWithAccess, dashboardActiveChildId]
+  );
+  const dashboardActiveRoleLabel = useMemo(() => {
+    const role = getUserRoleForChild?.(dashboardActiveChild?.id);
+    const label = getRoleDisplay(role)?.label || '';
+    return label.replace(/^[^\w]+/, '').trim();
+  }, [dashboardActiveChild?.id, getUserRoleForChild]);
   const userAvatarLabel =
     auth.currentUser?.displayName?.trim()?.charAt(0)?.toUpperCase() ||
     auth.currentUser?.email?.trim()?.charAt(0)?.toUpperCase() ||
@@ -49,6 +77,38 @@ const Navbar = () => {
     });
     return () => unsubscribe();
   }, [auth]);
+
+  useEffect(() => {
+    if (!dashboardActiveChildId && childrenWithAccess[0]?.id) {
+      setDashboardActiveChildId(childrenWithAccess[0].id);
+      return;
+    }
+
+    if (dashboardActiveChildId && !childrenWithAccess.some((child) => child.id === dashboardActiveChildId)) {
+      setDashboardActiveChildId(childrenWithAccess[0]?.id || "");
+    }
+  }, [childrenWithAccess, dashboardActiveChildId]);
+
+  useEffect(() => {
+    const handleActiveChildChanged = (event) => {
+      const nextChildId = event?.detail?.childId || window.localStorage.getItem(ACTIVE_CHILD_STORAGE_KEY) || "";
+      setDashboardActiveChildId(nextChildId);
+    };
+
+    const handleStorage = (event) => {
+      if (event.key === ACTIVE_CHILD_STORAGE_KEY) {
+        setDashboardActiveChildId(event.newValue || "");
+      }
+    };
+
+    window.addEventListener("captureez:active-child-changed", handleActiveChildChanged);
+    window.addEventListener("storage", handleStorage);
+
+    return () => {
+      window.removeEventListener("captureez:active-child-changed", handleActiveChildChanged);
+      window.removeEventListener("storage", handleStorage);
+    };
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -96,11 +156,46 @@ const Navbar = () => {
     await handleLogout();
   };
 
+  const handleDashboardChildMenuOpen = (event) => {
+    setDashboardChildMenuAnchor(event.currentTarget);
+  };
+
+  const handleDashboardChildMenuClose = () => {
+    setDashboardChildMenuAnchor(null);
+  };
+
+  const handleDashboardActionsOpen = (event) => {
+    setDashboardActionsAnchor(event.currentTarget);
+  };
+
+  const handleDashboardActionsClose = () => {
+    setDashboardActionsAnchor(null);
+  };
+
+  const handleDashboardAction = (action) => {
+    handleDashboardActionsClose();
+    window.dispatchEvent(new CustomEvent("captureez:dashboard-action", {
+      detail: {
+        action,
+        childId: dashboardActiveChild?.id || "",
+      },
+    }));
+  };
+
+  const handleDashboardChildSelect = (childId) => {
+    handleDashboardChildMenuClose();
+    window.dispatchEvent(new CustomEvent("captureez:set-active-child", {
+      detail: { childId },
+    }));
+  };
+
   return (
     <AppBar
-      position="static"
+      position="sticky"
       elevation={0}
       sx={{
+        top: 0,
+        zIndex: (theme) => theme.zIndex.appBar,
         bgcolor: colors.landing.surface,
         color: colors.landing.heroText,
         borderBottom: `1px solid ${colors.landing.borderLight}`,
@@ -119,20 +214,23 @@ const Navbar = () => {
           maxWidth="xl"
           sx={{
             width: "100%",
-            display: "grid",
-            gridTemplateColumns: {
-              xs: "auto 1fr auto",
-              md: "1fr auto 1fr",
-            },
+            display: useCompactDashboardHeader || isMobileDashboardHeader ? "flex" : "grid",
             alignItems: "center",
-            columnGap: 1.5,
+            justifyContent: useCompactDashboardHeader || isMobileDashboardHeader ? "space-between" : undefined,
+            gridTemplateColumns: useCompactDashboardHeader
+              ? undefined
+              : {
+                  xs: "auto 1fr auto",
+                  md: "1fr auto 1fr",
+                },
+            columnGap: useCompactDashboardHeader || isMobileDashboardHeader ? undefined : 1.5,
             px: "0 !important",
           }}
         >
           <Button
             component={RouterLink}
             to="/"
-            aria-label="lifelog home"
+            aria-label={`${PRODUCT_NAME_TITLE} home`}
             sx={{
               minWidth: "auto",
               px: 0,
@@ -147,68 +245,8 @@ const Navbar = () => {
               },
             }}
           >
-            <Box sx={{ display: "flex", alignItems: "baseline" }}>
-              <Typography
-                component="span"
-                sx={{
-                  fontSize: { xs: "1.45rem", md: "1.7rem", lg: "1.9rem" },
-                  fontWeight: 700,
-                  fontFamily: "'Outfit', sans-serif",
-                  letterSpacing: "-0.05em",
-                  color: colors.landing.heroText,
-                  textTransform: "lowercase",
-                  lineHeight: 1,
-                }}
-              >
-                life
-              </Typography>
-              <Typography
-                component="span"
-                sx={{
-                  fontSize: { xs: "1.45rem", md: "1.7rem", lg: "1.9rem" },
-                  fontWeight: 400,
-                  fontFamily: "'Outfit', sans-serif",
-                  letterSpacing: "-0.05em",
-                  color: colors.landing.heroText,
-                  textTransform: "lowercase",
-                  lineHeight: 1,
-                }}
-              >
-                log
-              </Typography>
-            </Box>
+            <BrandWordmark variant="navbar" />
           </Button>
-
-          <Box
-            sx={{
-              justifySelf: "center",
-              display: { xs: "none", md: isDashboardRoute ? "none" : canSeeSwitchChild ? "block" : "none" },
-            }}
-          >
-            <Button
-              variant="outlined"
-              onClick={handleSwitchChild}
-              startIcon={<GroupIcon sx={{ fontSize: 18, color: colors.landing.textMuted }} />}
-              sx={{
-                minHeight: 36,
-                px: 2,
-                borderRadius: "9999px",
-                borderColor: colors.landing.borderLight,
-                color: colors.landing.textMuted,
-                bgcolor: "transparent",
-                textTransform: "none",
-                fontWeight: 700,
-                boxShadow: "none",
-                "&:hover": {
-                  borderColor: colors.landing.borderMedium,
-                  bgcolor: colors.landing.surfaceSoft,
-                  boxShadow: "none",
-                },
-              }}
-            >
-              Switch Child
-            </Button>
-          </Box>
 
           <Box
             sx={{
@@ -216,12 +254,13 @@ const Navbar = () => {
               display: "flex",
               alignItems: "center",
               gap: 1,
+              ml: useCompactDashboardHeader || isMobileDashboardHeader ? "auto" : 0,
             }}
           >
             {authReady ? (
               isLoggedIn ? (
                 <>
-                  {showInstallAction ? (
+                  {isDashboardRoute && isDesktopDashboard ? null : showInstallAction ? (
                     <Tooltip title={pwaInstallPrompt.isIOS ? "Add to Home Screen" : "Install app"}>
                       <IconButton
                         onClick={handleInstall}
@@ -250,39 +289,41 @@ const Navbar = () => {
                       </IconButton>
                     </Tooltip>
                   ) : null}
-                  <Button
-                    onClick={handleUserMenuOpen}
-                    aria-label="Profile options"
-                    sx={{
-                      minWidth: 0,
-                      p: 0,
-                      ml: 0.5,
-                      borderRadius: "9999px",
-                      bgcolor: "transparent",
-                      boxShadow: "none",
-                      "&:hover": {
+                  {isLoggedIn ? (
+                    <Button
+                      onClick={handleUserMenuOpen}
+                      aria-label="Profile options"
+                      sx={{
+                        minWidth: 0,
+                        p: 0,
+                        ml: 0.5,
+                        borderRadius: "9999px",
                         bgcolor: "transparent",
                         boxShadow: "none",
-                      },
-                    }}
-                  >
-                    <Avatar
-                      alt={auth.currentUser?.displayName || "User"}
-                      src={auth.currentUser?.photoURL || undefined}
-                      sx={{
-                        width: 32,
-                        height: 32,
-                        bgcolor: colors.landing.cyanPop,
-                        color: colors.landing.deepNavy,
-                        fontSize: "0.88rem",
-                        fontWeight: 700,
-                        border: `1px solid ${colors.landing.borderMedium}`,
-                        boxShadow: "0 4px 10px rgba(15, 23, 42, 0.08)",
+                        "&:hover": {
+                          bgcolor: "transparent",
+                          boxShadow: "none",
+                        },
                       }}
                     >
-                      {userAvatarLabel}
-                    </Avatar>
-                  </Button>
+                      <Avatar
+                        alt={auth.currentUser?.displayName || "User"}
+                        src={auth.currentUser?.photoURL || undefined}
+                        sx={{
+                          width: 32,
+                          height: 32,
+                          bgcolor: colors.landing.cyanPop,
+                          color: colors.landing.deepNavy,
+                          fontSize: "0.88rem",
+                          fontWeight: 700,
+                          border: `1px solid ${colors.landing.borderMedium}`,
+                          boxShadow: "0 4px 10px rgba(15, 23, 42, 0.08)",
+                        }}
+                      >
+                        {userAvatarLabel}
+                      </Avatar>
+                    </Button>
+                  ) : null}
                 </>
               ) : (
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -357,6 +398,186 @@ const Navbar = () => {
             </ListItemIcon>
           Profile page
           </MenuItem>
+        <MenuItem onClick={handleLogoutClick} sx={{ gap: 1.1, py: 1.25, px: 1.5, minHeight: 48 }}>
+          <ListItemIcon sx={{ minWidth: 34 }}>
+            <LogoutIcon sx={{ fontSize: 18, color: colors.landing.textMuted }} />
+          </ListItemIcon>
+          Logout
+        </MenuItem>
+      </Menu>
+
+      <Menu
+        anchorEl={dashboardChildMenuAnchor}
+        open={Boolean(dashboardChildMenuAnchor)}
+        onClose={handleDashboardChildMenuClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        PaperProps={{
+          sx: {
+            mt: 1,
+            minWidth: 250,
+            borderRadius: '18px',
+            border: `1px solid ${colors.landing.borderLight}`,
+            boxShadow: `0 24px 60px ${colors.landing.shadowPanel}`,
+            bgcolor: 'rgba(255,255,255,0.98)',
+            backdropFilter: 'blur(16px)',
+          },
+        }}
+      >
+        {childrenWithAccess.map((child) => (
+          <MenuItem
+            key={child.id}
+            onClick={() => handleDashboardChildSelect(child.id)}
+            sx={{ gap: 1.25, py: 1.25, px: 1.5, minHeight: 48 }}
+          >
+            <Avatar
+              src={child.profilePhoto || child.photoURL || child.avatarUrl || undefined}
+              sx={{
+                width: 28,
+                height: 28,
+                bgcolor: colors.roles.careOwner.primary,
+                color: '#fff',
+                fontSize: '0.78rem',
+              }}
+            >
+              {(child.name || 'C').charAt(0).toUpperCase()}
+            </Avatar>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography sx={{ fontWeight: 600, color: colors.landing.heroText, lineHeight: 1.1 }}>
+                {child.name}
+              </Typography>
+              <Typography variant="caption" sx={{ color: colors.landing.textMuted }}>
+                Switch profile
+              </Typography>
+            </Box>
+          </MenuItem>
+        ))}
+        <MenuItem
+          onClick={() => {
+            handleDashboardChildMenuClose();
+            window.dispatchEvent(new CustomEvent("captureez:dashboard-action", {
+              detail: { action: 'add-child', childId: dashboardActiveChild?.id || '' },
+            }));
+          }}
+          sx={{ gap: 1.25, py: 1.25, px: 1.5, minHeight: 48 }}
+        >
+          <ListItemIcon sx={{ minWidth: 32 }}>
+            <PersonAddAlt1OutlinedIcon sx={{ fontSize: 18, color: colors.brand.ink }} />
+          </ListItemIcon>
+          Add child
+        </MenuItem>
+      </Menu>
+
+      <Menu
+        anchorEl={dashboardActionsAnchor}
+        open={Boolean(dashboardActionsAnchor)}
+        onClose={handleDashboardActionsClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        PaperProps={{
+          sx: {
+            mt: 1,
+            minWidth: 280,
+            borderRadius: '18px',
+            border: `1px solid ${colors.landing.borderLight}`,
+            boxShadow: `0 24px 60px ${colors.landing.shadowPanel}`,
+            bgcolor: 'rgba(255,255,255,0.98)',
+            backdropFilter: 'blur(16px)',
+            overflow: 'hidden',
+          },
+        }}
+      >
+        {dashboardActiveChild?.medicalProfile?.foodAllergies?.find(Boolean) || dashboardActiveChild?.medicalProfile?.currentMedications?.find(Boolean) ? (
+          <>
+            <Box sx={{ px: 1.5, pt: 1.5, pb: 1 }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  px: 1.25,
+                  py: 1.1,
+                  borderRadius: '12px',
+                  bgcolor: alpha(colors.semantic.error, 0.09),
+                  color: colors.semantic.error,
+                  border: `1px solid ${alpha(colors.semantic.error, 0.18)}`,
+                }}
+              >
+                <Typography sx={{ fontWeight: 700, color: colors.landing.heroText }}>
+                  {dashboardActiveChild?.medicalProfile?.foodAllergies?.find(Boolean) || dashboardActiveChild?.medicalProfile?.currentMedications?.find(Boolean)}
+                </Typography>
+              </Box>
+            </Box>
+            <Divider sx={{ my: 0.5 }} />
+          </>
+        ) : null}
+        <Box sx={{ px: 1.5, pb: 0.75, pt: 1 }}>
+          <Typography sx={{ fontSize: '0.72rem', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: colors.landing.textMuted }}>
+            Care Team
+          </Typography>
+        </Box>
+        <MenuItem
+          onClick={() => handleDashboardAction('invite-caregiver')}
+          sx={{ gap: 1.25, py: 1.25, px: 1.5, minHeight: 48 }}
+        >
+          <ListItemIcon sx={{ minWidth: 34 }}>
+            <GroupIcon sx={{ fontSize: 18, color: colors.brand.ink }} />
+          </ListItemIcon>
+          Add careteam
+        </MenuItem>
+        {Array.isArray(dashboardActiveChild?.users?.members) && dashboardActiveChild.users.members.length > 1 ? (
+          <MenuItem
+            onClick={() => handleDashboardAction('start-chat')}
+            sx={{ gap: 1.25, py: 1.25, px: 1.5, minHeight: 48 }}
+          >
+            <ListItemIcon sx={{ minWidth: 34 }}>
+              <GroupIcon sx={{ fontSize: 18, color: colors.brand.deep }} />
+            </ListItemIcon>
+            Start chat
+          </MenuItem>
+        ) : null}
+        <Divider sx={{ my: 0.5 }} />
+        <Box sx={{ px: 1.5, pb: 0.75, pt: 1 }}>
+          <Typography sx={{ fontSize: '0.72rem', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: colors.landing.textMuted }}>
+            Tools
+          </Typography>
+        </Box>
+        <MenuItem onClick={() => handleDashboardAction('prep-for-therapy')} sx={{ gap: 1.25, py: 1.25, px: 1.5, minHeight: 48 }}>
+          <ListItemIcon sx={{ minWidth: 34 }}>
+            <AutoAwesomeOutlinedIcon sx={{ fontSize: 18, color: colors.brand.ink }} />
+          </ListItemIcon>
+          Prep for therapy
+        </MenuItem>
+        <MenuItem onClick={() => handleDashboardAction('import-logs')} sx={{ gap: 1.25, py: 1.25, px: 1.5, minHeight: 48 }}>
+          <ListItemIcon sx={{ minWidth: 34 }}>
+            <AddToHomeScreenIcon sx={{ fontSize: 18, color: colors.brand.deep }} />
+          </ListItemIcon>
+          Import .xlsx or .docx
+        </MenuItem>
+        <MenuItem onClick={() => handleDashboardAction('edit-child')} sx={{ gap: 1.25, py: 1.25, px: 1.5, minHeight: 48 }}>
+          <ListItemIcon sx={{ minWidth: 34 }}>
+            <PersonOutlineIcon sx={{ fontSize: 18, color: colors.brand.ink }} />
+          </ListItemIcon>
+          Edit Child Profile
+        </MenuItem>
+        <MenuItem onClick={() => handleDashboardAction('delete-child')} sx={{ gap: 1.25, py: 1.25, px: 1.5, minHeight: 48, color: 'error.main' }}>
+          <ListItemIcon sx={{ minWidth: 34 }}>
+            <LogoutIcon sx={{ fontSize: 18, color: 'error.main' }} />
+          </ListItemIcon>
+          Delete Child Profile
+        </MenuItem>
+        <Divider sx={{ my: 0.5 }} />
+        <Box sx={{ px: 1.5, pb: 0.75, pt: 1 }}>
+          <Typography sx={{ fontSize: '0.72rem', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: colors.landing.textMuted }}>
+            Account
+          </Typography>
+        </Box>
+        <MenuItem onClick={handleProfile} sx={{ gap: 1.1, py: 1.25, px: 1.5, minHeight: 48 }}>
+          <ListItemIcon sx={{ minWidth: 34 }}>
+            <PersonOutlineIcon sx={{ fontSize: 18, color: colors.brand.ink }} />
+          </ListItemIcon>
+          Profile page
+        </MenuItem>
         <MenuItem onClick={handleLogoutClick} sx={{ gap: 1.1, py: 1.25, px: 1.5, minHeight: 48 }}>
           <ListItemIcon sx={{ minWidth: 34 }}>
             <LogoutIcon sx={{ fontSize: 18, color: colors.landing.textMuted }} />

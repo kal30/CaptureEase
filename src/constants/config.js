@@ -1,4 +1,20 @@
 // src/constants/config.js
-export const PRODUCT_NAME = 'lifelog';
-export const PRODUCT_NAME_TITLE = 'Lifelog';
-export const PRODUCT_TAGLINE = 'Caregiver-first timeline tracking';
+import {
+  BRAND_DESCRIPTION,
+  BRAND_NAME,
+  BRAND_OG_DESCRIPTION,
+  BRAND_SITE_TITLE,
+  BRAND_SITE_URL,
+  BRAND_SUPPORT_EMAIL,
+  BRAND_TAGLINE,
+  BRAND_TITLE,
+} from "./brand";
+
+export const PRODUCT_NAME = BRAND_NAME;
+export const PRODUCT_NAME_TITLE = BRAND_TITLE;
+export const PRODUCT_TAGLINE = BRAND_TAGLINE;
+export const PRODUCT_SITE_TITLE = BRAND_SITE_TITLE;
+export const PRODUCT_DESCRIPTION = BRAND_DESCRIPTION;
+export const PRODUCT_OG_DESCRIPTION = BRAND_OG_DESCRIPTION;
+export const PRODUCT_SUPPORT_EMAIL = BRAND_SUPPORT_EMAIL;
+export const PRODUCT_SITE_URL = BRAND_SITE_URL;
