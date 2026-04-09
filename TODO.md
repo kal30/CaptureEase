@@ -53,7 +53,7 @@ These are the shared UI pieces we should consolidate so desktop and mobile stop 
   - mobile switcher sheet
   - `Your role: ...` text
   - avatar + chevron layout
-- [ ] Child actions menu
+- [x] Child actions menu
   - add child
   - add careteam
   - prep for therapy

@@ -33,6 +33,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../../services/firebase';
 import { useDashboardView } from './shared/DashboardViewContext';
 import { ChildSwitcherPanel, ChildSwitcherTrigger } from './shared/ChildSwitcher';
+import ChildActionsMenuContent from './shared/ChildActionsMenuContent';
 import { getAllQuickTagOptions, loadCustomQuickTags } from '../../utils/quickTags';
 import { getRoleDisplay } from '../../constants/roles';
 import TimelineFilters from '../Timeline/TimelineFilters';
@@ -590,98 +591,23 @@ const DesktopDashboardWorkspace = ({
           },
         }}
       >
-        {activeChild?.medicalProfile?.foodAllergies?.find(Boolean) || activeChild?.medicalProfile?.currentMedications?.find(Boolean) ? (
-          <>
-            <Box sx={{ px: 1.5, pt: 1.5, pb: 1 }}>
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
-                  px: 1.25,
-                  py: 1.1,
-                  borderRadius: '12px',
-                  bgcolor: alpha(colors.semantic.error, 0.09),
-                  color: colors.semantic.error,
-                  border: `1px solid ${alpha(colors.semantic.error, 0.18)}`,
-                }}
-              >
-                <Typography sx={{ fontWeight: 700, color: colors.landing.heroText }}>
-                  {activeChild?.medicalProfile?.foodAllergies?.find(Boolean) || activeChild?.medicalProfile?.currentMedications?.find(Boolean)}
-                </Typography>
-              </Box>
-            </Box>
-            <Divider sx={{ my: 0.5 }} />
-          </>
-        ) : null}
-
-        <MenuItem
-          onClick={() => handleDesktopAction('add-child')}
-          sx={{ gap: 1.25, py: 1.25, px: 1.5, minHeight: 48 }}
-        >
-          <ListItemIcon sx={{ minWidth: 34 }}>
-            <PersonAddAlt1OutlinedIcon sx={{ fontSize: 18, color: colors.brand.ink }} />
-          </ListItemIcon>
-          Add child
-        </MenuItem>
-
-        <Box sx={{ px: 1.5, pb: 0.75, pt: 1 }}>
-          <Typography sx={{ fontSize: '0.72rem', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: colors.landing.textMuted }}>
-            Care Team
-          </Typography>
+        <Box sx={{ px: 0.5 }}>
+          <ChildActionsMenuContent
+            child={activeChild}
+            userRole={hook.getUserRoleForChild?.(activeChild?.id)}
+            careTeamCount={(activeChild?.users?.members || []).length}
+            onAddChild={() => handleDesktopAction('add-child')}
+            onEditChild={() => handleDesktopAction('edit-child')}
+            onInviteTeamMember={() => handleDesktopAction('invite-caregiver')}
+            onDeleteChild={() => handleDesktopAction('delete-child')}
+            onPrepForTherapy={() => handleDesktopAction('prep-for-therapy')}
+            onImportLogs={() => handleDesktopAction('import-logs')}
+            onStartChat={() => handleDesktopAction('start-chat')}
+            showWarning
+            showSwitchChild={false}
+            showAddChild
+          />
         </Box>
-
-        <MenuItem onClick={() => handleDesktopAction('invite-caregiver')} sx={{ gap: 1.25, py: 1.25, px: 1.5, minHeight: 48 }}>
-          <ListItemIcon sx={{ minWidth: 34 }}>
-            <GroupsOutlinedIcon sx={{ fontSize: 18, color: colors.brand.ink }} />
-          </ListItemIcon>
-          Add careteam
-        </MenuItem>
-
-        {Array.isArray(activeChild?.users?.members) && activeChild.users.members.length > 1 ? (
-          <MenuItem onClick={() => handleDesktopAction('start-chat')} sx={{ gap: 1.25, py: 1.25, px: 1.5, minHeight: 48 }}>
-            <ListItemIcon sx={{ minWidth: 34 }}>
-              <ChatBubbleOutlineIcon sx={{ fontSize: 18, color: colors.brand.deep }} />
-            </ListItemIcon>
-            Start chat
-          </MenuItem>
-        ) : null}
-
-        <Divider sx={{ my: 0.5 }} />
-
-        <Box sx={{ px: 1.5, pb: 0.75, pt: 1 }}>
-          <Typography sx={{ fontSize: '0.72rem', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: colors.landing.textMuted }}>
-            Tools
-          </Typography>
-        </Box>
-
-        <MenuItem onClick={() => handleDesktopAction('prep-for-therapy')} sx={{ gap: 1.25, py: 1.25, px: 1.5, minHeight: 48 }}>
-          <ListItemIcon sx={{ minWidth: 34 }}>
-            <AutoAwesomeOutlinedIcon sx={{ fontSize: 18, color: colors.brand.ink }} />
-          </ListItemIcon>
-          Prep for therapy
-        </MenuItem>
-
-        <MenuItem onClick={() => handleDesktopAction('import-logs')} sx={{ gap: 1.25, py: 1.25, px: 1.5, minHeight: 48 }}>
-          <ListItemIcon sx={{ minWidth: 34 }}>
-            <FileUploadOutlinedIcon sx={{ fontSize: 18, color: colors.brand.deep }} />
-          </ListItemIcon>
-          Import .xlsx or .docx
-        </MenuItem>
-
-        <MenuItem onClick={() => handleDesktopAction('edit-child')} sx={{ gap: 1.25, py: 1.25, px: 1.5, minHeight: 48 }}>
-          <ListItemIcon sx={{ minWidth: 34 }}>
-            <EditOutlinedIcon sx={{ fontSize: 18, color: colors.brand.ink }} />
-          </ListItemIcon>
-          Edit Child Profile
-        </MenuItem>
-
-        <MenuItem onClick={() => handleDesktopAction('delete-child')} sx={{ gap: 1.25, py: 1.25, px: 1.5, minHeight: 48, color: 'error.main' }}>
-          <ListItemIcon sx={{ minWidth: 34 }}>
-            <DeleteOutlineIcon sx={{ fontSize: 18, color: 'error.main' }} />
-          </ListItemIcon>
-          Delete Child Profile
-        </MenuItem>
       </Menu>
     </Box>
   );

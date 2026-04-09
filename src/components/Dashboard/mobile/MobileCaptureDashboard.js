@@ -40,6 +40,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { PickersDay } from '@mui/x-date-pickers/PickersDay';
 import { useDashboardView } from '../shared/DashboardViewContext';
 import { ChildSwitcherPanel, ChildSwitcherTrigger } from '../shared/ChildSwitcher';
+import ChildActionsMenuContent from '../shared/ChildActionsMenuContent';
 import { USER_ROLES } from '../../../constants/roles';
 import UnifiedTimeline from '../../Timeline/UnifiedTimeline';
 import { getChildCareTeam } from '../../../services/childAccessService';
@@ -176,6 +177,7 @@ const MobileCaptureDashboard = ({
     () => careTeamsByChildId[activeChild?.id] || [],
     [activeChild?.id, careTeamsByChildId]
   );
+  const activeChildRole = getUserRoleForChild?.(activeChild?.id) || null;
   const hasChatAvailable = useMemo(
     () => activeChildCareTeam.some((member) => String(member?.role || '').toLowerCase() !== USER_ROLES.CARE_OWNER),
     [activeChildCareTeam]
@@ -910,155 +912,39 @@ const MobileCaptureDashboard = ({
               }}
             />
           </Box>
-
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1,
-              px: 1.5,
-              py: 1.1,
-              mb: 1,
-              borderRadius: '16px',
-              bgcolor: alpha('#EF4444', 0.1),
-              border: `1px solid ${alpha('#EF4444', 0.16)}`,
-            }}
-          >
-            <Box
-              sx={{
-                width: 22,
-                height: 22,
-                borderRadius: '9999px',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                bgcolor: alpha('#EF4444', 0.14),
-                color: '#EF4444',
-                flexShrink: 0,
-              }}
-            >
-              <PriorityHighIcon sx={{ fontSize: 15 }} />
-            </Box>
-            <Typography sx={{ fontSize: '0.92rem', fontWeight: 800, color: colors.landing.heroText, lineHeight: 1.2 }}>
-              {activeChildWarningLabel}
-            </Typography>
-          </Box>
-
-          <Typography
-            sx={{
-              px: 0.75,
-              pt: 0.5,
-              pb: 0.75,
-              fontFamily: 'Outfit, sans-serif',
-              fontSize: '12px',
-              fontWeight: 700,
-              textTransform: 'uppercase',
-              letterSpacing: '0.1em',
-              color: colors.landing.textMuted,
-            }}
-          >
-            Care Team
-          </Typography>
-
-          {onInviteTeamMember ? (
-            <MenuItem
-              onClick={() => {
-                closeMobileChildSheet();
-                handleAddCaregiver();
-              }}
-              sx={{ gap: 1.1, py: 1.3, px: 1.25, minHeight: 50, borderRadius: '14px' }}
-            >
-              <ListItemIcon sx={{ minWidth: 34 }}>
-                <GroupsIcon sx={{ fontSize: 18, color: colors.brand.ink }} />
-              </ListItemIcon>
-              <Typography sx={{ fontWeight: 700, color: colors.landing.heroText }}>Add careteam</Typography>
-            </MenuItem>
-          ) : null}
-
-          {(careTeamsByChildId[activeChild?.id] || []).length > 1 && onMessages ? (
-            <MenuItem
-              onClick={() => {
-                closeMobileChildSheet();
-                onMessages?.(activeChild);
-              }}
-              sx={{ gap: 1.1, py: 1.3, px: 1.25, minHeight: 50, borderRadius: '14px' }}
-            >
-              <ListItemIcon sx={{ minWidth: 34 }}>
-                <GroupsIcon sx={{ fontSize: 18, color: colors.brand.ink }} />
-              </ListItemIcon>
-              <Typography sx={{ fontWeight: 700, color: colors.landing.heroText }}>Start chat</Typography>
-            </MenuItem>
-          ) : null}
-
-          <Typography
-            sx={{
-              px: 0.75,
-              pt: 1,
-              pb: 0.75,
-              fontFamily: 'Outfit, sans-serif',
-              fontSize: '12px',
-              fontWeight: 700,
-              textTransform: 'uppercase',
-              letterSpacing: '0.1em',
-              color: colors.landing.textMuted,
-            }}
-          >
-            Tools
-          </Typography>
-
-          <MenuItem
-            onClick={() => {
+          <ChildActionsMenuContent
+            child={activeChild}
+            userRole={activeChildRole}
+            careTeamCount={activeChildCareTeam.length}
+            onAddChild={onAddChildClick}
+            onEditChild={(child) => {
               closeMobileChildSheet();
-              onDailyReport?.(activeChild);
+              onEditChild?.(child);
             }}
-            sx={{ gap: 1.1, py: 1.3, px: 1.25, minHeight: 50, borderRadius: '14px' }}
-          >
-            <ListItemIcon sx={{ minWidth: 34 }}>
-              <AutoAwesomeIcon sx={{ fontSize: 18, color: colors.brand.ink }} />
-            </ListItemIcon>
-            <Typography sx={{ fontWeight: 700, color: colors.landing.heroText }}>Prep for therapy</Typography>
-          </MenuItem>
-
-          <MenuItem
-            onClick={() => {
+            onInviteTeamMember={(childId) => {
               closeMobileChildSheet();
-              onImportLogs?.(activeChild);
+              onInviteTeamMember?.(childId);
             }}
-            sx={{ gap: 1.1, py: 1.3, px: 1.25, minHeight: 50, borderRadius: '14px' }}
-          >
-            <ListItemIcon sx={{ minWidth: 34 }}>
-              <FileUploadIcon sx={{ fontSize: 18, color: colors.brand.ink }} />
-            </ListItemIcon>
-            <Typography sx={{ fontWeight: 700, color: colors.landing.heroText }}>Import .xlsx or .docx</Typography>
-          </MenuItem>
-
-          <MenuItem
-            onClick={() => {
+            onDeleteChild={(child) => {
               closeMobileChildSheet();
-              onEditChild?.(activeChild);
+              onDeleteChild?.(child);
             }}
-            sx={{ gap: 1.1, py: 1.3, px: 1.25, minHeight: 50, borderRadius: '14px' }}
-          >
-            <ListItemIcon sx={{ minWidth: 34 }}>
-              <EditIcon sx={{ fontSize: 18, color: colors.brand.ink }} />
-            </ListItemIcon>
-            <Typography sx={{ fontWeight: 700, color: colors.landing.heroText }}>Edit Child Profile</Typography>
-          </MenuItem>
-
-          {typeof onDeleteChild === 'function' ? (
-            <MenuItem
-              onClick={() => {
-                closeMobileChildSheet();
-                onDeleteChild?.(activeChild);
-              }}
-              sx={{ gap: 1.1, py: 1.3, px: 1.25, minHeight: 50, borderRadius: '14px', color: 'error.main' }}
-            >
-              <ListItemIcon sx={{ minWidth: 34 }}>
-                <DeleteIcon sx={{ fontSize: 18, color: 'error.main' }} />
-              </ListItemIcon>
-              <Typography sx={{ fontWeight: 700, color: 'error.main' }}>Delete Child Profile</Typography>
-            </MenuItem>
-          ) : null}
+            onPrepForTherapy={(child) => {
+              closeMobileChildSheet();
+              onDailyReport?.(child);
+            }}
+            onImportLogs={(child) => {
+              closeMobileChildSheet();
+              onImportLogs?.(child);
+            }}
+            onStartChat={(child) => {
+              closeMobileChildSheet();
+              onMessages?.(child);
+            }}
+            showWarning
+            showSwitchChild={false}
+            showAddChild={Boolean(onAddChildClick)}
+          />
         </Box>
       </SwipeableDrawer>
 
