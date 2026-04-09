@@ -14,6 +14,7 @@ const MobileDashboardFlow = ({
   onEditChild,
   onDeleteChild,
   onInviteTeamMember,
+  onGoToCareTeam,
   onDailyReport,
   onOpenSleepLog,
   onOpenFoodLog,
@@ -60,6 +61,7 @@ const MobileDashboardFlow = ({
       onEditChild={onEditChild}
       onDeleteChild={onDeleteChild}
       onInviteTeamMember={onInviteTeamMember}
+      onGoToCareTeam={onGoToCareTeam}
       onDailyReport={onDailyReport}
       onOpenSleepLog={onOpenSleepLog}
       onOpenFoodLog={onOpenFoodLog}

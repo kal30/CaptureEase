@@ -33,6 +33,7 @@ import { getActiveTimelineFilterCount } from '../Timeline/utils/filterCounts';
 import UnifiedTimeline from '../Timeline/UnifiedTimeline';
 import MiniCalendar from '../UI/MiniCalendar';
 import colors from '../../assets/theme/colors';
+import { getE2EMockData, isE2EMockEnabled } from '../../services/e2eMock';
 
 const formatStreakLabel = (streak = 0) => {
   if (!streak || streak < 1) {
@@ -49,6 +50,7 @@ const DesktopDashboardWorkspace = ({
   onOpenFoodLog,
   onOpenBathroomLog,
   onImportLogs,
+  onGoToCareTeam,
 }) => {
   const { activeChildId, setActiveChildId } = useDashboardView();
   const [customQuickTags, setCustomQuickTags] = useState([]);
@@ -83,6 +85,11 @@ const DesktopDashboardWorkspace = ({
   const desktopTimelineFilterCount = getActiveTimelineFilterCount(timelineFilters, selectedDate);
 
   useEffect(() => {
+    if (isE2EMockEnabled()) {
+      setCustomQuickTags(loadCustomQuickTags(getE2EMockData().authUser?.uid));
+      return undefined;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCustomQuickTags(loadCustomQuickTags(user?.uid));
     });
@@ -235,6 +242,7 @@ const DesktopDashboardWorkspace = ({
 
             <IconButton
               onClick={handleDesktopMenuOpen}
+              data-cy="dashboard-actions-menu"
               sx={{
                 width: 36,
                 height: 36,
@@ -360,6 +368,7 @@ const DesktopDashboardWorkspace = ({
 
               <Button
                 onClick={handleQuickNote}
+                data-cy="dashboard-quick-note"
                 startIcon={<NoteAltOutlinedIcon sx={{ fontSize: 18 }} />}
                 variant="outlined"
                 sx={{
@@ -514,6 +523,7 @@ const DesktopDashboardWorkspace = ({
             userRole={hook.getUserRoleForChild?.(activeChild?.id)}
             careTeamCount={(activeChild?.users?.members || []).length}
             onAddChild={() => handleDesktopAction('add-child')}
+            onGoToCareTeam={(child) => onGoToCareTeam?.(child)}
             onEditChild={() => handleDesktopAction('edit-child')}
             onInviteTeamMember={() => handleDesktopAction('invite-caregiver')}
             onDeleteChild={() => handleDesktopAction('delete-child')}

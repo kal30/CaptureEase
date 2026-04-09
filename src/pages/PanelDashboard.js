@@ -17,6 +17,7 @@ import {
   Alert,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
+import { useNavigate } from "react-router-dom";
 import CloseIcon from "@mui/icons-material/Close";
 
 // Hooks and Services
@@ -47,6 +48,7 @@ import { PRODUCT_NAME_TITLE } from "../constants/config";
 
 const PanelDashboard = () => {
   const theme = useTheme();
+  const navigate = useNavigate();
   const isMobile = useMediaQuery('(max-width:1023.95px)');
   const isDesktop = !isMobile;
   const hook = usePanelDashboard({ activeChildOnly: isMobile });
@@ -120,6 +122,9 @@ const PanelDashboard = () => {
         case "add-child":
           hook.setShowAddChildModal(true);
           break;
+        case "view-care-team":
+          navigate('/care-team');
+          break;
         case "invite-caregiver":
           if (child) {
             hook.handleInviteTeamMember(child.id);
@@ -167,6 +172,7 @@ const PanelDashboard = () => {
     hook.handleShowCareReport,
     hook.selectedChild,
     hook.setShowAddChildModal,
+    navigate,
     handleImportLogsClick,
   ]);
 
@@ -359,6 +365,7 @@ const PanelDashboard = () => {
               onEditChild={hook.handleEditChild}
               onDeleteChild={hook.handleDeleteChild}
               onInviteTeamMember={hook.handleInviteTeamMember}
+              onGoToCareTeam={() => navigate('/care-team')}
               onDailyReport={hook.handleShowCareReport}
               onTrack={hook.handleTrack}
               onOpenSleepLog={hook.handleOpenSleepLog}
@@ -397,6 +404,7 @@ const PanelDashboard = () => {
               onOpenBathroomLog={hook.handleOpenBathroomLog}
               onOpenMedicalLog={handleOpenMedicalLog}
               onImportLogs={handleImportLogsClick}
+              onGoToCareTeam={() => navigate('/care-team')}
               onAddChildClick={() => hook.setShowAddChildModal(true)}
             />
           )}

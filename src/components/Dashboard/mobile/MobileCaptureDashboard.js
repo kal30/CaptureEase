@@ -53,6 +53,7 @@ import { auth } from '../../../services/firebase';
 import { getAllQuickTagOptions, getQuickTagDisplay, loadCustomQuickTags } from '../../../utils/quickTags';
 import { CORE_ENTRY_ACTIONS } from '../../../constants/logTypeRegistry';
 import colors from '../../../assets/theme/colors';
+import { getE2EMockData, isE2EMockEnabled } from '../../../services/e2eMock';
 
 const quickActions = CORE_ENTRY_ACTIONS.map((action) => ({
   key: action.key,
@@ -116,6 +117,7 @@ const MobileCaptureDashboard = ({
   onOpenBathroomLog,
   onOpenMedicalLog,
   onInviteTeamMember,
+  onGoToCareTeam,
   onMessages,
   onImportLogs,
   onAddChildClick,
@@ -220,6 +222,11 @@ const MobileCaptureDashboard = ({
   }, [activeChild?.id]);
 
   useEffect(() => {
+    if (isE2EMockEnabled()) {
+      setCustomQuickTags(loadCustomQuickTags(getE2EMockData().authUser?.uid));
+      return undefined;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCustomQuickTags(loadCustomQuickTags(user?.uid));
     });
@@ -228,6 +235,12 @@ const MobileCaptureDashboard = ({
   }, []);
 
   useEffect(() => {
+    if (isE2EMockEnabled()) {
+      const mockCareTeams = getE2EMockData().careTeamsByChildId || {};
+      setCareTeamsByChildId(mockCareTeams);
+      return undefined;
+    }
+
     let isMounted = true;
 
     if (!children.length) {
@@ -588,6 +601,7 @@ const MobileCaptureDashboard = ({
               <IconButton
                 onClick={() => onMessages?.(activeChild)}
                 aria-label="Open child chat"
+                data-cy="mobile-child-chat"
                 sx={{
                   flexShrink: 0,
                   width: 44,
@@ -608,6 +622,7 @@ const MobileCaptureDashboard = ({
             <IconButton
               onClick={openMobileChildSheet}
               aria-label="Child actions"
+              data-cy="mobile-child-actions"
               sx={{
                 flexShrink: 0,
                 width: 44,
@@ -673,6 +688,7 @@ const MobileCaptureDashboard = ({
             fullWidth
             variant="outlined"
             onClick={handleQuickNote}
+            data-cy="mobile-quick-note"
             startIcon={<NoteAltOutlinedIcon sx={{ fontSize: 19, color: colors.brand.tealBlue }} />}
             sx={{
               mt: 1.1,
@@ -790,6 +806,10 @@ const MobileCaptureDashboard = ({
             userRole={activeChildRole}
             careTeamCount={activeChildCareTeam.length}
             onAddChild={onAddChildClick}
+            onGoToCareTeam={(child) => {
+              closeMobileChildSheet();
+              onGoToCareTeam?.(child);
+            }}
             onEditChild={(child) => {
               closeMobileChildSheet();
               onEditChild?.(child);

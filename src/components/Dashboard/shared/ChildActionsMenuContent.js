@@ -63,6 +63,7 @@ const ChildActionsMenuContent = ({
   careTeamCount = 0,
   onEditChild,
   onInviteTeamMember,
+  onGoToCareTeam,
   onDeleteChild,
   onSwitchChild,
   onPrepForTherapy,
@@ -75,6 +76,7 @@ const ChildActionsMenuContent = ({
 }) => {
   const warningLabel = showWarning ? getWarningLabel(child) : null;
   const canInvite = userRole === USER_ROLES.CARE_OWNER && typeof onInviteTeamMember === 'function';
+  const canGoToCareTeam = typeof onGoToCareTeam === 'function';
   const canEdit = typeof onEditChild === 'function';
   const canDelete = typeof onDeleteChild === 'function';
   const canStartChat = typeof onStartChat === 'function' && careTeamCount > 1;
@@ -142,6 +144,16 @@ const ChildActionsMenuContent = ({
         </ActionItem>
       ) : null}
 
+      {canGoToCareTeam ? (
+        <ActionItem
+          icon={<GroupsOutlinedIcon />}
+          onClick={() => onGoToCareTeam?.(child)}
+          iconColor={colors.brand.deep}
+        >
+          View care team
+        </ActionItem>
+      ) : null}
+
       {canStartChat ? (
         <ActionItem
           icon={<ChatBubbleOutlineIcon />}
@@ -201,4 +213,3 @@ const ChildActionsMenuContent = ({
 };
 
 export default ChildActionsMenuContent;
-

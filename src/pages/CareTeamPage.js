@@ -15,6 +15,8 @@ import {
   DialogActions,
   TextField
 } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import ForumOutlinedIcon from '@mui/icons-material/ForumOutlined';
 import { useRole } from '../contexts/RoleContext';
 import { USER_ROLES } from '../constants/roles';
 import ResponsiveLayout from '../components/Layout/ResponsiveLayout';
@@ -23,6 +25,7 @@ import { populateChildTeamMembers } from '../services/rolePermissionService';
 import { listChildInvitations, resendInvitation, editInvitation, cancelInvitation } from '../services/invitationService';
 
 const CareTeamPage = () => {
+  const navigate = useNavigate();
   const { childrenWithAccess, getUserRoleForChild, loading } = useRole();
   const [hasAccess, setHasAccess] = useState(false);
   const [userRole, setUserRole] = useState(null);
@@ -261,12 +264,36 @@ const CareTeamPage = () => {
     const invites = childInvitations[child.id] || [];
     const activeInvites = invites.filter((invite) => invite.status !== 'accepted');
     const acceptedInvites = invites.filter((invite) => invite.status === 'accepted');
+    const canOpenChat = allMembers.length > 0;
 
     return (
       <Box sx={{ mb: 4 }}>
-        <Typography variant="h6" sx={{ mb: 2, color: 'primary.main' }}>
-          {child.name}'s Care Team
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, mb: 2 }}>
+          <Typography variant="h6" sx={{ color: 'primary.main' }}>
+            {child.name}'s Care Team
+          </Typography>
+          {canOpenChat ? (
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<ForumOutlinedIcon />}
+              onClick={() => navigate(`/messages?childId=${child.id}&openChildChat=1&returnToDashboard=1`, {
+                state: {
+                  selectedChildId: child.id,
+                  openChildChat: true,
+                  returnToDashboard: true,
+                },
+              })}
+              sx={{
+                textTransform: 'none',
+                borderRadius: 9999,
+                fontWeight: 700,
+              }}
+            >
+              Open chat
+            </Button>
+          ) : null}
+        </Box>
         {allMembers.length === 0 ? (
           <Alert severity="info">
             No team members found for {child.name}
@@ -387,7 +414,7 @@ const CareTeamPage = () => {
   };
 
   return (
-    <ResponsiveLayout pageTitle="Care Team">
+    <ResponsiveLayout pageTitle="Care Team" showSidebar={false}>
       <Box sx={{ mb: 3 }}>
         <Typography variant="h4" gutterBottom>
           Care Team

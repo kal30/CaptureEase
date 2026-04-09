@@ -509,6 +509,15 @@ const Navbar = () => {
           </Typography>
         </Box>
         <MenuItem
+          onClick={() => handleDashboardAction('view-care-team')}
+          sx={{ gap: 1.25, py: 1.25, px: 1.5, minHeight: 48 }}
+        >
+          <ListItemIcon sx={{ minWidth: 34 }}>
+            <GroupIcon sx={{ fontSize: 18, color: colors.brand.deep }} />
+          </ListItemIcon>
+          View care team
+        </MenuItem>
+        <MenuItem
           onClick={() => handleDashboardAction('invite-caregiver')}
           sx={{ gap: 1.25, py: 1.25, px: 1.5, minHeight: 48 }}
         >
