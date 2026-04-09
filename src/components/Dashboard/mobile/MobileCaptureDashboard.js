@@ -12,6 +12,7 @@ import {
   Paper,
   Popover,
   MenuItem,
+  SwipeableDrawer,
   Stack,
   TextField,
   FormControlLabel,
@@ -29,7 +30,7 @@ import {
   PersonAddAlt1Outlined as PersonAddIcon,
   NoteAltOutlined as NoteAltOutlinedIcon,
   KeyboardArrowDown as KeyboardArrowDownIcon,
-  SettingsOutlined as SettingsIcon,
+  MenuOutlined as MenuIcon,
   Search as SearchIcon,
   PriorityHigh as PriorityHighIcon,
 } from '@mui/icons-material';
@@ -37,40 +38,14 @@ import { alpha } from '@mui/material/styles';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { PickersDay } from '@mui/x-date-pickers/PickersDay';
 import { useDashboardView } from '../shared/DashboardViewContext';
 import UnifiedTimeline from '../../Timeline/UnifiedTimeline';
 import { getChildCareTeam } from '../../../services/childAccessService';
-import { getLogTypeByEntry } from '../../../constants/logTypeRegistry';
 import { auth } from '../../../services/firebase';
 import { getAllQuickTagOptions, getQuickTagDisplay, loadCustomQuickTags } from '../../../utils/quickTags';
+import { getRoleDisplay } from '../../../constants/roles';
 import colors from '../../../assets/theme/colors';
-
-const countTodayEntries = (entries = []) => {
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
-
-  const counts = {
-    meds: 0,
-    meals: 0,
-    sleep: 0,
-  };
-
-  entries.forEach((entry) => {
-    const entryDate = entry.timestamp?.toDate?.() ? entry.timestamp.toDate() : new Date(entry.timestamp);
-    if (Number.isNaN(entryDate.getTime()) || entryDate < todayStart) {
-      return;
-    }
-
-    const meta = getLogTypeByEntry(entry);
-    const category = meta?.category || entry.category || entry.type || '';
-
-    if (category === 'medication') counts.meds += 1;
-    else if (category === 'food') counts.meals += 1;
-    else if (category === 'sleep') counts.sleep += 1;
-  });
-
-  return counts;
-};
 
 const quickActions = [
   {
@@ -113,6 +88,14 @@ const isSameDay = (dateA, dateB) => (
   && dateA.getDate() === dateB.getDate()
 );
 
+const formatStreakLabel = (streak = 0) => {
+  if (!streak || streak < 1) {
+    return '';
+  }
+
+  return `🔥 ${streak}-Day Streak`;
+};
+
 const getTimelineHeaderLabel = (date = new Date()) => {
   if (isSameDay(date, new Date())) {
     return 'Today';
@@ -127,6 +110,8 @@ const getTimelineHeaderLabel = (date = new Date()) => {
 const MobileCaptureDashboard = ({
   children = [],
   allEntries = {},
+  timelineSummary = {},
+  getUserRoleForChild,
   onRefreshDashboard,
   onQuickEntry,
   onEditChild,
@@ -140,14 +125,15 @@ const MobileCaptureDashboard = ({
   onMessages,
   onImportLogs,
   onAddChildClick,
+  onRefreshRoles,
 }) => {
-  const { activeChildId, goToSwitchboard } = useDashboardView();
+  const { activeChildId, setActiveChildId } = useDashboardView();
   const [searchText, setSearchText] = useState('');
   const [activeEntryTypes, setActiveEntryTypes] = useState([]);
   const [selectedDate, setSelectedDate] = useState(() => new Date());
-  const [childMenuAnchor, setChildMenuAnchor] = useState(null);
-  const [switchMenuAnchor, setSwitchMenuAnchor] = useState(null);
-  const [careTeamCount, setCareTeamCount] = useState(null);
+  const [mobileSwitchSheetOpen, setMobileSwitchSheetOpen] = useState(false);
+  const [mobileActionsSheetOpen, setMobileActionsSheetOpen] = useState(false);
+  const [careTeamsByChildId, setCareTeamsByChildId] = useState({});
   const [customQuickTags, setCustomQuickTags] = useState([]);
   const [timelineFilterSheetOpen, setTimelineFilterSheetOpen] = useState(false);
   const [timelineImportantOnly, setTimelineImportantOnly] = useState(false);
@@ -168,6 +154,23 @@ const MobileCaptureDashboard = ({
     [activeChildId, children]
   );
   const activeChildEntries = useMemo(() => allEntries[activeChild?.id] || [], [allEntries, activeChild?.id]);
+  const activeChildSummary = useMemo(
+    () => timelineSummary?.[activeChild?.id] || timelineSummary || {},
+    [activeChild?.id, timelineSummary]
+  );
+  const activityStreakLabel = formatStreakLabel(activeChildSummary.activityStreak || 0);
+  const datesWithEntries = useMemo(() => {
+    const dateKeys = new Set();
+
+    activeChildEntries.forEach((entry) => {
+      if (!entry) return;
+      const entryDate = entry.timestamp?.toDate?.() ? entry.timestamp.toDate() : new Date(entry.timestamp);
+      if (Number.isNaN(entryDate.getTime())) return;
+      dateKeys.add(new Date(entryDate.getFullYear(), entryDate.getMonth(), entryDate.getDate()).toDateString());
+    });
+
+    return dateKeys;
+  }, [activeChildEntries]);
   const activeChildPhoto = activeChild?.profilePhoto || activeChild?.photoURL || activeChild?.avatarUrl || '';
   const activeChildWarningLabel = useMemo(() => {
     const medicalProfile = activeChild?.medicalProfile || {};
@@ -202,6 +205,8 @@ const MobileCaptureDashboard = ({
     setTimelineTagFilters([]);
     setTimelineFilterSheetOpen(false);
     setTimelineDatePickerAnchor(null);
+    setMobileSwitchSheetOpen(false);
+    setMobileActionsSheetOpen(false);
     setSelectedDate(new Date());
   }, [activeChild?.id]);
 
@@ -212,6 +217,36 @@ const MobileCaptureDashboard = ({
 
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    if (!children.length) {
+      setCareTeamsByChildId({});
+      return undefined;
+    }
+
+    const loadCareTeams = async () => {
+      const entries = await Promise.all(children.map(async (child) => {
+        try {
+          const members = await getChildCareTeam(child.id);
+          return [child.id, Array.isArray(members) ? members : []];
+        } catch (error) {
+          return [child.id, []];
+        }
+      }));
+
+      if (isMounted) {
+        setCareTeamsByChildId(Object.fromEntries(entries));
+      }
+    };
+
+    loadCareTeams();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [children]);
 
   useEffect(() => {
     const node = rootRef.current;
@@ -304,40 +339,6 @@ const MobileCaptureDashboard = ({
     };
   }, [onRefreshDashboard, isRefreshing]);
 
-  useEffect(() => {
-    let isMounted = true;
-
-    if (!activeChild?.id || !onMessages) {
-      setCareTeamCount(null);
-      return undefined;
-    }
-
-    const loadCareTeamCount = async () => {
-      try {
-        const members = await getChildCareTeam(activeChild.id);
-        if (isMounted) {
-          setCareTeamCount(Array.isArray(members) ? members.length : 0);
-        }
-      } catch (error) {
-        if (isMounted) {
-          setCareTeamCount(0);
-        }
-      }
-    };
-
-    loadCareTeamCount();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [activeChild?.id, onMessages]);
-
-  const todaySummary = useMemo(() => {
-    if (!activeChild?.id) {
-      return { meds: 0, meals: 0, sleep: 0 };
-    }
-    return countTodayEntries(allEntries[activeChild.id] || []);
-  }, [activeChild?.id, allEntries]);
   const hasTimelineEntries = (allEntries[activeChild?.id] || []).length > 0;
   const shouldGuideToQuickLog = !hasTimelineEntries;
   const timelineAdvancedFilterCount = (timelineImportantOnly ? 1 : 0)
@@ -412,20 +413,22 @@ const MobileCaptureDashboard = ({
     });
   };
 
-  const handleChildMenuOpen = (event) => {
-    setChildMenuAnchor(event.currentTarget);
+  const openSwitchMenu = (event) => {
+    onRefreshRoles?.();
+    event?.preventDefault?.();
+    setMobileSwitchSheetOpen(true);
   };
 
-  const handleChildMenuClose = () => {
-    setChildMenuAnchor(null);
+  const closeSwitchMenu = () => {
+    setMobileSwitchSheetOpen(false);
   };
 
-  const handleSwitchMenuOpen = (event) => {
-    setSwitchMenuAnchor(event.currentTarget);
+  const openMobileChildSheet = () => {
+    setMobileActionsSheetOpen(true);
   };
 
-  const handleSwitchMenuClose = () => {
-    setSwitchMenuAnchor(null);
+  const closeMobileChildSheet = () => {
+    setMobileActionsSheetOpen(false);
   };
 
   const handleTimelineDatePreset = (dateValue) => {
@@ -441,8 +444,35 @@ const MobileCaptureDashboard = ({
     setTimelineDatePickerAnchor(null);
   };
 
+  const MobileCalendarDay = (props) => {
+    const { day, outsideCurrentMonth, ...other } = props;
+    const hasEntries = datesWithEntries.has(day.toDateString());
+
+    return (
+      <Box sx={{ position: 'relative' }}>
+        <PickersDay {...other} day={day} outsideCurrentMonth={outsideCurrentMonth} />
+        {hasEntries ? (
+          <Box
+            sx={{
+              position: 'absolute',
+              bottom: 4,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: 6,
+              height: 6,
+              borderRadius: '50%',
+              bgcolor: colors.roles.careOwner.primary,
+              border: `1px solid ${colors.landing.surface}`,
+              boxShadow: `0 0 0 1px ${colors.landing.surface}`,
+            }}
+          />
+        ) : null}
+      </Box>
+    );
+  };
+
   const handleAddCaregiver = () => {
-    handleChildMenuClose();
+    closeMobileChildSheet();
     onInviteTeamMember?.(activeChild?.id);
   };
 
@@ -520,7 +550,7 @@ const MobileCaptureDashboard = ({
         >
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
             <Button
-              onClick={handleSwitchMenuOpen}
+              onClick={openSwitchMenu}
               aria-label={children.length > 1 ? 'Switch child' : 'Add child'}
               sx={{
                 minWidth: 0,
@@ -571,7 +601,7 @@ const MobileCaptureDashboard = ({
             </Button>
 
             <IconButton
-              onClick={handleChildMenuOpen}
+              onClick={openMobileChildSheet}
               aria-label="Child actions"
               sx={{
                 flexShrink: 0,
@@ -586,7 +616,7 @@ const MobileCaptureDashboard = ({
                 },
               }}
             >
-              <SettingsIcon sx={{ fontSize: 18, color: '#64748B' }} />
+              <MenuIcon sx={{ fontSize: 18, color: '#64748B' }} />
             </IconButton>
           </Box>
         </Box>
@@ -661,46 +691,6 @@ const MobileCaptureDashboard = ({
             Quick Note (auto-classified)
           </Button>
 
-          <Paper
-            variant="outlined"
-            sx={{
-              mt: 1.1,
-              p: 1.2,
-              borderRadius: '14px',
-              bgcolor: colors.landing.sageLight,
-              borderColor: colors.landing.borderLight,
-            }}
-          >
-            <Typography sx={{ fontSize: '0.72rem', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: colors.landing.textMuted, mb: 0.7 }}>
-              Today
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1.5 }}>
-              <Box>
-                <Typography sx={{ color: colors.brand.ink, fontWeight: 900, fontSize: '1.15rem', lineHeight: 1 }}>
-                  {todaySummary.meds}
-                </Typography>
-                <Typography sx={{ color: colors.landing.textMuted, fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                  meds
-                </Typography>
-              </Box>
-              <Box>
-                <Typography sx={{ color: colors.semantic.warning, fontWeight: 900, fontSize: '1.15rem', lineHeight: 1 }}>
-                  {todaySummary.meals}
-                </Typography>
-                <Typography sx={{ color: colors.landing.textMuted, fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                  meals
-                </Typography>
-              </Box>
-              <Box>
-                <Typography sx={{ color: colors.brand.deep, fontWeight: 900, fontSize: '1.15rem', lineHeight: 1 }}>
-                  {todaySummary.sleep}
-                </Typography>
-                <Typography sx={{ color: colors.landing.textMuted, fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                  sleep
-                </Typography>
-              </Box>
-            </Box>
-          </Paper>
         </Box>
       </Paper>
 
@@ -720,29 +710,63 @@ const MobileCaptureDashboard = ({
         }}
       >
         <Box sx={{ p: 1.35, borderBottom: `1px solid ${colors.landing.borderLight}` }}>
-          <Button
-            onClick={handleTimelineDatePickerOpen}
-            startIcon={<CalendarTodayIcon sx={{ fontSize: 16 }} />}
-            endIcon={<KeyboardArrowDownIcon sx={{ fontSize: 18 }} />}
+          <Box
             sx={{
-              px: 0,
-              py: 0.25,
-              minWidth: 0,
+              display: 'flex',
+              flexDirection: { xs: 'column', sm: 'row' },
+              alignItems: { xs: 'flex-start', sm: 'center' },
+              justifyContent: 'space-between',
+              gap: 1,
               mb: 1,
-              color: colors.landing.heroText,
-              textTransform: 'none',
-              fontWeight: 900,
-              fontSize: '1rem',
-              letterSpacing: '-0.02em',
-              justifyContent: 'flex-start',
-              alignItems: 'center',
-              '&:hover': {
-                bgcolor: 'transparent',
-              },
             }}
           >
-            {getTimelineHeaderLabel(selectedDate)}
-          </Button>
+            <Button
+              onClick={handleTimelineDatePickerOpen}
+              startIcon={<CalendarTodayIcon sx={{ fontSize: 16 }} />}
+              endIcon={<KeyboardArrowDownIcon sx={{ fontSize: 18 }} />}
+              sx={{
+                px: 0,
+                py: 0.25,
+                minWidth: 0,
+                color: colors.landing.heroText,
+                textTransform: 'none',
+                fontWeight: 900,
+                fontSize: '1rem',
+                letterSpacing: '-0.02em',
+                justifyContent: 'flex-start',
+                alignItems: 'center',
+                '&:hover': {
+                  bgcolor: 'transparent',
+                },
+                alignSelf: 'flex-start',
+              }}
+            >
+              {getTimelineHeaderLabel(selectedDate)}
+            </Button>
+            {activityStreakLabel ? (
+              <Box
+                sx={{
+                  alignSelf: { xs: 'flex-start', sm: 'center' },
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 0.6,
+                  px: 1.15,
+                  py: 0.7,
+                  borderRadius: '9999px',
+                  bgcolor: alpha(colors.landing.cyanPop, 0.16),
+                  border: `1px solid ${alpha(colors.landing.cyanPop, 0.4)}`,
+                  color: colors.landing.heroText,
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                }}
+              >
+                <Typography sx={{ fontSize: '0.82rem', lineHeight: 1 }}>🔥</Typography>
+                <Typography sx={{ fontSize: '0.76rem', fontWeight: 800, letterSpacing: '-0.01em', lineHeight: 1 }}>
+                  {activityStreakLabel}
+                </Typography>
+              </Box>
+            ) : null}
+          </Box>
           <TextField
             fullWidth
             placeholder="Search..."
@@ -777,7 +801,10 @@ const MobileCaptureDashboard = ({
               mt: 1.1,
               flexWrap: 'nowrap',
               overflowX: 'auto',
+              overflowY: 'hidden',
+              scrollSnapType: 'x proximity',
               pb: 0.25,
+              pr: 0.5,
               WebkitOverflowScrolling: 'touch',
               scrollbarWidth: 'none',
               '&::-webkit-scrollbar': { display: 'none' },
@@ -792,6 +819,7 @@ const MobileCaptureDashboard = ({
                   onClick={() => toggleTimelineEntryType(filter.key)}
                   sx={{
                     flex: '0 0 auto',
+                    scrollSnapAlign: 'start',
                     height: 36,
                     borderRadius: '12px',
                     fontWeight: 800,
@@ -815,6 +843,7 @@ const MobileCaptureDashboard = ({
               onClick={() => setTimelineFilterSheetOpen(true)}
               sx={{
                 flex: '0 0 auto',
+                scrollSnapAlign: 'start',
                 height: 36,
                 borderRadius: '12px',
                 fontWeight: 800,
@@ -855,30 +884,42 @@ const MobileCaptureDashboard = ({
             showFilters={false}
             showDaySummary={false}
             mobileTimeLayout={true}
+            streakLabel={activityStreakLabel}
           />
         </Box>
       </Paper>
 
-      <Popover
-        open={Boolean(childMenuAnchor)}
-        anchorEl={childMenuAnchor}
-        onClose={handleChildMenuClose}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-        disableScrollLock
+      <SwipeableDrawer
+        anchor="bottom"
+        open={mobileActionsSheetOpen}
+        onOpen={openMobileChildSheet}
+        onClose={closeMobileChildSheet}
+        disableBackdropTransition
+        disableDiscovery
         PaperProps={{
           sx: {
-            mt: 0.8,
-            borderRadius: '18px',
-            bgcolor: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(16px)',
-            boxShadow: `0 24px 60px ${colors.landing.shadowPanel}`,
-            border: `1px solid ${colors.landing.borderLight}`,
+            borderRadius: '20px 20px 0 0',
+            bgcolor: colors.landing.surface,
+            borderTop: `1px solid ${colors.landing.borderLight}`,
+            boxShadow: `0 -18px 48px ${colors.landing.shadowPanel}`,
+            maxHeight: '82vh',
+            pb: 'env(safe-area-inset-bottom)',
             overflow: 'hidden',
           },
         }}
       >
-        <Box sx={{ p: 1, minWidth: 228 }}>
+        <Box sx={{ px: 1.5, pt: 0.75, pb: 1.5 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
+            <Box
+              sx={{
+                width: 36,
+                height: 4,
+                borderRadius: 9999,
+                bgcolor: colors.landing.borderLight,
+              }}
+            />
+          </Box>
+
           <Box
             sx={{
               display: 'flex',
@@ -886,8 +927,8 @@ const MobileCaptureDashboard = ({
               gap: 1,
               px: 1.5,
               py: 1.1,
-              mb: 0.75,
-              borderRadius: '14px',
+              mb: 1,
+              borderRadius: '16px',
               bgcolor: alpha('#EF4444', 0.1),
               border: `1px solid ${alpha('#EF4444', 0.16)}`,
             }}
@@ -912,150 +953,292 @@ const MobileCaptureDashboard = ({
             </Typography>
           </Box>
 
-          <Box sx={{ px: 1.25, pt: 0.25, pb: 0.9 }}>
-            <Typography sx={{ fontSize: '0.74rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.14em', color: colors.landing.textMuted }}>
-              Care Team
-            </Typography>
-          </Box>
+          <Typography
+            sx={{
+              px: 0.75,
+              pt: 0.5,
+              pb: 0.75,
+              fontFamily: 'Outfit, sans-serif',
+              fontSize: '12px',
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              letterSpacing: '0.1em',
+              color: colors.landing.textMuted,
+            }}
+          >
+            Care Team
+          </Typography>
 
           {onInviteTeamMember ? (
             <MenuItem
-              onClick={handleAddCaregiver}
-              sx={{ gap: 1.1, py: 1.25, px: 1.5, minHeight: 48, borderRadius: '12px' }}
+              onClick={() => {
+                closeMobileChildSheet();
+                handleAddCaregiver();
+              }}
+              sx={{ gap: 1.1, py: 1.3, px: 1.25, minHeight: 50, borderRadius: '14px' }}
             >
               <ListItemIcon sx={{ minWidth: 34 }}>
-                <PersonAddIcon sx={{ fontSize: 17, color: colors.brand.ink }} />
+                <GroupsIcon sx={{ fontSize: 18, color: colors.brand.ink }} />
               </ListItemIcon>
-              <Typography sx={{ fontWeight: 700 }}>Add caregiver</Typography>
+              <Typography sx={{ fontWeight: 700, color: colors.landing.heroText }}>Add careteam</Typography>
             </MenuItem>
           ) : null}
 
-          {onMessages && (careTeamCount ?? 0) > 1 ? (
+          {(careTeamsByChildId[activeChild?.id] || []).length > 1 && onMessages ? (
             <MenuItem
               onClick={() => {
-                handleChildMenuClose();
+                closeMobileChildSheet();
                 onMessages?.(activeChild);
               }}
-              sx={{ gap: 1.1, py: 1.25, px: 1.5, minHeight: 48, borderRadius: '12px' }}
+              sx={{ gap: 1.1, py: 1.3, px: 1.25, minHeight: 50, borderRadius: '14px' }}
             >
               <ListItemIcon sx={{ minWidth: 34 }}>
-                <GroupsIcon sx={{ fontSize: 17, color: colors.brand.ink }} />
+                <GroupsIcon sx={{ fontSize: 18, color: colors.brand.ink }} />
               </ListItemIcon>
-              <Typography sx={{ fontWeight: 700 }}>Start chat</Typography>
+              <Typography sx={{ fontWeight: 700, color: colors.landing.heroText }}>Start chat</Typography>
             </MenuItem>
           ) : null}
 
-          <Box sx={{ px: 1.25, pt: 0.8, pb: 0.9 }}>
-            <Typography sx={{ fontSize: '0.74rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.14em', color: colors.landing.textMuted }}>
-              Tools
-            </Typography>
-          </Box>
+          <Typography
+            sx={{
+              px: 0.75,
+              pt: 1,
+              pb: 0.75,
+              fontFamily: 'Outfit, sans-serif',
+              fontSize: '12px',
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              letterSpacing: '0.1em',
+              color: colors.landing.textMuted,
+            }}
+          >
+            Tools
+          </Typography>
 
           <MenuItem
             onClick={() => {
-              handleChildMenuClose();
+              closeMobileChildSheet();
               onDailyReport?.(activeChild);
             }}
-            sx={{ gap: 1.1, py: 1.25, px: 1.5, minHeight: 48, borderRadius: '12px' }}
+            sx={{ gap: 1.1, py: 1.3, px: 1.25, minHeight: 50, borderRadius: '14px' }}
           >
             <ListItemIcon sx={{ minWidth: 34 }}>
-              <AutoAwesomeIcon sx={{ fontSize: 17, color: colors.brand.ink }} />
+              <AutoAwesomeIcon sx={{ fontSize: 18, color: colors.brand.ink }} />
             </ListItemIcon>
-            <Typography sx={{ fontWeight: 700 }}>Prep for therapy</Typography>
+            <Typography sx={{ fontWeight: 700, color: colors.landing.heroText }}>Prep for therapy</Typography>
           </MenuItem>
 
           <MenuItem
             onClick={() => {
-              handleChildMenuClose();
+              closeMobileChildSheet();
               onImportLogs?.(activeChild);
             }}
-            sx={{ gap: 1.1, py: 1.25, px: 1.5, minHeight: 48, borderRadius: '12px' }}
+            sx={{ gap: 1.1, py: 1.3, px: 1.25, minHeight: 50, borderRadius: '14px' }}
           >
             <ListItemIcon sx={{ minWidth: 34 }}>
-              <FileUploadIcon sx={{ fontSize: 17, color: colors.brand.ink }} />
+              <FileUploadIcon sx={{ fontSize: 18, color: colors.brand.ink }} />
             </ListItemIcon>
-            <Typography sx={{ fontWeight: 700 }}>Import .xlsx or .docx</Typography>
+            <Typography sx={{ fontWeight: 700, color: colors.landing.heroText }}>Import .xlsx or .docx</Typography>
           </MenuItem>
 
           <MenuItem
             onClick={() => {
-              handleChildMenuClose();
+              closeMobileChildSheet();
               onEditChild?.(activeChild);
             }}
-            sx={{ gap: 1.1, py: 1.25, px: 1.5, minHeight: 48, borderRadius: '12px' }}
+            sx={{ gap: 1.1, py: 1.3, px: 1.25, minHeight: 50, borderRadius: '14px' }}
           >
             <ListItemIcon sx={{ minWidth: 34 }}>
-              <EditIcon sx={{ fontSize: 17, color: colors.brand.ink }} />
+              <EditIcon sx={{ fontSize: 18, color: colors.brand.ink }} />
             </ListItemIcon>
-            <Typography sx={{ fontWeight: 700 }}>Edit Child Profile</Typography>
+            <Typography sx={{ fontWeight: 700, color: colors.landing.heroText }}>Edit Child Profile</Typography>
           </MenuItem>
 
           {typeof onDeleteChild === 'function' ? (
             <MenuItem
               onClick={() => {
-                handleChildMenuClose();
+                closeMobileChildSheet();
                 onDeleteChild?.(activeChild);
               }}
-              sx={{ gap: 1.1, py: 1.25, px: 1.5, minHeight: 48, borderRadius: '12px', color: 'error.main' }}
+              sx={{ gap: 1.1, py: 1.3, px: 1.25, minHeight: 50, borderRadius: '14px', color: 'error.main' }}
             >
               <ListItemIcon sx={{ minWidth: 34 }}>
-                <DeleteIcon sx={{ fontSize: 17, color: 'error.main' }} />
+                <DeleteIcon sx={{ fontSize: 18, color: 'error.main' }} />
               </ListItemIcon>
               <Typography sx={{ fontWeight: 700, color: 'error.main' }}>Delete Child Profile</Typography>
             </MenuItem>
           ) : null}
         </Box>
-      </Popover>
+      </SwipeableDrawer>
 
-      <Popover
-        open={Boolean(switchMenuAnchor)}
-        anchorEl={switchMenuAnchor}
-        onClose={handleSwitchMenuClose}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-        transformOrigin={{ vertical: 'top', horizontal: 'left' }}
-        disableScrollLock
+      <SwipeableDrawer
+        anchor="bottom"
+        open={mobileSwitchSheetOpen}
+        onOpen={openSwitchMenu}
+        onClose={closeSwitchMenu}
+        disableBackdropTransition
+        disableDiscovery
         PaperProps={{
           sx: {
-            mt: 0.8,
-            borderRadius: '18px',
-            bgcolor: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(16px)',
-            boxShadow: `0 24px 60px ${colors.landing.shadowPanel}`,
-            border: `1px solid ${colors.landing.borderLight}`,
+            borderRadius: '20px 20px 0 0',
+            bgcolor: colors.landing.surface,
+            borderTop: `1px solid ${colors.landing.borderLight}`,
+            boxShadow: `0 -18px 48px ${colors.landing.shadowPanel}`,
+            maxHeight: '82vh',
+            pb: 'env(safe-area-inset-bottom)',
             overflow: 'hidden',
           },
         }}
       >
-        <Box sx={{ p: 0.75, minWidth: 220 }}>
-          {children.length > 1 ? (
-            <MenuItem
-              onClick={() => {
-                handleSwitchMenuClose();
-                goToSwitchboard?.();
+        <Box sx={{ px: 1.5, pt: 0.75, pb: 1.5 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
+            <Box
+              sx={{
+                width: 36,
+                height: 4,
+                borderRadius: 9999,
+                bgcolor: colors.landing.borderLight,
               }}
-              sx={{ gap: 1.1, py: 1.25, px: 1.5, minHeight: 48, borderRadius: '12px' }}
-            >
-              <ListItemIcon sx={{ minWidth: 34 }}>
-                <GroupsIcon sx={{ fontSize: 17, color: colors.brand.ink }} />
-              </ListItemIcon>
-              <Typography sx={{ fontWeight: 700 }}>Switch profile</Typography>
-            </MenuItem>
-          ) : null}
+            />
+          </Box>
 
-          <MenuItem
-            onClick={() => {
-              handleSwitchMenuClose();
-              onAddChildClick?.();
+          <Typography
+            sx={{
+              px: 0.75,
+              pt: 0.25,
+              pb: 0.75,
+              fontFamily: 'Outfit, sans-serif',
+              fontSize: '12px',
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              letterSpacing: '0.1em',
+              color: colors.landing.textMuted,
             }}
-            sx={{ gap: 1.1, py: 1.25, px: 1.5, minHeight: 48, borderRadius: '12px' }}
           >
-            <ListItemIcon sx={{ minWidth: 34 }}>
-              <PersonAddIcon sx={{ fontSize: 17, color: colors.brand.ink }} />
-            </ListItemIcon>
-            <Typography sx={{ fontWeight: 700 }}>Add child</Typography>
-          </MenuItem>
+            Switch Child
+          </Typography>
+
+          <Typography sx={{ px: 0.75, pb: 1.25, fontSize: '0.92rem', color: colors.landing.textMuted, lineHeight: 1.45 }}>
+            Choose who you&apos;re logging for. The care team and your role are shown on each profile.
+          </Typography>
+
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            {children.map((child) => {
+              const isSelected = child.id === activeChild?.id;
+              const childPhoto = child.profilePhoto || child.photoURL || child.avatarUrl || '';
+              const careTeamMembers = careTeamsByChildId[child.id] || [];
+              const careTeamNames = careTeamMembers
+                .map((member) => member.displayName || member.name || member.email || 'Unknown')
+                .filter(Boolean);
+              const roleLabel = getRoleDisplay(getUserRoleForChild?.(child.id))?.label || null;
+
+              return (
+                <Button
+                  key={child.id}
+                  onClick={() => {
+                    setActiveChildId?.(child.id);
+                    closeSwitchMenu();
+                  }}
+                  fullWidth
+                  sx={{
+                    textTransform: 'none',
+                    alignItems: 'stretch',
+                    justifyContent: 'flex-start',
+                    p: 0,
+                    borderRadius: '16px',
+                    border: `1px solid ${isSelected ? colors.brand.ink : colors.landing.borderLight}`,
+                    bgcolor: isSelected ? alpha(colors.brand.ink, 0.06) : colors.landing.surface,
+                    boxShadow: `0 4px 12px ${colors.landing.shadowSoft}`,
+                    overflow: 'hidden',
+                    '&:hover': {
+                      bgcolor: isSelected ? alpha(colors.brand.ink, 0.08) : colors.landing.surfaceSoft,
+                    },
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, width: '100%', p: 1.25 }}>
+                    <Avatar
+                      src={childPhoto}
+                      alt={child.name}
+                      sx={{
+                        width: 40,
+                        height: 40,
+                        border: `1px solid ${colors.landing.borderMedium}`,
+                        bgcolor: colors.roles.careOwner.primary,
+                        color: colors.landing.surface,
+                        fontSize: '0.9rem',
+                        fontWeight: 700,
+                        flexShrink: 0,
+                      }}
+                    >
+                      {!childPhoto ? child.name?.[0]?.toUpperCase() : null}
+                    </Avatar>
+
+                    <Box sx={{ minWidth: 0, flex: 1, textAlign: 'left' }}>
+                      <Typography sx={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, color: colors.landing.heroText, lineHeight: 1.1 }}>
+                        {child.name}
+                      </Typography>
+                      <Typography sx={{ mt: 0.35, fontSize: '0.82rem', color: colors.landing.textMuted, lineHeight: 1.35 }}>
+                        {careTeamNames.length ? `Care team: ${careTeamNames.slice(0, 2).join(', ')}${careTeamNames.length > 2 ? ` +${careTeamNames.length - 2}` : ''}` : 'Care team not loaded yet'}
+                      </Typography>
+                      {roleLabel ? (
+                        <Typography sx={{ mt: 0.2, fontSize: '0.78rem', fontWeight: 700, color: isSelected ? colors.brand.deep : colors.landing.textMuted }}>
+                          You: {roleLabel.replace(/^[^\w]+/, '').trim()}
+                        </Typography>
+                      ) : null}
+                    </Box>
+
+                    <Box
+                      sx={{
+                        flexShrink: 0,
+                        px: 1,
+                        py: 0.4,
+                        borderRadius: '9999px',
+                        bgcolor: isSelected ? alpha(colors.brand.ink, 0.12) : colors.landing.sageLight,
+                        color: isSelected ? colors.brand.ink : colors.landing.textMuted,
+                        fontSize: '0.72rem',
+                        fontWeight: 800,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.08em',
+                      }}
+                    >
+                      {isSelected ? 'Current' : 'Switch'}
+                    </Box>
+                  </Box>
+                </Button>
+              );
+            })}
+
+            {onAddChildClick ? (
+              <Button
+                onClick={() => {
+                  closeSwitchMenu();
+                  onAddChildClick();
+                }}
+                fullWidth
+                startIcon={<PersonAddIcon sx={{ fontSize: 18, color: colors.brand.ink }} />}
+                sx={{
+                  justifyContent: 'flex-start',
+                  textTransform: 'none',
+                  p: 1.25,
+                  borderRadius: '16px',
+                  border: `1px dashed ${colors.landing.borderMedium}`,
+                  bgcolor: colors.landing.surface,
+                  color: colors.landing.heroText,
+                  fontWeight: 800,
+                  boxShadow: 'none',
+                  '&:hover': {
+                    bgcolor: colors.landing.surfaceSoft,
+                    borderColor: colors.brand.ink,
+                    boxShadow: 'none',
+                  },
+                }}
+              >
+                Add Child
+              </Button>
+            ) : null}
+          </Box>
         </Box>
-      </Popover>
+      </SwipeableDrawer>
 
       <Drawer
         anchor="bottom"
@@ -1159,8 +1342,8 @@ const MobileCaptureDashboard = ({
                     fontWeight: 800,
                     px: 1,
                     color: selected ? colors.landing.heroText : colors.landing.textMuted,
-                    bgcolor: selected ? colors.brand.cyanPop : colors.landing.surface,
-                    border: `1px solid ${selected ? colors.brand.cyanPop : colors.landing.borderLight}`,
+                    bgcolor: selected ? colors.landing.cyanPop : colors.landing.surface,
+                    border: `1px solid ${selected ? colors.landing.cyanPop : colors.landing.borderLight}`,
                     '& .MuiChip-label': {
                       px: 1.1,
                     },
@@ -1230,13 +1413,16 @@ const MobileCaptureDashboard = ({
                 handleTimelineDatePreset(newDate);
               }
             }}
+            slots={{
+              day: MobileCalendarDay,
+            }}
             sx={{
               '& .MuiPickersDay-root.Mui-selected': {
-                bgcolor: colors.brand.cyanPop,
+                bgcolor: colors.landing.cyanPop,
                 color: colors.landing.heroText,
               },
               '& .MuiPickersDay-root.Mui-selected:hover': {
-                bgcolor: colors.brand.cyanPop,
+                bgcolor: colors.landing.cyanPop,
               },
               '& .MuiPickersCalendarHeader-label': {
                 color: colors.landing.heroText,
