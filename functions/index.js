@@ -15,6 +15,7 @@ const RESEND_API_KEY = defineSecret("RESEND_API_KEY");
 const FROM_EMAIL = defineSecret("FROM_EMAIL");
 const SENDER_NAME = defineSecret("SENDER_NAME");
 const ANTHROPIC_API_KEY = defineSecret("ANTHROPIC_API_KEY");
+const CONTACT_RECIPIENT_EMAIL = "carelogjournal@gmail.com";
 
 const escapeHtml = (value = "") =>
   String(value)
@@ -358,7 +359,7 @@ exports.sendContactEmail = onCall(
       try {
         const resend = new Resend(RESEND_API_KEY.value());
         const emailData = {
-          to: "captureezhq@gmail.com",
+          to: CONTACT_RECIPIENT_EMAIL,
           from: `${SENDER_NAME.value()} <${FROM_EMAIL.value()}>`,
           replyTo: senderEmail,
           subject: `CaptureEz Contact: ${subject}`,
@@ -385,6 +386,7 @@ exports.sendContactEmail = onCall(
           submissionId: contactSubmissionRef.id,
           messageId: response.data?.id,
           senderEmail,
+          to: CONTACT_RECIPIENT_EMAIL,
         });
       } catch (emailError) {
         await contactSubmissionRef.update({
@@ -398,6 +400,7 @@ exports.sendContactEmail = onCall(
           error: emailError.message,
           stack: emailError.stack,
           senderEmail,
+          to: CONTACT_RECIPIENT_EMAIL,
           response: emailError.response,
         });
       }

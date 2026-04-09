@@ -48,6 +48,12 @@ service cloud.firestore {
     return request.auth != null;
   }
 
+  function isContactInboxAdmin() {
+    return isAuthenticated() &&
+           request.auth.token.email != null &&
+           request.auth.token.email in ['rentalkaushik@gmail.com'];
+  }
+
   // Single-source access: prefer users.members; fall back to role arrays with null guards
   function hasChildAccess(uid, childId) {
     return uid != null &&
@@ -176,6 +182,12 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       // Only allow users to write to their own profile
       allow write: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Contact form submissions - private admin inbox only
+    match /contactSubmissions/{submissionId} {
+      allow read: if isContactInboxAdmin();
+      allow write: if false;
     }
 
     // Children collection (minimal & deterministic)

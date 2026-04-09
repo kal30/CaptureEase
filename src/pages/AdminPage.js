@@ -1,18 +1,55 @@
 import React from 'react';
-import { Container, Typography, Box, Paper, Divider } from '@mui/material';
+import { Container, Typography, Box, Paper, Divider, Alert } from '@mui/material';
+import { useAuthState } from 'react-firebase-hooks/auth';
 import ResponsiveLayout from '../components/Layout/ResponsiveLayout';
 import MigrationRunner from '../components/Admin/MigrationRunner';
 import TestDataRunner from '../components/Admin/TestDataRunner';
 import UserChecker from '../components/Debug/UserChecker';
 import DataCleaner from '../components/Debug/DataCleaner';
+import ContactSubmissionsInbox from '../components/Admin/ContactSubmissionsInbox';
+import { auth } from '../services/firebase';
+import { isContactInboxAdminEmail } from '../constants/admin';
 
 const AdminPage = () => {
+  const [user, loading] = useAuthState(auth);
+  const isAdmin = isContactInboxAdminEmail(user?.email);
+
+  if (loading) {
+    return (
+      <ResponsiveLayout pageTitle="Admin Tools" showBottomNav={false}>
+        <Container maxWidth="md" sx={{ py: 4 }}>
+          <Typography variant="h4" gutterBottom>
+            Admin Tools
+          </Typography>
+          <Alert severity="info">Checking admin access...</Alert>
+        </Container>
+      </ResponsiveLayout>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <ResponsiveLayout pageTitle="Admin Tools" showBottomNav={false}>
+        <Container maxWidth="md" sx={{ py: 4 }}>
+          <Typography variant="h4" gutterBottom>
+            Admin Tools
+          </Typography>
+          <Alert severity="error">
+            You do not have access to the admin inbox.
+          </Alert>
+        </Container>
+      </ResponsiveLayout>
+    );
+  }
+
   return (
     <ResponsiveLayout pageTitle="Admin Tools" showBottomNav={false}>
       <Container maxWidth="md" sx={{ py: 4 }}>
         <Typography variant="h4" gutterBottom>
           Admin Tools
         </Typography>
+
+        <ContactSubmissionsInbox />
         
         <Paper sx={{ p: 3, mb: 3 }}>
           <Typography variant="h6" gutterBottom>
