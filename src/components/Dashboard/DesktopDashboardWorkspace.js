@@ -8,6 +8,7 @@ import {
   Menu,
   MenuItem,
   Paper,
+  Popover,
   Stack,
   Typography,
   useMediaQuery,
@@ -37,6 +38,7 @@ import ChildActionsMenuContent from './shared/ChildActionsMenuContent';
 import { getAllQuickTagOptions, loadCustomQuickTags } from '../../utils/quickTags';
 import { getRoleDisplay } from '../../constants/roles';
 import TimelineFilters from '../Timeline/TimelineFilters';
+import TimelineHeaderControls from '../Timeline/TimelineHeaderControls';
 import UnifiedTimeline from '../Timeline/UnifiedTimeline';
 import MiniCalendar from '../UI/MiniCalendar';
 import colors from '../../assets/theme/colors';
@@ -86,6 +88,7 @@ const DesktopDashboardWorkspace = ({
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [childMenuAnchor, setChildMenuAnchor] = useState(null);
   const [desktopMenuAnchor, setDesktopMenuAnchor] = useState(null);
+  const [desktopTimelineFilterAnchor, setDesktopTimelineFilterAnchor] = useState(null);
   const showLeftSidebar = useMediaQuery('(min-width:1200px)');
   const showRightSidebar = useMediaQuery('(min-width:1024px)');
   const activeChild = useMemo(
@@ -164,6 +167,14 @@ const DesktopDashboardWorkspace = ({
 
   const handleDesktopMenuClose = () => {
     setDesktopMenuAnchor(null);
+  };
+
+  const handleDesktopTimelineFiltersOpen = (event) => {
+    setDesktopTimelineFilterAnchor(event.currentTarget);
+  };
+
+  const handleDesktopTimelineFiltersClose = () => {
+    setDesktopTimelineFilterAnchor(null);
   };
 
   const handleDesktopChildSelect = (childId) => {
@@ -426,15 +437,15 @@ const DesktopDashboardWorkspace = ({
                 p: { xs: 1.5, md: 2 },
               }}
             >
-              <TimelineFilters
-                compact
-                mobileLayout={false}
+              <TimelineHeaderControls
                 filters={timelineFilters}
                 onFiltersChange={setTimelineFilters}
                 selectedDate={selectedDate}
                 onDateChange={setSelectedDate}
-                hideDateFilter
-                sx={{ mb: 1 }}
+                streakLabel={activityStreakLabel}
+                mobileLayout={false}
+                onOpenAdvancedFilters={handleDesktopTimelineFiltersOpen}
+                sx={{ mb: 1.5 }}
               />
 
               <Box
@@ -590,7 +601,7 @@ const DesktopDashboardWorkspace = ({
             overflow: 'hidden',
           },
         }}
-      >
+        >
         <Box sx={{ px: 0.5 }}>
           <ChildActionsMenuContent
             child={activeChild}
@@ -609,6 +620,37 @@ const DesktopDashboardWorkspace = ({
           />
         </Box>
       </Menu>
+
+      <Popover
+        open={Boolean(desktopTimelineFilterAnchor)}
+        anchorEl={desktopTimelineFilterAnchor}
+        onClose={handleDesktopTimelineFiltersClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+        PaperProps={{
+          sx: {
+            mt: 1,
+            borderRadius: '18px',
+            border: `1px solid ${colors.landing.borderLight}`,
+            boxShadow: `0 24px 60px ${colors.landing.shadowPanel}`,
+            bgcolor: 'rgba(255,255,255,0.98)',
+            backdropFilter: 'blur(16px)',
+            overflow: 'hidden',
+            minWidth: 360,
+            maxWidth: '90vw',
+          },
+        }}
+      >
+        <Box sx={{ p: 1 }}>
+          <TimelineFilters
+            compact={false}
+            filters={timelineFilters}
+            onFiltersChange={setTimelineFilters}
+            selectedDate={selectedDate}
+            onDateChange={setSelectedDate}
+          />
+        </Box>
+      </Popover>
     </Box>
   );
 };

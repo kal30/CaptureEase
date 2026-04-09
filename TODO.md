@@ -65,7 +65,7 @@ These are the shared UI pieces we should consolidate so desktop and mobile stop 
 
 ### Priority 2
 
-- [ ] Timeline header
+- [x] Timeline header
   - date label
   - streak pill
   - calendar dropdown

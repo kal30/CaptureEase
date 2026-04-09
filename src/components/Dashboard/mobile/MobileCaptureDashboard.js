@@ -41,6 +41,7 @@ import { PickersDay } from '@mui/x-date-pickers/PickersDay';
 import { useDashboardView } from '../shared/DashboardViewContext';
 import { ChildSwitcherPanel, ChildSwitcherTrigger } from '../shared/ChildSwitcher';
 import ChildActionsMenuContent from '../shared/ChildActionsMenuContent';
+import TimelineHeaderControls from '../../Timeline/TimelineHeaderControls';
 import { USER_ROLES } from '../../../constants/roles';
 import UnifiedTimeline from '../../Timeline/UnifiedTimeline';
 import { getChildCareTeam } from '../../../services/childAccessService';
@@ -161,6 +162,10 @@ const MobileCaptureDashboard = ({
   );
   const activityStreakLabel = formatStreakLabel(activeChildSummary.activityStreak || 0);
   const mobileStreakLabel = activityStreakLabel || 'No streak yet';
+  const timelineHeaderFilters = useMemo(() => ({
+    searchText: searchText || undefined,
+    entryTypes: activeEntryTypes.length > 0 ? activeEntryTypes : undefined,
+  }), [searchText, activeEntryTypes]);
   const datesWithEntries = useMemo(() => {
     const dateKeys = new Set();
 
@@ -486,6 +491,16 @@ const MobileCaptureDashboard = ({
     onInviteTeamMember?.(activeChild?.id);
   };
 
+  const handleTimelineHeaderFiltersChange = (nextFilters) => {
+    if (Object.prototype.hasOwnProperty.call(nextFilters, 'searchText')) {
+      setSearchText(nextFilters.searchText || '');
+    }
+
+    if (Object.prototype.hasOwnProperty.call(nextFilters, 'entryTypes')) {
+      setActiveEntryTypes(Array.isArray(nextFilters.entryTypes) ? nextFilters.entryTypes : []);
+    }
+  };
+
   const toggleTimelineTagFilter = (tagKey) => {
     setTimelineTagFilters((prev) => (
       prev.includes(tagKey)
@@ -702,9 +717,22 @@ const MobileCaptureDashboard = ({
         }}
       >
         <Box sx={{ p: 1.35, borderBottom: `1px solid ${colors.landing.borderLight}` }}>
-          <Box
+          <TimelineHeaderControls
+            filters={timelineHeaderFilters}
+            onFiltersChange={handleTimelineHeaderFiltersChange}
+            selectedDate={selectedDate}
+            onDateChange={setSelectedDate}
+            streakLabel={mobileStreakLabel}
+            mobileLayout
+            showFiltersButton
+            onOpenAdvancedFilters={() => setTimelineFilterSheetOpen(true)}
+          />
+        </Box>
+
+          <Box sx={{ p: 1.35, borderBottom: `1px solid ${colors.landing.borderLight}` }}>
+            <Box
             sx={{
-              display: 'flex',
+              display: 'none',
               flexDirection: 'row',
               alignItems: 'center',
               justifyContent: 'space-between',
