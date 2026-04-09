@@ -10,7 +10,7 @@ import {
   Chip
 } from '@mui/material';
 import { Timeline as TimelineIcon } from '@mui/icons-material';
-import { getLogTypeByCategory, getLogTypeByEntry } from '../../constants/logTypeRegistry';
+import { getCanonicalEntryDisplayInfo } from '../../constants/logTypeRegistry';
 
 /**
  * TimelineRecentEntries - Displays recent timeline entries
@@ -45,13 +45,11 @@ const TimelineRecentEntries = ({
     <List className="timeline-widget__entries" dense>
       {entries.map((entry, index) => (
         (() => {
-          const categoryType = getLogTypeByEntry(entry);
-          const categoryMeta = getLogTypeByCategory(categoryType.category || entry.category || entry.type);
+          const categoryDisplay = getCanonicalEntryDisplayInfo(entry);
           const entryLabel = entry.titlePrefix
             || entry.title
             || entry.label
-            || categoryMeta.displayLabel
-            || categoryMeta.filterLabel
+            || categoryDisplay.label
             || entry.type;
           const secondaryText = entry.notes || entry.content || entry.sleepDetails?.notes || entry.bathroomDetails?.notes || entry.description || entry.summary || '';
 

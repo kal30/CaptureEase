@@ -27,7 +27,7 @@ import { UnifiedTimeline, TimelineFilters } from '../Timeline';
 import { useTimelineProgress } from '../../hooks/useTimelineProgress';
 import { trackRenderDebug, useMountDebug } from '../../utils/renderDebug';
 import { CATEGORY_COLORS } from '../../constants/categoryColors';
-import { getLogTypeByCategory, getLogTypeByEntry } from '../../constants/logTypeRegistry';
+import { getCanonicalEntryDisplayInfo, getLogTypeByCategory, getLogTypeByEntry } from '../../constants/logTypeRegistry';
 
 /**
  * TimelineWidget - Self-contained timeline component with progress visualization and unified daily log
@@ -178,6 +178,7 @@ const TimelineWidget = ({
   ].filter(Boolean).join(' ').toLowerCase();
 
   const getSearchCategoryLabel = (entry) => {
+    const categoryDisplay = getCanonicalEntryDisplayInfo(entry);
     const categoryType = getLogTypeByEntry(entry);
     const categoryMeta = getLogTypeByCategory(categoryType.category || entry.category || entry.type);
 
@@ -191,7 +192,7 @@ const TimelineWidget = ({
       return entry.title || 'Therapy Note';
     }
     if (entry.collection === 'dailyLogs') {
-      return entry.titlePrefix || entry.title || entry.label || categoryMeta.trackLabel || categoryMeta.displayLabel || entry.category || entry.type || 'Log';
+      return entry.titlePrefix || entry.title || entry.label || categoryDisplay.label || entry.category || entry.type || 'Log';
     }
     return entry.title || entry.category || entry.type || 'Entry';
   };

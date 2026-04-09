@@ -4,13 +4,16 @@ import {
   Box,
   CircularProgress,
   Button,
+  FormControl,
   Chip,
   IconButton,
   ListItemIcon,
   Drawer,
+  InputLabel,
   Paper,
   Popover,
   MenuItem,
+  Select,
   SwipeableDrawer,
   Stack,
   TextField,
@@ -42,45 +45,34 @@ import { useDashboardView } from '../shared/DashboardViewContext';
 import { ChildSwitcherPanel, ChildSwitcherTrigger } from '../shared/ChildSwitcher';
 import ChildActionsMenuContent from '../shared/ChildActionsMenuContent';
 import TimelineHeaderControls from '../../Timeline/TimelineHeaderControls';
+import { getActiveTimelineFilterCount } from '../../Timeline/utils/filterCounts';
 import { USER_ROLES } from '../../../constants/roles';
 import UnifiedTimeline from '../../Timeline/UnifiedTimeline';
 import { getChildCareTeam } from '../../../services/childAccessService';
 import { auth } from '../../../services/firebase';
 import { getAllQuickTagOptions, getQuickTagDisplay, loadCustomQuickTags } from '../../../utils/quickTags';
+import { CORE_ENTRY_ACTIONS } from '../../../constants/logTypeRegistry';
 import colors from '../../../assets/theme/colors';
 
-const quickActions = [
-  {
-    key: 'meds',
-    label: 'Meds',
-    emoji: '💊',
-    border: colors.semantic.success,
-  },
-  {
-    key: 'sleep',
-    label: 'Sleep',
-    emoji: '😴',
-    border: colors.brand.deep,
-  },
-  {
-    key: 'food',
-    label: 'Food',
-    emoji: '🍽️',
-    border: colors.semantic.warning,
-  },
-  {
-    key: 'toilet',
-    label: 'Toilet',
-    emoji: '🚽',
-    border: colors.app.tertiary.main,
-  },
-];
+const quickActions = CORE_ENTRY_ACTIONS.map((action) => ({
+  key: action.key,
+  label: action.label,
+  emoji: action.icon,
+  border: action.color,
+}));
 
-const timelineFilters = [
-  { key: 'medication', label: 'Meds', emoji: '💊', color: colors.semantic.success },
-  { key: 'sleep', label: 'Sleep', emoji: '😴', color: colors.brand.deep },
-  { key: 'food', label: 'Food', emoji: '🍽️', color: colors.semantic.warning },
-  { key: 'bathroom', label: 'Toilet', emoji: '🚽', color: colors.app.tertiary.main },
+const timelineFilters = CORE_ENTRY_ACTIONS.map((action) => ({
+  key: action.type,
+  label: action.label,
+  emoji: action.icon,
+  color: action.color,
+}));
+
+const timelineUserRoleOptions = [
+  { value: USER_ROLES.CARE_OWNER, label: 'Care Owner' },
+  { value: USER_ROLES.CARE_PARTNER, label: 'Care Partner' },
+  { value: USER_ROLES.CAREGIVER, label: 'Caregiver' },
+  { value: USER_ROLES.THERAPIST, label: 'Therapist' },
 ];
 
 const isSameDay = (dateA, dateB) => (
@@ -140,6 +132,7 @@ const MobileCaptureDashboard = ({
   const [timelineFilterSheetOpen, setTimelineFilterSheetOpen] = useState(false);
   const [timelineImportantOnly, setTimelineImportantOnly] = useState(false);
   const [timelineTagFilters, setTimelineTagFilters] = useState([]);
+  const [timelineUserRoles, setTimelineUserRoles] = useState([]);
   const [timelineDatePickerAnchor, setTimelineDatePickerAnchor] = useState(null);
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -218,6 +211,7 @@ const MobileCaptureDashboard = ({
     setActiveEntryTypes([]);
     setTimelineImportantOnly(false);
     setTimelineTagFilters([]);
+    setTimelineUserRoles([]);
     setTimelineFilterSheetOpen(false);
     setTimelineDatePickerAnchor(null);
     setMobileSwitchSheetOpen(false);
@@ -356,10 +350,13 @@ const MobileCaptureDashboard = ({
 
   const hasTimelineEntries = (allEntries[activeChild?.id] || []).length > 0;
   const shouldGuideToQuickLog = !hasTimelineEntries;
-  const timelineAdvancedFilterCount = (timelineImportantOnly ? 1 : 0)
-    + timelineTagFilters.length
-    + (!isSameDay(selectedDate, new Date()) ? 1 : 0)
-    + activeEntryTypes.length;
+  const timelineFilterCount = getActiveTimelineFilterCount({
+    searchText,
+    entryTypes: activeEntryTypes,
+    userRoles: timelineUserRoles,
+    importantOnly: timelineImportantOnly,
+    tagFilters: timelineTagFilters,
+  }, selectedDate);
 
   const availableTimelineTags = useMemo(() => {
     const tagMap = new Map();
@@ -387,9 +384,10 @@ const MobileCaptureDashboard = ({
   const timelineFiltersValue = useMemo(() => ({
     searchText: searchText || undefined,
     entryTypes: activeEntryTypes.length > 0 ? activeEntryTypes : undefined,
+    userRoles: timelineUserRoles.length > 0 ? timelineUserRoles : undefined,
     importantOnly: timelineImportantOnly || undefined,
     tagFilters: timelineTagFilters.length > 0 ? timelineTagFilters : undefined,
-  }), [activeEntryTypes, searchText, timelineImportantOnly, timelineTagFilters]);
+  }), [activeEntryTypes, searchText, timelineImportantOnly, timelineTagFilters, timelineUserRoles]);
 
   if (!activeChild) {
     return null;
@@ -723,164 +721,11 @@ const MobileCaptureDashboard = ({
             selectedDate={selectedDate}
             onDateChange={setSelectedDate}
             streakLabel={mobileStreakLabel}
+            activeFiltersCount={timelineFilterCount}
             mobileLayout
             showFiltersButton
             onOpenAdvancedFilters={() => setTimelineFilterSheetOpen(true)}
           />
-        </Box>
-
-          <Box sx={{ p: 1.35, borderBottom: `1px solid ${colors.landing.borderLight}` }}>
-            <Box
-            sx={{
-              display: 'none',
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              flexWrap: 'nowrap',
-              gap: 1,
-              mb: 1,
-              width: '100%',
-              minWidth: 0,
-            }}
-          >
-            <Button
-              onClick={handleTimelineDatePickerOpen}
-              startIcon={<CalendarTodayIcon sx={{ fontSize: 16 }} />}
-              endIcon={<KeyboardArrowDownIcon sx={{ fontSize: 18 }} />}
-              sx={{
-                px: 0,
-                py: 0.25,
-                minWidth: 0,
-                color: colors.landing.heroText,
-                textTransform: 'none',
-                fontWeight: 900,
-                fontSize: '1rem',
-                letterSpacing: '-0.02em',
-                justifyContent: 'flex-start',
-                alignItems: 'center',
-                flexShrink: 0,
-                '&:hover': {
-                  bgcolor: 'transparent',
-                },
-              }}
-            >
-              {getTimelineHeaderLabel(selectedDate)}
-            </Button>
-            <Box
-              sx={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 0.45,
-                px: 0.85,
-                py: 0.45,
-                borderRadius: '9999px',
-                bgcolor: activityStreakLabel ? alpha(colors.landing.cyanPop, 0.16) : colors.landing.sageLight,
-                border: `1px solid ${activityStreakLabel ? alpha(colors.landing.cyanPop, 0.4) : colors.landing.borderLight}`,
-                color: colors.landing.heroText,
-                whiteSpace: 'nowrap',
-                flexShrink: 0,
-                maxWidth: '46%',
-              }}
-            >
-              <Typography sx={{ fontSize: '0.78rem', lineHeight: 1 }}>🔥</Typography>
-              <Typography sx={{ fontSize: '0.72rem', fontWeight: 800, letterSpacing: '-0.01em', lineHeight: 1 }}>
-                {mobileStreakLabel}
-              </Typography>
-            </Box>
-          </Box>
-          <TextField
-            fullWidth
-            placeholder="Search..."
-            value={searchText}
-            onChange={(event) => setSearchText(event.target.value)}
-            size="small"
-            InputProps={{
-              startAdornment: <SearchIcon sx={{ fontSize: 18, mr: 0.75, color: colors.landing.textMuted }} />,
-            }}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                minHeight: 48,
-                borderRadius: 1.5,
-                bgcolor: colors.landing.surface,
-                '& fieldset': {
-                  borderColor: colors.landing.borderLight,
-                },
-                '&:hover fieldset': {
-                  borderColor: colors.landing.borderMedium,
-                },
-                '&.Mui-focused fieldset': {
-                  borderColor: colors.brand.ink,
-                },
-              },
-            }}
-          />
-
-          <Stack
-            direction="row"
-            spacing={0.75}
-            sx={{
-              mt: 1.1,
-              flexWrap: 'nowrap',
-              overflowX: 'auto',
-              overflowY: 'hidden',
-              scrollSnapType: 'x proximity',
-              pb: 0.25,
-              pr: 0.5,
-              WebkitOverflowScrolling: 'touch',
-              scrollbarWidth: 'none',
-              '&::-webkit-scrollbar': { display: 'none' },
-            }}
-          >
-            {timelineFilters.map((filter) => {
-              const active = activeEntryTypes.includes(filter.key);
-              return (
-                <Chip
-                  key={filter.label}
-                  label={filter.emoji ? `${filter.emoji} ${filter.label}` : filter.label}
-                  onClick={() => toggleTimelineEntryType(filter.key)}
-                  sx={{
-                    flex: '0 0 auto',
-                    scrollSnapAlign: 'start',
-                    height: 36,
-                    borderRadius: '12px',
-                    fontWeight: 800,
-                    px: 1,
-                    color: active ? filter.color : colors.landing.textMuted,
-                    bgcolor: active ? alpha(filter.color, 0.16) : colors.landing.surface,
-                    border: `2px solid ${active ? filter.color : colors.landing.borderLight}`,
-                    '& .MuiChip-label': {
-                      px: 1.5,
-                    },
-                    '&:hover': {
-                      bgcolor: active ? alpha(filter.color, 0.2) : colors.landing.surfaceSoft,
-                    },
-                  }}
-                />
-              );
-            })}
-            <Chip
-              icon={<FilterListRoundedIcon sx={{ fontSize: 18 }} />}
-              label="Filters"
-              onClick={() => setTimelineFilterSheetOpen(true)}
-              sx={{
-                flex: '0 0 auto',
-                scrollSnapAlign: 'start',
-                height: 36,
-                borderRadius: '12px',
-                fontWeight: 800,
-                px: 1,
-                color: timelineAdvancedFilterCount > 0 ? colors.landing.heroText : colors.landing.textMuted,
-                bgcolor: timelineAdvancedFilterCount > 0 ? alpha(colors.landing.cyanPop, 0.16) : colors.landing.surface,
-                border: `2px solid ${timelineAdvancedFilterCount > 0 ? colors.landing.cyanPop : colors.landing.borderLight}`,
-                '& .MuiChip-label': {
-                  px: 1.5,
-                },
-                '&:hover': {
-                  bgcolor: timelineAdvancedFilterCount > 0 ? alpha(colors.landing.cyanPop, 0.2) : colors.landing.surfaceSoft,
-                },
-              }}
-            />
-          </Stack>
         </Box>
 
         <Box
@@ -1073,6 +918,7 @@ const MobileCaptureDashboard = ({
               onClick={() => {
                 setTimelineImportantOnly(false);
                 setTimelineTagFilters([]);
+                setTimelineUserRoles([]);
                 setSelectedDate(new Date());
                 setTimelineDatePickerAnchor(null);
               }}
@@ -1081,8 +927,57 @@ const MobileCaptureDashboard = ({
                 color: colors.landing.textMuted,
                 fontWeight: 700,
               }}
-              >
+            >
               Clear
+            </Button>
+          </Box>
+
+          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 1.25 }}>
+            <FormControl size="small" sx={{ minWidth: 0, flex: '1 1 180px' }}>
+              <InputLabel>Who logged it</InputLabel>
+              <Select
+                multiple
+                value={timelineUserRoles}
+                label="Who logged it"
+                onChange={(event) => {
+                  const value = event.target.value;
+                  setTimelineUserRoles(typeof value === 'string' ? value.split(',') : value);
+                }}
+                renderValue={(selected) => (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {(Array.isArray(selected) ? selected : []).map((value) => {
+                      const option = timelineUserRoleOptions.find((item) => item.value === value);
+                      return (
+                        <Chip key={value} label={option?.label || value} size="small" />
+                      );
+                    })}
+                  </Box>
+                )}
+              >
+                {timelineUserRoleOptions.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <Button
+              variant="outlined"
+              onClick={() => setTimelineDatePickerAnchor((prev) => prev || document.body)}
+              startIcon={<CalendarTodayIcon sx={{ fontSize: 16 }} />}
+              sx={{
+                minHeight: 40,
+                flex: '1 1 180px',
+                borderRadius: '12px',
+                textTransform: 'none',
+                fontWeight: 800,
+                color: colors.landing.heroText,
+                borderColor: colors.landing.borderLight,
+                bgcolor: colors.landing.surface,
+              }}
+            >
+              Jump to date
             </Button>
           </Box>
 

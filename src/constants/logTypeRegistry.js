@@ -34,9 +34,9 @@ export const LOG_TYPES = {
     category: 'medication',
     type: 'medication',
     timelineType: 'medication',
-    displayLabel: 'Medication',
-    filterLabel: 'Medication',
-    trackLabel: 'Medication',
+    displayLabel: 'Meds',
+    filterLabel: 'Meds',
+    trackLabel: 'Meds',
     icon: '💊',
     palette: createPalette('#EEF9F1', '#0A6640', '#1E9E6B'),
     trackChip: true,
@@ -48,9 +48,9 @@ export const LOG_TYPES = {
     category: 'bathroom',
     type: 'bathroom',
     timelineType: 'bathroom',
-    displayLabel: 'Bathroom',
-    filterLabel: 'Toileting',
-    trackLabel: 'Toileting',
+    displayLabel: 'Toilet',
+    filterLabel: 'Toilet',
+    trackLabel: 'Toilet',
     icon: '🚽',
     palette: createPalette('#F5E8DB', '#7A4B22', '#B8773A'),
     trackChip: true,
@@ -199,6 +199,37 @@ export const TRACK_LOG_TYPES = Object.values(LOG_TYPES)
   .filter((type) => type.trackChip)
   .sort((a, b) => (a.trackOrder || 999) - (b.trackOrder || 999));
 
+export const CORE_ENTRY_ACTIONS = [
+  {
+    key: 'meds',
+    type: 'medication',
+    label: LOG_TYPES.medication.displayLabel,
+    icon: LOG_TYPES.medication.icon,
+    color: LOG_TYPES.medication.palette.dot,
+  },
+  {
+    key: 'sleep',
+    type: 'sleep',
+    label: LOG_TYPES.sleep.displayLabel,
+    icon: LOG_TYPES.sleep.icon,
+    color: LOG_TYPES.sleep.palette.dot,
+  },
+  {
+    key: 'food',
+    type: 'food',
+    label: LOG_TYPES.food.displayLabel,
+    icon: LOG_TYPES.food.icon,
+    color: LOG_TYPES.food.palette.dot,
+  },
+  {
+    key: 'toilet',
+    type: 'bathroom',
+    label: LOG_TYPES.bathroom.displayLabel,
+    icon: LOG_TYPES.bathroom.icon,
+    color: LOG_TYPES.bathroom.palette.dot,
+  },
+];
+
 export const TIMELINE_FILTER_SECTIONS = {
   allEntries: {
     value: null,
@@ -206,13 +237,7 @@ export const TIMELINE_FILTER_SECTIONS = {
   },
   entryType: {
     label: 'Entry type',
-    items: [
-      LOG_TYPES.sleep,
-      LOG_TYPES.food,
-      LOG_TYPES.medication,
-      LOG_TYPES.bathroom,
-      LOG_TYPES.log,
-    ].map((type) => ({
+    items: TRACK_LOG_TYPES.map((type) => ({
       value: type.category,
       label: type.filterLabel,
       icon: type.icon,
@@ -336,5 +361,18 @@ export const getTimelineMetaForCategory = (category, { importantMoment = false }
     label: logType.displayLabel,
     color: logType.palette.dot,
     icon: logType.icon,
+  };
+};
+
+export const getCanonicalEntryDisplayInfo = (entry = {}) => {
+  const categoryType = getLogTypeByEntry(entry);
+  const categoryMeta = getLogTypeByCategory(categoryType.category || entry.category || entry.type);
+
+  return {
+    category: categoryType.category || entry.category || entry.type || 'log',
+    label: categoryMeta.trackLabel || categoryMeta.displayLabel || categoryMeta.filterLabel || 'Log',
+    icon: categoryMeta.icon || '•',
+    palette: categoryMeta.palette || null,
+    titlePrefix: categoryMeta.trackLabel || categoryMeta.displayLabel || 'Log',
   };
 };

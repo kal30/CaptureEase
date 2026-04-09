@@ -19,7 +19,7 @@ import {
 import { alpha, useTheme } from '@mui/material/styles';
 import { getEntryTypeMeta, mapLegacyType } from '../../constants/timeline';
 import { getIncidentDisplayInfo, getJournalDisplayInfo } from '../../constants/uiDisplayConstants';
-import { getLogTypeByCategory, getLogTypeByEntry } from '../../constants/logTypeRegistry';
+import { getCanonicalEntryDisplayInfo, getLogTypeByCategory, getLogTypeByEntry } from '../../constants/logTypeRegistry';
 import colors from '../../assets/theme/colors';
 
 /**
@@ -51,6 +51,7 @@ const UnifiedTimelineEntry = ({
   const typeMeta = getEntryTypeMeta(entry.type);
   const categoryType = getLogTypeByEntry(entry);
   const categoryMeta = getLogTypeByCategory(categoryType.category || entry.category || entry.type);
+  const categoryDisplay = getCanonicalEntryDisplayInfo(entry);
   const isDailyLogEntry = entry.collection === 'dailyLogs' || normalizedType === 'journal';
   const typeColor = entry.color || categoryMeta.palette?.dot || theme.palette.timeline?.entries?.[typeMeta.key] || theme.palette.primary.main;
 
@@ -93,7 +94,7 @@ const UnifiedTimelineEntry = ({
       case 'journal':
         return {
           primary: isDailyLogEntry
-            ? (entry.titlePrefix || entry.title || categoryMeta.trackLabel || categoryMeta.displayLabel || journalDisplay.label)
+            ? (entry.titlePrefix || entry.title || categoryDisplay.label || journalDisplay.label)
             : (entry.title || `${journalDisplay.label} Entry`),
           secondary: combinedText
             ? combinedText.substring(0, 100) + (combinedText.length > 100 ? '...' : '')
@@ -125,7 +126,7 @@ const UnifiedTimelineEntry = ({
         };
       default:
         return {
-          primary: entry.title || entry.titlePrefix || categoryMeta.trackLabel || categoryMeta.displayLabel || 'Timeline Entry',
+          primary: entry.title || entry.titlePrefix || categoryDisplay.label || 'Timeline Entry',
           secondary: combinedText || entry.description,
           hasMedia: false
         };
@@ -173,8 +174,8 @@ const UnifiedTimelineEntry = ({
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
               <Chip
                 label={isDailyLogEntry
-                  ? (entry.titlePrefix || categoryMeta.trackLabel || categoryMeta.displayLabel || typeMeta.label.replace(/s$/, ''))
-                  : typeMeta.label.replace(/s$/, '')}
+                  ? (entry.titlePrefix || categoryDisplay.label || typeMeta.label.replace(/s$/, ''))
+                  : (categoryDisplay.label || typeMeta.label.replace(/s$/, ''))}
                 size="small"
                 variant="filled"
                 sx={{ 

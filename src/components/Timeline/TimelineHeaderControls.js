@@ -17,8 +17,9 @@ import {
 } from '@mui/icons-material';
 import { alpha } from '@mui/material/styles';
 import MiniCalendar from '../UI/MiniCalendar';
-import { getTimelineFilterSections } from '../../constants/logTypeRegistry';
+import { getTimelineFilterSections, LOG_TYPES } from '../../constants/logTypeRegistry';
 import colors from '../../assets/theme/colors';
+import { getActiveTimelineFilterCount } from './utils/filterCounts';
 
 const isSameDay = (dateA, dateB) => (
   Boolean(dateA && dateB)
@@ -44,6 +45,7 @@ const TimelineHeaderControls = ({
   selectedDate,
   onDateChange,
   streakLabel = '',
+  activeFiltersCount,
   mobileLayout = false,
   showFiltersButton = true,
   onOpenAdvancedFilters,
@@ -55,6 +57,12 @@ const TimelineHeaderControls = ({
   const searchText = filters.searchText || '';
   const mobileHeaderLabel = getTimelineHeaderLabel(selectedDate);
   const activeStreakLabel = streakLabel || 'No streak yet';
+  const computedActiveFiltersCount = typeof activeFiltersCount === 'number'
+    ? activeFiltersCount
+    : getActiveTimelineFilterCount(filters, selectedDate);
+  const filtersLabel = computedActiveFiltersCount > 0
+    ? `Filters (${computedActiveFiltersCount})`
+    : 'Filters';
 
   const updateFilters = (nextFilters) => {
     onFiltersChange?.({
@@ -93,34 +101,29 @@ const TimelineHeaderControls = ({
     });
   };
 
-  const sharedChipSx = (active, chipColor) => ({
+  const getEntryTypePalette = (typeKey) => LOG_TYPES[typeKey]?.palette || null;
+
+  const sharedChipSx = (active, chipPalette, fallbackColor) => ({
     flex: '0 0 auto',
     scrollSnapAlign: 'start',
     height: 36,
     borderRadius: '12px',
     fontWeight: 800,
     px: 1,
-    color: active ? chipColor : colors.landing.textMuted,
-    bgcolor: active ? alpha(chipColor, 0.16) : colors.landing.surface,
-    border: `2px solid ${active ? chipColor : colors.landing.borderLight}`,
+    color: active ? (chipPalette?.text || fallbackColor) : colors.landing.textMuted,
+    bgcolor: active ? alpha(chipPalette?.bg || fallbackColor, 0.9) : colors.landing.surface,
+    border: `2px solid ${active ? (chipPalette?.border || fallbackColor) : colors.landing.borderLight}`,
     '& .MuiChip-label': {
       px: 1.5,
     },
     '&:hover': {
-      bgcolor: active ? alpha(chipColor, 0.2) : colors.landing.surfaceSoft,
+      bgcolor: active ? alpha(chipPalette?.bg || fallbackColor, 1) : colors.landing.surfaceSoft,
     },
   });
 
   return (
     <Box sx={{ ...sx }}>
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: mobileLayout ? 'column' : 'row',
-          gap: mobileLayout ? 1 : 1.25,
-          alignItems: mobileLayout ? 'stretch' : 'center',
-        }}
-      >
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: mobileLayout ? 1 : 1.25, alignItems: 'stretch' }}>
         <Box
           sx={{
             display: 'flex',
@@ -181,86 +184,177 @@ const TimelineHeaderControls = ({
           </Box>
         </Box>
 
-        <TextField
-          fullWidth
-          placeholder="Search..."
-          value={searchText}
-          onChange={handleSearchChange}
-          size="small"
-          InputProps={{
-            startAdornment: <SearchIcon sx={{ fontSize: 18, mr: 0.75, color: colors.landing.textMuted }} />,
-          }}
-          sx={{
-            flex: 1,
-            '& .MuiOutlinedInput-root': {
-              minHeight: 48,
-              borderRadius: 1.5,
-              bgcolor: colors.landing.surface,
-              '& fieldset': {
-                borderColor: colors.landing.borderLight,
-              },
-              '&:hover fieldset': {
-                borderColor: colors.landing.borderMedium,
-              },
-              '&.Mui-focused fieldset': {
-                borderColor: colors.brand.ink,
-              },
-            },
-          }}
-        />
-
-        <Stack
-          direction="row"
-          spacing={0.75}
-          sx={{
-            flexWrap: 'nowrap',
-            overflowX: 'auto',
-            overflowY: 'hidden',
-            scrollSnapType: 'x proximity',
-            pb: 0.25,
-            pr: 0.5,
-            WebkitOverflowScrolling: 'touch',
-            scrollbarWidth: 'none',
-            '&::-webkit-scrollbar': { display: 'none' },
-          }}
-        >
-          {entryType.items.map((filter) => {
-            const active = activeEntryTypes.includes(filter.value);
-            return (
-              <Chip
-                key={filter.value}
-                label={filter.icon ? `${filter.icon} ${filter.label}` : filter.label}
-                onClick={() => toggleEntryType(filter.value)}
-                sx={sharedChipSx(active, colors.brand.deep)}
-              />
-            );
-          })}
-
-          {showFiltersButton ? (
-            <Chip
-              icon={<FilterListRoundedIcon sx={{ fontSize: 18 }} />}
-              label="Filters"
-              onClick={onOpenAdvancedFilters}
+        {mobileLayout ? (
+          <>
+            <TextField
+              fullWidth
+              placeholder="Search..."
+              value={searchText}
+              onChange={handleSearchChange}
+              size="small"
+              InputProps={{
+                startAdornment: <SearchIcon sx={{ fontSize: 18, mr: 0.75, color: colors.landing.textMuted }} />,
+              }}
               sx={{
-                flex: '0 0 auto',
-                scrollSnapAlign: 'start',
-                height: 36,
-                borderRadius: '12px',
-                fontWeight: 800,
-                px: 1,
-                color: colors.landing.textMuted,
-                bgcolor: colors.landing.surface,
-                border: `2px solid ${colors.landing.borderLight}`,
-                '& .MuiChip-label': {
-                  px: 1.5,
-                },
-                '&:hover': {
-                  bgcolor: colors.landing.surfaceSoft,
+                flex: 1,
+                '& .MuiOutlinedInput-root': {
+                  minHeight: 48,
+                  borderRadius: 1.5,
+                  bgcolor: colors.landing.surface,
+                  '& fieldset': {
+                    borderColor: colors.landing.borderLight,
+                  },
+                  '&:hover fieldset': {
+                    borderColor: colors.landing.borderMedium,
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: colors.brand.ink,
+                  },
                 },
               }}
             />
-          ) : null}
-        </Stack>
+
+            <Stack
+              direction="row"
+              spacing={0.75}
+              sx={{
+                flexWrap: 'nowrap',
+                overflowX: 'auto',
+                overflowY: 'hidden',
+                scrollSnapType: 'x proximity',
+                pb: 0.25,
+                pr: 0.5,
+                WebkitOverflowScrolling: 'touch',
+                scrollbarWidth: 'none',
+                '&::-webkit-scrollbar': { display: 'none' },
+              }}
+            >
+              {entryType.items.map((filter) => {
+                const active = activeEntryTypes.includes(filter.value);
+                const chipPalette = getEntryTypePalette(filter.value);
+                return (
+                  <Chip
+                    key={filter.value}
+                    label={filter.icon ? `${filter.icon} ${filter.label}` : filter.label}
+                    onClick={() => toggleEntryType(filter.value)}
+                    sx={{ ...sharedChipSx(active, chipPalette, colors.brand.deep), flex: '0 0 auto', scrollSnapAlign: 'start' }}
+                  />
+                );
+              })}
+
+              {showFiltersButton ? (
+                <Chip
+                  icon={<FilterListRoundedIcon sx={{ fontSize: 18 }} />}
+                  label={filtersLabel}
+                  onClick={onOpenAdvancedFilters}
+                  sx={{
+                    flex: '0 0 auto',
+                    scrollSnapAlign: 'start',
+                    height: 36,
+                    borderRadius: '12px',
+                    fontWeight: 800,
+                    px: 1,
+                    color: colors.landing.textMuted,
+                    bgcolor: colors.landing.surface,
+                    border: `2px solid ${colors.landing.borderLight}`,
+                    '& .MuiChip-label': {
+                      px: 1.5,
+                    },
+                    '&:hover': {
+                      bgcolor: colors.landing.surfaceSoft,
+                    },
+                  }}
+                />
+              ) : null}
+            </Stack>
+          </>
+        ) : (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+              }}
+            >
+              <TextField
+                fullWidth
+                placeholder="Search..."
+                value={searchText}
+                onChange={handleSearchChange}
+                size="small"
+                InputProps={{
+                  startAdornment: <SearchIcon sx={{ fontSize: 18, mr: 0.75, color: colors.landing.textMuted }} />,
+                }}
+                sx={{
+                  flex: 1,
+                  '& .MuiOutlinedInput-root': {
+                    minHeight: 48,
+                    borderRadius: 1.5,
+                    bgcolor: colors.landing.surface,
+                    '& fieldset': {
+                      borderColor: colors.landing.borderLight,
+                    },
+                    '&:hover fieldset': {
+                      borderColor: colors.landing.borderMedium,
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: colors.brand.ink,
+                    },
+                  },
+                }}
+              />
+
+              {showFiltersButton ? (
+                <Chip
+                  icon={<FilterListRoundedIcon sx={{ fontSize: 18 }} />}
+                  label={filtersLabel}
+                  onClick={onOpenAdvancedFilters}
+                  sx={{
+                    flex: '0 0 auto',
+                    height: 40,
+                    borderRadius: '12px',
+                    fontWeight: 800,
+                    px: 1,
+                    color: colors.landing.textMuted,
+                    bgcolor: colors.landing.surface,
+                    border: `2px solid ${colors.landing.borderLight}`,
+                    '& .MuiChip-label': {
+                      px: 1.5,
+                    },
+                    '&:hover': {
+                      bgcolor: colors.landing.surfaceSoft,
+                    },
+                  }}
+                />
+              ) : null}
+            </Box>
+
+            <Box
+              sx={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: 1,
+              }}
+            >
+              {entryType.items.map((filter) => {
+                const active = activeEntryTypes.includes(filter.value);
+                const chipPalette = getEntryTypePalette(filter.value);
+                return (
+                  <Chip
+                    key={filter.value}
+                    label={filter.icon ? `${filter.icon} ${filter.label}` : filter.label}
+                    onClick={() => toggleEntryType(filter.value)}
+                    sx={{
+                      ...sharedChipSx(active, chipPalette, colors.brand.deep),
+                      flex: '0 1 auto',
+                    }}
+                  />
+                );
+              })}
+            </Box>
+          </Box>
+        )}
       </Box>
 
       <Popover

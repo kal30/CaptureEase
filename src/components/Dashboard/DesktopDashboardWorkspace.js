@@ -16,18 +16,7 @@ import {
 import {
   CalendarToday as CalendarTodayIcon,
   NoteAltOutlined as NoteAltOutlinedIcon,
-  RestaurantOutlined as RestaurantOutlinedIcon,
-  BedtimeOutlined as BedtimeOutlinedIcon,
-  MedicationOutlined as MedicationOutlinedIcon,
-  GroupsOutlined as GroupsOutlinedIcon,
-  PersonAddAlt1Outlined as PersonAddAlt1OutlinedIcon,
   MenuOutlined as MenuOutlinedIcon,
-  AutoAwesomeOutlined as AutoAwesomeOutlinedIcon,
-  FileUploadOutlined as FileUploadOutlinedIcon,
-  EditOutlined as EditOutlinedIcon,
-  DeleteOutline as DeleteOutlineIcon,
-  ChatBubbleOutline as ChatBubbleOutlineIcon,
-  WcOutlined as WcOutlinedIcon,
 } from '@mui/icons-material';
 import { alpha } from '@mui/material/styles';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -37,34 +26,13 @@ import { ChildSwitcherPanel, ChildSwitcherTrigger } from './shared/ChildSwitcher
 import ChildActionsMenuContent from './shared/ChildActionsMenuContent';
 import { getAllQuickTagOptions, loadCustomQuickTags } from '../../utils/quickTags';
 import { getRoleDisplay } from '../../constants/roles';
+import { CORE_ENTRY_ACTIONS } from '../../constants/logTypeRegistry';
 import TimelineFilters from '../Timeline/TimelineFilters';
 import TimelineHeaderControls from '../Timeline/TimelineHeaderControls';
+import { getActiveTimelineFilterCount } from '../Timeline/utils/filterCounts';
 import UnifiedTimeline from '../Timeline/UnifiedTimeline';
 import MiniCalendar from '../UI/MiniCalendar';
 import colors from '../../assets/theme/colors';
-
-const actionPalette = {
-  meds: {
-    icon: <MedicationOutlinedIcon sx={{ fontSize: 18 }} />,
-    label: 'Meds',
-    color: colors.semantic.success,
-  },
-  sleep: {
-    icon: <BedtimeOutlinedIcon sx={{ fontSize: 18 }} />,
-    label: 'Sleep',
-    color: colors.brand.deep,
-  },
-  food: {
-    icon: <RestaurantOutlinedIcon sx={{ fontSize: 18 }} />,
-    label: 'Food',
-    color: colors.semantic.warning,
-  },
-  toilet: {
-    icon: <WcOutlinedIcon sx={{ fontSize: 18 }} />,
-    label: 'Toilet',
-    color: colors.app.tertiary.main,
-  },
-};
 
 const formatStreakLabel = (streak = 0) => {
   if (!streak || streak < 1) {
@@ -112,7 +80,7 @@ const DesktopDashboardWorkspace = ({
 
   const activityStreakLabel = formatStreakLabel(activeChildSummary.activityStreak || 0);
   const quickTagOptions = useMemo(() => getAllQuickTagOptions(customQuickTags), [customQuickTags]);
-  const activeQuickTags = timelineFilters.tagFilters || [];
+  const desktopTimelineFilterCount = getActiveTimelineFilterCount(timelineFilters, selectedDate);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -226,20 +194,6 @@ const DesktopDashboardWorkspace = ({
       default:
         break;
     }
-  };
-
-  const handleQuickTagToggle = (tagKey) => {
-    setTimelineFilters((current) => {
-      const currentTags = Array.isArray(current.tagFilters) ? current.tagFilters : [];
-      const nextTags = currentTags.includes(tagKey)
-        ? currentTags.filter((value) => value !== tagKey)
-        : [...currentTags, tagKey];
-
-      return {
-        ...current,
-        tagFilters: nextTags.length > 0 ? nextTags : undefined,
-      };
-    });
   };
 
   if (!activeChild) {
@@ -370,11 +324,10 @@ const DesktopDashboardWorkspace = ({
               }}
             >
               <Stack direction="row" spacing={1} sx={{ overflowX: 'auto', pb: 0.25 }}>
-                {Object.entries(actionPalette).map(([key, action]) => (
+                {CORE_ENTRY_ACTIONS.map((action) => (
                   <Button
-                    key={key}
-                    onClick={() => handleQuickAction(key)}
-                    startIcon={action.icon}
+                    key={action.key}
+                    onClick={() => handleQuickAction(action.key)}
                     variant="outlined"
                     sx={{
                       minHeight: 36,
@@ -388,6 +341,8 @@ const DesktopDashboardWorkspace = ({
                       borderColor: action.color,
                       bgcolor: alpha(action.color, 0.06),
                       boxShadow: 'none',
+                      display: 'inline-flex',
+                      gap: 0.75,
                       '&:hover': {
                         bgcolor: alpha(action.color, 0.12),
                         borderColor: action.color,
@@ -395,7 +350,10 @@ const DesktopDashboardWorkspace = ({
                       },
                     }}
                   >
-                    {action.label}
+                    <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.6 }}>
+                      <span style={{ lineHeight: 1, color: action.color }}>{action.icon}</span>
+                      <span>{action.label}</span>
+                    </Box>
                   </Button>
                 ))}
               </Stack>
@@ -443,63 +401,11 @@ const DesktopDashboardWorkspace = ({
                 selectedDate={selectedDate}
                 onDateChange={setSelectedDate}
                 streakLabel={activityStreakLabel}
+                activeFiltersCount={desktopTimelineFilterCount}
                 mobileLayout={false}
                 onOpenAdvancedFilters={handleDesktopTimelineFiltersOpen}
                 sx={{ mb: 1.5 }}
               />
-
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
-                  overflowX: 'auto',
-                  whiteSpace: 'nowrap',
-                  pb: 0.75,
-                  mb: 1.5,
-                  mt: -0.25,
-                  scrollbarWidth: 'none',
-                  '&::-webkit-scrollbar': {
-                    display: 'none',
-                  },
-                }}
-              >
-                {quickTagOptions.map((tag) => {
-                  const selected = activeQuickTags.includes(tag.key);
-                  return (
-                    <Button
-                      key={tag.key}
-                      onClick={() => handleQuickTagToggle(tag.key)}
-                      variant={selected ? 'contained' : 'outlined'}
-                      sx={{
-                        flex: '0 0 auto',
-                        minHeight: 30,
-                        px: 1.4,
-                        py: 0.5,
-                        borderRadius: '9999px',
-                        borderColor: selected ? colors.brand.deep : colors.landing.borderLight,
-                        bgcolor: selected ? alpha(colors.brand.deep, 0.12) : colors.landing.surface,
-                        color: selected ? colors.landing.heroText : colors.landing.textMuted,
-                        textTransform: 'none',
-                        fontWeight: 600,
-                        fontSize: '0.8rem',
-                        letterSpacing: '-0.01em',
-                        boxShadow: 'none',
-                        whiteSpace: 'nowrap',
-                        '&:hover': {
-                          bgcolor: selected ? alpha(colors.brand.deep, 0.16) : colors.landing.sageLight,
-                          boxShadow: 'none',
-                        },
-                      }}
-                    >
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.6 }}>
-                        <span>{tag.icon}</span>
-                        <span>{tag.label}</span>
-                      </Box>
-                    </Button>
-                  );
-                })}
-              </Box>
 
               <UnifiedTimeline
                 child={activeChild}
@@ -648,6 +554,7 @@ const DesktopDashboardWorkspace = ({
             onFiltersChange={setTimelineFilters}
             selectedDate={selectedDate}
             onDateChange={setSelectedDate}
+            availableTags={quickTagOptions}
           />
         </Box>
       </Popover>

@@ -3,6 +3,7 @@ import {
   Box,
   Button,
   FormControl,
+  FormControlLabel,
   InputLabel,
   Select,
   MenuItem,
@@ -12,7 +13,8 @@ import {
   Paper,
   Divider,
   IconButton,
-  Popover
+  Popover,
+  Switch,
 } from '@mui/material';
 import { useMediaQuery, useTheme } from '@mui/material';
 import {
@@ -25,6 +27,8 @@ import {
 } from '@mui/icons-material';
 import MiniCalendar from '../UI/MiniCalendar';
 import { getTimelineFilterSections } from '../../constants/logTypeRegistry';
+import { getActiveTimelineFilterCount } from './utils/filterCounts';
+import { getAllQuickTagOptions } from '../../utils/quickTags';
 import colors from '../../assets/theme/colors';
 
 /**
@@ -49,6 +53,7 @@ const TimelineFilters = ({
   compact = false,
   mobileLayout = false,
   hideDateFilter = false,
+  availableTags = [],
   sx = {}
 }) => {
   const theme = useTheme();
@@ -133,6 +138,25 @@ const TimelineFilters = ({
     handleCategoryMenuClose();
   };
 
+  const activeTagFilters = Array.isArray(filters.tagFilters) ? filters.tagFilters : [];
+  const toggleTagFilter = (tagKey) => {
+    const nextTags = activeTagFilters.includes(tagKey)
+      ? activeTagFilters.filter((key) => key !== tagKey)
+      : [...activeTagFilters, tagKey];
+
+    onFiltersChange({
+      ...filters,
+      tagFilters: nextTags.length > 0 ? nextTags : undefined,
+    });
+  };
+
+  const handleImportantToggle = (event) => {
+    onFiltersChange({
+      ...filters,
+      importantOnly: event.target.checked || undefined,
+    });
+  };
+
   const selectedCategoryType = (filters.entryTypes || []).find((type) => CATEGORY_FILTER_VALUES.includes(type));
   const selectedCategoryOption = entryType.items.find((option) => option.value === selectedCategoryType);
   const filterTriggerLabel = selectedCategoryOption
@@ -147,9 +171,7 @@ const TimelineFilters = ({
     { value: 'therapist', label: '🩺 Therapist' }
   ];
 
-  const activeFiltersCount = Object.keys(filters).filter(key => 
-    key !== 'selectedDate' && filters[key]?.length > 0
-  ).length;
+  const activeFiltersCount = getActiveTimelineFilterCount(filters, selectedDate);
   const useCompactMobileLayout = compact && (mobileLayout || isMobile);
   const mobileControlHeight = 30;
 
@@ -505,6 +527,79 @@ const TimelineFilters = ({
           }}
           sx={{ minWidth: 160, '& .MuiOutlinedInput-root': { borderRadius: 0.35, backgroundColor: colors.app.cards.background } }}
         />
+      </Box>
+
+      <Box sx={{ mb: 2 }}>
+        <Typography variant="caption" sx={{ fontWeight: 600, mb: 1, display: 'block' }}>
+          IMPORTANT + TAGS
+        </Typography>
+
+        <Paper
+          variant="outlined"
+          sx={{
+            p: 1.25,
+            borderRadius: 2,
+            borderColor: colors.app.cards.border,
+            bgcolor: colors.app.cards.shadowPanel,
+            mb: 1.25,
+          }}
+        >
+          <FormControlLabel
+            control={
+              <Switch
+                checked={Boolean(filters.importantOnly)}
+                onChange={handleImportantToggle}
+                color="primary"
+              />
+            }
+            label="Show only important / flagged"
+            sx={{
+              m: 0,
+              alignItems: 'center',
+              gap: 1,
+              '& .MuiFormControlLabel-label': {
+                fontWeight: 700,
+                color: 'text.primary',
+              },
+            }}
+          />
+        </Paper>
+
+        <Box
+          sx={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 0.8,
+            maxHeight: 220,
+            overflowY: 'auto',
+            pr: 0.25,
+            pb: 0.5,
+          }}
+        >
+          {(availableTags.length > 0 ? availableTags : getAllQuickTagOptions()).map((tag) => {
+            const selected = activeTagFilters.includes(tag.key);
+            return (
+              <Chip
+                key={tag.key}
+                label={`${tag.icon || '🏷️'} ${tag.label}`}
+                onClick={() => toggleTagFilter(tag.key)}
+                sx={{
+                  flex: '0 0 auto',
+                  height: 38,
+                  borderRadius: 9999,
+                  fontWeight: 800,
+                  px: 1,
+                  color: selected ? colors.landing.heroText : colors.landing.textMuted,
+                  bgcolor: selected ? colors.landing.cyanPop : colors.landing.surface,
+                  border: `1px solid ${selected ? colors.landing.cyanPop : colors.landing.borderLight}`,
+                  '& .MuiChip-label': {
+                    px: 1.1,
+                  },
+                }}
+              />
+            );
+          })}
+        </Box>
       </Box>
 
       {/* Active Filters Summary */}
