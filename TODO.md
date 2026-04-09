@@ -48,7 +48,7 @@ These are the shared UI pieces we should consolidate so desktop and mobile stop 
   - back button style
   - avatar style
   - sticky vs non-sticky behavior
-- [ ] Child switcher UI
+- [x] Child switcher UI
   - desktop switcher
   - mobile switcher sheet
   - `Your role: ...` text

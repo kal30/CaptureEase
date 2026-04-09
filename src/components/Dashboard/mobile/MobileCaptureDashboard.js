@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import {
-  Avatar,
   Box,
   CircularProgress,
   Button,
@@ -25,9 +24,9 @@ import {
   DeleteOutline as DeleteIcon,
   EditOutlined as EditIcon,
   FileUpload as FileUploadIcon,
+  ForumOutlined as ForumOutlinedIcon,
   GroupsOutlined as GroupsIcon,
   FilterListRounded as FilterListRoundedIcon,
-  PersonAddAlt1Outlined as PersonAddIcon,
   NoteAltOutlined as NoteAltOutlinedIcon,
   KeyboardArrowDown as KeyboardArrowDownIcon,
   MenuOutlined as MenuIcon,
@@ -40,11 +39,12 @@ import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { PickersDay } from '@mui/x-date-pickers/PickersDay';
 import { useDashboardView } from '../shared/DashboardViewContext';
+import { ChildSwitcherPanel, ChildSwitcherTrigger } from '../shared/ChildSwitcher';
+import { USER_ROLES } from '../../../constants/roles';
 import UnifiedTimeline from '../../Timeline/UnifiedTimeline';
 import { getChildCareTeam } from '../../../services/childAccessService';
 import { auth } from '../../../services/firebase';
 import { getAllQuickTagOptions, getQuickTagDisplay, loadCustomQuickTags } from '../../../utils/quickTags';
-import { getRoleDisplay } from '../../../constants/roles';
 import colors from '../../../assets/theme/colors';
 
 const quickActions = [
@@ -159,6 +159,7 @@ const MobileCaptureDashboard = ({
     [activeChild?.id, timelineSummary]
   );
   const activityStreakLabel = formatStreakLabel(activeChildSummary.activityStreak || 0);
+  const mobileStreakLabel = activityStreakLabel || 'No streak yet';
   const datesWithEntries = useMemo(() => {
     const dateKeys = new Set();
 
@@ -171,7 +172,14 @@ const MobileCaptureDashboard = ({
 
     return dateKeys;
   }, [activeChildEntries]);
-  const activeChildPhoto = activeChild?.profilePhoto || activeChild?.photoURL || activeChild?.avatarUrl || '';
+  const activeChildCareTeam = useMemo(
+    () => careTeamsByChildId[activeChild?.id] || [],
+    [activeChild?.id, careTeamsByChildId]
+  );
+  const hasChatAvailable = useMemo(
+    () => activeChildCareTeam.some((member) => String(member?.role || '').toLowerCase() !== USER_ROLES.CARE_OWNER),
+    [activeChildCareTeam]
+  );
   const activeChildWarningLabel = useMemo(() => {
     const medicalProfile = activeChild?.medicalProfile || {};
     const foodAllergies = Array.isArray(medicalProfile.foodAllergies) ? medicalProfile.foodAllergies : [];
@@ -531,11 +539,15 @@ const MobileCaptureDashboard = ({
       <Paper
         elevation={0}
         sx={{
+          position: 'sticky',
+          top: 0,
+          zIndex: (theme) => theme.zIndex.appBar + 2,
           borderRadius: '14px',
           overflow: 'hidden',
           border: `1px solid ${colors.landing.borderLight}`,
           boxShadow: `0 16px 36px ${colors.landing.shadowSoft}`,
           mb: 1.5,
+          bgcolor: colors.landing.surface,
         }}
       >
         <Box
@@ -549,70 +561,48 @@ const MobileCaptureDashboard = ({
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
-            <Button
+            <ChildSwitcherTrigger
+              child={activeChild}
               onClick={openSwitchMenu}
-              aria-label={children.length > 1 ? 'Switch child' : 'Add child'}
-              sx={{
-                minWidth: 0,
-                p: 0,
-                borderRadius: '12px',
-                textTransform: 'none',
-                color: colors.landing.heroText,
-                cursor: 'pointer',
-                '&:hover': { bgcolor: 'transparent' },
-              }}
-            >
-              <Stack direction="row" alignItems="center" spacing={0.7} sx={{ minWidth: 0 }}>
-                <Avatar
-                  src={activeChildPhoto}
-                  alt={activeChild.name}
-                  sx={{
-                    width: 26,
-                    height: 26,
-                    border: `1px solid ${colors.landing.borderMedium}`,
-                    bgcolor: colors.roles.careOwner.primary,
-                    color: colors.landing.surface,
-                    fontSize: '0.72rem',
-                    fontWeight: 700,
-                    flexShrink: 0,
-                  }}
-                >
-                  {!activeChildPhoto ? activeChild.name?.[0]?.toUpperCase() : null}
-                </Avatar>
-                <Stack direction="row" alignItems="center" spacing={0.35} sx={{ minWidth: 0 }}>
-                  <Typography
-                    sx={{
-                      fontFamily: 'Outfit, sans-serif',
-                      fontSize: '1.03rem',
-                      fontWeight: 600,
-                      lineHeight: 1.05,
-                      letterSpacing: '-0.015em',
-                      color: colors.landing.heroText,
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                    }}
-                  >
-                    {activeChild.name}
-                  </Typography>
-                  <KeyboardArrowDownIcon sx={{ fontSize: 18, color: colors.landing.textMuted, flexShrink: 0 }} />
-                </Stack>
-              </Stack>
-            </Button>
+              showRole={false}
+              showBorder={false}
+              avatarSize={26}
+            />
+
+            {hasChatAvailable && onMessages ? (
+              <IconButton
+                onClick={() => onMessages?.(activeChild)}
+                aria-label="Open child chat"
+                sx={{
+                  flexShrink: 0,
+                  width: 44,
+                  height: 44,
+                  p: 0,
+                  borderRadius: '14px',
+                  color: colors.landing.heroText,
+                  bgcolor: 'transparent',
+                  '&:hover': {
+                    bgcolor: colors.landing.surfaceSoft,
+                  },
+                }}
+              >
+                <ForumOutlinedIcon sx={{ fontSize: 18, color: colors.landing.textMuted }} />
+              </IconButton>
+            ) : null}
 
             <IconButton
               onClick={openMobileChildSheet}
               aria-label="Child actions"
               sx={{
                 flexShrink: 0,
-                width: 28,
-                height: 28,
+                width: 44,
+                height: 44,
                 p: 0,
-                borderRadius: '9999px',
+                borderRadius: '14px',
                 color: '#64748B',
                 bgcolor: 'transparent',
                 '&:hover': {
-                  bgcolor: 'transparent',
+                  bgcolor: colors.landing.surfaceSoft,
                 },
               }}
             >
@@ -713,11 +703,14 @@ const MobileCaptureDashboard = ({
           <Box
             sx={{
               display: 'flex',
-              flexDirection: { xs: 'column', sm: 'row' },
-              alignItems: { xs: 'flex-start', sm: 'center' },
+              flexDirection: 'row',
+              alignItems: 'center',
               justifyContent: 'space-between',
+              flexWrap: 'nowrap',
               gap: 1,
               mb: 1,
+              width: '100%',
+              minWidth: 0,
             }}
           >
             <Button
@@ -735,37 +728,35 @@ const MobileCaptureDashboard = ({
                 letterSpacing: '-0.02em',
                 justifyContent: 'flex-start',
                 alignItems: 'center',
+                flexShrink: 0,
                 '&:hover': {
                   bgcolor: 'transparent',
                 },
-                alignSelf: 'flex-start',
               }}
             >
               {getTimelineHeaderLabel(selectedDate)}
             </Button>
-            {activityStreakLabel ? (
-              <Box
-                sx={{
-                  alignSelf: { xs: 'flex-start', sm: 'center' },
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 0.6,
-                  px: 1.15,
-                  py: 0.7,
-                  borderRadius: '9999px',
-                  bgcolor: alpha(colors.landing.cyanPop, 0.16),
-                  border: `1px solid ${alpha(colors.landing.cyanPop, 0.4)}`,
-                  color: colors.landing.heroText,
-                  whiteSpace: 'nowrap',
-                  flexShrink: 0,
-                }}
-              >
-                <Typography sx={{ fontSize: '0.82rem', lineHeight: 1 }}>🔥</Typography>
-                <Typography sx={{ fontSize: '0.76rem', fontWeight: 800, letterSpacing: '-0.01em', lineHeight: 1 }}>
-                  {activityStreakLabel}
-                </Typography>
-              </Box>
-            ) : null}
+            <Box
+              sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 0.45,
+                px: 0.85,
+                py: 0.45,
+                borderRadius: '9999px',
+                bgcolor: activityStreakLabel ? alpha(colors.landing.cyanPop, 0.16) : colors.landing.sageLight,
+                border: `1px solid ${activityStreakLabel ? alpha(colors.landing.cyanPop, 0.4) : colors.landing.borderLight}`,
+                color: colors.landing.heroText,
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
+                maxWidth: '46%',
+              }}
+            >
+              <Typography sx={{ fontSize: '0.78rem', lineHeight: 1 }}>🔥</Typography>
+              <Typography sx={{ fontSize: '0.72rem', fontWeight: 800, letterSpacing: '-0.01em', lineHeight: 1 }}>
+                {mobileStreakLabel}
+              </Typography>
+            </Box>
           </Box>
           <TextField
             fullWidth
@@ -1118,125 +1109,24 @@ const MobileCaptureDashboard = ({
             Switch Child
           </Typography>
 
-          <Typography sx={{ px: 0.75, pb: 1.25, fontSize: '0.92rem', color: colors.landing.textMuted, lineHeight: 1.45 }}>
-            Choose who you&apos;re logging for. The care team and your role are shown on each profile.
-          </Typography>
-
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            {children.map((child) => {
-              const isSelected = child.id === activeChild?.id;
-              const childPhoto = child.profilePhoto || child.photoURL || child.avatarUrl || '';
-              const careTeamMembers = careTeamsByChildId[child.id] || [];
-              const careTeamNames = careTeamMembers
-                .map((member) => member.displayName || member.name || member.email || 'Unknown')
-                .filter(Boolean);
-              const roleLabel = getRoleDisplay(getUserRoleForChild?.(child.id))?.label || null;
-
-              return (
-                <Button
-                  key={child.id}
-                  onClick={() => {
-                    setActiveChildId?.(child.id);
-                    closeSwitchMenu();
-                  }}
-                  fullWidth
-                  sx={{
-                    textTransform: 'none',
-                    alignItems: 'stretch',
-                    justifyContent: 'flex-start',
-                    p: 0,
-                    borderRadius: '16px',
-                    border: `1px solid ${isSelected ? colors.brand.ink : colors.landing.borderLight}`,
-                    bgcolor: isSelected ? alpha(colors.brand.ink, 0.06) : colors.landing.surface,
-                    boxShadow: `0 4px 12px ${colors.landing.shadowSoft}`,
-                    overflow: 'hidden',
-                    '&:hover': {
-                      bgcolor: isSelected ? alpha(colors.brand.ink, 0.08) : colors.landing.surfaceSoft,
-                    },
-                  }}
-                >
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, width: '100%', p: 1.25 }}>
-                    <Avatar
-                      src={childPhoto}
-                      alt={child.name}
-                      sx={{
-                        width: 40,
-                        height: 40,
-                        border: `1px solid ${colors.landing.borderMedium}`,
-                        bgcolor: colors.roles.careOwner.primary,
-                        color: colors.landing.surface,
-                        fontSize: '0.9rem',
-                        fontWeight: 700,
-                        flexShrink: 0,
-                      }}
-                    >
-                      {!childPhoto ? child.name?.[0]?.toUpperCase() : null}
-                    </Avatar>
-
-                    <Box sx={{ minWidth: 0, flex: 1, textAlign: 'left' }}>
-                      <Typography sx={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, color: colors.landing.heroText, lineHeight: 1.1 }}>
-                        {child.name}
-                      </Typography>
-                      <Typography sx={{ mt: 0.35, fontSize: '0.82rem', color: colors.landing.textMuted, lineHeight: 1.35 }}>
-                        {careTeamNames.length ? `Care team: ${careTeamNames.slice(0, 2).join(', ')}${careTeamNames.length > 2 ? ` +${careTeamNames.length - 2}` : ''}` : 'Care team not loaded yet'}
-                      </Typography>
-                      {roleLabel ? (
-                        <Typography sx={{ mt: 0.2, fontSize: '0.78rem', fontWeight: 700, color: isSelected ? colors.brand.deep : colors.landing.textMuted }}>
-                          You: {roleLabel.replace(/^[^\w]+/, '').trim()}
-                        </Typography>
-                      ) : null}
-                    </Box>
-
-                    <Box
-                      sx={{
-                        flexShrink: 0,
-                        px: 1,
-                        py: 0.4,
-                        borderRadius: '9999px',
-                        bgcolor: isSelected ? alpha(colors.brand.ink, 0.12) : colors.landing.sageLight,
-                        color: isSelected ? colors.brand.ink : colors.landing.textMuted,
-                        fontSize: '0.72rem',
-                        fontWeight: 800,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.08em',
-                      }}
-                    >
-                      {isSelected ? 'Current' : 'Switch'}
-                    </Box>
-                  </Box>
-                </Button>
-              );
-            })}
-
-            {onAddChildClick ? (
-              <Button
-                onClick={() => {
-                  closeSwitchMenu();
-                  onAddChildClick();
-                }}
-                fullWidth
-                startIcon={<PersonAddIcon sx={{ fontSize: 18, color: colors.brand.ink }} />}
-                sx={{
-                  justifyContent: 'flex-start',
-                  textTransform: 'none',
-                  p: 1.25,
-                  borderRadius: '16px',
-                  border: `1px dashed ${colors.landing.borderMedium}`,
-                  bgcolor: colors.landing.surface,
-                  color: colors.landing.heroText,
-                  fontWeight: 800,
-                  boxShadow: 'none',
-                  '&:hover': {
-                    bgcolor: colors.landing.surfaceSoft,
-                    borderColor: colors.brand.ink,
-                    boxShadow: 'none',
-                  },
-                }}
-              >
-                Add Child
-              </Button>
-            ) : null}
-          </Box>
+          <ChildSwitcherPanel
+            children={children}
+            activeChildId={activeChild?.id}
+            getUserRoleForChild={getUserRoleForChild}
+            careTeamsByChildId={careTeamsByChildId}
+            onSelectChild={(childId) => {
+              setActiveChildId?.(childId);
+              closeSwitchMenu();
+            }}
+            onAddChild={() => {
+              closeSwitchMenu();
+              onAddChildClick?.();
+            }}
+            showCareTeamSummary
+            showAddChild={Boolean(onAddChildClick)}
+            title="Switch Child"
+            subtitle="Choose who you&apos;re logging for. The care team and your role are shown on each profile."
+          />
         </Box>
       </SwipeableDrawer>
 

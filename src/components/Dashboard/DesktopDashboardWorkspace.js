@@ -1,38 +1,43 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
-  Avatar,
   Box,
   Button,
-  Chip,
   Divider,
+  IconButton,
   ListItemIcon,
   Menu,
   MenuItem,
   Paper,
   Stack,
   Typography,
+  useMediaQuery,
 } from '@mui/material';
 import {
   CalendarToday as CalendarTodayIcon,
-  CategoryOutlined as CategoryOutlinedIcon,
-  KeyboardArrowDown as KeyboardArrowDownIcon,
-  PeopleAltOutlined as PeopleAltOutlinedIcon,
   NoteAltOutlined as NoteAltOutlinedIcon,
   RestaurantOutlined as RestaurantOutlinedIcon,
   BedtimeOutlined as BedtimeOutlinedIcon,
   MedicationOutlined as MedicationOutlinedIcon,
+  GroupsOutlined as GroupsOutlinedIcon,
+  PersonAddAlt1Outlined as PersonAddAlt1OutlinedIcon,
+  MenuOutlined as MenuOutlinedIcon,
+  AutoAwesomeOutlined as AutoAwesomeOutlinedIcon,
+  FileUploadOutlined as FileUploadOutlinedIcon,
+  EditOutlined as EditOutlinedIcon,
+  DeleteOutline as DeleteOutlineIcon,
+  ChatBubbleOutline as ChatBubbleOutlineIcon,
   WcOutlined as WcOutlinedIcon,
 } from '@mui/icons-material';
 import { alpha } from '@mui/material/styles';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../../services/firebase';
 import { useDashboardView } from './shared/DashboardViewContext';
-import { getLogTypeByEntry } from '../../constants/logTypeRegistry';
+import { ChildSwitcherPanel, ChildSwitcherTrigger } from './shared/ChildSwitcher';
 import { getAllQuickTagOptions, loadCustomQuickTags } from '../../utils/quickTags';
+import { getRoleDisplay } from '../../constants/roles';
 import TimelineFilters from '../Timeline/TimelineFilters';
 import UnifiedTimeline from '../Timeline/UnifiedTimeline';
 import MiniCalendar from '../UI/MiniCalendar';
-import ChildManagementMenu from './ChildManagementMenu';
 import colors from '../../assets/theme/colors';
 
 const actionPalette = {
@@ -58,56 +63,52 @@ const actionPalette = {
   },
 };
 
-const countTodayEntries = (entries = []) => {
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
+const formatStreakLabel = (streak = 0) => {
+  if (!streak || streak < 1) {
+    return '';
+  }
 
-  return entries.reduce((acc, entry) => {
-    if (!entry) return acc;
-    const entryDate = entry.timestamp?.toDate?.() ? entry.timestamp.toDate() : new Date(entry.timestamp);
-    if (Number.isNaN(entryDate.getTime()) || entryDate < todayStart) {
-      return acc;
-    }
-
-    const meta = getLogTypeByEntry(entry);
-    const category = meta?.category || entry.category || entry.type || '';
-
-    if (category === 'medication') acc.meds += 1;
-    else if (category === 'food') acc.meals += 1;
-    else if (category === 'sleep') acc.sleep += 1;
-
-    return acc;
-  }, { meds: 0, meals: 0, sleep: 0 });
+  return `🔥 ${streak}-Day Streak`;
 };
-
-const getChildLabel = (child) => child?.name || 'Select child';
 
 const DesktopDashboardWorkspace = ({
   hook,
   onQuickEntry,
-  onAddChildClick,
   onOpenSleepLog,
   onOpenFoodLog,
   onOpenBathroomLog,
   onImportLogs,
 }) => {
   const { activeChildId, setActiveChildId } = useDashboardView();
-  const switchChildButtonRef = useRef(null);
-  const [childSwitcherAnchor, setChildSwitcherAnchor] = useState(null);
   const [customQuickTags, setCustomQuickTags] = useState([]);
   const [timelineFilters, setTimelineFilters] = useState({});
   const [selectedDate, setSelectedDate] = useState(() => new Date());
+  const [childMenuAnchor, setChildMenuAnchor] = useState(null);
+  const [desktopMenuAnchor, setDesktopMenuAnchor] = useState(null);
+  const showLeftSidebar = useMediaQuery('(min-width:1200px)');
+  const showRightSidebar = useMediaQuery('(min-width:1024px)');
   const activeChild = useMemo(
     () => hook.children.find((child) => child.id === activeChildId) || hook.children[0] || null,
     [activeChildId, hook.children]
   );
+  const activeChildSummary = useMemo(
+    () => hook.timelineSummary?.[activeChild?.id] || hook.timelineSummary || {},
+    [activeChild?.id, hook.timelineSummary]
+  );
+  const dashboardRoleLabel = useMemo(() => {
+    const role = hook.getUserRoleForChild?.(activeChild?.id);
+    const label = getRoleDisplay(role)?.label || '';
+    return label.replace(/^[^\w]+/, '').trim();
+  }, [activeChild?.id, hook.getUserRoleForChild]);
 
   const activeChildEntries = useMemo(
     () => hook.allEntries?.[activeChild?.id] || [],
     [activeChild?.id, hook.allEntries]
   );
 
-  const todayStats = useMemo(() => countTodayEntries(activeChildEntries), [activeChildEntries]);
+  const activityStreakLabel = formatStreakLabel(activeChildSummary.activityStreak || 0);
+  const quickTagOptions = useMemo(() => getAllQuickTagOptions(customQuickTags), [customQuickTags]);
+  const activeQuickTags = timelineFilters.tagFilters || [];
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -121,34 +122,6 @@ const DesktopDashboardWorkspace = ({
     setTimelineFilters({});
     setSelectedDate(new Date());
   }, [activeChild?.id]);
-
-  const quickTagOptions = useMemo(() => getAllQuickTagOptions(customQuickTags), [customQuickTags]);
-
-  const handleChildSwitcherOpen = (event) => {
-    if (hook.children.length > 1) {
-      setChildSwitcherAnchor(event?.currentTarget || switchChildButtonRef.current);
-    }
-  };
-
-  const handleChildSwitcherClose = () => {
-    setChildSwitcherAnchor(null);
-  };
-
-  const handleSelectChild = (childId) => {
-    setActiveChildId(childId);
-    handleChildSwitcherClose();
-  };
-
-  const handleAddChild = () => {
-    handleChildSwitcherClose();
-    onAddChildClick?.();
-  };
-
-  const handleOpenSwitchChild = () => {
-    if (hook.children.length > 1) {
-      setChildSwitcherAnchor(switchChildButtonRef.current);
-    }
-  };
 
   const handleQuickAction = (actionKey) => {
     if (!activeChild) return;
@@ -176,12 +149,92 @@ const DesktopDashboardWorkspace = ({
     onQuickEntry?.(activeChild, 'quick_note');
   };
 
+  const handleDesktopChildMenuOpen = (event) => {
+    setChildMenuAnchor(event.currentTarget);
+  };
+
+  const handleDesktopChildMenuClose = () => {
+    setChildMenuAnchor(null);
+  };
+
+  const handleDesktopMenuOpen = (event) => {
+    setDesktopMenuAnchor(event.currentTarget);
+  };
+
+  const handleDesktopMenuClose = () => {
+    setDesktopMenuAnchor(null);
+  };
+
+  const handleDesktopChildSelect = (childId) => {
+    handleDesktopChildMenuClose();
+    setActiveChildId?.(childId);
+    window.dispatchEvent(new CustomEvent('captureez:set-active-child', {
+      detail: { childId },
+    }));
+  };
+
+  const handleDesktopAction = (action) => {
+    handleDesktopMenuClose();
+
+    const child = activeChild;
+    switch (action) {
+      case 'add-child':
+        hook.setShowAddChildModal?.(true);
+        break;
+      case 'invite-caregiver':
+        if (child) {
+          hook.handleInviteTeamMember?.(child.id);
+        }
+        break;
+      case 'start-chat':
+        if (child) {
+          hook.handleMessages?.(child);
+        }
+        break;
+      case 'prep-for-therapy':
+        if (child) {
+          hook.handleShowCareReport?.(child);
+        }
+        break;
+      case 'import-logs':
+        if (child) {
+          onImportLogs?.(child);
+        }
+        break;
+      case 'edit-child':
+        if (child) {
+          hook.handleEditChild?.(child);
+        }
+        break;
+      case 'delete-child':
+        if (child) {
+          hook.handleDeleteChild?.(child);
+        }
+        break;
+      default:
+        break;
+    }
+  };
+
+  const handleQuickTagToggle = (tagKey) => {
+    setTimelineFilters((current) => {
+      const currentTags = Array.isArray(current.tagFilters) ? current.tagFilters : [];
+      const nextTags = currentTags.includes(tagKey)
+        ? currentTags.filter((value) => value !== tagKey)
+        : [...currentTags, tagKey];
+
+      return {
+        ...current,
+        tagFilters: nextTags.length > 0 ? nextTags : undefined,
+      };
+    });
+  };
+
   if (!activeChild) {
     return null;
   }
 
-  const childAvatar = activeChild.profilePhoto || activeChild.photoURL || activeChild.avatarUrl || '';
-  const childLabel = getChildLabel(activeChild);
+  const desktopCardShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.05)';
 
   return (
     <Box
@@ -191,172 +244,106 @@ const DesktopDashboardWorkspace = ({
         px: { xs: 0, lg: 0 },
       }}
     >
-      <Box sx={{ width: '100%', maxWidth: 1520, mx: 'auto', px: { xs: 2, xl: 3 }, pb: 4 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 1, pt: 0.5, pb: 1.5 }}>
-          <Button
-            ref={switchChildButtonRef}
-            onClick={handleChildSwitcherOpen}
-            variant="outlined"
-            disabled={hook.children.length <= 1}
-            endIcon={hook.children.length > 1 ? <KeyboardArrowDownIcon sx={{ fontSize: 18 }} /> : null}
-            sx={{
-              minHeight: 42,
-              px: 1.5,
-              borderRadius: '12px',
-              borderColor: colors.landing.borderLight,
-              bgcolor: colors.landing.surface,
-              color: colors.landing.heroText,
-              textTransform: 'none',
-              fontWeight: 600,
-              boxShadow: 'none',
-              '&:hover': {
-                bgcolor: colors.landing.sageLight,
-                borderColor: colors.landing.borderMedium,
-                boxShadow: 'none',
-              },
-            }}
-          >
-            <Avatar
-              src={childAvatar || undefined}
-              alt={childLabel}
+      <Box sx={{ width: '100%', maxWidth: 1640, mx: 'auto', px: { xs: 2, xl: 3 }, pb: 4 }}>
+        <Paper
+          variant="outlined"
+          sx={{
+            borderRadius: '12px',
+            bgcolor: colors.landing.surface,
+            borderColor: colors.landing.borderLight,
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
+            px: 2,
+            py: 1.25,
+            mb: 2,
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
+            <ChildSwitcherTrigger
+              child={activeChild}
+              roleLabel={dashboardRoleLabel || 'Care Owner'}
+              showRole
+              showBorder
+              avatarSize={36}
+              onClick={handleDesktopChildMenuOpen}
+            />
+
+            <IconButton
+              onClick={handleDesktopMenuOpen}
               sx={{
-                width: 26,
-                height: 26,
-                mr: 1,
-                bgcolor: colors.roles.careOwner.primary,
-                color: '#fff',
-                fontSize: '0.8rem',
-                border: `1px solid ${colors.landing.borderMedium}`,
+                width: 36,
+                height: 36,
+                borderRadius: '50%',
+                color: colors.landing.textMuted,
+                bgcolor: 'transparent',
+                boxShadow: 'none',
+                '&:hover': {
+                  bgcolor: alpha(colors.landing.textMuted, 0.08),
+                },
               }}
             >
-              {childLabel.charAt(0).toUpperCase()}
-            </Avatar>
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1 }}>
-              <Typography sx={{ fontSize: '0.7rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: colors.landing.textMuted, fontWeight: 700 }}>
-                Switch Child
-              </Typography>
-              <Typography sx={{ fontWeight: 600, fontSize: '0.92rem', color: colors.landing.heroText }}>
-                {childLabel}
-              </Typography>
-            </Box>
-          </Button>
-
-          <Menu
-            anchorEl={childSwitcherAnchor}
-            open={Boolean(childSwitcherAnchor)}
-            onClose={handleChildSwitcherClose}
-            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-            transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-            PaperProps={{
-              sx: {
-                mt: 1,
-                minWidth: 250,
-                borderRadius: '12px',
-                border: `1px solid ${colors.landing.borderLight}`,
-                boxShadow: `0 24px 60px ${colors.landing.shadowPanel}`,
-                bgcolor: 'rgba(255,255,255,0.96)',
-                backdropFilter: 'blur(16px)',
-              },
-            }}
-          >
-            {hook.children.map((child) => (
-              <MenuItem key={child.id} onClick={() => handleSelectChild(child.id)} sx={{ gap: 1.25, py: 1.25, px: 1.5, minHeight: 48 }}>
-                <Avatar
-                  src={child.profilePhoto || child.photoURL || child.avatarUrl || undefined}
-                  sx={{
-                    width: 28,
-                    height: 28,
-                    bgcolor: colors.roles.careOwner.primary,
-                    color: '#fff',
-                    fontSize: '0.78rem',
-                  }}
-                >
-                  {(child.name || 'C').charAt(0).toUpperCase()}
-                </Avatar>
-                <Box sx={{ minWidth: 0 }}>
-                  <Typography sx={{ fontWeight: 600, color: colors.landing.heroText, lineHeight: 1.1 }}>
-                    {child.name}
-                  </Typography>
-                  <Typography variant="caption" sx={{ color: colors.landing.textMuted }}>
-                    Switch profile
-                  </Typography>
-                </Box>
-              </MenuItem>
-            ))}
-            <Divider sx={{ my: 0.5 }} />
-            <MenuItem onClick={handleAddChild} sx={{ gap: 1.25, py: 1.25, px: 1.5, minHeight: 48 }}>
-              <ListItemIcon sx={{ minWidth: 32 }}>
-                <PeopleAltOutlinedIcon sx={{ fontSize: 18, color: colors.brand.ink }} />
-              </ListItemIcon>
-              Add child
-            </MenuItem>
-          </Menu>
-
-            <ChildManagementMenu
-            child={activeChild}
-            onEditChild={hook.handleEditChild}
-            onInviteTeamMember={hook.handleInviteTeamMember}
-            onDeleteChild={hook.handleDeleteChild}
-            onSwitchChild={handleOpenSwitchChild}
-            onPrepForTherapy={hook.handleShowCareReport}
-            onImportLogs={onImportLogs}
-            onStartChat={hook.handleMessages}
-            userRole={hook.getUserRoleForChild?.(activeChild.id)}
-            careTeamCount={Array.isArray(activeChild?.users?.members) ? activeChild.users.members.length : 0}
-          />
-        </Box>
+              <MenuOutlinedIcon sx={{ fontSize: 20 }} />
+            </IconButton>
+          </Box>
+        </Paper>
 
         <Box
           sx={{
             display: 'grid',
-            gridTemplateColumns: { lg: '250px minmax(0, 1fr) 290px' },
+            gridTemplateColumns: showLeftSidebar
+              ? '260px minmax(0, 1fr) 300px'
+              : showRightSidebar
+                ? 'minmax(0, 1fr) 300px'
+                : '1fr',
             gap: { lg: 2.25 },
             alignItems: 'start',
           }}
         >
-          <Paper
-            variant="outlined"
+          {showLeftSidebar ? (
+            <Stack
+              spacing={2}
               sx={{
-                display: { xs: 'none', lg: 'block' },
                 position: 'sticky',
                 top: 76,
-                borderRadius: '12px',
-                bgcolor: colors.landing.surface,
-                borderColor: colors.landing.borderLight,
-                boxShadow: `0 4px 6px -1px ${colors.landing.shadowSoft}`,
-              p: 2,
-            }}
-          >
-            <Typography sx={{ fontSize: '0.8rem', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: colors.landing.textMuted, mb: 1.5 }}>
-              Daily Stats
-            </Typography>
-            <Stack spacing={1.25}>
-              {[
-                { label: 'Meds', value: todayStats.meds, color: colors.semantic.success },
-                { label: 'Meals', value: todayStats.meals, color: colors.semantic.warning },
-                { label: 'Sleep', value: todayStats.sleep, color: colors.brand.deep },
-              ].map((item) => (
-                <Paper
-                  key={item.label}
-                  variant="outlined"
+                alignSelf: 'start',
+                minWidth: 0,
+              }}
+            >
+              <Paper
+                variant="outlined"
+                sx={{
+                  borderRadius: '12px',
+                  bgcolor: colors.landing.surface,
+                  borderColor: colors.landing.borderLight,
+                  boxShadow: desktopCardShadow,
+                  p: 2,
+                }}
+              >
+                <Typography sx={{ fontSize: '0.8rem', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: colors.landing.textMuted, mb: 1.25 }}>
+                  Streak
+                </Typography>
+                <Box
                   sx={{
-                    p: 1.5,
-                    borderRadius: '12px',
-                    borderColor: colors.landing.borderLight,
-                    bgcolor: colors.landing.surface,
-                    boxShadow: `0 4px 6px -1px ${colors.landing.shadowSoft}`,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 0.75,
+                    px: 1.4,
+                    py: 1,
+                    borderRadius: '9999px',
+                    bgcolor: alpha(colors.landing.cyanPop, 0.16),
+                    border: `1px solid ${alpha(colors.landing.cyanPop, 0.4)}`,
+                    color: colors.landing.heroText,
                   }}
                 >
-                  <Typography sx={{ color: colors.landing.textMuted, fontSize: '0.78rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                    {item.label}
+                  <Typography sx={{ fontSize: '0.9rem', lineHeight: 1 }}>
+                    🔥
                   </Typography>
-                  <Typography sx={{ color: item.color, fontSize: '1.75rem', fontWeight: 700, lineHeight: 1.1 }}>
-                    {item.value}
+                  <Typography sx={{ fontSize: '0.86rem', fontWeight: 800, letterSpacing: '-0.01em', lineHeight: 1 }}>
+                    {activityStreakLabel || 'No streak yet'}
                   </Typography>
-                </Paper>
-              ))}
+                </Box>
+              </Paper>
             </Stack>
-          </Paper>
+          ) : null}
 
           <Box sx={{ minWidth: 0, maxWidth: 800, width: '100%', mx: 'auto' }}>
             <Paper
@@ -365,7 +352,7 @@ const DesktopDashboardWorkspace = ({
                 borderRadius: '12px',
                 bgcolor: colors.landing.surface,
                 borderColor: colors.landing.borderLight,
-                boxShadow: `0 4px 6px -1px ${colors.landing.shadowSoft}`,
+                boxShadow: desktopCardShadow,
                 p: { xs: 1.5, md: 2 },
                 mb: 2,
               }}
@@ -378,12 +365,13 @@ const DesktopDashboardWorkspace = ({
                     startIcon={action.icon}
                     variant="outlined"
                     sx={{
-                      minHeight: 44,
-                      px: 2,
+                      minHeight: 36,
+                      px: 1.5,
                       borderRadius: '12px',
                       whiteSpace: 'nowrap',
                       textTransform: 'none',
                       fontWeight: 700,
+                      fontSize: '0.84rem',
                       color: colors.landing.heroText,
                       borderColor: action.color,
                       bgcolor: alpha(action.color, 0.06),
@@ -407,7 +395,7 @@ const DesktopDashboardWorkspace = ({
                 sx={{
                   mt: 1.5,
                   width: '100%',
-                  minHeight: 46,
+                  minHeight: 40,
                   px: 2,
                   borderRadius: '12px',
                   borderColor: colors.landing.borderLight,
@@ -433,7 +421,7 @@ const DesktopDashboardWorkspace = ({
                 borderRadius: '12px',
                 bgcolor: colors.landing.surface,
                 borderColor: colors.landing.borderLight,
-                boxShadow: `0 4px 6px -1px ${colors.landing.shadowSoft}`,
+                boxShadow: desktopCardShadow,
                 p: { xs: 1.5, md: 2 },
               }}
             >
@@ -445,8 +433,61 @@ const DesktopDashboardWorkspace = ({
                 selectedDate={selectedDate}
                 onDateChange={setSelectedDate}
                 hideDateFilter
-                sx={{ mb: 1.5 }}
+                sx={{ mb: 1 }}
               />
+
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  overflowX: 'auto',
+                  whiteSpace: 'nowrap',
+                  pb: 0.75,
+                  mb: 1.5,
+                  mt: -0.25,
+                  scrollbarWidth: 'none',
+                  '&::-webkit-scrollbar': {
+                    display: 'none',
+                  },
+                }}
+              >
+                {quickTagOptions.map((tag) => {
+                  const selected = activeQuickTags.includes(tag.key);
+                  return (
+                    <Button
+                      key={tag.key}
+                      onClick={() => handleQuickTagToggle(tag.key)}
+                      variant={selected ? 'contained' : 'outlined'}
+                      sx={{
+                        flex: '0 0 auto',
+                        minHeight: 30,
+                        px: 1.4,
+                        py: 0.5,
+                        borderRadius: '9999px',
+                        borderColor: selected ? colors.brand.deep : colors.landing.borderLight,
+                        bgcolor: selected ? alpha(colors.brand.deep, 0.12) : colors.landing.surface,
+                        color: selected ? colors.landing.heroText : colors.landing.textMuted,
+                        textTransform: 'none',
+                        fontWeight: 600,
+                        fontSize: '0.8rem',
+                        letterSpacing: '-0.01em',
+                        boxShadow: 'none',
+                        whiteSpace: 'nowrap',
+                        '&:hover': {
+                          bgcolor: selected ? alpha(colors.brand.deep, 0.16) : colors.landing.sageLight,
+                          boxShadow: 'none',
+                        },
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.6 }}>
+                        <span>{tag.icon}</span>
+                        <span>{tag.label}</span>
+                      </Box>
+                    </Button>
+                  );
+                })}
+              </Box>
 
               <UnifiedTimeline
                 child={activeChild}
@@ -455,26 +496,27 @@ const DesktopDashboardWorkspace = ({
                 onFiltersChange={setTimelineFilters}
                 showFilters={false}
                 showDaySummary
+                streakLabel={activityStreakLabel}
               />
             </Paper>
           </Box>
 
-          <Stack
-            spacing={2}
-            sx={{
-              display: { xs: 'none', lg: 'block' },
-              position: 'sticky',
-              top: 76,
-              alignSelf: 'start',
-            }}
-          >
+          {showRightSidebar ? (
+            <Stack
+              spacing={2}
+              sx={{
+                position: 'sticky',
+                top: 76,
+                alignSelf: 'start',
+              }}
+            >
             <Paper
               variant="outlined"
               sx={{
                 borderRadius: '12px',
                 bgcolor: colors.landing.surface,
                 borderColor: colors.landing.borderLight,
-                boxShadow: `0 4px 6px -1px ${colors.landing.shadowSoft}`,
+                boxShadow: desktopCardShadow,
                 p: 2,
               }}
             >
@@ -492,42 +534,155 @@ const DesktopDashboardWorkspace = ({
               />
             </Paper>
 
-            <Paper
-              variant="outlined"
-              sx={{
-                borderRadius: 3,
-                bgcolor: colors.landing.surface,
-                borderColor: colors.landing.borderLight,
-                boxShadow: `0 4px 6px -1px ${colors.landing.shadowSoft}`,
-                p: 2,
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-                <CategoryOutlinedIcon sx={{ fontSize: 18, color: colors.brand.deep }} />
-                <Typography sx={{ fontSize: '0.8rem', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: colors.landing.textMuted }}>
-                  Quick Tags
-                </Typography>
-              </Box>
-              <Stack direction="row" flexWrap="wrap" gap={1}>
-                {quickTagOptions.map((tag) => (
-                  <Chip
-                    key={tag.key}
-                    label={`${tag.icon} ${tag.label}`}
-                    variant="outlined"
-                    sx={{
-                      borderRadius: 2,
-                      borderColor: colors.landing.borderLight,
-                      bgcolor: colors.landing.sageLight,
-                      color: colors.landing.heroText,
-                      fontWeight: 600,
-                    }}
-                  />
-                ))}
-              </Stack>
-            </Paper>
-          </Stack>
+            </Stack>
+          ) : null}
         </Box>
       </Box>
+
+      <Menu
+        anchorEl={childMenuAnchor}
+        open={Boolean(childMenuAnchor)}
+        onClose={handleDesktopChildMenuClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        PaperProps={{
+          sx: {
+            mt: 1,
+            minWidth: 280,
+            borderRadius: '18px',
+            border: `1px solid ${colors.landing.borderLight}`,
+            boxShadow: `0 24px 60px ${colors.landing.shadowPanel}`,
+            bgcolor: 'rgba(255,255,255,0.98)',
+            backdropFilter: 'blur(16px)',
+            overflow: 'hidden',
+          },
+          }}
+        >
+        <Box sx={{ px: 1.5, py: 1.25 }}>
+          <ChildSwitcherPanel
+            children={hook.children}
+            activeChildId={activeChildId}
+            getUserRoleForChild={hook.getUserRoleForChild}
+            onSelectChild={handleDesktopChildSelect}
+            showCareTeamSummary={false}
+            showAddChild={false}
+            title="Switch Child"
+          />
+        </Box>
+      </Menu>
+
+      <Menu
+        anchorEl={desktopMenuAnchor}
+        open={Boolean(desktopMenuAnchor)}
+        onClose={handleDesktopMenuClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        PaperProps={{
+          sx: {
+            mt: 1,
+            minWidth: 280,
+            borderRadius: '18px',
+            border: `1px solid ${colors.landing.borderLight}`,
+            boxShadow: `0 24px 60px ${colors.landing.shadowPanel}`,
+            bgcolor: 'rgba(255,255,255,0.98)',
+            backdropFilter: 'blur(16px)',
+            overflow: 'hidden',
+          },
+        }}
+      >
+        {activeChild?.medicalProfile?.foodAllergies?.find(Boolean) || activeChild?.medicalProfile?.currentMedications?.find(Boolean) ? (
+          <>
+            <Box sx={{ px: 1.5, pt: 1.5, pb: 1 }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  px: 1.25,
+                  py: 1.1,
+                  borderRadius: '12px',
+                  bgcolor: alpha(colors.semantic.error, 0.09),
+                  color: colors.semantic.error,
+                  border: `1px solid ${alpha(colors.semantic.error, 0.18)}`,
+                }}
+              >
+                <Typography sx={{ fontWeight: 700, color: colors.landing.heroText }}>
+                  {activeChild?.medicalProfile?.foodAllergies?.find(Boolean) || activeChild?.medicalProfile?.currentMedications?.find(Boolean)}
+                </Typography>
+              </Box>
+            </Box>
+            <Divider sx={{ my: 0.5 }} />
+          </>
+        ) : null}
+
+        <MenuItem
+          onClick={() => handleDesktopAction('add-child')}
+          sx={{ gap: 1.25, py: 1.25, px: 1.5, minHeight: 48 }}
+        >
+          <ListItemIcon sx={{ minWidth: 34 }}>
+            <PersonAddAlt1OutlinedIcon sx={{ fontSize: 18, color: colors.brand.ink }} />
+          </ListItemIcon>
+          Add child
+        </MenuItem>
+
+        <Box sx={{ px: 1.5, pb: 0.75, pt: 1 }}>
+          <Typography sx={{ fontSize: '0.72rem', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: colors.landing.textMuted }}>
+            Care Team
+          </Typography>
+        </Box>
+
+        <MenuItem onClick={() => handleDesktopAction('invite-caregiver')} sx={{ gap: 1.25, py: 1.25, px: 1.5, minHeight: 48 }}>
+          <ListItemIcon sx={{ minWidth: 34 }}>
+            <GroupsOutlinedIcon sx={{ fontSize: 18, color: colors.brand.ink }} />
+          </ListItemIcon>
+          Add careteam
+        </MenuItem>
+
+        {Array.isArray(activeChild?.users?.members) && activeChild.users.members.length > 1 ? (
+          <MenuItem onClick={() => handleDesktopAction('start-chat')} sx={{ gap: 1.25, py: 1.25, px: 1.5, minHeight: 48 }}>
+            <ListItemIcon sx={{ minWidth: 34 }}>
+              <ChatBubbleOutlineIcon sx={{ fontSize: 18, color: colors.brand.deep }} />
+            </ListItemIcon>
+            Start chat
+          </MenuItem>
+        ) : null}
+
+        <Divider sx={{ my: 0.5 }} />
+
+        <Box sx={{ px: 1.5, pb: 0.75, pt: 1 }}>
+          <Typography sx={{ fontSize: '0.72rem', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: colors.landing.textMuted }}>
+            Tools
+          </Typography>
+        </Box>
+
+        <MenuItem onClick={() => handleDesktopAction('prep-for-therapy')} sx={{ gap: 1.25, py: 1.25, px: 1.5, minHeight: 48 }}>
+          <ListItemIcon sx={{ minWidth: 34 }}>
+            <AutoAwesomeOutlinedIcon sx={{ fontSize: 18, color: colors.brand.ink }} />
+          </ListItemIcon>
+          Prep for therapy
+        </MenuItem>
+
+        <MenuItem onClick={() => handleDesktopAction('import-logs')} sx={{ gap: 1.25, py: 1.25, px: 1.5, minHeight: 48 }}>
+          <ListItemIcon sx={{ minWidth: 34 }}>
+            <FileUploadOutlinedIcon sx={{ fontSize: 18, color: colors.brand.deep }} />
+          </ListItemIcon>
+          Import .xlsx or .docx
+        </MenuItem>
+
+        <MenuItem onClick={() => handleDesktopAction('edit-child')} sx={{ gap: 1.25, py: 1.25, px: 1.5, minHeight: 48 }}>
+          <ListItemIcon sx={{ minWidth: 34 }}>
+            <EditOutlinedIcon sx={{ fontSize: 18, color: colors.brand.ink }} />
+          </ListItemIcon>
+          Edit Child Profile
+        </MenuItem>
+
+        <MenuItem onClick={() => handleDesktopAction('delete-child')} sx={{ gap: 1.25, py: 1.25, px: 1.5, minHeight: 48, color: 'error.main' }}>
+          <ListItemIcon sx={{ minWidth: 34 }}>
+            <DeleteOutlineIcon sx={{ fontSize: 18, color: 'error.main' }} />
+          </ListItemIcon>
+          Delete Child Profile
+        </MenuItem>
+      </Menu>
     </Box>
   );
 };
