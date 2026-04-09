@@ -207,23 +207,16 @@ const Navbar = () => {
         sx={{
           minHeight: "calc(52px + env(safe-area-inset-top))",
           height: "calc(52px + env(safe-area-inset-top))",
-          px: { xs: 1.25, sm: 2, md: 3 },
+          px: { xs: 2.5, sm: 2, md: 3 },
         }}
       >
         <Container
           maxWidth="xl"
           sx={{
             width: "100%",
-            display: useCompactDashboardHeader || isMobileDashboardHeader ? "flex" : "grid",
+            display: "flex",
             alignItems: "center",
-            justifyContent: useCompactDashboardHeader || isMobileDashboardHeader ? "space-between" : undefined,
-            gridTemplateColumns: useCompactDashboardHeader
-              ? undefined
-              : {
-                  xs: "auto 1fr auto",
-                  md: "1fr auto 1fr",
-                },
-            columnGap: useCompactDashboardHeader || isMobileDashboardHeader ? undefined : 1.5,
+            justifyContent: "space-between",
             px: "0 !important",
           }}
         >
@@ -250,11 +243,10 @@ const Navbar = () => {
 
           <Box
             sx={{
-              justifySelf: "end",
               display: "flex",
               alignItems: "center",
-              gap: 1,
-              ml: useCompactDashboardHeader || isMobileDashboardHeader ? "auto" : 0,
+              gap: 2,
+              ml: "auto",
             }}
           >
             {authReady ? (
@@ -326,7 +318,7 @@ const Navbar = () => {
                   ) : null}
                 </>
               ) : (
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                   <Button
                     variant="text"
                     component={RouterLink}
@@ -347,7 +339,7 @@ const Navbar = () => {
                     sx={{
                       borderRadius: "9999px",
                       minHeight: 36,
-                      px: 2,
+                      px: 2.25,
                       textTransform: "none",
                       fontWeight: 700,
                       bgcolor: colors.brand.ink,
