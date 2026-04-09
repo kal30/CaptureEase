@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Button, Box, Typography, Paper, Alert, TextField } from '@mui/material';
+import { Button, Box, Typography, Paper, Alert, TextField, Divider } from '@mui/material';
 import { fetchSignInMethodsForEmail } from 'firebase/auth';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { auth, db } from '../../services/firebase';
+import { getChildrenWithRoles } from '../../services/roles/roleService';
 
 const UserChecker = () => {
   const [email, setEmail] = useState('rkalyani@gmail.com');
@@ -23,10 +24,31 @@ const UserChecker = () => {
       const q = query(usersRef, where('email', '==', email));
       const querySnapshot = await getDocs(q);
       const existsInFirestore = !querySnapshot.empty;
+      const firestoreUserDoc = existsInFirestore ? querySnapshot.docs[0] : null;
+      const firestoreUserId = firestoreUserDoc?.id || firestoreUserDoc?.data()?.uid || null;
 
       let firestoreData = null;
       if (existsInFirestore) {
         firestoreData = querySnapshot.docs[0].data();
+      }
+
+      let accessibleChildren = [];
+      if (firestoreUserId) {
+        const allChildren = await getChildrenWithRoles();
+        accessibleChildren = allChildren
+          .filter((child) => {
+            const users = child?.users || {};
+            return users.care_owner === firestoreUserId ||
+              users.care_partners?.includes(firestoreUserId) ||
+              users.caregivers?.includes(firestoreUserId) ||
+              users.therapists?.includes(firestoreUserId) ||
+              users.members?.includes(firestoreUserId);
+          })
+          .map((child) => ({
+            id: child.id,
+            name: child.name,
+            role: child.userRole,
+          }));
       }
 
       setResult(JSON.stringify({
@@ -34,7 +56,9 @@ const UserChecker = () => {
         existsInAuth,
         existsInFirestore,
         signInMethods: signInMethods || [],
+        firestoreUserId,
         firestoreData,
+        accessibleChildren,
         timestamp: new Date().toISOString()
       }, null, 2));
 

@@ -3,6 +3,8 @@ import { Container, Typography, Box, Paper, Divider } from '@mui/material';
 import ResponsiveLayout from '../components/Layout/ResponsiveLayout';
 import MigrationRunner from '../components/Admin/MigrationRunner';
 import TestDataRunner from '../components/Admin/TestDataRunner';
+import UserChecker from '../components/Debug/UserChecker';
+import DataCleaner from '../components/Debug/DataCleaner';
 
 const AdminPage = () => {
   return (
@@ -24,6 +26,19 @@ const AdminPage = () => {
         </Paper>
 
         <Divider sx={{ my: 4 }} />
+
+        <Paper sx={{ p: 3, mb: 3 }}>
+          <Typography variant="h6" gutterBottom>
+            User / Child Lookup
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Check whether a user exists, which Firebase Auth account they have, and which children they can access.
+          </Typography>
+
+          <UserChecker />
+        </Paper>
+
+        <Divider sx={{ my: 4 }} />
         
         <Paper sx={{ p: 3, mb: 3 }}>
           <Typography variant="h6" gutterBottom>
@@ -35,6 +50,10 @@ const AdminPage = () => {
           
           <TestDataRunner />
         </Paper>
+
+        <Divider sx={{ my: 4 }} />
+
+        <DataCleaner />
         
         <Box sx={{ mt: 4 }}>
           <Typography variant="body2" color="text.secondary">

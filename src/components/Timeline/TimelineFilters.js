@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   Box,
   Button,
-  ToggleButton,
   FormControl,
   InputLabel,
   Select,
@@ -25,7 +24,7 @@ import {
   ArrowDropDown as ArrowDropDownIcon,
 } from '@mui/icons-material';
 import MiniCalendar from '../UI/MiniCalendar';
-import { getTimelineFilterSections, SPECIAL_FILTER_TYPES } from '../../constants/logTypeRegistry';
+import { getTimelineFilterSections } from '../../constants/logTypeRegistry';
 import colors from '../../assets/theme/colors';
 
 /**
@@ -59,11 +58,9 @@ const TimelineFilters = ({
   const [searchText, setSearchText] = useState(filters.searchText || '');
   const [searchExpanded, setSearchExpanded] = useState(Boolean(filters.searchText));
 
-  const { allEntries, entryType, flaggedAs } = getTimelineFilterSections();
-  const IMPORTANT_FILTER_VALUES = [SPECIAL_FILTER_TYPES.importantMoment.value];
+  const { allEntries, entryType } = getTimelineFilterSections();
   const CATEGORY_FILTER_VALUES = [
     ...entryType.items.map((option) => option.value),
-    ...flaggedAs.items.map((option) => option.value),
     'health',
   ];
 
@@ -136,14 +133,11 @@ const TimelineFilters = ({
     handleCategoryMenuClose();
   };
 
-  const importantMomentsSelected = IMPORTANT_FILTER_VALUES.some((value) => filters.entryTypes?.includes(value));
   const selectedCategoryType = (filters.entryTypes || []).find((type) => CATEGORY_FILTER_VALUES.includes(type));
-  const selectedCategoryOption = [...entryType.items, ...flaggedAs.items].find((option) => option.value === selectedCategoryType);
+  const selectedCategoryOption = entryType.items.find((option) => option.value === selectedCategoryType);
   const filterTriggerLabel = selectedCategoryOption
     ? `${selectedCategoryOption.icon} ${selectedCategoryOption.label}`
-    : importantMomentsSelected
-      ? `⭐ ${SPECIAL_FILTER_TYPES.importantMoment.titlePrefix}`
-      : 'Filters';
+    : 'Filters';
 
   // User role options - CLEAN VERSION
   const userRoleOptions = [
@@ -357,8 +351,8 @@ const TimelineFilters = ({
               <Button
               endIcon={<ArrowDropDownIcon />}
               onClick={handleCategoryMenuOpen}
-              variant={selectedCategoryType || importantMomentsSelected ? 'contained' : 'outlined'}
-              color={selectedCategoryType || importantMomentsSelected ? 'primary' : 'inherit'}
+              variant={selectedCategoryType ? 'contained' : 'outlined'}
+              color={selectedCategoryType ? 'primary' : 'inherit'}
               sx={{
             fontSize: useCompactMobileLayout ? '0.78rem' : '0.7rem',
             height: useCompactMobileLayout ? mobileControlHeight : 24,
@@ -368,16 +362,16 @@ const TimelineFilters = ({
               borderRadius: useCompactMobileLayout ? 9999 : undefined,
                 textTransform: 'none',
                 fontWeight: 700,
-                color: selectedCategoryType || importantMomentsSelected ? undefined : 'text.primary',
-              borderColor: selectedCategoryType || importantMomentsSelected ? undefined : colors.app.cards.border,
-              backgroundColor: selectedCategoryType || importantMomentsSelected ? undefined : colors.app.cards.shadowPanel,
+                color: selectedCategoryType ? undefined : 'text.primary',
+              borderColor: selectedCategoryType ? undefined : colors.app.cards.border,
+              backgroundColor: selectedCategoryType ? undefined : colors.app.cards.shadowPanel,
             boxShadow: 'none',
             contain: 'none',
             transform: 'none',
               willChange: 'auto',
               '&:hover': {
-                backgroundColor: selectedCategoryType || importantMomentsSelected ? undefined : colors.app.cards.background,
-                borderColor: selectedCategoryType || importantMomentsSelected ? undefined : colors.app.cards.border,
+                backgroundColor: selectedCategoryType ? undefined : colors.app.cards.background,
+                borderColor: selectedCategoryType ? undefined : colors.app.cards.border,
               },
             }}
         >
@@ -413,44 +407,6 @@ const TimelineFilters = ({
               {entryType.label}
             </Typography>
             {entryType.items.map((option) => (
-              <MenuItem key={option.value} onClick={() => setCategoryTypeFilter(option.value)}>
-                <Typography sx={{ mr: 1, fontSize: '1rem' }}>{option.icon}</Typography>
-                <Typography sx={{ fontSize: '0.9rem', fontWeight: 600 }}>{option.label}</Typography>
-              </MenuItem>
-            ))}
-
-            <Divider sx={{ my: 0.5 }} />
-            <Typography
-              sx={{
-                px: 1,
-                pb: 0.5,
-                pt: 0.25,
-                fontSize: '0.68rem',
-                fontWeight: 800,
-                letterSpacing: '0.08em',
-                textTransform: 'uppercase',
-                color: 'text.secondary',
-              }}
-            >
-              {flaggedAs.label}
-            </Typography>
-            <MenuItem
-              onClick={() => {
-                const currentTypes = filters.entryTypes || [];
-                const remainingTypes = currentTypes.filter((type) => !IMPORTANT_FILTER_VALUES.includes(type));
-                onFiltersChange({
-                  ...filters,
-                  entryTypes: importantMomentsSelected
-                    ? (remainingTypes.length > 0 ? remainingTypes : undefined)
-                    : [...remainingTypes, ...IMPORTANT_FILTER_VALUES],
-                });
-                handleCategoryMenuClose();
-              }}
-            >
-              <Typography sx={{ mr: 1, fontSize: '1rem' }}>⭐</Typography>
-              <Typography sx={{ fontSize: '0.9rem', fontWeight: 600 }}>{SPECIAL_FILTER_TYPES.importantMoment.label}</Typography>
-            </MenuItem>
-            {flaggedAs.items.map((option) => (
               <MenuItem key={option.value} onClick={() => setCategoryTypeFilter(option.value)}>
                 <Typography sx={{ mr: 1, fontSize: '1rem' }}>{option.icon}</Typography>
                 <Typography sx={{ fontSize: '0.9rem', fontWeight: 600 }}>{option.label}</Typography>
@@ -506,39 +462,6 @@ const TimelineFilters = ({
         <Typography variant="caption" sx={{ fontWeight: 600, mb: 1, display: 'block' }}>
           ENTRY TYPES
         </Typography>
-        <ToggleButton
-          value="importantMoments"
-          selected={importantMomentsSelected}
-          onChange={() => {
-            const currentTypes = filters.entryTypes || [];
-            const remainingTypes = currentTypes.filter((type) => !IMPORTANT_FILTER_VALUES.includes(type));
-            onFiltersChange({
-              ...filters,
-              entryTypes: importantMomentsSelected
-                ? (remainingTypes.length > 0 ? remainingTypes : undefined)
-                : [...remainingTypes, ...IMPORTANT_FILTER_VALUES],
-            });
-          }}
-          sx={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 0.5,
-            px: 1.5,
-            py: 0.5,
-            fontSize: '0.75rem',
-            textTransform: 'none',
-            border: '1px solid',
-            borderColor: colors.app.cards.border,
-            borderRadius: 0.35,
-            '&.Mui-selected': {
-              bgcolor: colors.app.dailyCare.background,
-              borderColor: colors.app.dailyCare.primary,
-              color: colors.app.dailyCare.primary
-            }
-          }}
-        >
-          ⭐ {SPECIAL_FILTER_TYPES.importantMoment.label}
-        </ToggleButton>
       </Box>
 
       {/* User Role Filter */}

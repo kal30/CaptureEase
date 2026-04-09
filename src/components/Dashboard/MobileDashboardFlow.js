@@ -7,6 +7,8 @@ import { trackRenderDebug, useMountDebug } from '../../utils/renderDebug';
 const MobileDashboardFlow = ({
   children = [],
   allEntries,
+  getUserRoleForChild,
+  timelineSummary,
   onRefreshDashboard,
   onQuickEntry,
   onEditChild,
@@ -20,6 +22,7 @@ const MobileDashboardFlow = ({
   onMessages,
   onAddChildClick,
   onImportLogs,
+  onRefreshRoles,
 }) => {
   const { activeChildId, mobileView, enterChild } = useDashboardView();
   const activeChild = children.find((child) => child.id === activeChildId) || children[0] || null;
@@ -45,10 +48,13 @@ const MobileDashboardFlow = ({
   }
 
   return (
-    <MobileCaptureDashboard
+      <MobileCaptureDashboard
       child={activeChild}
       children={children}
       allEntries={allEntries}
+      timelineSummary={timelineSummary}
+      getUserRoleForChild={getUserRoleForChild}
+      onRefreshRoles={onRefreshRoles}
       onRefreshDashboard={onRefreshDashboard}
       onQuickEntry={onQuickEntry}
       onEditChild={onEditChild}

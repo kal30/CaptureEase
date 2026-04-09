@@ -60,6 +60,7 @@ const UnifiedTimeline = ({
   showFilters = true,
   showDaySummary = true,
   mobileTimeLayout = false,
+  streakLabel = '',
   focusEntryId = null,
 }) => {
   useMountDebug('UnifiedTimeline');
@@ -127,6 +128,7 @@ const UnifiedTimeline = ({
 
   // Get user role for this child
   const userRole = getUserRoleForChild?.(child?.id) || null;
+  const childDisplayName = child?.name || 'This child';
 
   // Fetch unified timeline data
   const { entries, loading, error, summary } = useUnifiedTimelineData(
@@ -521,21 +523,46 @@ const UnifiedTimeline = ({
             borderColor: "divider",
           }}
         >
-          <Typography
-            gutterBottom
-            sx={{
-              fontWeight: 700,
-              mb: 1,
-              fontSize: { xs: '1rem', md: '1.25rem' },
-              lineHeight: 1.25,
-            }}
-          >
-            {selectedDate.toLocaleDateString('en-US', { 
-              weekday: 'long', 
-              month: 'long', 
-              day: 'numeric' 
-            })}
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', mb: 1 }}>
+            <Typography
+              gutterBottom={false}
+              sx={{
+                fontWeight: 700,
+                fontSize: { xs: '1rem', md: '1.25rem' },
+                lineHeight: 1.25,
+                mb: 0,
+              }}
+            >
+              {selectedDate.toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                month: 'long', 
+                day: 'numeric' 
+              })}
+            </Typography>
+            {streakLabel ? (
+              <Box
+                sx={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 0.6,
+                  px: 1.15,
+                  py: 0.7,
+                  borderRadius: '9999px',
+                  bgcolor: colors.landing.sageLight,
+                  border: `1px solid ${colors.landing.borderLight}`,
+                  color: colors.landing.heroText,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                <Typography sx={{ fontSize: '0.82rem', lineHeight: 1 }}>
+                  🔥
+                </Typography>
+                <Typography sx={{ fontSize: '0.76rem', fontWeight: 800, letterSpacing: '-0.01em', lineHeight: 1 }}>
+                  {streakLabel}
+                </Typography>
+              </Box>
+            ) : null}
+          </Box>
           
           {/* Basic Summary */}
           <Typography variant="body2" color="text.secondary">
@@ -624,7 +651,7 @@ const UnifiedTimeline = ({
               <FavoriteBorderOutlinedIcon sx={{ fontSize: 24 }} />
             </Box>
             <Typography variant="body1" sx={{ fontWeight: 700, mb: 0.25, color: colors.landing.heroText, textAlign: 'center' }}>
-              Aravindh&apos;s day is a blank canvas!
+              {childDisplayName}&apos;s day is a blank canvas!
             </Typography>
             <Typography
               variant="caption"
@@ -702,7 +729,7 @@ const UnifiedTimeline = ({
                 textAlign: 'center',
               }}
             >
-              Aravindh&apos;s day is a blank canvas!
+              {childDisplayName}&apos;s day is a blank canvas!
             </Typography>
             <Typography
               variant="caption"
@@ -737,12 +764,14 @@ const UnifiedTimeline = ({
                     return null;
                   }
 
-                  const timestamp = new Date(entry.timestamp);
-                  const timeString = timestamp.toLocaleTimeString([], {
-                    hour: "2-digit",
+                const timestamp = new Date(entry.timestamp);
+                const timeString = timestamp.toLocaleTimeString([], {
+                  hour: "2-digit",
                   minute: "2-digit",
                 });
                 const presentation = getEntryPresentation(entry);
+                const canEditDesktopEntry = entry.collection === 'dailyLogs'
+                  && ((entry.createdBy || entry.userId || entry.authorId) === currentUser?.uid);
                 const mobileAttachment = getMobileEntryAttachment(entry, presentation.entryType);
                 const mobileMeta = getMobileEntryMeta(entry, presentation.entryType);
                 const canEditMobileEntry = entry.collection === 'dailyLogs'
@@ -1045,28 +1074,6 @@ const UnifiedTimeline = ({
                   </Box>
                 );
               })}
-              <Menu
-                anchorEl={entryMenuAnchor}
-                open={Boolean(entryMenuAnchor)}
-                onClose={handleEntryMenuClose}
-                onClick={handleEntryMenuClose}
-              >
-                <MenuItem
-                  onClick={() => entryMenuEntry && handleStartEdit(entryMenuEntry)}
-                  disabled={!entryMenuEntry || Boolean(actionLoadingId)}
-                >
-                  <EditIcon sx={{ fontSize: 16, mr: 1, color: 'text.secondary' }} />
-                  Edit
-                </MenuItem>
-                <MenuItem
-                  onClick={() => entryMenuEntry && handleDeleteEntry(entryMenuEntry)}
-                  disabled={!entryMenuEntry || Boolean(actionLoadingId)}
-                  sx={{ color: colors.semantic?.error || '#EF4444' }}
-                >
-                  <DeleteIcon sx={{ fontSize: 16, mr: 1 }} />
-                  Delete
-                </MenuItem>
-              </Menu>
             </Stack>
           </Box>
         ) : (
@@ -1103,6 +1110,8 @@ const UnifiedTimeline = ({
                     minute: "2-digit",
                   });
                   const presentation = getEntryPresentation(entry);
+                  const canEditDesktopEntry = entry.collection === 'dailyLogs'
+                    && ((entry.createdBy || entry.userId || entry.authorId) === currentUser?.uid);
 
                   return (
                     <TimelineItem
@@ -1126,6 +1135,9 @@ const UnifiedTimeline = ({
                         labelBackground={presentation.entryColor}
                         labelTextColor={presentation.labelTextColor}
                         loggedByUser={entry.loggedByUser}
+                        showActions={canEditDesktopEntry}
+                        onOpenActionsMenu={(event) => handleEntryMenuOpen(event, entry)}
+                        actionMenuDisabled={Boolean(actionLoadingId)}
                       />
                       {renderEntryBody(entry, presentation.entryType)}
                     </TimelineItem>
@@ -1136,6 +1148,29 @@ const UnifiedTimeline = ({
           </Box>
         )
       )}
+
+      <Menu
+        anchorEl={entryMenuAnchor}
+        open={Boolean(entryMenuAnchor)}
+        onClose={handleEntryMenuClose}
+        onClick={handleEntryMenuClose}
+      >
+        <MenuItem
+          onClick={() => entryMenuEntry && handleStartEdit(entryMenuEntry)}
+          disabled={!entryMenuEntry || Boolean(actionLoadingId)}
+        >
+          <EditIcon sx={{ fontSize: 16, mr: 1, color: 'text.secondary' }} />
+          Edit
+        </MenuItem>
+        <MenuItem
+          onClick={() => entryMenuEntry && handleDeleteEntry(entryMenuEntry)}
+          disabled={!entryMenuEntry || Boolean(actionLoadingId)}
+          sx={{ color: colors.semantic?.error || '#EF4444' }}
+        >
+          <DeleteIcon sx={{ fontSize: 16, mr: 1 }} />
+          Delete
+        </MenuItem>
+      </Menu>
     </Box>
   );
 };

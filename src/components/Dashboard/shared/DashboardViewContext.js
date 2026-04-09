@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 const DashboardViewContext = createContext(null);
+export const ACTIVE_CHILD_STORAGE_KEY = 'lifelog:activeChildId';
 
 export const DashboardViewProvider = ({
   children,
@@ -42,6 +43,18 @@ export const DashboardViewProvider = ({
       lastSyncedChildIdRef.current = activeChildId;
       onActiveChildChange?.(activeChildId);
     }
+
+    if (typeof window !== 'undefined') {
+      if (activeChildId) {
+        window.localStorage.setItem(ACTIVE_CHILD_STORAGE_KEY, activeChildId);
+      } else {
+        window.localStorage.removeItem(ACTIVE_CHILD_STORAGE_KEY);
+      }
+
+      window.dispatchEvent(new CustomEvent('captureez:active-child-changed', {
+        detail: { childId: activeChildId },
+      }));
+    }
   }, [activeChildId, onActiveChildChange]);
 
   useEffect(() => {
@@ -49,8 +62,19 @@ export const DashboardViewProvider = ({
       setMobileView('switchboard');
     };
 
+    const handleSetActiveChild = (event) => {
+      const nextChildId = event?.detail?.childId;
+      if (nextChildId) {
+        setActiveChildId(nextChildId);
+      }
+    };
+
     window.addEventListener('captureez:open-switchboard', handleOpenSwitchboard);
-    return () => window.removeEventListener('captureez:open-switchboard', handleOpenSwitchboard);
+    window.addEventListener('captureez:set-active-child', handleSetActiveChild);
+    return () => {
+      window.removeEventListener('captureez:open-switchboard', handleOpenSwitchboard);
+      window.removeEventListener('captureez:set-active-child', handleSetActiveChild);
+    };
   }, []);
 
   const value = useMemo(() => ({

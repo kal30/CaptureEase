@@ -1,5 +1,6 @@
 import React from 'react';
-import { Avatar, Box, Typography } from '@mui/material';
+import { Avatar, Box, IconButton, Typography } from '@mui/material';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 
 // EntryHeader renders the label + time + optional user, with configurable time formatting.
 // Preferred order of time rendering:
@@ -19,6 +20,9 @@ const EntryHeader = ({
   locale, // e.g., 'en-US'
   timeOptions, // Intl.DateTimeFormatOptions
   hideTime = false,
+  showActions = false,
+  onOpenActionsMenu = null,
+  actionMenuDisabled = false,
 }) => {
   const safeLocale = locale || (typeof navigator !== 'undefined' ? navigator.language : 'en-US');
 
@@ -74,23 +78,43 @@ const EntryHeader = ({
           </Typography>
         )}
       </Box>
-      {loggedByUser && loggerInitials && (
-        <Avatar
-          sx={{
-            width: { xs: 24, md: 26 },
-            height: { xs: 24, md: 26 },
-            flexShrink: 0,
-            fontSize: { xs: '0.68rem', md: '0.72rem' },
-            fontWeight: 800,
-            bgcolor: 'rgba(255, 255, 255, 0.82)',
-            color: 'text.secondary',
-            border: '1px solid rgba(203, 213, 225, 0.8)',
-          }}
-          title={loggedByUser}
-        >
-          {loggerInitials}
-        </Avatar>
-      )}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4 }}>
+        {showActions && onOpenActionsMenu ? (
+          <IconButton
+            size="small"
+            onClick={onOpenActionsMenu}
+            disabled={actionMenuDisabled}
+            sx={{
+              width: 28,
+              height: 28,
+              borderRadius: 0.45,
+              bgcolor: 'rgba(255,255,255,0.88)',
+              color: 'text.secondary',
+              border: '1px solid rgba(203, 213, 225, 0.8)',
+              flexShrink: 0,
+            }}
+          >
+            <MoreVertIcon sx={{ fontSize: 16 }} />
+          </IconButton>
+        ) : null}
+        {loggedByUser && loggerInitials && (
+          <Avatar
+            sx={{
+              width: { xs: 24, md: 26 },
+              height: { xs: 24, md: 26 },
+              flexShrink: 0,
+              fontSize: { xs: '0.68rem', md: '0.72rem' },
+              fontWeight: 800,
+              bgcolor: 'rgba(255, 255, 255, 0.82)',
+              color: 'text.secondary',
+              border: '1px solid rgba(203, 213, 225, 0.8)',
+            }}
+            title={loggedByUser}
+          >
+            {loggerInitials}
+          </Avatar>
+        )}
+      </Box>
     </Box>
   );
 };

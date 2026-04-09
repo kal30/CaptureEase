@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Box,
   Container,
@@ -47,7 +47,7 @@ import { PRODUCT_NAME_TITLE } from "../constants/config";
 
 const PanelDashboard = () => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isMobile = useMediaQuery('(max-width:1023.95px)');
   const isDesktop = !isMobile;
   const hook = usePanelDashboard({ activeChildOnly: isMobile });
   const importFileInputRef = useRef(null);
@@ -105,6 +105,70 @@ const PanelDashboard = () => {
     setShowMedicalLogPanel(false);
     setMedicalLogChild(null);
   };
+
+  useEffect(() => {
+    const handleDashboardAction = (event) => {
+      const action = event?.detail?.action;
+      const childId = event?.detail?.childId;
+      const child = hook.children.find((item) => item.id === childId) || hook.selectedChild || hook.children[0] || null;
+
+      if (!action) {
+        return;
+      }
+
+      switch (action) {
+        case "add-child":
+          hook.setShowAddChildModal(true);
+          break;
+        case "invite-caregiver":
+          if (child) {
+            hook.handleInviteTeamMember(child.id);
+          }
+          break;
+        case "start-chat":
+          if (child) {
+            hook.handleMessages(child);
+          }
+          break;
+        case "prep-for-therapy":
+          if (child) {
+            hook.handleShowCareReport(child);
+          }
+          break;
+        case "import-logs":
+          handleImportLogsClick(child);
+          break;
+        case "edit-child":
+          if (child) {
+            hook.handleEditChild(child);
+          }
+          break;
+        case "delete-child":
+          if (child) {
+            hook.handleDeleteChild(child);
+          }
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener("captureez:dashboard-action", handleDashboardAction);
+
+    return () => {
+      window.removeEventListener("captureez:dashboard-action", handleDashboardAction);
+    };
+  }, [
+    hook.children,
+    hook.handleDeleteChild,
+    hook.handleEditChild,
+    hook.handleInviteTeamMember,
+    hook.handleMessages,
+    hook.handleShowCareReport,
+    hook.selectedChild,
+    hook.setShowAddChildModal,
+    handleImportLogsClick,
+  ]);
 
   const handleImportFileChange = async (event) => {
     const file = event.target.files?.[0];
@@ -304,6 +368,7 @@ const PanelDashboard = () => {
               onMessages={hook.handleMessages}
               onImportLogs={handleImportLogsClick}
               onAddChildClick={() => hook.setShowAddChildModal(true)}
+              onRefreshRoles={hook.refreshRoles}
               showSleepLogSheet={
                 hook.showSleepLogSheet
                 || hook.showFoodLogSheet
