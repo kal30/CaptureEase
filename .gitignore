@@ -76,3 +76,4 @@ ignore.md
 
 # Temporary or unused source
 src/crap/firebasedetails
+.firebase/hosting.*.cache
