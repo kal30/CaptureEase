@@ -6,6 +6,7 @@ import { PRODUCT_NAME_TITLE, PRODUCT_TAGLINE } from "../../constants/config";
 const Footer = () => {
   return (
     <Box
+      data-cy="landing-footer"
       sx={{
         padding: "12px 0",
         textAlign: "center",

@@ -115,6 +115,7 @@ const HeaderSection = () => {
 
   return (
     <Box
+      data-cy="landing-hero"
       sx={{
         backgroundColor: "transparent",
         position: "relative",
@@ -214,6 +215,7 @@ const HeaderSection = () => {
                 component={RouterLink}
                 to={tryLifelogPath}
                 variant="contained"
+                data-cy="landing-start-tracking-btn"
                 sx={{ ...landingPrimaryButtonStyles, height: 48, minHeight: 48 }}
               >
                 Start Tracking Free
@@ -222,6 +224,7 @@ const HeaderSection = () => {
                 component={RouterLink}
                 to="/#how-it-works"
                 variant="outlined"
+                data-cy="landing-how-it-works-btn"
                 sx={{ ...landingSecondaryButtonStyles, height: 48, minHeight: 48 }}
               >
                 See How It Works
@@ -229,6 +232,7 @@ const HeaderSection = () => {
             </Box>
 
             <Box
+              data-cy="founding-family-form"
               component="form"
               onSubmit={handleFoundingFamilySubmit}
               sx={{
@@ -263,18 +267,18 @@ const HeaderSection = () => {
                   gap: 1,
                 }}
               >
-                  <TextField
-                    type="email"
-                    placeholder="Enter your email"
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                    fullWidth
-                    size="small"
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        height: 48,
-                        borderRadius: "12px",
-                      },
+                <TextField
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  fullWidth
+                  size="small"
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      height: 48,
+                      borderRadius: "12px",
+                    },
                     "& .MuiOutlinedInput-input": {
                       py: 0,
                       px: 1.75,

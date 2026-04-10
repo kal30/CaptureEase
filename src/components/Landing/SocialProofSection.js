@@ -10,7 +10,7 @@ const founderStoryParagraphs = [
 
 const SocialProofSection = () => {
   return (
-    <Box sx={{ px: { xs: 2, md: 3 }, py: { xs: 3, md: 4 } }}>
+    <Box data-cy="landing-social-proof" sx={{ px: { xs: 2, md: 3 }, py: { xs: 3, md: 4 } }}>
       <Container maxWidth="xl">
         <Paper
           elevation={0}

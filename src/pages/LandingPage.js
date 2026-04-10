@@ -8,7 +8,7 @@ import { landingPageStyles } from "../assets/theme/landingTheme";
 
 const LandingPage = () => {
   return (
-    <Box sx={landingPageStyles}>
+    <Box sx={landingPageStyles} data-cy="landing-page">
       <HeaderSection />
       <SocialProofSection />
       <HowItWorksSection />

@@ -32,6 +32,7 @@ const HowItWorksSection = () => {
   return (
     <Box
       id="how-it-works"
+      data-cy="landing-how-it-works"
       sx={{ px: { xs: 2, md: 3 }, py: { xs: 4, md: 5 }, scrollMarginTop: 96 }}
     >
       <Container maxWidth="lg">

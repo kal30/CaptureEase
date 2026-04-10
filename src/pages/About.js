@@ -23,6 +23,7 @@ export default function About() {
 
   return (
     <Box
+      data-cy="about-page"
       sx={{
         backgroundColor: "background.default",
         pt: { xs: 6, md: 8 },
@@ -40,6 +41,7 @@ export default function About() {
           <Grid item xs={12} sm={7} md={7}>
             <Typography
               component="h1"
+              data-cy="about-title"
               sx={{
                 fontFamily: '"Dancing Script", cursive',
                 color: colors.marketing.about.title,
@@ -155,6 +157,7 @@ export default function About() {
                 color="primary"
                 size="large"
                 onClick={handleGetStarted}
+                data-cy="about-get-started-btn"
                 sx={{
                   px: 4,
                   py: 1.4,
@@ -179,6 +182,7 @@ export default function About() {
             xs={12}
             sm={5}
             md={5}
+            data-cy="about-image-column"
             sx={{
               display: "flex",
               justifyContent: { xs: "center", md: "flex-end" },
