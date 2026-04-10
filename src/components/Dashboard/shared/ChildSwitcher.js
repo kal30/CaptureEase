@@ -49,6 +49,7 @@ export const ChildSwitcherTrigger = ({
   return (
     <Button
       onClick={onClick}
+      data-cy="dashboard-child-switcher"
       sx={{
         minWidth: 0,
         px: showBorder ? 1.2 : 0,
@@ -142,7 +143,7 @@ export const ChildSwitcherPanel = ({
   onAddChild,
   showCareTeamSummary = false,
   showAddChild = false,
-  title = 'Switch Child',
+  title = 'Who are we logging for today?',
   subtitle = '',
   addChildLabel = 'Add Child',
   currentLabel = 'Current',
@@ -156,11 +157,12 @@ export const ChildSwitcherPanel = ({
         <Typography
           sx={{
             fontFamily: "'Outfit', sans-serif",
-            fontSize: '12px',
+            fontSize: '0.98rem',
             fontWeight: 700,
-            textTransform: 'uppercase',
-            letterSpacing: '0.1em',
-            color: colors.landing.textMuted,
+            textTransform: 'none',
+            letterSpacing: '-0.02em',
+            color: colors.landing.heroText,
+            lineHeight: 1.15,
           }}
         >
           {title}
@@ -183,6 +185,7 @@ export const ChildSwitcherPanel = ({
             <Button
               key={child.id}
               onClick={() => onSelectChild?.(child.id)}
+              data-cy="dashboard-child-switch-option"
               fullWidth
               sx={{
                 textTransform: 'none',
@@ -280,12 +283,12 @@ export const ChildSwitcherPanel = ({
               p: 1.25,
               borderRadius: '16px',
               border: `1px dashed ${colors.landing.borderMedium}`,
-              bgcolor: colors.landing.surface,
+              bgcolor: alpha(colors.brand.ink, 0.06),
               color: colors.landing.heroText,
               fontWeight: 800,
               boxShadow: 'none',
               '&:hover': {
-                bgcolor: colors.landing.surfaceSoft,
+                bgcolor: alpha(colors.brand.ink, 0.09),
                 borderColor: colors.brand.ink,
                 boxShadow: 'none',
               },
@@ -298,4 +301,3 @@ export const ChildSwitcherPanel = ({
     </Stack>
   );
 };
-

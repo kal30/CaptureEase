@@ -493,7 +493,6 @@ const DesktopDashboardWorkspace = ({
             onSelectChild={handleDesktopChildSelect}
             showCareTeamSummary={false}
             showAddChild={false}
-            title="Switch Child"
           />
         </Box>
       </Menu>

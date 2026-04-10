@@ -872,22 +872,6 @@ const MobileCaptureDashboard = ({
             />
           </Box>
 
-          <Typography
-            sx={{
-              px: 0.75,
-              pt: 0.25,
-              pb: 0.75,
-              fontFamily: 'Outfit, sans-serif',
-              fontSize: '12px',
-              fontWeight: 700,
-              textTransform: 'uppercase',
-              letterSpacing: '0.1em',
-              color: colors.landing.textMuted,
-            }}
-          >
-            Switch Child
-          </Typography>
-
           <ChildSwitcherPanel
             children={children}
             activeChildId={activeChild?.id}
@@ -903,7 +887,6 @@ const MobileCaptureDashboard = ({
             }}
             showCareTeamSummary
             showAddChild={Boolean(onAddChildClick)}
-            title="Switch Child"
             subtitle="Choose who you&apos;re logging for. The care team and your role are shown on each profile."
           />
         </Box>
