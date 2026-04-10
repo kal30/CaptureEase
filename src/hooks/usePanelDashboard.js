@@ -11,6 +11,7 @@ import { useDailyCareStatus } from "./useDailyCareStatus";
 import { listenForFollowUps, initializeNotificationsForPendingFollowUps, processQuickResponses, startQuickResponseListener } from "../services/followUpService";
 import { analyzeOtherIncidentPatterns, getIncidents } from "../services/incidentService";
 import { getTimelineMetaForCategory } from "../constants/logTypeRegistry";
+import { getE2EMockDashboardState, isE2EMockEnabled } from "../services/e2eMock";
 
 const toEntryDate = (timestamp) => timestamp?.toDate?.() || new Date(timestamp);
 
@@ -86,6 +87,7 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
   const theme = useTheme();
   const navigate = useNavigate();
   const [user] = useAuthState(auth);
+  const isMockMode = isE2EMockEnabled();
   const { currentChildId, setCurrentChildId } = useChildContext();
   const {
     loading: roleLoading,
@@ -147,6 +149,10 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
   const childIdsKey = (children || []).map((child) => child.id).join('|');
 
   useEffect(() => {
+    if (isMockMode) {
+      return;
+    }
+
     // Start SW quick response listener once on mount
     startQuickResponseListener();
 
@@ -180,12 +186,20 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
   }, [roleLoading, childrenAccessKey, childrenWithAccess]);
 
   useEffect(() => {
+    if (isMockMode) {
+      return;
+    }
+
     if (!currentChildId && children.length > 0) {
       setCurrentChildId(children[0].id);
     }
-  }, [currentChildId, children, setCurrentChildId]);
+  }, [currentChildId, children, setCurrentChildId, isMockMode]);
 
   useEffect(() => {
+    if (isMockMode) {
+      return;
+    }
+
     const unsubscribes = [];
     const entriesByChild = {};
     const allEntriesByChild = {};
@@ -273,9 +287,13 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
         if (unsub) unsub();
       });
     };
-  }, [childIdsKey, currentChildId, activeChildOnly]);
+  }, [childIdsKey, currentChildId, activeChildOnly, isMockMode]);
 
   useEffect(() => {
+    if (isMockMode) {
+      return;
+    }
+
     if (!children.length) {
       return undefined;
     }
@@ -370,10 +388,14 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
 
     window.addEventListener('captureez:timeline-entry-created', handleTimelineEntryCreated);
     return () => window.removeEventListener('captureez:timeline-entry-created', handleTimelineEntryCreated);
-  }, [children, allEntries]);
+  }, [children, allEntries, isMockMode]);
 
   // Listen for follow-up reminders
   useEffect(() => {
+    if (isMockMode) {
+      return;
+    }
+
     if (children.length === 0) return;
 
     const childIds = children.map(child => child.id);
@@ -386,7 +408,7 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
     const cleanup = listenForFollowUps(childIds, handleFollowUpNeeded);
 
     return cleanup;
-  }, [children]);
+  }, [children, isMockMode]);
 
   const handleQuickDataEntry = (child, type, event) => {
     if (event) {
@@ -844,6 +866,10 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
   const ownChildren = children.filter(child => getUserRoleForChild?.(child.id) === USER_ROLES.CARE_OWNER);
   const familyChildren = children.filter(child => getUserRoleForChild?.(child.id) === USER_ROLES.CARE_PARTNER);
   const professionalChildren = children.filter(child => [USER_ROLES.CAREGIVER, USER_ROLES.THERAPIST].includes(getUserRoleForChild?.(child.id)));
+
+  if (isMockMode) {
+    return getE2EMockDashboardState();
+  }
 
   return {
     user,

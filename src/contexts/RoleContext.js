@@ -9,6 +9,7 @@ import {
   populateChildTeamMembers
 } from '../services/rolePermissionService';
 import { USER_ROLES, PERMISSIONS } from '../constants/roles';
+import { getE2EMockRoleContext, isE2EMockEnabled } from '../services/e2eMock';
 
 const defaultRoleContext = {
   userRoles: {},
@@ -51,9 +52,14 @@ export const RoleProvider = ({ children }) => {
   const [userDisplayInfo, setUserDisplayInfo] = useState({}); // childId -> display info
   const [childrenWithAccess, setChildrenWithAccess] = useState([]);
   const [loading, setLoading] = useState(true);
+  const isMockMode = isE2EMockEnabled();
 
   // Load user's roles and permissions for all children
   useEffect(() => {
+    if (isMockMode) {
+      return;
+    }
+
     const loadUserRolesAndPermissions = async () => {
       if (!user) {
         setUserRoles({});
@@ -102,7 +108,7 @@ export const RoleProvider = ({ children }) => {
     };
 
     loadUserRolesAndPermissions();
-  }, [user]);
+  }, [user, isMockMode]);
 
   // Helper functions
   const getUserRoleForChild = (childId) => {
@@ -193,6 +199,28 @@ export const RoleProvider = ({ children }) => {
     USER_ROLES,
     PERMISSIONS
   };
+
+  if (isMockMode) {
+    const mockContext = getE2EMockRoleContext();
+
+    return (
+      <RoleContext.Provider value={{
+        ...defaultRoleContext,
+        ...mockContext,
+        getUserRoleForChild: (childId) => mockContext.userRoles[childId] || null,
+        hasPermissionForChild: () => true,
+        canAddDataForChild: () => true,
+        isReadOnlyForChild: () => false,
+        getDisplayInfoForChild: (childId) => mockContext.userDisplayInfo[childId] || null,
+        isPrimaryCaregiver: () => true,
+        canInviteOthers: () => true,
+        canManageChild: () => true,
+        refreshRoles: async () => {},
+      }}>
+        {children}
+      </RoleContext.Provider>
+    );
+  }
 
   return <RoleContext.Provider value={value}>{children}</RoleContext.Provider>;
 };
