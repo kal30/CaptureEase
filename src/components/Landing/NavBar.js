@@ -31,6 +31,7 @@ import PhoneIphoneIcon from "@mui/icons-material/PhoneIphone";
 import usePWAInstallPrompt from "../../hooks/usePWAInstallPrompt";
 import colors from "../../assets/theme/colors";
 import { ACTIVE_CHILD_STORAGE_KEY } from "../Dashboard/shared/DashboardViewContext";
+import ChildActionsMenuContent from "../Dashboard/shared/ChildActionsMenuContent";
 import { getRoleDisplay } from "../../constants/roles";
 import { PRODUCT_NAME_TITLE } from "../../constants/config";
 import BrandWordmark from "../UI/BrandWordmark";
@@ -479,95 +480,20 @@ const Navbar = () => {
           },
         }}
       >
-        {dashboardActiveChild?.medicalProfile?.foodAllergies?.find(Boolean) || dashboardActiveChild?.medicalProfile?.currentMedications?.find(Boolean) ? (
-          <>
-            <Box sx={{ px: 1.5, pt: 1.5, pb: 1 }}>
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
-                  px: 1.25,
-                  py: 1.1,
-                  borderRadius: '12px',
-                  bgcolor: alpha(colors.semantic.error, 0.09),
-                  color: colors.semantic.error,
-                  border: `1px solid ${alpha(colors.semantic.error, 0.18)}`,
-                }}
-              >
-                <Typography sx={{ fontWeight: 700, color: colors.landing.heroText }}>
-                  {dashboardActiveChild?.medicalProfile?.foodAllergies?.find(Boolean) || dashboardActiveChild?.medicalProfile?.currentMedications?.find(Boolean)}
-                </Typography>
-              </Box>
-            </Box>
-            <Divider sx={{ my: 0.5 }} />
-          </>
-        ) : null}
-        <Box sx={{ px: 1.5, pb: 0.75, pt: 1 }}>
-          <Typography sx={{ fontSize: '0.72rem', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: colors.landing.textMuted }}>
-            Care Team
-          </Typography>
+        <Box sx={{ px: 0.5 }}>
+          <ChildActionsMenuContent
+            child={dashboardActiveChild}
+            userRole={getUserRoleForChild?.(dashboardActiveChild?.id)}
+            careTeamCount={Array.isArray(dashboardActiveChild?.users?.members) ? dashboardActiveChild.users.members.length : 0}
+            onAddChild={() => handleDashboardAction('add-child')}
+            onGoToCareTeam={() => handleDashboardAction('view-care-team')}
+            onEditChild={() => handleDashboardAction('edit-child')}
+            onInviteTeamMember={() => handleDashboardAction('invite-caregiver')}
+            onDeleteChild={() => handleDashboardAction('delete-child')}
+            onPrepForTherapy={() => handleDashboardAction('prep-for-therapy')}
+            onImportLogs={() => handleDashboardAction('import-logs')}
+          />
         </Box>
-        <MenuItem
-          onClick={() => handleDashboardAction('view-care-team')}
-          sx={{ gap: 1.25, py: 1.25, px: 1.5, minHeight: 48 }}
-        >
-          <ListItemIcon sx={{ minWidth: 34 }}>
-            <GroupIcon sx={{ fontSize: 18, color: colors.brand.deep }} />
-          </ListItemIcon>
-          View care team
-        </MenuItem>
-        <MenuItem
-          onClick={() => handleDashboardAction('invite-caregiver')}
-          sx={{ gap: 1.25, py: 1.25, px: 1.5, minHeight: 48 }}
-        >
-          <ListItemIcon sx={{ minWidth: 34 }}>
-            <GroupIcon sx={{ fontSize: 18, color: colors.brand.ink }} />
-          </ListItemIcon>
-          Add careteam
-        </MenuItem>
-        {Array.isArray(dashboardActiveChild?.users?.members) && dashboardActiveChild.users.members.length > 1 ? (
-          <MenuItem
-            onClick={() => handleDashboardAction('start-chat')}
-            sx={{ gap: 1.25, py: 1.25, px: 1.5, minHeight: 48 }}
-          >
-            <ListItemIcon sx={{ minWidth: 34 }}>
-              <GroupIcon sx={{ fontSize: 18, color: colors.brand.deep }} />
-            </ListItemIcon>
-            Start chat
-          </MenuItem>
-        ) : null}
-        <Divider sx={{ my: 0.5 }} />
-        <Box sx={{ px: 1.5, pb: 0.75, pt: 1 }}>
-          <Typography sx={{ fontSize: '0.72rem', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: colors.landing.textMuted }}>
-            Tools
-          </Typography>
-        </Box>
-        <MenuItem onClick={() => handleDashboardAction('prep-for-therapy')} sx={{ gap: 1.25, py: 1.25, px: 1.5, minHeight: 48 }}>
-          <ListItemIcon sx={{ minWidth: 34 }}>
-            <AutoAwesomeOutlinedIcon sx={{ fontSize: 18, color: colors.brand.ink }} />
-          </ListItemIcon>
-          Prep for therapy
-        </MenuItem>
-        <MenuItem onClick={() => handleDashboardAction('import-logs')} sx={{ gap: 1.25, py: 1.25, px: 1.5, minHeight: 48 }}>
-          <ListItemIcon sx={{ minWidth: 34 }}>
-            <AddToHomeScreenIcon sx={{ fontSize: 18, color: colors.brand.deep }} />
-          </ListItemIcon>
-          Import .xlsx or .docx
-        </MenuItem>
-        <MenuItem onClick={() => handleDashboardAction('edit-child')} sx={{ gap: 1.25, py: 1.25, px: 1.5, minHeight: 48 }}>
-          <ListItemIcon sx={{ minWidth: 34 }}>
-            <PersonOutlineIcon sx={{ fontSize: 18, color: colors.brand.ink }} />
-          </ListItemIcon>
-          Edit Child Profile
-        </MenuItem>
-        <MenuItem onClick={() => handleDashboardAction('delete-child')} sx={{ gap: 1.25, py: 1.25, px: 1.5, minHeight: 48, color: 'error.main' }}>
-          <ListItemIcon sx={{ minWidth: 34 }}>
-            <LogoutIcon sx={{ fontSize: 18, color: 'error.main' }} />
-          </ListItemIcon>
-          Delete Child Profile
-        </MenuItem>
-        <Divider sx={{ my: 0.5 }} />
         <Box sx={{ px: 1.5, pb: 0.75, pt: 1 }}>
           <Typography sx={{ fontSize: '0.72rem', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: colors.landing.textMuted }}>
             Account

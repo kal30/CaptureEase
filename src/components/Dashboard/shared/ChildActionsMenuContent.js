@@ -9,11 +9,10 @@ import {
 import {
   EditOutlined as EditOutlinedIcon,
   DeleteOutline as DeleteOutlineIcon,
-  SwapHoriz as SwapHorizIcon,
+  WarningAmberOutlined as WarningAmberOutlinedIcon,
   AutoAwesomeOutlined as AutoAwesomeOutlinedIcon,
   FileUploadOutlined as FileUploadOutlinedIcon,
   GroupsOutlined as GroupsOutlinedIcon,
-  ChatBubbleOutline as ChatBubbleOutlineIcon,
   PersonAddAlt1Outlined as PersonAddIcon,
 } from '@mui/icons-material';
 import { alpha } from '@mui/material/styles';
@@ -60,27 +59,25 @@ const ActionItem = ({ icon, children, onClick, color = colors.landing.heroText, 
 const ChildActionsMenuContent = ({
   child,
   userRole,
-  careTeamCount = 0,
   onEditChild,
   onInviteTeamMember,
   onGoToCareTeam,
   onDeleteChild,
-  onSwitchChild,
   onPrepForTherapy,
   onImportLogs,
-  onStartChat,
   onAddChild,
   showWarning = true,
-  showSwitchChild = true,
-  showAddChild = true,
 }) => {
   const warningLabel = showWarning ? getWarningLabel(child) : null;
   const canInvite = userRole === USER_ROLES.CARE_OWNER && typeof onInviteTeamMember === 'function';
   const canGoToCareTeam = typeof onGoToCareTeam === 'function';
   const canEdit = typeof onEditChild === 'function';
   const canDelete = typeof onDeleteChild === 'function';
-  const canStartChat = typeof onStartChat === 'function' && careTeamCount > 1;
-  const canSwitch = typeof onSwitchChild === 'function' && showSwitchChild;
+  const canAddAnotherPerson = typeof onAddChild === 'function';
+  const childName = child?.name || 'This child';
+  const teamLabel = `${childName}’s Team`;
+  const infoLabel = `Edit ${childName}’s Info`;
+  const recordLabel = `Delete ${childName}’s Record`;
 
   return (
     <>
@@ -100,7 +97,7 @@ const ChildActionsMenuContent = ({
                 border: `1px solid ${alpha(colors.semantic.error, 0.18)}`,
               }}
             >
-              <AutoAwesomeOutlinedIcon sx={{ fontSize: 18, color: colors.semantic.error }} />
+              <WarningAmberOutlinedIcon sx={{ fontSize: 18, color: colors.semantic.error }} />
               <Typography sx={{ fontWeight: 700, color: colors.landing.heroText }}>
                 {warningLabel}
               </Typography>
@@ -110,37 +107,19 @@ const ChildActionsMenuContent = ({
         </>
       ) : null}
 
-      {showAddChild && typeof onAddChild === 'function' ? (
-        <ActionItem
-          icon={<PersonAddIcon />}
-          onClick={onAddChild}
-        >
-          Add child
-        </ActionItem>
-      ) : null}
-
-      {canSwitch ? (
-        <ActionItem
-          icon={<SwapHorizIcon />}
-          onClick={onSwitchChild}
-        >
-          Switch Child
-        </ActionItem>
-      ) : null}
-
       <Box sx={{ px: 1.5, pb: 0.75, pt: 1 }}>
         <Typography sx={{ fontSize: '0.72rem', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: colors.landing.textMuted }}>
-          Care Team
+          {teamLabel}
         </Typography>
       </Box>
 
       {canInvite ? (
         <ActionItem
-          icon={<GroupsOutlinedIcon />}
+          icon={<PersonAddIcon />}
           onClick={() => onInviteTeamMember?.(child?.id)}
           iconColor={colors.brand.ink}
         >
-          Add careteam
+          Invite Team Member
         </ActionItem>
       ) : null}
 
@@ -150,17 +129,7 @@ const ChildActionsMenuContent = ({
           onClick={() => onGoToCareTeam?.(child)}
           iconColor={colors.brand.deep}
         >
-          View care team
-        </ActionItem>
-      ) : null}
-
-      {canStartChat ? (
-        <ActionItem
-          icon={<ChatBubbleOutlineIcon />}
-          onClick={() => onStartChat?.(child)}
-          iconColor={colors.brand.deep}
-        >
-          Start chat
+          Manage Team
         </ActionItem>
       ) : null}
 
@@ -194,7 +163,17 @@ const ChildActionsMenuContent = ({
           onClick={() => onEditChild?.(child)}
           iconColor={colors.brand.ink}
         >
-          Edit Child Profile
+          {infoLabel}
+        </ActionItem>
+      ) : null}
+
+      {canAddAnotherPerson ? (
+        <ActionItem
+          icon={<PersonAddIcon />}
+          onClick={() => onAddChild?.(child)}
+          iconColor={colors.brand.deep}
+        >
+          Add another person
         </ActionItem>
       ) : null}
 
@@ -205,7 +184,7 @@ const ChildActionsMenuContent = ({
           color="error.main"
           iconColor="error.main"
         >
-          Delete Child Profile
+          {recordLabel}
         </ActionItem>
       ) : null}
     </>
