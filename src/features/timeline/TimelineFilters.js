@@ -1,0 +1,627 @@
+import React, { useState } from "react";
+import {
+  Box,
+  Button,
+  FormControl,
+  FormControlLabel,
+  InputLabel,
+  Select,
+  MenuItem,
+  Chip,
+  TextField,
+  Typography,
+  Paper,
+  Divider,
+  IconButton,
+  Popover,
+  Switch,
+} from "@mui/material";
+import { useMediaQuery, useTheme } from "@mui/material";
+import {
+  Person as PersonIcon,
+  Today as DateIcon,
+  Search as SearchIcon,
+  Clear as ClearIcon,
+  CalendarToday as CalendarIcon,
+  ArrowDropDown as ArrowDropDownIcon,
+} from "@mui/icons-material";
+import MiniCalendar from "../../components/UI/MiniCalendar";
+import { getTimelineFilterSections } from "../../constants/logTypeRegistry";
+import { getActiveTimelineFilterCount } from "../../components/Timeline/utils/filterCounts";
+import { getAllQuickTagOptions } from "../../utils/quickTags";
+import colors from "../../assets/theme/colors";
+
+/**
+ * TimelineFilters - Filter controls for unified timeline
+ * Allows filtering by entry type, user role, and date navigation
+ */
+const TimelineFilters = ({
+  filters = {},
+  onFiltersChange,
+  selectedDate,
+  onDateChange,
+  summary: _summary = {},
+  compact = false,
+  mobileLayout = false,
+  hideDateFilter = false,
+  availableTags = [],
+  sx = {},
+}) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const [datePickerAnchor, setDatePickerAnchor] = useState(null);
+  const [categoryMenuAnchor, setCategoryMenuAnchor] = useState(null);
+  const [searchText, setSearchText] = useState(filters.searchText || "");
+  const [searchExpanded, setSearchExpanded] = useState(Boolean(filters.searchText));
+
+  const { allEntries, entryType } = getTimelineFilterSections();
+  const CATEGORY_FILTER_VALUES = [
+    ...entryType.items.map((option) => option.value),
+    "health",
+  ];
+
+  const handleUserRoleFilter = (event) => {
+    const value = event.target.value;
+    onFiltersChange({
+      ...filters,
+      userRoles: value === "" ? [] : typeof value === "string" ? [value] : value,
+    });
+  };
+
+  const handleDateChange = (newDate) => {
+    if (onDateChange) {
+      onDateChange(newDate);
+    }
+    onFiltersChange({
+      ...filters,
+      selectedDate: newDate,
+    });
+    setDatePickerAnchor(null);
+  };
+
+  const handleSearchChange = (event) => {
+    const value = event.target.value;
+    setSearchText(value);
+    onFiltersChange({
+      ...filters,
+      searchText: value || undefined,
+    });
+  };
+
+  const clearAllFilters = () => {
+    setSearchText("");
+    setSearchExpanded(false);
+    onFiltersChange({});
+  };
+
+  const handleDatePickerOpen = (event) => {
+    setDatePickerAnchor(event.currentTarget);
+  };
+
+  const handleDatePickerClose = () => {
+    setDatePickerAnchor(null);
+  };
+
+  const handleCategoryMenuOpen = (event) => {
+    setCategoryMenuAnchor(event.currentTarget);
+  };
+
+  const handleCategoryMenuClose = () => {
+    setCategoryMenuAnchor(null);
+  };
+
+  const setCategoryTypeFilter = (categoryValue) => {
+    const currentTypes = filters.entryTypes || [];
+    const preservedTypes = currentTypes.filter((type) => !CATEGORY_FILTER_VALUES.includes(type));
+
+    onFiltersChange({
+      ...filters,
+      entryTypes: categoryValue
+        ? [...preservedTypes, categoryValue]
+        : preservedTypes.length > 0
+          ? preservedTypes
+          : undefined,
+    });
+    handleCategoryMenuClose();
+  };
+
+  const clearEntryTypeFilters = () => {
+    onFiltersChange({
+      ...filters,
+      entryTypes: undefined,
+    });
+    handleCategoryMenuClose();
+  };
+
+  const activeTagFilters = Array.isArray(filters.tagFilters) ? filters.tagFilters : [];
+  const toggleTagFilter = (tagKey) => {
+    const nextTags = activeTagFilters.includes(tagKey)
+      ? activeTagFilters.filter((key) => key !== tagKey)
+      : [...activeTagFilters, tagKey];
+
+    onFiltersChange({
+      ...filters,
+      tagFilters: nextTags.length > 0 ? nextTags : undefined,
+    });
+  };
+
+  const handleImportantToggle = (event) => {
+    onFiltersChange({
+      ...filters,
+      importantOnly: event.target.checked || undefined,
+    });
+  };
+
+  const selectedCategoryType = (filters.entryTypes || []).find((type) =>
+    CATEGORY_FILTER_VALUES.includes(type)
+  );
+  const selectedCategoryOption = entryType.items.find(
+    (option) => option.value === selectedCategoryType
+  );
+  const filterTriggerLabel = selectedCategoryOption
+    ? `${selectedCategoryOption.icon} ${selectedCategoryOption.label}`
+    : "Filters";
+
+  const userRoleOptions = [
+    { value: "care_owner", label: "👑 Care Owner" },
+    { value: "care_partner", label: "👨‍👩‍👧‍👦 Care Partner" },
+    { value: "caregiver", label: "👤 Caregiver" },
+    { value: "therapist", label: "🩺 Therapist" },
+  ];
+
+  const activeFiltersCount = getActiveTimelineFilterCount(filters, selectedDate);
+  const useCompactMobileLayout = compact && (mobileLayout || isMobile);
+  const mobileControlHeight = 30;
+
+  if (compact) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          gap: 1,
+          alignItems: "center",
+          flexWrap: useCompactMobileLayout ? "nowrap" : "wrap",
+          overflowX: useCompactMobileLayout ? "auto" : "visible",
+          overflowY: "hidden",
+          WebkitOverflowScrolling: "touch",
+          overscrollBehaviorX: "contain",
+          scrollSnapType: useCompactMobileLayout ? "x proximity" : "none",
+          pb: useCompactMobileLayout ? 0.25 : 0,
+          pr: useCompactMobileLayout ? 0.5 : 0,
+          position: "static",
+          backgroundColor: "transparent",
+          scrollbarWidth: "none",
+          "&::-webkit-scrollbar": {
+            display: "none",
+          },
+          ...(useCompactMobileLayout
+            ? {
+                width: "100%",
+                minWidth: 0,
+              }
+            : {}),
+          ...sx,
+        }}
+      >
+        {useCompactMobileLayout ? (
+          searchExpanded || searchText ? (
+            <TextField
+              size="small"
+              placeholder="Search entries..."
+              value={searchText}
+              onChange={handleSearchChange}
+              InputProps={{
+                startAdornment: <SearchIcon sx={{ fontSize: 16, mr: 0.5, color: "text.secondary" }} />,
+                endAdornment: (
+                  <IconButton
+                    size="small"
+                    onClick={() => {
+                      setSearchExpanded(false);
+                      setSearchText("");
+                      onFiltersChange({
+                        ...filters,
+                        searchText: undefined,
+                      });
+                    }}
+                    sx={{ mr: -0.5 }}
+                  >
+                    <ClearIcon sx={{ fontSize: 15 }} />
+                  </IconButton>
+                ),
+                sx: { height: mobileControlHeight, fontSize: "0.78rem" },
+              }}
+              sx={{
+                minWidth: 170,
+                width: "auto",
+                flex: useCompactMobileLayout ? "0 0 auto" : "1 1 220px",
+                mr: 0.5,
+                contain: "none",
+                transform: "none",
+                willChange: "auto",
+                "& .MuiInputBase-root": {
+                  borderRadius: "0 !important",
+                },
+                "& .MuiOutlinedInput-root": {
+                  height: mobileControlHeight,
+                  borderRadius: "0 !important",
+                  contain: "none",
+                  transform: "none",
+                  willChange: "auto",
+                  backgroundColor: colors.app.cards.background,
+                  "& .MuiOutlinedInput-notchedOutline": {
+                    borderRadius: "0 !important",
+                  },
+                  "& .MuiInputBase-input": {
+                    height: "100%",
+                    boxSizing: "border-box",
+                  },
+                  "& input": {
+                    py: 0,
+                    fontSize: "0.8rem",
+                    color: theme.palette.text.primary,
+                    WebkitTextFillColor: theme.palette.text.primary,
+                  },
+                  "& .MuiSvgIcon-root": {
+                    color: theme.palette.text.secondary,
+                  },
+                },
+              }}
+            />
+          ) : (
+            <Button
+              startIcon={<SearchIcon sx={{ fontSize: 16 }} />}
+              onClick={() => setSearchExpanded(true)}
+              variant="outlined"
+              sx={{
+                height: mobileControlHeight,
+                px: 1.2,
+                pl: 1.2,
+                minWidth: "auto",
+                flex: useCompactMobileLayout ? "0 0 auto" : "1 1 220px",
+                mr: 0.5,
+                borderRadius: 0.25,
+                textTransform: "none",
+                fontSize: "0.82rem",
+                fontWeight: 700,
+                color: "text.primary",
+                borderColor: colors.app.cards.border,
+                backgroundColor: colors.app.cards.shadowPanel,
+                boxShadow: "none",
+                contain: "none",
+                transform: "none",
+                willChange: "auto",
+                "&:hover": {
+                  backgroundColor: colors.app.cards.background,
+                  borderColor: colors.app.cards.border,
+                },
+              }}
+            >
+              Search
+            </Button>
+          )
+        ) : (
+          <TextField
+            size="small"
+            placeholder="Search entries..."
+            value={searchText}
+            onChange={handleSearchChange}
+            InputProps={{
+              startAdornment: <SearchIcon sx={{ fontSize: 16, mr: 0.5, color: "text.secondary" }} />,
+              sx: { height: 24, fontSize: "0.75rem" },
+            }}
+            sx={{
+              minWidth: 120,
+              width: "auto",
+              flex: "0 0 auto",
+              "& .MuiInputBase-root": {
+                borderRadius: "0 !important",
+              },
+              "& .MuiOutlinedInput-root": {
+                height: isMobile ? 28 : 24,
+                borderRadius: "0 !important",
+                "& .MuiOutlinedInput-notchedOutline": {
+                  borderRadius: "0 !important",
+                },
+                "& input": {
+                  py: 0,
+                  fontSize: isMobile ? "0.8rem" : "0.75rem",
+                },
+              },
+            }}
+          />
+        )}
+
+        {!hideDateFilter && (
+          <>
+            <Chip
+              size="small"
+              icon={<CalendarIcon sx={{ fontSize: 14 }} />}
+              label={selectedDate?.toLocaleDateString() || "Select Date"}
+              onClick={handleDatePickerOpen}
+              variant="outlined"
+              sx={{
+                fontSize: useCompactMobileLayout ? "0.78rem" : "0.7rem",
+                height: useCompactMobileLayout ? 30 : 24,
+                flex: "0 0 auto",
+                borderRadius: 0.35,
+              }}
+            />
+
+            <Popover
+              open={Boolean(datePickerAnchor)}
+              anchorEl={datePickerAnchor}
+              onClose={handleDatePickerClose}
+              disableScrollLock
+              disablePortal
+              anchorOrigin={{
+                vertical: "bottom",
+                horizontal: "left",
+              }}
+              disableAutoFocus
+            >
+              <Box sx={{ p: 1 }}>
+                <MiniCalendar
+                  entries={[]}
+                  onDayClick={(day, dayEntries, date) => handleDateChange(date)}
+                  currentMonth={selectedDate || new Date()}
+                  selectedDate={selectedDate}
+                />
+              </Box>
+            </Popover>
+          </>
+        )}
+
+        <Button
+          endIcon={<ArrowDropDownIcon />}
+          onClick={handleCategoryMenuOpen}
+          variant={selectedCategoryType ? "contained" : "outlined"}
+          color={selectedCategoryType ? "primary" : "inherit"}
+          sx={{
+            fontSize: useCompactMobileLayout ? "0.78rem" : "0.7rem",
+            height: useCompactMobileLayout ? mobileControlHeight : 24,
+            flex: "0 0 auto",
+            px: useCompactMobileLayout ? 1.2 : 1,
+            minWidth: "auto",
+            borderRadius: useCompactMobileLayout ? 9999 : undefined,
+            textTransform: "none",
+            fontWeight: 700,
+            color: selectedCategoryType ? undefined : "text.primary",
+            borderColor: selectedCategoryType ? undefined : colors.app.cards.border,
+            backgroundColor: selectedCategoryType ? undefined : colors.app.cards.shadowPanel,
+            boxShadow: "none",
+            contain: "none",
+            transform: "none",
+            willChange: "auto",
+            "&:hover": {
+              backgroundColor: selectedCategoryType ? undefined : colors.app.cards.background,
+              borderColor: selectedCategoryType ? undefined : colors.app.cards.border,
+            },
+          }}
+        >
+          {filterTriggerLabel}
+        </Button>
+
+        <Popover
+          open={Boolean(categoryMenuAnchor)}
+          anchorEl={categoryMenuAnchor}
+          onClose={handleCategoryMenuClose}
+          disableScrollLock
+          anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+          transformOrigin={{ vertical: "top", horizontal: "left" }}
+        >
+          <Box sx={{ p: 0.75, minWidth: 180 }}>
+            <MenuItem onClick={clearEntryTypeFilters}>
+              <Typography sx={{ fontSize: "0.9rem", fontWeight: 600 }}>{allEntries.label}</Typography>
+            </MenuItem>
+            <Divider sx={{ my: 0.5 }} />
+
+            <Typography
+              sx={{
+                px: 1,
+                pb: 0.5,
+                pt: 0.25,
+                fontSize: "0.68rem",
+                fontWeight: 800,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                color: "text.secondary",
+              }}
+            >
+              {entryType.label}
+            </Typography>
+            {entryType.items.map((option) => (
+              <MenuItem key={option.value} onClick={() => setCategoryTypeFilter(option.value)}>
+                <Typography sx={{ mr: 1, fontSize: "1rem" }}>{option.icon}</Typography>
+                <Typography sx={{ fontSize: "0.9rem", fontWeight: 600 }}>{option.label}</Typography>
+              </MenuItem>
+            ))}
+          </Box>
+        </Popover>
+
+        {(Object.keys(filters).length > 0 || searchText) && (
+          <IconButton
+            size="small"
+            onClick={clearAllFilters}
+            sx={{
+              width: useCompactMobileLayout ? 30 : 24,
+              height: useCompactMobileLayout ? 30 : 24,
+              flex: "0 0 auto",
+              borderRadius: 9999,
+              backgroundColor: colors.app.cards.shadowPanel,
+              border: `1px solid ${colors.app.cards.border}`,
+            }}
+            title="Clear all filters"
+          >
+            <ClearIcon sx={{ fontSize: useCompactMobileLayout ? 16 : 14 }} />
+          </IconButton>
+        )}
+      </Box>
+    );
+  }
+
+  return (
+    <Paper
+      variant="outlined"
+      sx={{
+        p: { xs: 1.5, md: 2 },
+        mb: 2,
+        borderRadius: { xs: 0.35, md: 0.35 },
+        ...sx,
+      }}
+    >
+      <Box sx={{ mb: 2 }}>
+        <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
+          Timeline Filters
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Filter timeline entries by type, who logged them, or jump to a specific date
+        </Typography>
+      </Box>
+
+      <Box sx={{ mb: 2 }}>
+        <Typography variant="caption" sx={{ fontWeight: 600, mb: 1, display: "block" }}>
+          ENTRY TYPES
+        </Typography>
+      </Box>
+
+      <Box sx={{ mb: 2, display: "flex", gap: 2, flexWrap: "wrap", alignItems: "center" }}>
+        <FormControl size="small" sx={{ minWidth: 160 }}>
+          <InputLabel>Who logged it</InputLabel>
+          <Select
+            value={filters.userRoles || []}
+            onChange={handleUserRoleFilter}
+            multiple
+            label="Who logged it"
+            startAdornment={<PersonIcon sx={{ fontSize: 16, mr: 0.5 }} />}
+            renderValue={(selected) => (
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                {selected.map((value) => {
+                  const option = userRoleOptions.find((opt) => opt.value === value);
+                  return <Chip key={value} label={option?.label || value} size="small" />;
+                })}
+              </Box>
+            )}
+          >
+            {userRoleOptions.map((option) => (
+              <MenuItem key={option.value} value={option.value}>
+                {option.label}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        <TextField
+          type="date"
+          label="Jump to date"
+          size="small"
+          value={selectedDate.toISOString().split("T")[0]}
+          onChange={handleDateChange}
+          InputProps={{
+            startAdornment: <DateIcon sx={{ fontSize: 16, mr: 0.5 }} />,
+          }}
+          sx={{
+            minWidth: 160,
+            "& .MuiOutlinedInput-root": {
+              borderRadius: 0.35,
+              backgroundColor: colors.app.cards.background,
+            },
+          }}
+        />
+      </Box>
+
+      <Box sx={{ mb: 2 }}>
+        <Typography variant="caption" sx={{ fontWeight: 600, mb: 1, display: "block" }}>
+          IMPORTANT + TAGS
+        </Typography>
+
+        <Paper
+          variant="outlined"
+          sx={{
+            p: 1.25,
+            borderRadius: 2,
+            borderColor: colors.app.cards.border,
+            bgcolor: colors.app.cards.shadowPanel,
+            mb: 1.25,
+          }}
+        >
+          <FormControlLabel
+            control={
+              <Switch
+                checked={Boolean(filters.importantOnly)}
+                onChange={handleImportantToggle}
+                color="primary"
+              />
+            }
+            label="Show only important / flagged"
+            sx={{
+              m: 0,
+              alignItems: "center",
+              gap: 1,
+              "& .MuiFormControlLabel-label": {
+                fontWeight: 700,
+                color: "text.primary",
+              },
+            }}
+          />
+        </Paper>
+
+        <Box
+          sx={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 0.8,
+            maxHeight: 220,
+            overflowY: "auto",
+            pr: 0.25,
+            pb: 0.5,
+          }}
+        >
+          {(availableTags.length > 0 ? availableTags : getAllQuickTagOptions()).map((tag) => {
+            const selected = activeTagFilters.includes(tag.key);
+            return (
+              <Chip
+                key={tag.key}
+                label={`${tag.icon || "🏷️"} ${tag.label}`}
+                onClick={() => toggleTagFilter(tag.key)}
+                sx={{
+                  flex: "0 0 auto",
+                  height: 38,
+                  borderRadius: 9999,
+                  fontWeight: 800,
+                  px: 1,
+                  color: selected ? colors.landing.heroText : colors.landing.textMuted,
+                  bgcolor: selected ? colors.landing.cyanPop : colors.landing.surface,
+                  border: `1px solid ${selected ? colors.landing.cyanPop : colors.landing.borderLight}`,
+                  "& .MuiChip-label": {
+                    px: 1.1,
+                  },
+                }}
+              />
+            );
+          })}
+        </Box>
+      </Box>
+
+      {activeFiltersCount > 0 && (
+        <>
+          <Divider sx={{ mb: 1, borderColor: colors.app.cards.border }} />
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <Typography variant="caption" color="text.secondary">
+              {activeFiltersCount} filter{activeFiltersCount > 1 ? "s" : ""} active
+            </Typography>
+            <Typography
+              variant="caption"
+              color="primary"
+              sx={{ cursor: "pointer", textDecoration: "underline" }}
+              onClick={clearAllFilters}
+            >
+              Clear all filters
+            </Typography>
+          </Box>
+        </>
+      )}
+    </Paper>
+  );
+};
+
+export default TimelineFilters;

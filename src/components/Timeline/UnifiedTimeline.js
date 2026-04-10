@@ -1175,4 +1175,4 @@ const UnifiedTimeline = ({
   );
 };
 
-export default UnifiedTimeline;
+export { default } from "../../features/timeline/UnifiedTimeline";

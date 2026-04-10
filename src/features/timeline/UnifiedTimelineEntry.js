@@ -1,0 +1,345 @@
+import React from "react";
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Avatar,
+  Chip,
+  IconButton,
+  Collapse,
+  Stack,
+  Divider,
+} from "@mui/material";
+import {
+  ExpandMore as ExpandIcon,
+  AccessTime as TimeIcon,
+  Person as PersonIcon,
+} from "@mui/icons-material";
+import { alpha, useTheme } from "@mui/material/styles";
+import { getEntryTypeMeta, mapLegacyType } from "../../constants/timeline";
+import { getIncidentDisplayInfo, getJournalDisplayInfo } from "../../constants/uiDisplayConstants";
+import {
+  getCanonicalEntryDisplayInfo,
+  getLogTypeByCategory,
+  getLogTypeByEntry,
+} from "../../constants/logTypeRegistry";
+import colors from "../../assets/theme/colors";
+
+const UnifiedTimelineEntry = ({
+  entry,
+  isExpanded = false,
+  onToggleExpand,
+  showTimestamp = true,
+  showUser = true,
+  compact = false,
+}) => {
+  const incidentDisplay = getIncidentDisplayInfo();
+  const journalDisplay = getJournalDisplayInfo();
+
+  const theme = useTheme();
+  const normalizedType = mapLegacyType(entry.type);
+  const typeMeta = getEntryTypeMeta(entry.type);
+  const categoryType = getLogTypeByEntry(entry);
+  const categoryMeta = getLogTypeByCategory(categoryType.category || entry.category || entry.type);
+  const categoryDisplay = getCanonicalEntryDisplayInfo(entry);
+  const isDailyLogEntry = entry.collection === "dailyLogs" || normalizedType === "journal";
+  const typeColor =
+    entry.color ||
+    categoryMeta.palette?.dot ||
+    theme.palette.timeline?.entries?.[typeMeta.key] ||
+    theme.palette.primary.main;
+
+  const getUserRoleColor = (userRole) => {
+    const mapRoleKey = (r) => {
+      switch (r) {
+        case "care_owner":
+          return "care_owner";
+        case "care_partner":
+          return "care_partner";
+        case "caregiver":
+          return "caregiver";
+        case "therapist":
+          return "therapist";
+        default:
+          return null;
+      }
+    };
+    const key = mapRoleKey(userRole);
+    return key && theme.palette.roles?.[key]?.primary
+      ? theme.palette.roles[key].primary
+      : theme.palette.text.secondary;
+  };
+
+  const timestamp = new Date(entry.timestamp);
+  const timeString = timestamp.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  const getPreviewContent = () => {
+    const notesText = entry.notes || entry.sleepDetails?.notes || entry.bathroomDetails?.notes || "";
+    const combinedText = [entry.text, entry.content, notesText].filter(Boolean).join(" — ");
+
+    switch (entry.type) {
+      case "incident":
+        return {
+          primary: `${entry.incidentType || incidentDisplay.label} - ${entry.severity || "Unknown"} severity`,
+          secondary: entry.description || entry.summary,
+          hasMedia: entry.mediaAttachments?.length > 0,
+        };
+      case "journal":
+        return {
+          primary: isDailyLogEntry
+            ? entry.titlePrefix || entry.title || categoryDisplay.label || journalDisplay.label
+            : entry.title || `${journalDisplay.label} Entry`,
+          secondary: combinedText
+            ? `${combinedText.substring(0, 100)}${combinedText.length > 100 ? "..." : ""}`
+            : null,
+          hasMedia: false,
+        };
+      case "behavior":
+      case "health":
+      case "mood":
+      case "sleep":
+      case "food":
+      case "milestone":
+        return {
+          primary: entry.title || typeMeta.label,
+          secondary: entry.text || entry.content || entry.notes,
+          hasMedia: false,
+        };
+      case "dailyLog":
+        return {
+          primary:
+            entry.title ||
+            entry.titlePrefix ||
+            categoryMeta.trackLabel ||
+            categoryMeta.displayLabel ||
+            `${entry.activityType || "Activity"}`,
+          secondary: combinedText || entry.description,
+          hasMedia: false,
+        };
+      case "followUp":
+        return {
+          primary: `${entry.status || "Update"} - ${entry.originalIncidentType || "Follow-up"}`,
+          secondary: entry.resolution || entry.notes,
+          hasMedia: false,
+        };
+      default:
+        return {
+          primary: entry.title || entry.titlePrefix || categoryDisplay.label || "Timeline Entry",
+          secondary: combinedText || entry.description,
+          hasMedia: false,
+        };
+    }
+  };
+
+  const previewContent = getPreviewContent();
+
+  return (
+    <Card
+      variant="outlined"
+      sx={{
+        border: "1px solid",
+        borderColor: alpha(typeColor, 0.12),
+        borderLeft: `4px solid ${typeColor}`,
+        bgcolor: colors.semantic.surface,
+        borderRadius: 3,
+        boxShadow: `0 8px 22px ${colors.app.cards.shadowHover}`,
+        transition: "all 0.2s ease",
+        "&:hover": {
+          bgcolor: colors.semantic.surface,
+          boxShadow: `0 10px 24px ${colors.app.cards.shadowPanel}`,
+        },
+      }}
+    >
+      <CardContent sx={{ p: compact ? 1.5 : 2, "&:last-child": { pb: compact ? 1.5 : 2 } }}>
+        <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.5 }}>
+          <Avatar
+            sx={{
+              width: compact ? 24 : 32,
+              height: compact ? 24 : 32,
+              bgcolor: typeColor,
+              color: "common.white",
+              fontSize: compact ? 14 : 18,
+            }}
+          >
+            {typeMeta.icon}
+          </Avatar>
+
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+              <Chip
+                label={
+                  isDailyLogEntry
+                    ? entry.titlePrefix || categoryDisplay.label || typeMeta.label.replace(/s$/, "")
+                    : categoryDisplay.label || typeMeta.label.replace(/s$/, "")
+                }
+                size="small"
+                variant="filled"
+                sx={{
+                  height: 20,
+                  fontSize: "0.7rem",
+                  bgcolor: alpha(typeColor, 0.15),
+                  color: typeColor,
+                }}
+              />
+
+              {showTimestamp && (
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.25 }}>
+                  <TimeIcon sx={{ fontSize: 12, color: "text.secondary" }} />
+                  <Typography variant="caption" color="text.secondary">
+                    {timeString}
+                  </Typography>
+                </Box>
+              )}
+
+              {showUser && entry.loggedByUser && (
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.25 }}>
+                  <PersonIcon sx={{ fontSize: 12, color: getUserRoleColor(entry.userRole) }} />
+                  <Typography
+                    variant="caption"
+                    sx={{ color: getUserRoleColor(entry.userRole), fontWeight: 500 }}
+                  >
+                    {entry.loggedByUser}
+                  </Typography>
+                </Box>
+              )}
+
+              {previewContent.hasMedia && (
+                <Chip
+                  label="Media"
+                  size="small"
+                  variant="outlined"
+                  sx={{ height: 16, fontSize: "0.6rem" }}
+                />
+              )}
+
+              <IconButton
+                size="small"
+                onClick={onToggleExpand}
+                sx={{
+                  ml: "auto",
+                  transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
+                  transition: "transform 0.2s",
+                }}
+              >
+                <ExpandIcon sx={{ fontSize: 18 }} />
+              </IconButton>
+            </Box>
+
+            <Typography variant="body2" sx={{ fontWeight: 500, mb: 0.25 }}>
+              {previewContent.primary}
+            </Typography>
+
+            {previewContent.secondary && (
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{
+                  display: "-webkit-box",
+                  WebkitLineClamp: isExpanded ? "unset" : 2,
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
+                }}
+              >
+                {previewContent.secondary}
+              </Typography>
+            )}
+          </Box>
+        </Box>
+
+        <Collapse in={isExpanded}>
+          <Box sx={{ mt: 2 }}>
+            <Divider sx={{ mb: 2 }} />
+
+            {normalizedType === "incident" && (
+              <Stack spacing={1}>
+                <Typography variant="subtitle2" gutterBottom>
+                  {incidentDisplay.label} Details
+                </Typography>
+                {entry.triggers && (
+                  <Typography variant="body2">
+                    <strong>Triggers:</strong>{" "}
+                    {Array.isArray(entry.triggers) ? entry.triggers.join(", ") : entry.triggers}
+                  </Typography>
+                )}
+                {entry.duration && (
+                  <Typography variant="body2">
+                    <strong>Duration:</strong> {entry.duration} minutes
+                  </Typography>
+                )}
+                {entry.interventions && (
+                  <Typography variant="body2">
+                    <strong>Interventions:</strong>{" "}
+                    {Array.isArray(entry.interventions)
+                      ? entry.interventions.join(", ")
+                      : entry.interventions}
+                  </Typography>
+                )}
+              </Stack>
+            )}
+
+            {normalizedType === "journal" && (
+              <Stack spacing={1}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Full {journalDisplay.label} Entry
+                </Typography>
+                <Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>
+                  {entry.content}
+                </Typography>
+              </Stack>
+            )}
+
+            {normalizedType === "dailyLog" && (
+              <Stack spacing={1}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Activity Details
+                </Typography>
+                {entry.duration && (
+                  <Typography variant="body2">
+                    <strong>Duration:</strong> {entry.duration}
+                  </Typography>
+                )}
+                {entry.quantity && (
+                  <Typography variant="body2">
+                    <strong>Amount:</strong> {entry.quantity}
+                  </Typography>
+                )}
+              </Stack>
+            )}
+
+            {entry.mediaAttachments?.length > 0 && (
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Attachments
+                </Typography>
+                <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }}>
+                  {entry.mediaAttachments.map((media, index) => (
+                    <Box
+                      key={index}
+                      component="img"
+                      src={media.url}
+                      alt={media.caption || "Attachment"}
+                      sx={{
+                        width: 60,
+                        height: 60,
+                        objectFit: "cover",
+                        borderRadius: 1,
+                        border: "1px solid",
+                        borderColor: "divider",
+                      }}
+                    />
+                  ))}
+                </Stack>
+              </Box>
+            )}
+          </Box>
+        </Collapse>
+      </CardContent>
+    </Card>
+  );
+};
+
+export default UnifiedTimelineEntry;

@@ -54,7 +54,7 @@ const DashboardHeader = ({
         elevated
         sx={{ width: { xs: "100%", sm: "auto" } }}
       >
-        Add Child
+        Add a new person to track
       </GradientButton>
     </Box>
   );

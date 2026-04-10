@@ -28,7 +28,7 @@ import {
 } from '@mui/icons-material';
 import TimelineWidget from '../../UI/TimelineWidget';
 import CareTeamDisplay from '../../UI/CareTeamDisplay';
-import ChildManagementMenu from '../ChildManagementMenu';
+import ChildManagementMenu from '../../../features/dashboard/shared/ChildManagementMenu';
 import { getChildAccent } from '../shared/childAccent';
 import { getChildCareTeam } from '../../../services/childAccessService';
 import { getTrackLogTypes } from '../../../constants/logTypeRegistry';
@@ -844,7 +844,7 @@ const ChildDashboard = ({
                 <Avatar sx={{ width: 30, height: 30, bgcolor: accent.strong }}>
                   <span style={{ fontSize: 18, lineHeight: 1 }}>+</span>
                 </Avatar>
-                <Typography sx={{ fontWeight: 700, fontSize: '0.92rem' }}>Add Child</Typography>
+                <Typography sx={{ fontWeight: 700, fontSize: '0.92rem' }}>Add a new person to track</Typography>
               </MenuItem>
             ) : null}
           </Paper>

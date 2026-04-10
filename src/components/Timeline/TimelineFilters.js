@@ -625,4 +625,4 @@ const TimelineFilters = ({
   );
 };
 
-export default TimelineFilters;
+export { default } from "../../features/timeline/TimelineFilters";

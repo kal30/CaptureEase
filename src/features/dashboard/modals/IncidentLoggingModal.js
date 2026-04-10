@@ -1,0 +1,188 @@
+import React, { useState } from "react";
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  IconButton,
+  Box,
+  Typography,
+  Slide,
+} from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+import IncidentTypeSelector from "./IncidentTypeSelector";
+import IncidentQuickCapture from "./IncidentQuickCapture";
+import { getIncidentDisplayInfo } from "../../../constants/uiDisplayConstants";
+import OtherIncidentCapture from "../../../components/Dashboard/Incidents/OtherIncidentCapture";
+import { INCIDENT_TYPES } from "../../../services/incidentService";
+import colors from "../../../assets/theme/colors";
+
+const IncidentLoggingModal = ({ open, onClose, childId, childName }) => {
+  // Get centralized display info
+  const incidentDisplay = getIncidentDisplayInfo();
+  
+  const [currentStep, setCurrentStep] = useState(1); // 1 = type selection, 2 = quick capture
+  const [selectedIncidentType, setSelectedIncidentType] = useState(null);
+
+  const handleClose = () => {
+    // Reset state when closing
+    setCurrentStep(1);
+    setSelectedIncidentType(null);
+    onClose();
+  };
+
+  const handleTypeSelect = (incidentType) => {
+    setSelectedIncidentType(incidentType);
+    setCurrentStep(2);
+  };
+
+  const handleBack = () => {
+    setCurrentStep(1);
+    setSelectedIncidentType(null);
+  };
+
+  const handleIncidentSaved = () => {
+    // Reset and close after successful save
+    setCurrentStep(1);
+    setSelectedIncidentType(null);
+    onClose();
+  };
+
+  const handleCategoryCreated = () => {
+    // When a category is created, we need to refresh the incident type selector
+    // by resetting to step 1 and clearing selection
+    setCurrentStep(1);
+    setSelectedIncidentType(null);
+    // The modal stays open so user can see the new category
+  };
+
+  const getStepTitle = () => {
+    if (currentStep === 1) {
+      return (
+        <Box sx={{ display: "flex", flexDirection: "column" }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <WarningAmberIcon sx={{ color: "error.main" }} />
+            <Typography
+              variant="h6"
+              sx={{ fontWeight: 700, letterSpacing: "-0.5px" }}
+            >
+              Log {incidentDisplay.label} {childName}
+            </Typography>
+          </Box>
+          <Typography variant="body2" sx={{ color: "text.secondary" }}>
+            Create a detailed report for a significant event.
+          </Typography>
+        </Box>
+      );
+    }
+    const typeConfig = INCIDENT_TYPES[selectedIncidentType];
+    if (!typeConfig) {
+      console.warn("No incident type config found for:", selectedIncidentType);
+      return `Incident - ${childName}`;
+    }
+    return `${typeConfig.emoji || "📝"} ${typeConfig.label} - ${childName}`;
+  };
+
+  return (
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      slots={{ transition: Slide }}
+      slotProps={{ transition: { direction: "up" } }}
+      maxWidth="sm"
+      fullWidth
+      fullScreen={window.innerWidth < 600} // Full screen on mobile
+      sx={{
+        "& .MuiDialog-paper": {
+          borderRadius: window.innerWidth < 600 ? 0 : 2,
+          minHeight: window.innerWidth < 600 ? "100vh" : "60vh",
+        },
+      }}
+    >
+      <DialogTitle
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          backgroundColor: colors.app.cards.background,
+          color: colors.app.text.strong,
+          py: 3,
+          borderBottom: `1px solid ${colors.app.cards.border}`,
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          {currentStep === 2 && (
+            <IconButton
+              aria-label="back"
+              onClick={handleBack}
+              sx={{
+                color: colors.app.text.secondary,
+                "&:hover": {
+                  bgcolor: colors.app.cards.shadowPanel,
+                  color: colors.app.text.strong,
+                },
+              }}
+            >
+              <ArrowBackIcon />
+            </IconButton>
+          )}
+          {getStepTitle()}
+        </Box>
+        <IconButton
+          aria-label="close"
+          onClick={handleClose}
+          sx={{
+            color: colors.app.text.secondary,
+            "&:hover": {
+              bgcolor: colors.app.cards.shadowPanel,
+              color: colors.app.text.strong,
+            },
+          }}
+        >
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
+
+      <DialogContent sx={{ p: 0, backgroundColor: colors.app.cards.background }}>
+        {currentStep === 1 && (
+          <IncidentTypeSelector
+            key={`incident-selector-${Date.now()}`} // Force remount to reload categories
+            onTypeSelect={handleTypeSelect}
+            onClose={handleClose}
+            childId={childId}
+          />
+        )}
+
+        {currentStep === 2 && selectedIncidentType && (
+          <>
+            {selectedIncidentType === "OTHER" ||
+            selectedIncidentType.startsWith("CUSTOM_") ? (
+              <OtherIncidentCapture
+                childId={childId}
+                childName={childName}
+                onBack={handleBack}
+                onSaved={handleIncidentSaved}
+                onClose={handleClose}
+                onCategoryCreated={handleCategoryCreated}
+                isCustomCategory={selectedIncidentType.startsWith("CUSTOM_")}
+                customCategoryType={selectedIncidentType}
+              />
+            ) : (
+              <IncidentQuickCapture
+                incidentType={selectedIncidentType}
+                childId={childId}
+                childName={childName}
+                onBack={handleBack}
+                onSaved={handleIncidentSaved}
+                onClose={handleClose}
+              />
+            )}
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default IncidentLoggingModal;

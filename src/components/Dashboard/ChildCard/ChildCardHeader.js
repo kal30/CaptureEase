@@ -4,7 +4,7 @@ import { useMediaQuery, useTheme } from '@mui/material';
 import { ChatBubbleOutlineRounded } from '@mui/icons-material';
 import ChildAvatar from '../../UI/ChildAvatar';
 import CareTeamDisplay from '../../UI/CareTeamDisplay';
-import ChildManagementMenu from '../ChildManagementMenu';
+import ChildManagementMenu from '../../../features/dashboard/shared/ChildManagementMenu';
 import MedicalInfoDisplay from './MedicalInfoDisplay';
 import { getChildCareTeam } from '../../../services/childAccessService';
 import { ROLE_DISPLAY, USER_ROLES } from '../../../constants/roles';
