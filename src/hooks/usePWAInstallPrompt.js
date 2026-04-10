@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 const DISMISS_UNTIL_KEY = 'captureez:pwa-install-dismissed-until';
-const INSTALLED_KEY = 'captureez:pwa-install-installed';
 const DISMISS_DURATION_MS = 1000 * 60 * 60 * 24 * 30;
 
 const isBrowser = typeof window !== 'undefined';
@@ -31,7 +30,7 @@ const usePWAInstallPrompt = () => {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [isInstalled, setIsInstalled] = useState(() => {
     if (!isBrowser) return false;
-    return isStandaloneMode() || window.localStorage.getItem(INSTALLED_KEY) === 'true';
+    return isStandaloneMode();
   });
   const [dismissUntil, setDismissUntil] = useState(() => readDismissUntil());
   const [isIOS, setIsIOS] = useState(() => isIOSPlatform());
@@ -40,7 +39,7 @@ const usePWAInstallPrompt = () => {
     if (!isBrowser) return undefined;
 
     setIsIOS(isIOSPlatform());
-    setIsInstalled((current) => current || isStandaloneMode() || window.localStorage.getItem(INSTALLED_KEY) === 'true');
+    setIsInstalled(isStandaloneMode());
     setDismissUntil(readDismissUntil());
 
     const handleBeforeInstallPrompt = (event) => {
@@ -49,7 +48,6 @@ const usePWAInstallPrompt = () => {
     };
 
     const handleAppInstalled = () => {
-      window.localStorage.setItem(INSTALLED_KEY, 'true');
       window.localStorage.removeItem(DISMISS_UNTIL_KEY);
       setIsInstalled(true);
       setDeferredPrompt(null);
@@ -81,7 +79,6 @@ const usePWAInstallPrompt = () => {
     setDeferredPrompt(null);
 
     if (choiceResult?.outcome === 'accepted') {
-      window.localStorage.setItem(INSTALLED_KEY, 'true');
       window.localStorage.removeItem(DISMISS_UNTIL_KEY);
       setIsInstalled(true);
     }

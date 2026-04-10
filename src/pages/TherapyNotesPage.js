@@ -27,7 +27,7 @@ import useChildName from "../hooks/useChildName";
 import { therapyTheme, createTherapyStyles } from "../assets/theme/therapyTheme";
 import ResponsiveLayout from "../components/Layout/ResponsiveLayout";
 import TherapyNoteInput from "../components/TherapyNotes/TherapyNoteInput";
-import UnifiedTimeline from "../components/Timeline/UnifiedTimeline";
+import UnifiedTimeline from "../features/timeline/UnifiedTimeline";
 
 const TherapyNotesPage = () => {
   const navigate = useNavigate();

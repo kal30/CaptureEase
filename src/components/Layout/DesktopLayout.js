@@ -3,6 +3,7 @@ import {
   Box,
   Container
 } from '@mui/material';
+import PWAUpdateBanner from '../UI/PWAUpdateBanner';
 
 const DesktopLayout = ({ children, pageTitle, fullWidth = false, sx = {} }) => {
   return (
@@ -14,6 +15,7 @@ const DesktopLayout = ({ children, pageTitle, fullWidth = false, sx = {} }) => {
         ...sx
       }}
     >
+      <PWAUpdateBanner />
       <Container maxWidth={fullWidth ? false : "xl"}>
         {children}
       </Container>

@@ -202,8 +202,11 @@ const LogInput = ({ childId, selectedDate = new Date() }) => {
       }
 
       if (selectedPhotoFile) {
+        const selectedMediaType = selectedPhotoFile.type?.startsWith("video/")
+          ? "video"
+          : "image";
         const uploadedMedia = await uploadIncidentMedia(
-          { file: selectedPhotoFile, type: "image" },
+          { file: selectedPhotoFile, type: selectedMediaType },
           null,
           docRef.id,
           `dailyLogs/${docRef.id}`
@@ -268,8 +271,7 @@ const LogInput = ({ childId, selectedDate = new Date() }) => {
       <input
         ref={photoInputRef}
         type="file"
-        accept="image/*"
-        capture="environment"
+        accept="image/*,video/*"
         hidden
         onChange={handlePhotoSelect}
       />
@@ -319,19 +321,36 @@ const LogInput = ({ childId, selectedDate = new Date() }) => {
           Add Photo or Video
         </Button>
         {photoPreviewUrl ? (
-          <Box
-            component="img"
-            src={photoPreviewUrl}
-            alt="Selected attachment"
-            sx={{
-              width: 88,
-              height: 88,
-              objectFit: "cover",
-              borderRadius: 2,
-              border: "1px solid",
-              borderColor: "divider",
-            }}
-          />
+          selectedPhotoFile?.type?.startsWith("video/") ? (
+            <Box
+              component="video"
+              src={photoPreviewUrl}
+              controls
+              playsInline
+              sx={{
+                width: 160,
+                maxHeight: 120,
+                borderRadius: 2,
+                border: "1px solid",
+                borderColor: "divider",
+                bgcolor: "#000",
+              }}
+            />
+          ) : (
+            <Box
+              component="img"
+              src={photoPreviewUrl}
+              alt="Selected attachment"
+              sx={{
+                width: 88,
+                height: 88,
+                objectFit: "cover",
+                borderRadius: 2,
+                border: "1px solid",
+                borderColor: "divider",
+              }}
+            />
+          )
         ) : null}
       </Box>
       <Box

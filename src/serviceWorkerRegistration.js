@@ -1,5 +1,18 @@
 // This is a simple service worker registration file to enable PWA functionality.
 
+const UPDATE_CHECK_INTERVAL_MS = 5 * 60 * 1000;
+const UPDATE_AVAILABLE_EVENT = 'lifelog:sw-update-available';
+
+function announceServiceWorkerUpdate(registration) {
+  if (typeof window === 'undefined' || !registration?.waiting) return;
+
+  window.dispatchEvent(
+    new CustomEvent(UPDATE_AVAILABLE_EVENT, {
+      detail: { registration },
+    })
+  );
+}
+
 // Register the service worker
 export function register() {
   if ('serviceWorker' in navigator) {
@@ -7,6 +20,36 @@ export function register() {
       const swUrl = `${process.env.PUBLIC_URL}/sw.js`;
       navigator.serviceWorker.register(swUrl).then((registration) => {
         console.log('Service Worker registered with scope:', registration.scope);
+
+        registration.update();
+        announceServiceWorkerUpdate(registration);
+
+        const updateCheck = window.setInterval(() => {
+          registration.update().catch((error) => {
+            console.error('Service Worker update check failed:', error);
+          });
+        }, UPDATE_CHECK_INTERVAL_MS);
+
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          window.location.reload();
+        });
+
+        registration.addEventListener('updatefound', () => {
+          const installingWorker = registration.installing;
+          if (!installingWorker) {
+            return;
+          }
+
+          installingWorker.addEventListener('statechange', () => {
+            if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              announceServiceWorkerUpdate(registration);
+            }
+          });
+        });
+
+        window.addEventListener('beforeunload', () => {
+          window.clearInterval(updateCheck);
+        });
       }).catch((error) => {
         console.error('Service Worker registration failed:', error);
       });

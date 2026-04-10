@@ -30,7 +30,7 @@ import AddToHomeScreenIcon from "@mui/icons-material/AddToHomeScreen";
 import PhoneIphoneIcon from "@mui/icons-material/PhoneIphone";
 import usePWAInstallPrompt from "../../hooks/usePWAInstallPrompt";
 import colors from "../../assets/theme/colors";
-import { ACTIVE_CHILD_STORAGE_KEY } from "../Dashboard/shared/DashboardViewContext";
+import { ACTIVE_CHILD_STORAGE_KEY } from "../../features/dashboard/shared/DashboardViewContext";
 import ChildActionsMenuContent from "../Dashboard/shared/ChildActionsMenuContent";
 import { getRoleDisplay } from "../../constants/roles";
 import { PRODUCT_NAME_TITLE } from "../../constants/config";
@@ -53,10 +53,11 @@ const Navbar = () => {
     return window.localStorage.getItem(ACTIVE_CHILD_STORAGE_KEY) || "";
   });
   const isDashboardRoute = location.pathname.startsWith("/dashboard");
+  const isInstallRoute = location.pathname.startsWith("/install");
   const isMobileDashboardHeader = isDashboardRoute && !isDesktopDashboard;
   const useCompactDashboardHeader = isDashboardRoute && isDesktopDashboard;
   const canSeeSwitchChild = isLoggedIn && (childrenWithAccess?.length || 0) > 1;
-  const showInstallAction = !isDashboardRoute && !pwaInstallPrompt.isInstalled && (pwaInstallPrompt.canInstall || pwaInstallPrompt.isIOS);
+  const showInstallAction = !isDashboardRoute && !isInstallRoute && !pwaInstallPrompt.isInstalled && (pwaInstallPrompt.canInstall || pwaInstallPrompt.isIOS);
   const dashboardActiveChild = useMemo(
     () => childrenWithAccess.find((child) => child.id === dashboardActiveChildId) || childrenWithAccess[0] || null,
     [childrenWithAccess, dashboardActiveChildId]
@@ -457,7 +458,7 @@ const Navbar = () => {
           <ListItemIcon sx={{ minWidth: 32 }}>
             <PersonAddAlt1OutlinedIcon sx={{ fontSize: 18, color: colors.brand.ink }} />
           </ListItemIcon>
-          Add child
+          Add a new person to track
         </MenuItem>
       </Menu>
 

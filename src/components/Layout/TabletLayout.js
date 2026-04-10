@@ -27,6 +27,7 @@ import { auth } from '../../services/firebase';
 import colors from '../../assets/theme/colors';
 import { PRODUCT_NAME_TITLE } from '../../constants/config';
 import ResponsiveHeaderBar from './shared/ResponsiveHeaderBar';
+import PWAUpdateBanner from '../UI/PWAUpdateBanner';
 
 const DRAWER_WIDTH = 240;
 
@@ -151,6 +152,8 @@ const TabletLayout = ({ children, pageTitle, showSidebar = true }) => {
             </IconButton>
           </Box>
         </ResponsiveHeaderBar>
+
+        <PWAUpdateBanner />
 
         {/* Tablet Content */}
         <Box sx={{ flex: 1, p: 3, overflow: 'auto' }}>

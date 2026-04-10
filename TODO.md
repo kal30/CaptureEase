@@ -110,6 +110,10 @@ These are the shared UI pieces we should consolidate so desktop and mobile stop 
 - [ ] Map `lifelog.care` to staging
 - [ ] Keep `captureez.com` for production
 - [ ] Make sure staging and production do not share Firestore/Auth/Storage
+- [ ] Decide test email handling for Resend free plan
+  - keep production email on `lifelog.care`
+  - suppress or reroute test email instead of adding a second domain
+  - revisit when we do the email environment split
 
 ## Messaging / Chat
 

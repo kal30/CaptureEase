@@ -89,7 +89,9 @@ export const isReadOnlyUser = async (userId, childId) => {
 
 /**
  * Get all children current user has access to with their roles
- * OPTIMIZED: Uses users.members field for efficient single-field query with OR fallback
+ * OPTIMIZED: Uses users.members field for efficient single-field query.
+ * Legacy role-array fallbacks were removed because they cause permission noise
+ * on the current rules/data shape and are no longer needed for active children.
  */
 export const getChildrenWithRoles = async () => {
   const auth = getAuth();
@@ -107,10 +109,7 @@ export const getChildrenWithRoles = async () => {
       where("status", "==", "active")
     );
 
-    const childrenSnapshot = await getDocs(childrenQuery).catch((error) => {
-      console.warn("Members query failed, falling back to legacy role lookups:", error);
-      return { docs: [] };
-    });
+    const childrenSnapshot = await getDocs(childrenQuery);
 
     console.log(`📊 Members query found: ${childrenSnapshot.docs.length} children`)
 
@@ -119,58 +118,6 @@ export const getChildrenWithRoles = async () => {
       const childResult = await buildRoleResult(childDoc, user.uid);
       if (childResult) {
         childrenMap.set(childResult.id, childResult);
-      }
-    }
-
-    // Legacy fallback: older child docs may not have users.members yet.
-    // Merge role-based queries so every accessible child still appears.
-    const fallbackQueries = [
-      query(collection(db, "children"), where("users.care_owner", "==", user.uid), where("status", "==", "active")),
-      query(collection(db, "children"), where("users.care_partners", "array-contains", user.uid), where("status", "==", "active")),
-      query(collection(db, "children"), where("users.caregivers", "array-contains", user.uid), where("status", "==", "active")),
-      query(collection(db, "children"), where("users.therapists", "array-contains", user.uid), where("status", "==", "active")),
-    ];
-
-    const fallbackSnapshots = await Promise.allSettled(
-      fallbackQueries.map((q) => getDocs(q))
-    );
-
-    for (const result of fallbackSnapshots) {
-      if (result.status !== 'fulfilled') {
-        console.warn("Role fallback query failed:", result.reason);
-        continue;
-      }
-
-      for (const childDoc of result.value.docs) {
-        if (childrenMap.has(childDoc.id)) {
-          continue;
-        }
-
-        const childResult = await buildRoleResult(childDoc, user.uid);
-        if (childResult) {
-          childrenMap.set(childResult.id, childResult);
-        }
-      }
-    }
-
-    if (childrenMap.size === 0) {
-      // Last-resort fallback: load all accessible children, then resolve roles per child.
-      const { getChildren } = await import('../childService');
-      const accessibleChildren = await getChildren();
-      for (const child of accessibleChildren.filter((candidate) => candidate?.status === 'active' || !candidate?.status)) {
-        if (!child?.id || childrenMap.has(child.id)) {
-          continue;
-        }
-
-        const childDoc = await getDoc(doc(db, "children", child.id));
-        if (!childDoc.exists()) {
-          continue;
-        }
-
-        const childResult = await buildRoleResult(childDoc, user.uid);
-        if (childResult) {
-          childrenMap.set(childResult.id, childResult);
-        }
       }
     }
 

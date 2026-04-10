@@ -66,12 +66,7 @@ const Register = () => {
         });
         
         await user.sendEmailVerification();
-        navigate("/login", {
-          state: {
-            message:
-              "Registration successful! Please check your email to verify your account.",
-          },
-        });
+        navigate("/dashboard", { replace: true });
       } else {
         setError(
           "Registration successful, but could not send verification email. Please try logging in."
@@ -120,26 +115,31 @@ const Register = () => {
         <Typography
           component="h1"
           variant="h5"
-          sx={{ mb: 3, fontWeight: "bold", color: "primary.main" }}
+          sx={{ mb: 1, fontWeight: "bold", color: "primary.main", textAlign: "center" }}
         >
           Sign Up for {PRODUCT_NAME_TITLE}
         </Typography>
-        {email && (
-          <Alert severity="info" sx={{ width: "100%", mb: 2 }}>
-            You&apos;re starting with your email first. Finish setting up your
-            account below.
-          </Alert>
-        )}
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{ mb: 3, textAlign: "center" }}
+        >
+          Google is the fastest way to get started. Prefer email? Use the form below.
+        </Typography>
         {error && (
           <Alert severity="error" sx={{ width: "100%", mb: 2 }}>
             {error}
           </Alert>
         )}
+        <Box sx={{ width: "100%", mb: 2 }}>
+          <GoogleAuth buttonText="Sign Up with Google" />
+        </Box>
+        <Divider sx={{ width: "100%", my: 2 }}>or use email</Divider>
         <Box
           component="form"
           onSubmit={handleRegister}
           noValidate
-          sx={{ mt: 1, width: "100%" }}
+          sx={{ width: "100%" }}
         >
           <TextField
             margin="normal"
@@ -204,8 +204,6 @@ const Register = () => {
             Register
           </EnhancedLoadingButton>
         </Box>
-        <Divider sx={{ width: "100%", my: 2 }}>OR</Divider>
-        <GoogleAuth buttonText="Sign Up with Google" />
         <Box sx={{ mt: 2 }}>
           <Link
             to="/login"

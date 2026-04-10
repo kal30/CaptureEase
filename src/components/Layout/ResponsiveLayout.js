@@ -12,6 +12,7 @@ const ResponsiveLayout = ({
   children, 
   pageTitle,
   showBottomNav = true,
+  showFab = true,
   showSidebar = true,
   fullWidth = false,
   customMobile = null,
@@ -40,6 +41,7 @@ const ResponsiveLayout = ({
       <MobileLayout 
         pageTitle={pageTitle}
         showBottomNav={showBottomNav}
+        showFab={showFab}
       >
         {children}
       </MobileLayout>

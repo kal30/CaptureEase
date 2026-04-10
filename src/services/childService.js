@@ -17,7 +17,8 @@ import { getAuth } from "firebase/auth";
 import { USER_ROLES } from '../constants/roles';
 import { updateMembersField } from './migrations/usersMembersMigration';
 
-// Fetch all children for the current user - INCLUDES ALL ROLES (owner, partner, caregiver, therapist)
+// Fetch active children for the current user using the canonical users.members field.
+// Legacy role-based fallback lives in roleService for compatibility during migration.
 export const getChildren = async () => {
   const auth = getAuth();
   const user = auth.currentUser;
@@ -30,7 +31,8 @@ export const getChildren = async () => {
     // Use members array for fast lookup (performance optimized)
     const childrenQuery = query(
       collection(db, "children"),
-      where("users.members", "array-contains", user.uid)
+      where("users.members", "array-contains", user.uid),
+      where("status", "==", "active")
     );
 
     const snapshot = await getDocs(childrenQuery);
@@ -47,9 +49,7 @@ export const getChildren = async () => {
     return children;
   } catch (error) {
     console.error("❌ Error in getChildren:", error);
-    
-    // Fallback to individual role queries if members array not available
-    return await getChildrenFallback();
+    return [];
   }
 };
 
@@ -60,46 +60,6 @@ const getUserRole = (users, userId) => {
   if (users.caregivers?.includes(userId)) return 'caregiver';
   if (users.therapists?.includes(userId)) return 'therapist';
   return 'unknown';
-};
-
-// Fallback function for older documents without members array
-const getChildrenFallback = async () => {
-  const auth = getAuth();
-  const user = auth.currentUser;
-  if (!user) return [];
-
-  try {
-    console.log(`🔄 Using fallback query for user ${user.uid}`);
-    
-    // Query for each role separately and combine results
-    const queries = [
-      query(collection(db, "children"), where("users.care_owner", "==", user.uid)),
-      query(collection(db, "children"), where("users.care_partners", "array-contains", user.uid)),
-      query(collection(db, "children"), where("users.caregivers", "array-contains", user.uid)),
-      query(collection(db, "children"), where("users.therapists", "array-contains", user.uid))
-    ];
-
-    const allResults = await Promise.all(queries.map(q => getDocs(q)));
-    const childrenMap = new Map();
-
-    allResults.forEach(snapshot => {
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        if (!childrenMap.has(doc.id)) {
-          childrenMap.set(doc.id, {
-            id: doc.id,
-            ...data,
-          });
-        }
-      });
-    });
-
-    const children = Array.from(childrenMap.values());
-    return children;
-  } catch (error) {
-    console.error("❌ Error in fallback query:", error);
-    return [];
-  }
 };
 
 export const fetchChildName = async (childId) => {
@@ -343,48 +303,7 @@ export const archiveChild = async (childId) => {
 
 // Get active children only (excludes archived) - INCLUDES ALL ROLES
 export const getActiveChildren = async () => {
-  const auth = getAuth();
-  const user = auth.currentUser;
-  if (!user) {
-    console.log("❌ No authenticated user");
-    return [];
-  }
-
-  try {
-    
-    // Use members array for fast lookup + filter for active status
-    const childrenQuery = query(
-      collection(db, "children"),
-      where("users.members", "array-contains", user.uid),
-      where("status", "==", "active")  // Only active children
-    );
-
-    const snapshot = await getDocs(childrenQuery);
-    const children = [];
-    
-    snapshot.forEach((doc) => {
-      const data = doc.data();
-      console.log(`📄 Found active child:`, {
-        id: doc.id,
-        name: data.name,
-        status: data.status,
-        userRole: getUserRole(data.users, user.uid)
-      });
-      children.push({
-        id: doc.id,
-        ...data,
-      });
-    });
-    
-    return children;
-  } catch (error) {
-    console.error("❌ Error in getActiveChildren:", error);
-    
-    // Fallback: get all children and filter for active status
-    const allChildren = await getChildren();
-    const activeChildren = allChildren.filter(child => child.status === 'active');
-    return activeChildren;
-  }
+  return await getChildren();
 };
 
 // Get archived children for audit/retrieval purposes
@@ -420,4 +339,3 @@ export const getArchivedChildren = async () => {
     return [];
   }
 };
-

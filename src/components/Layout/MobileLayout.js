@@ -22,8 +22,9 @@ import colors from '../../assets/theme/colors';
 import BrandWordmark from '../UI/BrandWordmark';
 import { PRODUCT_NAME_TITLE } from '../../constants/config';
 import ResponsiveHeaderBar from './shared/ResponsiveHeaderBar';
+import PWAUpdateBanner from '../UI/PWAUpdateBanner';
 
-const MobileLayout = ({ children, pageTitle, showBottomNav = true }) => {
+const MobileLayout = ({ children, pageTitle, showBottomNav = true, showFab = true }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [user] = useAuthState(auth);
@@ -129,27 +130,31 @@ const MobileLayout = ({ children, pageTitle, showBottomNav = true }) => {
         </Box>
       </ResponsiveHeaderBar>
 
+      <PWAUpdateBanner />
+
       {/* Mobile Content */}
       <Box sx={{ p: 2 }}>
         {children}
       </Box>
 
       {/* Floating Action Button */}
-      <Fab
-        sx={{
-          position: 'fixed',
-          bottom: showBottomNav ? 80 : 16,
-          right: 16,
-          zIndex: 1000
-          , bgcolor: colors.brand.ink,
-          color: colors.landing.heroText,
-          '&:hover': {
-            bgcolor: colors.brand.navy,
-          }
-        }}
-      >
-        <AddIcon />
-      </Fab>
+      {showFab ? (
+        <Fab
+          sx={{
+            position: 'fixed',
+            bottom: showBottomNav ? 80 : 16,
+            right: 16,
+            zIndex: 1000,
+            bgcolor: colors.brand.ink,
+            color: colors.landing.heroText,
+            '&:hover': {
+              bgcolor: colors.brand.navy,
+            },
+          }}
+        >
+          <AddIcon />
+        </Fab>
+      ) : null}
 
       {/* Bottom Navigation */}
       {showBottomNav && (

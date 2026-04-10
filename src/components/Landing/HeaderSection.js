@@ -13,6 +13,7 @@ import heroImage from "../../assets/image/landing/heroImage-Lifelog.png";
 import { saveFoundingFamilyEmail } from "../../services/foundingFamilyService";
 import { landingTypography, landingColors } from "../../assets/theme/landingTheme";
 import BrandWordmark from "../UI/BrandWordmark";
+import { isInstallContext } from "../../utils/installDetection";
 
 const landingPrimaryButtonStyles = {
   width: { xs: "100%", sm: "auto" },
@@ -111,7 +112,12 @@ const HeaderSection = () => {
     }
   };
 
-  const tryLifelogPath = auth.currentUser ? "/dashboard" : "/register";
+  const shouldUseInstallFlow = isInstallContext();
+  const tryLifelogPath = auth.currentUser
+    ? "/dashboard"
+    : shouldUseInstallFlow
+      ? "/install?next=/register"
+      : "/register";
 
   return (
     <Box

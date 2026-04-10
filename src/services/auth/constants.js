@@ -8,6 +8,7 @@ export const AUTH_STORAGE_KEYS = {
 
 export const DEFAULT_ROUTES = {
   DASHBOARD: '/dashboard',
+  INSTALL: '/install',
   LOGIN: '/login'
 };
 

@@ -317,7 +317,6 @@ const RichTextInput = ({
                 accept="image/*"
                 id={imageInputId}
                 type="file"
-                capture="environment"
                 style={{ display: "none" }}
                 onChange={(e) => handleFileChange(e, "image")}
               />
