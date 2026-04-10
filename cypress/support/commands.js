@@ -2,13 +2,11 @@
 
 // Login command
 Cypress.Commands.add('login', (email, password) => {
-  cy.session([email, password], () => {
-    cy.visit('/login')
-    cy.get('[data-cy="email-input"]').type(email)
-    cy.get('[data-cy="password-input"]').type(password)
-    cy.get('[data-cy="login-btn"]').click()
-    cy.url().should('include', '/dashboard')
-  })
+  cy.visit('/login')
+  cy.get('[data-cy="email-input"]').type(email)
+  cy.get('[data-cy="password-input"]').type(password)
+  cy.get('[data-cy="login-btn"]').click()
+  cy.url().should('include', '/dashboard')
 })
 
 // Logout command

@@ -12,6 +12,7 @@ import {
   getDoc
 } from 'firebase/firestore';
 import { db } from './firebase';
+import { getE2EMockData, isE2EMockEnabled } from './e2eMock';
 
 /**
  * Get care team members for a specific child
@@ -21,6 +22,11 @@ import { db } from './firebase';
  * @returns {Promise<Array>} Array of care team members with user info and roles
  */
 export const getChildCareTeam = async (childId) => {
+  if (isE2EMockEnabled()) {
+    const mockData = getE2EMockData();
+    return mockData.careTeamsByChildId?.[childId] || [];
+  }
+
   try {
     if (!childId) {
       throw new Error('Child ID is required');

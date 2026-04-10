@@ -1,7 +1,8 @@
 {
   "projects": {
     "default": "lifelog-tracker",
-    "production": "captureease-ef82f"
+    "prod": "lifelog-tracker",
+    "test": "lifelog-test-aa7d6"
   },
   "targets": {},
   "etags": {}

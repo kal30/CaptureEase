@@ -1,4 +1,5 @@
 const { defineConfig } = require('cypress')
+const emulatorTasks = require('./cypress/tasks/firebaseEmulator')
 
 module.exports = defineConfig({
   e2e: {
@@ -13,6 +14,7 @@ module.exports = defineConfig({
     requestTimeout: 10000,
     responseTimeout: 10000,
     env: {
+      REACT_APP_USE_FIREBASE_EMULATORS: 'true',
       // Test user credentials
       TEST_EMAIL: 'test@captureez.com',
       TEST_PASSWORD: 'TestPassword123!',
@@ -21,16 +23,9 @@ module.exports = defineConfig({
       FIRESTORE_EMULATOR_HOST: 'localhost:8080'
     },
     setupNodeEvents(on, config) {
-      // Custom tasks for database seeding
       on('task', {
-        seedDatabase() {
-          // Seed test data
-          return null
-        },
-        clearDatabase() {
-          // Clear test data
-          return null
-        }
+        seedDatabase: emulatorTasks.seedDatabase,
+        clearDatabase: emulatorTasks.clearDatabase,
       })
     }
   },

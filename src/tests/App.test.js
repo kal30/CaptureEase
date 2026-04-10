@@ -1,17 +1,15 @@
 import { render, screen } from '@testing-library/react';
-import App from '../App';
+import { MemoryRouter } from 'react-router-dom';
+import LandingPage from '../pages/LandingPage';
 
-jest.mock('react-slick', () => {
-  return {
-    __esModule: true,
-    default: () => {
-      return <div>Slider</div>;
-    },
-  };
-});
+test('renders the landing page hero', () => {
+  render(
+    <MemoryRouter>
+      <LandingPage />
+    </MemoryRouter>
+  );
 
-test('renders the landing page', () => {
-  render(<App />);
-  const linkElement = screen.getByText(/About Us/i);
-  expect(linkElement).toBeInTheDocument();
+  expect(screen.getByRole('heading', { level: 1, name: /I have two nephews with autism/i })).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: /start tracking free/i })).toBeInTheDocument();
+  expect(screen.getByText(/Built for the real moments of caregiving/i)).toBeInTheDocument();
 });

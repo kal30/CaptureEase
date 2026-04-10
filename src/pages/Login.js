@@ -15,6 +15,7 @@ import GoogleAuth from "../components/AuthProviders/GoogleAuth";
 import ResponsiveLayout from "../components/Layout/ResponsiveLayout";
 import colors from "../assets/theme/colors";
 import { PRODUCT_NAME_TITLE } from "../constants/config";
+import { isE2EMockEnabled, setE2EMockAuthUser } from "../services/e2eMock";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -44,6 +45,20 @@ const Login = () => {
     setLoading(true);
 
     try {
+      if (isE2EMockEnabled()) {
+        setE2EMockAuthUser({
+          uid: "cypress-owner",
+          email,
+          displayName: "Test Care Owner",
+        });
+        handlePostAuthRedirect(navigate, location, {
+          uid: "cypress-owner",
+          email,
+          displayName: "Test Care Owner",
+        });
+        return;
+      }
+
       const result = await signInWithEmailAndPassword(auth, email, password);
       // Use shared post-auth redirect utility
       handlePostAuthRedirect(navigate, location, result.user);
@@ -128,6 +143,7 @@ const Login = () => {
             required
             fullWidth
             id="email"
+            data-cy="email-input"
             label="Email Address"
             name="email"
             autoComplete="email"
@@ -140,6 +156,7 @@ const Login = () => {
             required
             fullWidth
             name="password"
+            data-cy="password-input"
             label="Password"
             type="password"
             id="password"
@@ -151,6 +168,7 @@ const Login = () => {
             type="submit"
             fullWidth
             variant="gradient"
+            data-cy="login-btn"
             loading={loading}
             loadingStyle="spinner"
             loadingText="Signing in..."

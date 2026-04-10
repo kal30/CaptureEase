@@ -1,5 +1,9 @@
 import '@testing-library/jest-dom';
 
+jest.mock('@mui/x-date-pickers/AdapterDateFns', () => ({
+  AdapterDateFns: class AdapterDateFns {},
+}));
+
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: jest.fn().mockImplementation(query => ({
