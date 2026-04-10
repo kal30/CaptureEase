@@ -65,7 +65,6 @@ const ChildActionsMenuContent = ({
   onDeleteChild,
   onPrepForTherapy,
   onImportLogs,
-  onAddChild,
   showWarning = true,
 }) => {
   const warningLabel = showWarning ? getWarningLabel(child) : null;
@@ -73,7 +72,6 @@ const ChildActionsMenuContent = ({
   const canGoToCareTeam = typeof onGoToCareTeam === 'function';
   const canEdit = typeof onEditChild === 'function';
   const canDelete = typeof onDeleteChild === 'function';
-  const canAddAnotherPerson = typeof onAddChild === 'function';
   const childName = child?.name || 'This child';
   const teamLabel = `${childName}’s Team`;
   const infoLabel = `Edit ${childName}’s Info`;
@@ -107,11 +105,7 @@ const ChildActionsMenuContent = ({
         </>
       ) : null}
 
-      <Box sx={{ px: 1.5, pb: 0.75, pt: 1 }}>
-        <Typography sx={{ fontSize: '0.72rem', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: colors.landing.textMuted }}>
-          {teamLabel}
-        </Typography>
-      </Box>
+      <SectionLabel>{teamLabel}</SectionLabel>
 
       {canInvite ? (
         <ActionItem
@@ -135,11 +129,7 @@ const ChildActionsMenuContent = ({
 
       <Divider sx={{ my: 0.5 }} />
 
-      <Box sx={{ px: 1.5, pb: 0.75, pt: 1 }}>
-        <Typography sx={{ fontSize: '0.72rem', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: colors.landing.textMuted }}>
-          Tools
-        </Typography>
-      </Box>
+      <SectionLabel>Tools</SectionLabel>
 
       <ActionItem
         icon={<AutoAwesomeOutlinedIcon />}
@@ -157,6 +147,10 @@ const ChildActionsMenuContent = ({
         Import .xlsx or .docx
       </ActionItem>
 
+      <Divider sx={{ my: 0.5 }} />
+
+      <SectionLabel>Account</SectionLabel>
+
       {canEdit ? (
         <ActionItem
           icon={<EditOutlinedIcon />}
@@ -164,16 +158,6 @@ const ChildActionsMenuContent = ({
           iconColor={colors.brand.ink}
         >
           {infoLabel}
-        </ActionItem>
-      ) : null}
-
-      {canAddAnotherPerson ? (
-        <ActionItem
-          icon={<PersonAddIcon />}
-          onClick={() => onAddChild?.(child)}
-          iconColor={colors.brand.deep}
-        >
-          Add another person
         </ActionItem>
       ) : null}
 
