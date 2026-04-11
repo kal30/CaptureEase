@@ -223,12 +223,12 @@ const HeaderSection = () => {
               </Button>
               <Button
                 component={RouterLink}
-                to="/#how-it-works"
+                to="/contact-us"
                 variant="outlined"
-                data-cy="landing-how-it-works-btn"
+                data-cy="landing-contact-us-btn"
                 sx={{ ...landingSecondaryButtonStyles, height: 48, minHeight: 48 }}
               >
-                See How It Works
+                Connect with me
               </Button>
             </Box>
 

@@ -97,7 +97,7 @@ const getStoredTimelineDate = () => {
   return coerceCalendarDate(stored) || new Date();
 };
 
-const QuickCheckIn = ({ child, onComplete, onSkip }) => {
+const QuickCheckIn = ({ child, onComplete, onSkip, initialDate = null }) => {
   const [user] = useAuthState(auth);
 
   const [noteData, setNoteData] = useState({ text: '', mediaFile: null, audioBlob: null });
@@ -139,6 +139,19 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
     window.addEventListener('captureez:timeline-date-changed', handleTimelineDateChanged);
     return () => window.removeEventListener('captureez:timeline-date-changed', handleTimelineDateChanged);
   }, []);
+
+  useEffect(() => {
+    const nextDate = coerceCalendarDate(initialDate);
+    if (nextDate) {
+      setSelectedDate(nextDate);
+      return;
+    }
+
+    const storedDate = getStoredTimelineDate();
+    if (storedDate) {
+      setSelectedDate(storedDate);
+    }
+  }, [initialDate]);
 
   const quickTagGroups = useMemo(() => {
     const builtInGroups = getQuickTagGroups();

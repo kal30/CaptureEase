@@ -133,87 +133,6 @@ const MiniCalendar = ({
     };
   }, [entries, displayMonth, selectedDate, activityDateKeys]);
 
-  React.useEffect(() => {
-    if (process.env.NODE_ENV === 'production') {
-      return;
-    }
-
-    const activeDays = calendarData.days
-      .filter((day) => day.hasActivity)
-      .map((day) => day.dateKey);
-    const debugEntries = (entries || []).slice(0, 10).map((entry) => ({
-      id: entry?.id,
-      collection: entry?.collection,
-      originalCollection: entry?.originalData?.collection,
-      dateKey: getCalendarEntryDateKey(entry),
-      originalEntryDate: entry?.originalData?.entryDate || null,
-      originalDate: entry?.originalData?.date || null,
-      originalTimestampRaw:
-        entry?.originalData?.timestamp?.toDate?.() ||
-        entry?.originalData?.timestamp ||
-        entry?.originalData?.createdAt?.toDate?.() ||
-        entry?.originalData?.createdAt ||
-        entry?.originalData?.date?.toDate?.() ||
-        entry?.originalData?.date ||
-        entry?.originalData?.entryDate?.toDate?.() ||
-        entry?.originalData?.entryDate ||
-        null,
-      timestamp: entry?.timestamp?.toDate?.() || entry?.timestamp || entry?.createdAt || entry?.date || null,
-      originalTimestamp:
-        entry?.originalData?.timestamp?.toDate?.() ||
-        entry?.originalData?.timestamp ||
-        entry?.originalData?.createdAt?.toDate?.() ||
-        entry?.originalData?.createdAt ||
-        entry?.originalData?.date?.toDate?.() ||
-        entry?.originalData?.date ||
-        entry?.originalData?.entryDate?.toDate?.() ||
-        entry?.originalData?.entryDate ||
-        null,
-      entryDate: entry?.originalData?.entryDate || entry?.entryDate || null,
-      date: entry?.originalData?.date || entry?.date || null,
-      title: entry?.title || entry?.text || entry?.content || entry?.notes || '',
-    }));
-
-    const aprilTenth = calendarData.days.find((day) => day.dateKey === '2026-04-10');
-    const aprilEleventh = calendarData.days.find((day) => day.dateKey === '2026-04-11');
-    const rawActivityKeys = activityDateKeys.length > 0
-      ? activityDateKeys
-      : Array.from(getCalendarDateKeys(entries));
-    const entryKeysFromCalendar = debugEntries.map((entry) => entry.dateKey).filter(Boolean);
-
-    // eslint-disable-next-line no-console
-    console.groupCollapsed('[MiniCalendar debug]');
-    console.log('month', calendarData.monthName);
-    console.log('selectedDate', selectedDate ? getCalendarDateKey(selectedDate) : null);
-    console.log('entriesLength', entries.length);
-    console.log('activityDateKeysLength', activityDateKeys.length);
-    console.log('activityDateKeys', rawActivityKeys);
-    console.log('activeDays', activeDays);
-    console.log('entryKeysFromCalendar', entryKeysFromCalendar);
-    console.log('[MiniCalendar debug] entryKeysCsv', entryKeysFromCalendar.join(', '));
-    console.log('[MiniCalendar debug] firstEntry', debugEntries[0] || null);
-    console.log('hasApril10Source', rawActivityKeys.includes('2026-04-10') || activeDays.includes('2026-04-10') || entryKeysFromCalendar.includes('2026-04-10'));
-    console.log('hasApril11Source', rawActivityKeys.includes('2026-04-11') || activeDays.includes('2026-04-11') || entryKeysFromCalendar.includes('2026-04-11'));
-    console.log('aprilTenth', aprilTenth
-      ? {
-          dateKey: aprilTenth.dateKey,
-          hasActivity: aprilTenth.hasActivity,
-          isCurrentMonth: aprilTenth.isCurrentMonth,
-          entries: aprilTenth.entries.length,
-        }
-      : null);
-    console.log('aprilEleventh', aprilEleventh
-      ? {
-          dateKey: aprilEleventh.dateKey,
-          hasActivity: aprilEleventh.hasActivity,
-          isCurrentMonth: aprilEleventh.isCurrentMonth,
-          entries: aprilEleventh.entries.length,
-        }
-      : null);
-    console.table(debugEntries);
-    console.groupEnd();
-  }, [activityDateKeys.length, calendarData.days, calendarData.monthName, entries, selectedDate]);
-
   const handleDayClick = (e, dayData) => {
     // Allow clicking on any current month day that is today or in the past
     if (dayData.isCurrentMonth && (dayData.isToday || !dayData.isFuture) && onDayClick) {
@@ -364,7 +283,7 @@ const MiniCalendar = ({
       
       {/* Legend - only show on mobile */}
       <Box sx={{ 
-        display: { xs: 'flex', md: 'none' },
+        display: 'flex',
         alignItems: 'center', 
         justifyContent: 'center',
         gap: 0.5, 
@@ -377,7 +296,7 @@ const MiniCalendar = ({
           bgcolor: colors.brand.deep,
         }} />
         <Typography variant="caption" sx={{ fontSize: '0.7rem', color: 'text.secondary' }}>
-          Has Activity
+          Has activity
         </Typography>
       </Box>
     </Box>

@@ -444,7 +444,7 @@ const MobileCaptureDashboard = ({
   };
 
   const handleQuickNote = () => {
-    onQuickEntry?.(activeChild, 'quick_note');
+    onQuickEntry?.(activeChild, 'quick_note', undefined, selectedDate);
   };
 
   const toggleTimelineEntryType = (typeKey) => {

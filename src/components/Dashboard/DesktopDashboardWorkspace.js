@@ -141,7 +141,7 @@ const DesktopDashboardWorkspace = ({
 
   const handleQuickNote = () => {
     if (!activeChild) return;
-    onQuickEntry?.(activeChild, 'quick_note');
+    onQuickEntry?.(activeChild, 'quick_note', undefined, selectedDate);
   };
 
   const handleDesktopChildMenuOpen = (event) => {

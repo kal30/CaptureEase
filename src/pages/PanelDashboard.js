@@ -435,6 +435,7 @@ const PanelDashboard = () => {
               onComplete={hook.handleQuickEntryComplete}
               onSkip={hook.handleQuickEntrySkip}
               initialStep={hook.quickEntryStep}
+              initialDate={hook.quickEntryDate}
             />
           )}
         </Box>
