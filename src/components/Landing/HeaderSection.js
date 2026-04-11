@@ -174,6 +174,7 @@ const HeaderSection = () => {
                     <BrandWordmark
                       variant="heroInline"
                       color={landingColors.deepNavy}
+                      showIcon={false}
                       sx={{
                         display: 'inline-flex',
                   verticalAlign: 'baseline',

@@ -116,7 +116,7 @@ export class TimelinePermissionManager {
         },
         // Ensure we have the correct property names for counts
         incidentCount: entries.filter(e => e.type === 'incident').length,
-        journalCount: entries.filter(e => e.type === 'journal').length,
+        dailyLogCount: entries.filter(e => e.collection === 'dailyLogs').length,
         dailyHabitCount: entries.filter(e => e.type === 'dailyHabit').length,
         accessLevel: 'full',
         canSeeAllEntries: true

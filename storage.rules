@@ -1,0 +1,32 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Keep uploads simple and predictable for the current app flows.
+    // Firestore rules still govern who can see or use the underlying child data.
+    match /children/{allPaths=**} {
+      allow read, write: if isAuthenticated();
+    }
+
+    match /dailyLogs/{allPaths=**} {
+      allow read, write: if isAuthenticated();
+    }
+
+    match /incidents/{allPaths=**} {
+      allow read, write: if isAuthenticated();
+    }
+
+    match /messages/{allPaths=**} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // Default deny for everything else.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

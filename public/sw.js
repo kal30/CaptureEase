@@ -1,11 +1,12 @@
-const CACHE_NAME = 'captureez-app-v2';
+const CACHE_NAME = 'lifelog-app-v8';
 const APP_SHELL_URLS = [
   '/',
   '/index.html',
   '/manifest.json',
   '/favicon.ico',
-  '/captureez-icon-192.png',
-  '/captureez-icon-512.png',
+  '/lifelog-icon-32.png',
+  '/lifelog-icon-192.png',
+  '/lifelog-icon-512.png',
 ];
 
 self.addEventListener('install', (event) => {
@@ -89,8 +90,8 @@ self.addEventListener('notificationclick', (event) => {
       }).then(() =>
         self.registration.showNotification('Response Recorded! 🎉', {
           body: 'Your feedback has been saved. Open Lifelog to see details.',
-          icon: '/favicon.ico',
-          badge: '/favicon.ico',
+          icon: '/lifelog-icon-192.png',
+          badge: '/lifelog-icon-32.png',
           tag: `response-${data.incidentId}`,
           requireInteraction: false,
           actions: [],
@@ -147,8 +148,8 @@ self.addEventListener('push', (event) => {
   const data = event.data.json();
   const options = {
     body: data.body,
-    icon: data.icon || '/favicon.ico',
-    badge: '/favicon.ico',
+    icon: data.icon || '/lifelog-icon-192.png',
+    badge: '/lifelog-icon-32.png',
     data: data.data || {},
     tag: data.tag || 'default',
     requireInteraction: data.requireInteraction ?? true,
