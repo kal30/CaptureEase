@@ -41,7 +41,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { PickersDay } from '@mui/x-date-pickers/PickersDay';
-import { useDashboardView } from '../shared/DashboardViewContext';
+import { ACTIVE_TIMELINE_DATE_STORAGE_KEY, useDashboardView } from '../shared/DashboardViewContext';
 import { ChildSwitcherPanel, ChildSwitcherTrigger } from '../shared/ChildSwitcher';
 import ChildActionsMenuContent from '../shared/ChildActionsMenuContent';
 import TimelineHeaderControls from '../../Timeline/TimelineHeaderControls';
@@ -224,6 +224,20 @@ const MobileCaptureDashboard = ({
     setMobileActionsSheetOpen(false);
     setSelectedDate(new Date());
   }, [activeChild?.id]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const selectedDateKey = getCalendarDateKey(selectedDate);
+    if (selectedDateKey) {
+      window.localStorage.setItem(ACTIVE_TIMELINE_DATE_STORAGE_KEY, selectedDateKey);
+      window.dispatchEvent(new CustomEvent('captureez:timeline-date-changed', {
+        detail: { dateKey: selectedDateKey },
+      }));
+    }
+  }, [selectedDate]);
 
   useEffect(() => {
     if (isE2EMockEnabled()) {

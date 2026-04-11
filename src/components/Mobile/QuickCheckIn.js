@@ -12,14 +12,19 @@ import {
   Slide,
   Avatar,
   TextField,
+  Popover,
 } from '@mui/material';
 import {
   Close as CloseIcon,
   AccessTime as AccessTimeIcon,
+  CalendarToday as CalendarTodayIcon,
   LocalOffer as LocalOfferIcon,
   ExpandMore as ExpandMoreIcon,
   Description as DescriptionIcon,
 } from '@mui/icons-material';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import StyledButton from '../UI/StyledButton';
 import RichTextInput from '../UI/RichTextInput';
 import { db, auth } from '../../services/firebase';
@@ -42,6 +47,9 @@ import {
   loadCustomQuickTags,
   saveCustomQuickTags,
 } from '../../utils/quickTags';
+import { getCalendarDateKey } from '../../utils/calendarDateKey';
+import { ACTIVE_TIMELINE_DATE_STORAGE_KEY } from '../Dashboard/shared/DashboardViewContext';
+import { coerceCalendarDate } from '../../utils/calendarDateKey';
 
 const getTimeInputValue = (date = new Date()) =>
   new Date(date).toTimeString().slice(0, 5);
@@ -57,6 +65,18 @@ const formatTimeLabel = (timeValue) => {
   return `${displayHours}:${String(minutes).padStart(2, '0')} ${suffix}`;
 };
 
+const formatDateLabel = (dateValue) => {
+  if (!(dateValue instanceof Date) || Number.isNaN(dateValue.getTime())) {
+    return 'Select date';
+  }
+
+  return dateValue.toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  });
+};
+
 const buildTimestampWithTime = (dateValue, timeValue) => {
   const timestamp = new Date(dateValue);
   if (timeValue) {
@@ -68,15 +88,26 @@ const buildTimestampWithTime = (dateValue, timeValue) => {
   return timestamp;
 };
 
+const getStoredTimelineDate = () => {
+  if (typeof window === 'undefined') {
+    return new Date();
+  }
+
+  const stored = window.localStorage.getItem(ACTIVE_TIMELINE_DATE_STORAGE_KEY);
+  return coerceCalendarDate(stored) || new Date();
+};
+
 const QuickCheckIn = ({ child, onComplete, onSkip }) => {
   const [user] = useAuthState(auth);
 
   const [noteData, setNoteData] = useState({ text: '', mediaFile: null, audioBlob: null });
+  const [selectedDate, setSelectedDate] = useState(() => getStoredTimelineDate());
   const [selectedTime, setSelectedTime] = useState(() => getTimeInputValue());
   const [showQuickTags, setShowQuickTags] = useState(false);
   const [selectedTags, setSelectedTags] = useState([]);
   const [importantMoment, setImportantMoment] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [datePickerAnchor, setDatePickerAnchor] = useState(null);
   const [customQuickTags, setCustomQuickTags] = useState([]);
   const [tagDraftOpen, setTagDraftOpen] = useState(false);
   const [tagDraftLabel, setTagDraftLabel] = useState('');
@@ -87,6 +118,27 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
   useEffect(() => {
     setCustomQuickTags(loadCustomQuickTags(user?.uid));
   }, [user?.uid]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined;
+    }
+
+    const handleTimelineDateChanged = (event) => {
+      const nextDate = coerceCalendarDate(event?.detail?.dateKey);
+      if (nextDate) {
+        setSelectedDate(nextDate);
+      }
+    };
+
+    const storedDate = getStoredTimelineDate();
+    if (storedDate) {
+      setSelectedDate(storedDate);
+    }
+
+    window.addEventListener('captureez:timeline-date-changed', handleTimelineDateChanged);
+    return () => window.removeEventListener('captureez:timeline-date-changed', handleTimelineDateChanged);
+  }, []);
 
   const quickTagGroups = useMemo(() => {
     const builtInGroups = getQuickTagGroups();
@@ -200,6 +252,31 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
     }
   };
 
+  const handleDatePickerOpen = (event) => {
+    setDatePickerAnchor(event.currentTarget);
+  };
+
+  const handleDatePickerClose = () => {
+    setDatePickerAnchor(null);
+  };
+
+  const handleDateChange = (nextDate) => {
+    if (!nextDate) {
+      return;
+    }
+
+    setSelectedDate(nextDate);
+    setDatePickerAnchor(null);
+
+    if (typeof window !== 'undefined') {
+      const dateKey = getCalendarDateKey(nextDate);
+      window.localStorage.setItem(ACTIVE_TIMELINE_DATE_STORAGE_KEY, dateKey);
+      window.dispatchEvent(new CustomEvent('captureez:timeline-date-changed', {
+        detail: { dateKey },
+      }));
+    }
+  };
+
   const saveQuickNote = async () => {
     const text = noteText.trim();
     const hasContent = Boolean(text || noteData?.mediaFile || noteData?.audioBlob);
@@ -207,7 +284,7 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
 
     setSaving(true);
     try {
-      const timestamp = buildTimestampWithTime(new Date(), selectedTime);
+      const timestamp = buildTimestampWithTime(selectedDate, selectedTime);
       const optimisticEntry = {
         childId: child.id,
         text: text || 'Shared media note',
@@ -263,6 +340,7 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
         importantMoment,
         category: resolvedCategory,
         timestamp,
+        entryDate: timestamp.toDateString(),
         ...(mediaUrls.length > 0 && { mediaUrls }),
       });
       setNoteData({ text: '', mediaFile: null, audioBlob: null });
@@ -347,7 +425,40 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
               flexWrap: 'wrap',
             }}
           >
-          <Button
+            <Button
+              variant="outlined"
+              onClick={handleDatePickerOpen}
+              startIcon={<CalendarTodayIcon sx={{ fontSize: 16 }} />}
+              endIcon={<ExpandMoreIcon sx={{ fontSize: 18 }} />}
+              sx={{
+                minHeight: 32,
+                px: 1.1,
+                py: 0.25,
+                borderRadius: '10px',
+                textTransform: 'none',
+                fontWeight: 800,
+                fontSize: '0.84rem',
+                color: '#334155',
+                borderColor: '#cfd8e3',
+                bgcolor: '#ffffff',
+                boxShadow: '0 1px 4px rgba(15, 23, 42, 0.04)',
+                '&:hover': {
+                  bgcolor: '#f8fafc',
+                  borderColor: '#b8c2d1',
+                },
+                '& .MuiButton-startIcon': {
+                  mr: 0.35,
+                },
+                '& .MuiButton-endIcon': {
+                  ml: 0.25,
+                },
+                width: { xs: '100%', sm: 'auto' },
+              }}
+            >
+              {formatDateLabel(selectedDate)}
+            </Button>
+
+            <Button
               variant="outlined"
               onClick={handleTimePickerOpen}
               startIcon={<AccessTimeIcon sx={{ fontSize: 16 }} />}
@@ -378,8 +489,37 @@ const QuickCheckIn = ({ child, onComplete, onSkip }) => {
               }}
             >
               {formatTimeLabel(selectedTime)}
-          </Button>
+            </Button>
           </Box>
+
+          <Popover
+            open={Boolean(datePickerAnchor)}
+            anchorEl={datePickerAnchor}
+            onClose={handleDatePickerClose}
+            anchorOrigin={{
+              vertical: 'bottom',
+              horizontal: 'left',
+            }}
+            transformOrigin={{
+              vertical: 'top',
+              horizontal: 'left',
+            }}
+            PaperProps={{
+              sx: {
+                mt: 1,
+                borderRadius: '16px',
+                boxShadow: '0 18px 40px rgba(15, 23, 42, 0.18)',
+                overflow: 'hidden',
+              },
+            }}
+          >
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+              <DateCalendar
+                value={selectedDate}
+                onChange={handleDateChange}
+              />
+            </LocalizationProvider>
+          </Popover>
 
           <input
             ref={timeInputRef}

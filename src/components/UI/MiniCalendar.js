@@ -133,6 +133,87 @@ const MiniCalendar = ({
     };
   }, [entries, displayMonth, selectedDate, activityDateKeys]);
 
+  React.useEffect(() => {
+    if (process.env.NODE_ENV === 'production') {
+      return;
+    }
+
+    const activeDays = calendarData.days
+      .filter((day) => day.hasActivity)
+      .map((day) => day.dateKey);
+    const debugEntries = (entries || []).slice(0, 10).map((entry) => ({
+      id: entry?.id,
+      collection: entry?.collection,
+      originalCollection: entry?.originalData?.collection,
+      dateKey: getCalendarEntryDateKey(entry),
+      originalEntryDate: entry?.originalData?.entryDate || null,
+      originalDate: entry?.originalData?.date || null,
+      originalTimestampRaw:
+        entry?.originalData?.timestamp?.toDate?.() ||
+        entry?.originalData?.timestamp ||
+        entry?.originalData?.createdAt?.toDate?.() ||
+        entry?.originalData?.createdAt ||
+        entry?.originalData?.date?.toDate?.() ||
+        entry?.originalData?.date ||
+        entry?.originalData?.entryDate?.toDate?.() ||
+        entry?.originalData?.entryDate ||
+        null,
+      timestamp: entry?.timestamp?.toDate?.() || entry?.timestamp || entry?.createdAt || entry?.date || null,
+      originalTimestamp:
+        entry?.originalData?.timestamp?.toDate?.() ||
+        entry?.originalData?.timestamp ||
+        entry?.originalData?.createdAt?.toDate?.() ||
+        entry?.originalData?.createdAt ||
+        entry?.originalData?.date?.toDate?.() ||
+        entry?.originalData?.date ||
+        entry?.originalData?.entryDate?.toDate?.() ||
+        entry?.originalData?.entryDate ||
+        null,
+      entryDate: entry?.originalData?.entryDate || entry?.entryDate || null,
+      date: entry?.originalData?.date || entry?.date || null,
+      title: entry?.title || entry?.text || entry?.content || entry?.notes || '',
+    }));
+
+    const aprilTenth = calendarData.days.find((day) => day.dateKey === '2026-04-10');
+    const aprilEleventh = calendarData.days.find((day) => day.dateKey === '2026-04-11');
+    const rawActivityKeys = activityDateKeys.length > 0
+      ? activityDateKeys
+      : Array.from(getCalendarDateKeys(entries));
+    const entryKeysFromCalendar = debugEntries.map((entry) => entry.dateKey).filter(Boolean);
+
+    // eslint-disable-next-line no-console
+    console.groupCollapsed('[MiniCalendar debug]');
+    console.log('month', calendarData.monthName);
+    console.log('selectedDate', selectedDate ? getCalendarDateKey(selectedDate) : null);
+    console.log('entriesLength', entries.length);
+    console.log('activityDateKeysLength', activityDateKeys.length);
+    console.log('activityDateKeys', rawActivityKeys);
+    console.log('activeDays', activeDays);
+    console.log('entryKeysFromCalendar', entryKeysFromCalendar);
+    console.log('[MiniCalendar debug] entryKeysCsv', entryKeysFromCalendar.join(', '));
+    console.log('[MiniCalendar debug] firstEntry', debugEntries[0] || null);
+    console.log('hasApril10Source', rawActivityKeys.includes('2026-04-10') || activeDays.includes('2026-04-10') || entryKeysFromCalendar.includes('2026-04-10'));
+    console.log('hasApril11Source', rawActivityKeys.includes('2026-04-11') || activeDays.includes('2026-04-11') || entryKeysFromCalendar.includes('2026-04-11'));
+    console.log('aprilTenth', aprilTenth
+      ? {
+          dateKey: aprilTenth.dateKey,
+          hasActivity: aprilTenth.hasActivity,
+          isCurrentMonth: aprilTenth.isCurrentMonth,
+          entries: aprilTenth.entries.length,
+        }
+      : null);
+    console.log('aprilEleventh', aprilEleventh
+      ? {
+          dateKey: aprilEleventh.dateKey,
+          hasActivity: aprilEleventh.hasActivity,
+          isCurrentMonth: aprilEleventh.isCurrentMonth,
+          entries: aprilEleventh.entries.length,
+        }
+      : null);
+    console.table(debugEntries);
+    console.groupEnd();
+  }, [activityDateKeys.length, calendarData.days, calendarData.monthName, entries, selectedDate]);
+
   const handleDayClick = (e, dayData) => {
     // Allow clicking on any current month day that is today or in the past
     if (dayData.isCurrentMonth && (dayData.isToday || !dayData.isFuture) && onDayClick) {
@@ -162,8 +243,8 @@ const MiniCalendar = ({
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 0.3,
-    py: dayData.hasActivity && dayData.isCurrentMonth ? 0.2 : 0.3,
+    gap: 0.15,
+    py: 0.3,
     borderRadius: '50%',
     fontSize: { xs: '0.85rem', md: '0.75rem' },
     fontWeight: dayData.isToday || dayData.isSelected ? 600 : 400,
@@ -190,13 +271,16 @@ const MiniCalendar = ({
   });
 
   const activityDotStyles = {
-    width: { xs: 9, md: 8 },
-    height: { xs: 9, md: 8 },
-    borderRadius: '50%',
-    bgcolor: colors.brand.deep,
-    border: `2px solid ${colors.landing.surface}`,
-    boxShadow: '0 1px 4px rgba(0,0,0,0.22)',
-    flexShrink: 0,
+    color: colors.app.timeline.dailyLog,
+    fontSize: { xs: 13, md: 12 },
+    lineHeight: 1,
+    fontWeight: 900,
+    position: 'absolute',
+    bottom: { xs: 2, md: 1 },
+    left: '50%',
+    transform: 'translateX(-50%)',
+    zIndex: 2,
+    pointerEvents: 'none',
   };
 
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -250,43 +334,30 @@ const MiniCalendar = ({
             onClick={(e) => handleDayClick(e, dayData)}
             className={`mini-calendar__day ${dayData.hasActivity ? 'mini-calendar__day--active' : ''} ${dayData.isToday ? 'mini-calendar__day--today' : ''} ${!dayData.isCurrentMonth ? 'mini-calendar__day--other-month' : ''}`}
           >
-            <Box
-              component="span"
-              sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                lineHeight: 1,
-                width: '100%',
-                minHeight: 18,
-              }}
-            >
             <Typography
               variant="caption"
+            sx={{
+              fontSize: 'inherit',
+              fontWeight: 'inherit',
+              color: dayData.isToday ? 'primary.contrastText' : 'inherit',
+              lineHeight: 1,
+              position: 'relative',
+              zIndex: 1,
+            }}
+          >
+            {dayData.day}
+          </Typography>
+          {/* Activity dot */}
+          {dayData.hasActivity && dayData.isCurrentMonth && (
+            <Typography
+              aria-hidden="true"
               sx={{
-                fontSize: 'inherit',
-                fontWeight: 'inherit',
-                color: dayData.isToday ? 'primary.contrastText' : 'inherit'
+                ...activityDotStyles,
               }}
             >
-              {dayData.day}
+              •
             </Typography>
-            </Box>
-            {/* Activity dot */}
-            {dayData.hasActivity && dayData.isCurrentMonth && (
-              <Box
-                aria-hidden="true"
-                sx={{
-                  ...activityDotStyles,
-                  position: 'absolute',
-                  left: '50%',
-                  bottom: { xs: 4, md: 3 },
-                  transform: 'translateX(-50%)',
-                  zIndex: 1,
-                }}
-              />
-            )}
+          )}
           </Box>
         ))}
       </Box>

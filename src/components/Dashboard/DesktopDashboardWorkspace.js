@@ -25,6 +25,7 @@ import { useDashboardView } from './shared/DashboardViewContext';
 import { ChildSwitcherPanel, ChildSwitcherTrigger } from './shared/ChildSwitcher';
 import ChildActionsMenuContent from './shared/ChildActionsMenuContent';
 import { getAllQuickTagOptions, loadCustomQuickTags } from '../../utils/quickTags';
+import { getCalendarDateKey } from '../../utils/calendarDateKey';
 import { getRoleDisplay } from '../../constants/roles';
 import { CORE_ENTRY_ACTIONS } from '../../constants/logTypeRegistry';
 import TimelineFilters from '../Timeline/TimelineFilters';
@@ -34,6 +35,7 @@ import UnifiedTimeline from '../Timeline/UnifiedTimeline';
 import MiniCalendar from '../UI/MiniCalendar';
 import colors from '../../assets/theme/colors';
 import { getE2EMockData, isE2EMockEnabled } from '../../services/e2eMock';
+import { ACTIVE_TIMELINE_DATE_STORAGE_KEY } from './shared/DashboardViewContext';
 
 const formatStreakLabel = (streak = 0) => {
   if (!streak || streak < 1) {
@@ -101,6 +103,20 @@ const DesktopDashboardWorkspace = ({
     setTimelineFilters({});
     setSelectedDate(new Date());
   }, [activeChild?.id]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const selectedDateKey = getCalendarDateKey(selectedDate);
+    if (selectedDateKey) {
+      window.localStorage.setItem(ACTIVE_TIMELINE_DATE_STORAGE_KEY, selectedDateKey);
+      window.dispatchEvent(new CustomEvent('captureez:timeline-date-changed', {
+        detail: { dateKey: selectedDateKey },
+      }));
+    }
+  }, [selectedDate]);
 
   const handleQuickAction = (actionKey) => {
     if (!activeChild) return;

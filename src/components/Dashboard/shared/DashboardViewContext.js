@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useMemo, useRef, useState 
 
 const DashboardViewContext = createContext(null);
 export const ACTIVE_CHILD_STORAGE_KEY = 'lifelog:activeChildId';
+export const ACTIVE_TIMELINE_DATE_STORAGE_KEY = 'lifelog:timelineSelectedDate';
 
 export const DashboardViewProvider = ({
   children,
