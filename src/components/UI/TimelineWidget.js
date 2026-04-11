@@ -807,6 +807,7 @@ const TimelineWidget = ({
                       onEmptyStateClick={handleEmptyStateClick}
                       showFilters={false}
                       showDaySummary={false}
+                      calendarEntries={childSpecificEntries}
                     />
                   </Box>
                 </Box>

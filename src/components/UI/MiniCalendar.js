@@ -3,6 +3,7 @@ import { Box, Typography, useMediaQuery, useTheme } from '@mui/material';
 import MonthNavigationControls from './MonthNavigationControls';
 import { useSwipeGesture } from '../../hooks/useSwipeGesture';
 import colors from '../../assets/theme/colors';
+import { getCalendarDateKey, getCalendarEntryDateKey, getCalendarDateKeys } from '../../utils/calendarDateKey';
 
 const toMonthStart = (date) => new Date(date.getFullYear(), date.getMonth(), 1);
 const getMonthKey = (date) => `${date.getFullYear()}-${date.getMonth()}`;
@@ -20,6 +21,7 @@ const getMonthKey = (date) => `${date.getFullYear()}-${date.getMonth()}`;
  */
 const MiniCalendar = ({
   entries = [],
+  activityDateKeys = [],
   onDayClick,
   currentMonth,
   selectedDate = null
@@ -70,6 +72,7 @@ const MiniCalendar = ({
   const calendarData = useMemo(() => {
     const today = new Date();
     const monthToDisplay = new Date(displayMonth.getFullYear(), displayMonth.getMonth(), 1);
+    const todayKey = getCalendarDateKey(today);
     
     // Get first day of month and adjust to start on Sunday
     const firstDayOfMonth = new Date(monthToDisplay);
@@ -81,11 +84,14 @@ const MiniCalendar = ({
     // Generate days (6 weeks = 42 days to cover all possible month layouts)
     const days = [];
     const entriesByDay = {};
+    const activityKeys = activityDateKeys.length > 0
+      ? new Set(activityDateKeys)
+      : getCalendarDateKeys(entries);
     
     // Group entries by day
     entries.forEach(entry => {
-      const entryDate = entry.timestamp?.toDate?.() || new Date(entry.timestamp);
-      const dateKey = entryDate.toDateString();
+      const dateKey = getCalendarEntryDateKey(entry);
+      if (!dateKey) return;
       
       if (!entriesByDay[dateKey]) {
         entriesByDay[dateKey] = [];
@@ -98,22 +104,22 @@ const MiniCalendar = ({
       const currentDate = new Date(startDate);
       currentDate.setDate(startDate.getDate() + i);
       
-      const dateKey = currentDate.toDateString();
+      const dateKey = getCalendarDateKey(currentDate);
       const dayEntries = entriesByDay[dateKey] || [];
-      const isToday = currentDate.toDateString() === today.toDateString();
+      const isToday = getCalendarDateKey(currentDate) === todayKey;
       // Compare only date parts, not time, to properly identify future dates
       const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
       const currentDateOnly = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
       const isFuture = currentDateOnly > todayDateOnly;
       const isCurrentMonth = currentDate.getMonth() === monthToDisplay.getMonth();
-      const isSelected = selectedDate && currentDate.toDateString() === selectedDate.toDateString();
+      const isSelected = selectedDate && getCalendarDateKey(currentDate) === getCalendarDateKey(selectedDate);
       
       days.push({
         date: currentDate,
         day: currentDate.getDate(),
         dateKey,
         entries: dayEntries,
-        hasActivity: dayEntries.length > 0,
+        hasActivity: activityKeys.has(dateKey) || dayEntries.length > 0,
         isToday,
         isFuture,
         isCurrentMonth,
@@ -125,7 +131,7 @@ const MiniCalendar = ({
       days, 
       monthName: monthToDisplay.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
     };
-  }, [entries, displayMonth, selectedDate]);
+  }, [entries, displayMonth, selectedDate, activityDateKeys]);
 
   const handleDayClick = (e, dayData) => {
     // Allow clicking on any current month day that is today or in the past
@@ -151,11 +157,13 @@ const MiniCalendar = ({
 
   const dayStyles = (dayData) => ({
     width: { xs: 38, sm: 34, md: 28 },
-    height: { xs: 44, sm: 42, md: 36 },
+    height: { xs: 50, sm: 46, md: 42 },
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 0.3,
+    py: dayData.hasActivity && dayData.isCurrentMonth ? 0.2 : 0.3,
     borderRadius: '50%',
     fontSize: { xs: '0.85rem', md: '0.75rem' },
     fontWeight: dayData.isToday || dayData.isSelected ? 600 : 400,
@@ -182,16 +190,12 @@ const MiniCalendar = ({
   });
 
   const activityDotStyles = {
-    position: 'absolute',
-    bottom: { xs: 4, md: 3 },
-    left: '50%',
-    transform: 'translateX(-50%)',
     width: { xs: 9, md: 8 },
     height: { xs: 9, md: 8 },
     borderRadius: '50%',
     bgcolor: colors.app.calendar.eventDot,
-    border: `1px solid ${colors.landing.surface}`,
-    boxShadow: '0 1px 3px rgba(0,0,0,0.24)',
+    border: `2px solid ${colors.landing.surface}`,
+    boxShadow: '0 1px 4px rgba(0,0,0,0.22)',
     flexShrink: 0,
   };
 
@@ -246,6 +250,18 @@ const MiniCalendar = ({
             onClick={(e) => handleDayClick(e, dayData)}
             className={`mini-calendar__day ${dayData.hasActivity ? 'mini-calendar__day--active' : ''} ${dayData.isToday ? 'mini-calendar__day--today' : ''} ${!dayData.isCurrentMonth ? 'mini-calendar__day--other-month' : ''}`}
           >
+            <Box
+              component="span"
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                lineHeight: 1,
+                width: '100%',
+                minHeight: 18,
+              }}
+            >
             <Typography
               variant="caption"
               sx={{
@@ -256,10 +272,20 @@ const MiniCalendar = ({
             >
               {dayData.day}
             </Typography>
-            
+            </Box>
             {/* Activity dot */}
             {dayData.hasActivity && dayData.isCurrentMonth && (
-              <Box sx={activityDotStyles} />
+              <Box
+                aria-hidden="true"
+                sx={{
+                  ...activityDotStyles,
+                  position: 'absolute',
+                  left: '50%',
+                  bottom: { xs: 4, md: 3 },
+                  transform: 'translateX(-50%)',
+                  zIndex: 1,
+                }}
+              />
             )}
           </Box>
         ))}

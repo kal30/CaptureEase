@@ -47,29 +47,41 @@ const BrandWordmark = ({
             objectFit: 'contain',
             flexShrink: 0,
           }}
-        />
+          />
       ) : null}
       <Typography
         component="span"
         sx={{
-          fontWeight: 700,
-          fontSize: wordmarkVariant.fontSize,
+          display: 'inline-flex',
+          alignItems: 'baseline',
+          fontSize: 0,
           lineHeight: wordmarkVariant.lineHeight,
           color,
-        }}
-      >
-        life
-      </Typography>
-      <Typography
-        component="span"
-        sx={{
           fontWeight: 400,
-          fontSize: wordmarkVariant.fontSize,
-          lineHeight: wordmarkVariant.lineHeight,
-          color,
         }}
       >
-        log
+        <Box
+          component="span"
+          sx={{
+            fontWeight: 700,
+            display: 'inline-block',
+            fontSize: wordmarkVariant.fontSize,
+            lineHeight: wordmarkVariant.lineHeight,
+          }}
+        >
+          {'life'}
+        </Box>
+        <Box
+          component="span"
+          sx={{
+            fontWeight: 400,
+            display: 'inline-block',
+            fontSize: wordmarkVariant.fontSize,
+            lineHeight: wordmarkVariant.lineHeight,
+          }}
+        >
+          {'log'}
+        </Box>
       </Typography>
       {showDot ? (
         <Box

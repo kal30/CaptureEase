@@ -768,6 +768,7 @@ const MobileCaptureDashboard = ({
             showDaySummary={false}
             mobileTimeLayout={true}
             streakLabel={activityStreakLabel}
+            calendarEntries={activeChildEntries}
           />
         </Box>
       </Paper>

@@ -425,6 +425,7 @@ const DesktopDashboardWorkspace = ({
                 showFilters={false}
                 showDaySummary
                 streakLabel={activityStreakLabel}
+                calendarEntries={activeChildEntries}
               />
             </Paper>
           </Box>
@@ -477,12 +478,14 @@ const DesktopDashboardWorkspace = ({
           sx: {
             mt: 1,
             minWidth: 280,
+            maxHeight: '80vh',
             borderRadius: '18px',
             border: `1px solid ${colors.landing.borderLight}`,
             boxShadow: `0 24px 60px ${colors.landing.shadowPanel}`,
             bgcolor: 'rgba(255,255,255,0.98)',
             backdropFilter: 'blur(16px)',
-            overflow: 'hidden',
+            overflowY: 'auto',
+            overflowX: 'hidden',
           },
           }}
         >

@@ -24,6 +24,7 @@ import {
 import { alpha, useTheme } from '@mui/material/styles';
 import { TIMELINE_TYPES, getTimelineEntryGroup } from '../../services/timelineService';
 import { getTypeColor } from './utils/colors';
+import { getCalendarDateKey } from '../../utils/calendarDateKey';
 
 const TimelineCalendar = ({ entries, onDayClick, filters }) => {
   const theme = useTheme();
@@ -44,7 +45,10 @@ const TimelineCalendar = ({ entries, onDayClick, filters }) => {
     // Group entries by date
     entries.forEach(entry => {
       const entryDate = entry.timestamp?.toDate ? entry.timestamp.toDate() : new Date(entry.timestamp);
-      const dateKey = entryDate.toDateString();
+      const dateKey = getCalendarDateKey(entryDate);
+      if (!dateKey) {
+        return;
+      }
       
       if (!data[dateKey]) {
         data[dateKey] = {};
@@ -85,7 +89,7 @@ const TimelineCalendar = ({ entries, onDayClick, filters }) => {
   const isToday = (day) => {
     const today = new Date();
     const checkDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-    return checkDate.toDateString() === today.toDateString();
+    return getCalendarDateKey(checkDate) === getCalendarDateKey(today);
   };
 
   const isDayInFuture = (day) => {
@@ -96,7 +100,7 @@ const TimelineCalendar = ({ entries, onDayClick, filters }) => {
 
   const getDayEntries = (day) => {
     const dayDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-    const dateKey = dayDate.toDateString();
+    const dateKey = getCalendarDateKey(dayDate);
     return calendarData[dateKey] || {};
   };
 

@@ -62,6 +62,7 @@ const UnifiedTimeline = ({
   mobileTimeLayout = false,
   streakLabel = '',
   focusEntryId = null,
+  calendarEntries = [],
 }) => {
   useMountDebug('UnifiedTimeline');
   const getContrastText = React.useCallback((hexColor) => {
@@ -135,6 +136,10 @@ const UnifiedTimeline = ({
     child?.id,
     selectedDate,
     filters
+  );
+  const sharedCalendarEntries = React.useMemo(
+    () => (calendarEntries.length > 0 ? calendarEntries : entries),
+    [calendarEntries, entries]
   );
   trackRenderDebug('UnifiedTimeline', {
     childId: child?.id || 'none',
@@ -506,7 +511,7 @@ const UnifiedTimeline = ({
           onFiltersChange={onFiltersChange}
           selectedDate={selectedDate}
           summary={summary}
-          calendarEntries={entries}
+          calendarEntries={sharedCalendarEntries}
           compact
           mobileLayout={mobileTimeLayout}
         />
