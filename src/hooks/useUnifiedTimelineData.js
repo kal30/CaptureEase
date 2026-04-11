@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { collection, onSnapshot, query, where, orderBy } from 'firebase/firestore';
 import { 
   withTimelinePermissions,
   getCareOwnerTimelineView 
@@ -10,6 +11,7 @@ import { getCustomCategories, getIncidentTypeConfig } from '../services/incident
 import { HABIT_TYPES } from '../constants/habitTypes';
 import { LOG_TYPES, getLogTypeByEntry, getTimelineMetaForCategory, SPECIAL_FILTER_TYPES } from '../constants/logTypeRegistry';
 import { dedupeTimelineEntries } from '../services/timeline/timelineDeduping';
+import { db } from '../services/firebase';
 
 const HABIT_CATEGORY_ICON_MAP = {
   mood: '🙂',
@@ -54,6 +56,32 @@ const getQuickNoteMeta = (entry) => {
   }
 
   return getTimelineMetaForCategory(entry.category, { importantMoment: !!entry.importantMoment });
+};
+
+const buildJournalTitle = (data, categoryMeta) => {
+  if (data.titlePrefix?.trim()) {
+    return data.titlePrefix.trim();
+  }
+
+  if (data.title?.trim()) {
+    return data.title.trim();
+  }
+
+  if (Array.isArray(data.tags) && data.tags.length > 0) {
+    return `${categoryMeta.titlePrefix}: #${data.tags[0]}`;
+  }
+
+  const noteText = (data.text || data.note || data.content || '').trim();
+  if (!noteText) {
+    return categoryMeta.titlePrefix;
+  }
+
+  const firstLine = noteText.split('\n')[0].trim();
+  if (!firstLine) {
+    return categoryMeta.titlePrefix;
+  }
+
+  return firstLine.length > 60 ? `${firstLine.slice(0, 57)}...` : firstLine;
 };
 
 /**
@@ -190,6 +218,81 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
 
     window.addEventListener('captureez:timeline-entry-created', handleQuickEntryCreated);
     return () => window.removeEventListener('captureez:timeline-entry-created', handleQuickEntryCreated);
+  }, [childId, selectedDate]);
+
+  useEffect(() => {
+    if (!childId || !selectedDate) {
+      return undefined;
+    }
+
+    const { start, end } = (() => {
+      const startDate = new Date(selectedDate);
+      startDate.setHours(0, 0, 0, 0);
+      const endDate = new Date(selectedDate);
+      endDate.setHours(23, 59, 59, 999);
+      return { start: startDate, end: endDate };
+    })();
+
+    const dailyLogsQuery = query(
+      collection(db, 'dailyLogs'),
+      where('childId', '==', childId),
+      where('status', '==', 'active'),
+      where('timestamp', '>=', start),
+      where('timestamp', '<=', end),
+      orderBy('timestamp', 'desc')
+    );
+
+    let didCancel = false;
+
+    const unsubscribe = onSnapshot(
+      dailyLogsQuery,
+      (snapshot) => {
+        if (didCancel) {
+          return;
+        }
+
+        const nextJournals = dedupeTimelineEntries(
+          snapshot.docs
+            .map((doc) => {
+              const data = doc.data();
+              const categoryType = getLogTypeByEntry(data);
+              const categoryMeta = getTimelineMetaForCategory(categoryType.category, { importantMoment: !!data.importantMoment });
+              const notesText = data.notes || data.sleepDetails?.notes || data.bathroomDetails?.notes || data.content || data.text || null;
+
+              return {
+                id: doc.id,
+                ...data,
+                timestamp: data.timestamp?.toDate ? data.timestamp.toDate() : new Date(data.createdAt),
+                category: categoryType.category,
+                type: categoryMeta.type,
+                timelineType: categoryMeta.timelineType,
+                collection: 'dailyLogs',
+                title: buildJournalTitle(data, categoryMeta),
+                titlePrefix: categoryMeta.titlePrefix,
+                label: categoryMeta.label,
+                icon: categoryMeta.icon,
+                color: categoryMeta.color,
+                content: notesText,
+                notes: notesText,
+              };
+            })
+            .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+        );
+
+        setRawEntries((current) => ({
+          ...current,
+          journals: nextJournals,
+        }));
+      },
+      (snapshotError) => {
+        console.error('Error listening for live timeline updates:', snapshotError);
+      }
+    );
+
+    return () => {
+      didCancel = true;
+      unsubscribe();
+    };
   }, [childId, selectedDate]);
 
   // Process and filter entries
