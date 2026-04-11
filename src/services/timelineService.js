@@ -10,7 +10,7 @@ export const TIMELINE_TYPES = {
     label: LOG_TYPES.log.displayLabel,
     icon: LOG_TYPES.log.icon,
     color: LOG_TYPES.log.palette.dot,
-    entryGroup: 'journal',
+    entryGroup: 'dailyLog',
     collection: 'dailyLogs',
     isRootCollection: true
   },

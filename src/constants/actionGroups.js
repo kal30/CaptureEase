@@ -33,7 +33,7 @@ export const getActionGroups = (theme) => (userRole) => {
       color: theme.palette.dailyCare.primary, // Themed color
       tooltip: `Essential daily tracking with notes, ${incidentDisplay.pluralLabelLowercase}, health and safety`,
       actions: [
-        { key: 'journal', label: 'Journal', icon: '💬', types: ['journal_entry'], trackingType: 'daily', description: 'Free-form notes and thoughts' },
+        { key: 'dailyLog', label: 'Daily Log', icon: '💬', types: ['daily_log_entry'], trackingType: 'daily', description: 'Free-form notes and thoughts' },
         { key: 'incident', label: `Log ${incidentDisplay.label}`, icon: incidentDisplay.emoji, types: ['incident_log'], trackingType: 'task' },
         { key: 'food_health', label: 'Food & Medicine', icon: '🍎', types: ['food_log', 'medication_log', 'medical_event'], trackingType: 'daily' },
         { key: 'safety', label: 'Safety Check', icon: '🛡️', types: ['safety_log'], trackingType: 'task' },

@@ -52,10 +52,10 @@ const theme = createTheme({
       background: colors.app.dailyCare.background,
       hover: colors.app.dailyCare.hover,
     },
-    journal: {
-      chipBg: colors.app.journal.chipBg,
-      hoverIcon: colors.app.journal.hoverIcon,
-      deleteHover: colors.app.journal.deleteHover,
+    dailyLog: {
+      chipBg: colors.app.dailyLog.chipBg,
+      hoverIcon: colors.app.dailyLog.hoverIcon,
+      deleteHover: colors.app.dailyLog.deleteHover,
     },
     behavior: {
       primary: colors.app.behavior.primary,
@@ -78,7 +78,7 @@ const theme = createTheme({
       entries: {
         incident: colors.app.timeline.incident,
         dailyHabit: colors.app.timeline.dailyHabit,
-        journal: colors.app.timeline.journal,
+        dailyLog: colors.app.timeline.dailyLog,
         therapyNote: getRoleColor("therapist", "primary"),
       },
       periods: {

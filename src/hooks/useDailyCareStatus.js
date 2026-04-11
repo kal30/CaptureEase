@@ -29,8 +29,8 @@ export const useDailyCareStatus = (children = []) => {
           // Merge daily care status with habit status
           const combinedStatus = {
             ...todayStatus,
-            // Add journal status based on habit entries
-            journal: Object.keys(habitStatus).length > 0
+            // Add daily log status based on habit entries
+            dailyLog: Object.keys(habitStatus).length > 0
           };
           
           return { childId: child.id, status: combinedStatus, habitStatus };
@@ -46,7 +46,7 @@ export const useDailyCareStatus = (children = []) => {
         
         results.forEach(({ childId, status, habitStatus }) => {
           // Calculate daily care completion (mood, sleep, energy, food_health, safety)
-          const dailyCareCount = Object.keys(status).filter(key => key !== 'journal').length;
+          const dailyCareCount = Object.keys(status).filter(key => key !== 'dailyLog').length;
           const totalItems = 5; // mood, sleep, energy, food_health, safety
           const completionRate = Math.round((dailyCareCount / totalItems) * 100);
 
@@ -60,7 +60,7 @@ export const useDailyCareStatus = (children = []) => {
             energy: !!status.energy,
             food_health: !!status.food_health,
             safety: !!status.safety,
-            journal: !!status.journal, // Add journal status
+            dailyLog: !!status.dailyLog, // Add daily log status
             dataCompleteness: completionRate,
             
             // Date-suffixed keys for ActionGroup daily tracking
@@ -100,7 +100,7 @@ export const useDailyCareStatus = (children = []) => {
       energy: false,
       food_health: false,
       safety: false,
-      journal: false,
+      dailyLog: false,
       dataCompleteness: 0,
       
       // Date-suffixed keys for ActionGroup daily tracking
@@ -122,10 +122,10 @@ export const useDailyCareStatus = (children = []) => {
       
       const combinedStatus = {
         ...todayStatus,
-        journal: Object.keys(habitStatus).length > 0
+        dailyLog: Object.keys(habitStatus).length > 0
       };
       
-      const dailyCareCount = Object.keys(combinedStatus).filter(key => key !== 'journal').length;
+      const dailyCareCount = Object.keys(combinedStatus).filter(key => key !== 'dailyLog').length;
       const totalItems = 5; // mood, sleep, energy, food_health, safety
       const completionRate = Math.round((dailyCareCount / totalItems) * 100);
       
@@ -141,7 +141,7 @@ export const useDailyCareStatus = (children = []) => {
           energy: !!combinedStatus.energy,
           food_health: !!combinedStatus.food_health,
           safety: !!combinedStatus.safety,
-          journal: !!combinedStatus.journal,
+          dailyLog: !!combinedStatus.dailyLog,
           dataCompleteness: completionRate,
           
           // Date-suffixed keys for ActionGroup daily tracking

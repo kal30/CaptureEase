@@ -1,5 +1,5 @@
 import { getIncidents, getGroupedIncidents } from './incidentDataService';
-import { getJournalEntries, getDailyLogEntries } from './journalDataService';
+import { getDailyLogEntries } from './dailyLogDataService';
 import { getDailyHabits } from './habitDataService';
 
 /**
@@ -16,35 +16,30 @@ import { getDailyHabits } from './habitDataService';
  */
 export const getTimelineData = async (childId, selectedDate) => {
   try {
-    // Fetch grouped incidents and other data sources in parallel
-    // Note: getJournalEntries and getDailyLogEntries both fetch from dailyLogs collection
-    // so we only call getJournalEntries to avoid duplicates
     const [
       groupedIncidents,
-      journalEntries,
+      dailyLogEntries,
       dailyHabits
     ] = await Promise.all([
       getGroupedIncidents(childId, selectedDate),
-      getJournalEntries(childId, selectedDate),
+      getDailyLogEntries(childId, selectedDate),
       getDailyHabits(childId, selectedDate)
     ]);
 
     return {
       incidents: groupedIncidents, // Now contains grouped incidents with follow-ups
-      journalEntries,
-      dailyLogEntries: [], // Empty to avoid duplicates - journalEntries contains the dailyLogs data
+      dailyLogEntries,
       dailyHabits,
       therapyNotes: [],
-      totalEntries: groupedIncidents.length + journalEntries.length + dailyHabits.length
+      totalEntries: groupedIncidents.length + dailyLogEntries.length + dailyHabits.length
     };
   } catch (error) {
     console.error('Error fetching timeline data:', error);
     return {
       incidents: [],
-      journalEntries: [],
       dailyLogEntries: [],
       dailyHabits: [],
-      therapyNotes: [], // NEW: Empty array for error case
+      therapyNotes: [],
       totalEntries: 0
     };
   }
@@ -62,11 +57,9 @@ export const getCombinedTimelineEntries = async (childId, selectedDate) => {
   try {
     const data = await getTimelineData(childId, selectedDate);
     
-    // Combine all entries - incidents now contain their follow-ups
     const allEntries = [
-      ...data.incidents, // These are now grouped incidents with follow-ups
-      ...data.journalEntries, // Contains dailyLogs data
-      // ...data.dailyLogEntries, // Skip to avoid duplicates
+      ...data.incidents,
+      ...data.dailyLogEntries,
       ...data.dailyHabits
     ];
     
@@ -84,6 +77,6 @@ export const getCombinedTimelineEntries = async (childId, selectedDate) => {
 
 // Re-export individual services for direct use if needed
 export { getIncidents, getGroupedIncidents } from './incidentDataService';
-export { getJournalEntries, getDailyLogEntries } from './journalDataService';
+export { getDailyLogEntries } from './dailyLogDataService';
 export { getDailyHabits } from './habitDataService';
 export { getDayDateRange } from './dateUtils';

@@ -37,7 +37,7 @@ const BreadcrumbsComponent = () => {
   const breadcrumbNameMap = {
     dashboard: "Dashboard",
     messages: "Messages",
-    journal: "Journal",
+    dailyLog: "Daily Log",
     sensory: "Sensory",
     log: "Daily Log",
     medical: "Medical Log",

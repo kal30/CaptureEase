@@ -31,7 +31,7 @@ import IncidentDetails from "./parts/IncidentDetails";
 import GroupedIncidentDetails from "./parts/GroupedIncidentDetails";
 import DailyHabitDetails from "./parts/DailyHabitDetails";
 // DailyNoteDetails removed - no longer used (legacy progressNotes)
-import JournalDetails from "./parts/JournalDetails";
+import DailyLogDetails from "./parts/DailyLogDetails";
 import TherapyNoteDetails from "./parts/TherapyNoteDetails";
 import EntryHeader from "./parts/EntryHeader";
 import TimelineItem from "./parts/TimelineItem";
@@ -42,7 +42,7 @@ import colors from "../../assets/theme/colors";
 
 /**
  * UnifiedTimeline - Main unified timeline component
- * Combines incidents, daily logs, journal entries, and follow-ups for a single day
+ * Combines incidents, daily logs, daily habits, and follow-ups for a single day
  *
  * @param {Object} props
  * @param {Object} props.child - Child object
@@ -270,7 +270,7 @@ const UnifiedTimeline = ({
     } else if (entry.collection === 'dailyCare') {
       typeForTimeline = 'dailyHabit';
     } else if (entry.collection === 'dailyLogs') {
-      typeForTimeline = getLogTypeByEntry(entry).category || entry.category || entry.timelineType || entry.type || 'journal';
+      typeForTimeline = getLogTypeByEntry(entry).category || entry.category || entry.timelineType || entry.type || 'dailyLog';
     } else if (entry.collection === 'therapyNotes') {
       typeForTimeline = 'therapyNote';
     } else {
@@ -316,8 +316,8 @@ const UnifiedTimeline = ({
     if (entryType === ENTRY_TYPE.DAILY_HABIT) {
       return <DailyHabitDetails entry={entry} />;
     }
-    if ([ENTRY_TYPE.JOURNAL, ENTRY_TYPE.IMPORTANT_MOMENT, ENTRY_TYPE.BEHAVIOR, ENTRY_TYPE.HEALTH, ENTRY_TYPE.MOOD, ENTRY_TYPE.SLEEP, ENTRY_TYPE.FOOD, ENTRY_TYPE.BATHROOM, ENTRY_TYPE.MILESTONE].includes(entryType)) {
-      return <JournalDetails entry={entry} />;
+    if (entry.collection === 'dailyLogs') {
+      return <DailyLogDetails entry={entry} />;
     }
     if (entryType === ENTRY_TYPE.THERAPY_NOTE) {
       return <TherapyNoteDetails entry={entry} />;
@@ -338,7 +338,7 @@ const UnifiedTimeline = ({
       return entry.summary || entry.note || entry.notes || entry.content || null;
     }
 
-    if ([ENTRY_TYPE.JOURNAL, ENTRY_TYPE.IMPORTANT_MOMENT, ENTRY_TYPE.BEHAVIOR, ENTRY_TYPE.HEALTH, ENTRY_TYPE.MOOD, ENTRY_TYPE.SLEEP, ENTRY_TYPE.FOOD, ENTRY_TYPE.BATHROOM, ENTRY_TYPE.MILESTONE].includes(entryType)) {
+    if ([ENTRY_TYPE.DAILY_LOG, ENTRY_TYPE.IMPORTANT_MOMENT, ENTRY_TYPE.BEHAVIOR, ENTRY_TYPE.HEALTH, ENTRY_TYPE.MOOD, ENTRY_TYPE.SLEEP, ENTRY_TYPE.FOOD, ENTRY_TYPE.BATHROOM, ENTRY_TYPE.MILESTONE].includes(entryType)) {
       const primary = entry.text || entry.summary || entry.content || entry.title || null;
       const noteBits = [entry.notes, entry.bathroomDetails?.notes].filter(Boolean);
       if (primary && noteBits.length) {
@@ -396,7 +396,7 @@ const UnifiedTimeline = ({
       return normalizeAttachment(entry.mediaUrls?.[0], 'image');
     }
 
-    if ([ENTRY_TYPE.JOURNAL, ENTRY_TYPE.IMPORTANT_MOMENT, ENTRY_TYPE.BEHAVIOR, ENTRY_TYPE.HEALTH, ENTRY_TYPE.MOOD, ENTRY_TYPE.SLEEP, ENTRY_TYPE.FOOD, ENTRY_TYPE.MILESTONE].includes(entryType)) {
+    if ([ENTRY_TYPE.DAILY_LOG, ENTRY_TYPE.IMPORTANT_MOMENT, ENTRY_TYPE.BEHAVIOR, ENTRY_TYPE.HEALTH, ENTRY_TYPE.MOOD, ENTRY_TYPE.SLEEP, ENTRY_TYPE.FOOD, ENTRY_TYPE.MILESTONE].includes(entryType)) {
       return normalizeAttachment(entry.mediaURL || entry.mediaUrls?.[0] || entry.mediaAttachments?.[0], 'image');
     }
 

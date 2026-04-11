@@ -12,7 +12,7 @@ const localizer = momentLocalizer(moment);
 
 const CustomCalendar = ({
   childId, // Child ID to fetch data
-  collectionName = "journals", // Collection to fetch data from
+  collectionName = "dailyLogs", // Collection to fetch data from
   titleGetter = (entry) => entry.title || "Entry", // Dynamic title getter
   eventColor, // Event color
   events: externalEvents, // Option to pass external events instead of fetching
@@ -33,7 +33,7 @@ const CustomCalendar = ({
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const journalEvents = snapshot.docs.map((doc) => {
+      const dailyLogEvents = snapshot.docs.map((doc) => {
         const entry = doc.data();
         return {
           title: titleGetter(entry),
@@ -42,7 +42,7 @@ const CustomCalendar = ({
           allDay: true,
         };
       });
-      setEvents(journalEvents);
+      setEvents(dailyLogEvents);
     });
 
     return () => unsubscribe();

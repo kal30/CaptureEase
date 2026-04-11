@@ -111,9 +111,9 @@ export const LOG_TYPES = {
   },
   log: {
     id: 'log',
-    category: 'log',
-    type: 'journal',
-    timelineType: 'journal',
+    category: 'dailyLog',
+    type: 'dailyLog',
+    timelineType: 'dailyLog',
     displayLabel: 'Daily Log',
     filterLabel: 'Daily Log',
     trackLabel: 'Daily Log',
@@ -264,7 +264,7 @@ export const getLogTypeByCategory = (category) => {
   if (!category) return LOG_TYPES.log;
   if (LOG_TYPES[category]) return LOG_TYPES[category];
 
-  if (category === 'journal') {
+  if (category === 'dailyLog' || category === 'log') {
     return LOG_TYPES.log;
   }
 

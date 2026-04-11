@@ -449,7 +449,7 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
       return;
     }
 
-    if (type === "journal") {
+    if (type === "dailyLog") {
       setSelectedChild(child);
       setEntryType("full");
       setQuickEntryStep(0);

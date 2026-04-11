@@ -53,12 +53,12 @@ code {
 }
 
 /* Global Styles or in a CSS Module */
-.journal-entry-day {
+.daily-log-entry-day {
   /* Use theme calendar colors - will be moved to MUI component styling */
   border-radius: 50%;
 }
 
-.react-calendar .journal-entry-day {
+.react-calendar .daily-log-entry-day {
   /* Calendar styling moved to theme - remove hardcoded colors */
 }
 
@@ -78,7 +78,7 @@ code {
   /* Hover color moved to theme */
 }
 
-.journal-entry-day {
+.daily-log-entry-day {
   /* Colors moved to theme */
   border-radius: 10px;
 }

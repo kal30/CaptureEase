@@ -30,7 +30,7 @@ const getEntryUser = (entry) => ({
   userId: entry.loggedBy?.id || entry.authorId || entry.createdBy || null,
 });
 
-const getQuickJournalTitle = (entry, categoryMeta) => {
+const getQuickDailyLogTitle = (entry, categoryMeta) => {
   const text = (entry.title || entry.text || '').trim();
   if (!text) {
     return categoryMeta.titlePrefix;
@@ -58,7 +58,7 @@ const getQuickNoteMeta = (entry) => {
   return getTimelineMetaForCategory(entry.category, { importantMoment: !!entry.importantMoment });
 };
 
-const buildJournalTitle = (data, categoryMeta) => {
+const buildDailyLogTitle = (data, categoryMeta) => {
   if (data.titlePrefix?.trim()) {
     return data.titlePrefix.trim();
   }
@@ -86,7 +86,7 @@ const buildJournalTitle = (data, categoryMeta) => {
 
 /**
  * useUnifiedTimelineData - Hook to fetch and combine all timeline data for a specific day
- * Combines incidents, journal entries, daily logs, and follow-ups
+ * Combines incidents, daily logs, daily habits, and follow-ups
  * 
  * @param {string} childId - Child ID
  * @param {Date} selectedDate - Date to fetch data for
@@ -100,9 +100,9 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
   const [customCategories, setCustomCategories] = useState({});
   const [rawEntries, setRawEntries] = useState({
     incidents: [],
-    journals: [],
+    dailyLogs: [],
     dailyHabits: [],
-    therapyNotes: [] // NEW: 4th timeline entry type
+    therapyNotes: [],
   });
 
   // Get current user's role for this child
@@ -126,9 +126,9 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
 
         setRawEntries({
           incidents: timelineData.incidents || [],
-          journals: timelineData.journalEntries || [],
+          dailyLogs: timelineData.dailyLogEntries || [],
           dailyHabits: timelineData.dailyHabits || [],
-          therapyNotes: timelineData.therapyNotes || [] // NEW: Include therapy notes
+          therapyNotes: timelineData.therapyNotes || [],
         });
         
       } catch (err) {
@@ -194,12 +194,12 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
       }
 
       const categoryMeta = getQuickNoteMeta(entry);
-      const optimisticJournal = {
+      const optimisticDailyLog = {
         ...entry,
         timestamp: entryTimestamp,
         type: categoryMeta.type,
         timelineType: categoryMeta.timelineType,
-        title: getQuickJournalTitle(entry, categoryMeta),
+        title: getQuickDailyLogTitle(entry, categoryMeta),
         titlePrefix: categoryMeta.titlePrefix,
         color: categoryMeta.color,
         categoryIcon: categoryMeta.icon,
@@ -209,9 +209,9 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
 
       setRawEntries((prev) => ({
         ...prev,
-        journals: [
-          optimisticJournal,
-          ...prev.journals.filter((journal) => journal.id !== optimisticJournal.id),
+        dailyLogs: [
+          optimisticDailyLog,
+          ...prev.dailyLogs.filter((dailyLog) => dailyLog.id !== optimisticDailyLog.id),
         ],
       }));
     };
@@ -251,13 +251,13 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
           return;
         }
 
-        const nextJournals = dedupeTimelineEntries(
+        const nextDailyLogs = dedupeTimelineEntries(
           snapshot.docs
             .map((doc) => {
               const data = doc.data();
               const categoryType = getLogTypeByEntry(data);
               const categoryMeta = getTimelineMetaForCategory(categoryType.category, { importantMoment: !!data.importantMoment });
-              const notesText = data.notes || data.sleepDetails?.notes || data.bathroomDetails?.notes || data.content || data.text || null;
+              const notesText = data.notes || data.sleepDetails?.notes || data.bathroomDetails?.notes || data.content || null;
 
               return {
                 id: doc.id,
@@ -267,7 +267,7 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
                 type: categoryMeta.type,
                 timelineType: categoryMeta.timelineType,
                 collection: 'dailyLogs',
-                title: buildJournalTitle(data, categoryMeta),
+                title: buildDailyLogTitle(data, categoryMeta),
                 titlePrefix: categoryMeta.titlePrefix,
                 label: categoryMeta.label,
                 icon: categoryMeta.icon,
@@ -281,7 +281,7 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
 
         setRawEntries((current) => ({
           ...current,
-          journals: nextJournals,
+          dailyLogs: nextDailyLogs,
         }));
       },
       (snapshotError) => {
@@ -307,7 +307,7 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
       incidents: rawEntries.incidents.filter(entry => 
         entry.childId === childId || entry.child?.id === childId
       ),
-      journals: rawEntries.journals.filter(entry => 
+      dailyLogs: rawEntries.dailyLogs.filter(entry => 
         entry.childId === childId || entry.child?.id === childId
       ),
       dailyHabits: rawEntries.dailyHabits.filter(entry => 
@@ -362,37 +362,37 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
         };
       }),
       
-      // Transform journal entries (from dailyLogs - avoid duplicates by using journals data only)
-      ...childFilteredEntries.journals.map(journal => {
-        const categoryType = getLogTypeByEntry(journal);
-        const categoryMeta = getTimelineMetaForCategory(categoryType.category, { importantMoment: !!journal.importantMoment });
-        const notesText = journal.notes || journal.sleepDetails?.notes || journal.bathroomDetails?.notes || null;
+      // Transform daily log entries (from dailyLogs collection)
+      ...childFilteredEntries.dailyLogs.map((dailyLog) => {
+        const categoryType = getLogTypeByEntry(dailyLog);
+        const categoryMeta = getTimelineMetaForCategory(categoryType.category, { importantMoment: !!dailyLog.importantMoment });
+        const notesText = dailyLog.notes || dailyLog.sleepDetails?.notes || dailyLog.bathroomDetails?.notes || null;
 
         return {
-          id: journal.id,
+          id: dailyLog.id,
           type: categoryMeta.type,
           timelineType: categoryMeta.timelineType,
           collection: 'dailyLogs',
-          childId: journal.childId,
-          timestamp: journal.timestamp?.toDate ? journal.timestamp.toDate() : new Date(journal.timestamp),
+          childId: dailyLog.childId,
+          timestamp: dailyLog.timestamp?.toDate ? dailyLog.timestamp.toDate() : new Date(dailyLog.timestamp),
           category: categoryType.category,
-          title: journal.importantMoment
+          title: dailyLog.importantMoment
             ? 'Important Moment'
-            : (journal.titlePrefix || journal.title || categoryMeta.titlePrefix || LOG_TYPES.log.displayLabel),
-          titlePrefix: journal.titlePrefix || categoryMeta.titlePrefix || null,
+            : (dailyLog.titlePrefix || dailyLog.title || categoryMeta.titlePrefix || LOG_TYPES.log.displayLabel),
+          titlePrefix: dailyLog.titlePrefix || categoryMeta.titlePrefix || null,
           color: categoryMeta.color,
           categoryIcon: categoryMeta.icon,
-          text: journal.text,
-          content: notesText || journal.text || null,
-          tags: journal.tags,
-          mediaURL: journal.mediaURL,
-          mediaType: journal.mediaType,
-          mediaUrls: journal.mediaUrls,
-          voiceMemoURL: journal.voiceMemoURL,
+          text: dailyLog.text,
+          content: notesText,
+          tags: dailyLog.tags,
+          mediaURL: dailyLog.mediaURL,
+          mediaType: dailyLog.mediaType,
+          mediaUrls: dailyLog.mediaUrls,
+          voiceMemoURL: dailyLog.voiceMemoURL,
           notes: notesText,
-          importantMoment: !!journal.importantMoment,
-          isImportantMoment: !!journal.importantMoment,
-          ...getEntryUser(journal),
+          importantMoment: !!dailyLog.importantMoment,
+          isImportantMoment: !!dailyLog.importantMoment,
+          ...getEntryUser(dailyLog),
         };
       }),
       
@@ -521,7 +521,7 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
     const summary = {
       totalEntries: filteredEntries.length,
       incidentCount: filteredEntries.filter(e => e?.type === 'incident').length,
-      journalCount: filteredEntries.filter(e => e?.collection === 'dailyLogs').length,
+      dailyLogCount: filteredEntries.filter(e => e?.collection === 'dailyLogs').length,
       dailyHabitCount: filteredEntries.filter(e => e?.type === 'dailyHabit').length,
       therapyNoteCount: filteredEntries.filter(e => e?.type === 'therapyNote').length,
       lastActivityTime: filteredEntries.length > 0 
@@ -533,15 +533,15 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
       byTimePeriod: {
         morning: {
           hasIncidents: filteredEntries.some(e => e?.type === 'incident' && getTimePeriod(e.timestamp) === 'morning'),
-          hasJournalEntries: filteredEntries.some(e => e?.collection === 'dailyLogs' && getTimePeriod(e.timestamp) === 'morning')
+          hasDailyLogEntries: filteredEntries.some(e => e?.collection === 'dailyLogs' && getTimePeriod(e.timestamp) === 'morning')
         },
         afternoon: {
           hasIncidents: filteredEntries.some(e => e?.type === 'incident' && getTimePeriod(e.timestamp) === 'afternoon'),
-          hasJournalEntries: filteredEntries.some(e => e?.collection === 'dailyLogs' && getTimePeriod(e.timestamp) === 'afternoon')
+          hasDailyLogEntries: filteredEntries.some(e => e?.collection === 'dailyLogs' && getTimePeriod(e.timestamp) === 'afternoon')
         },
         evening: {
           hasIncidents: filteredEntries.some(e => e?.type === 'incident' && getTimePeriod(e.timestamp) === 'evening'),
-          hasJournalEntries: filteredEntries.some(e => e?.collection === 'dailyLogs' && getTimePeriod(e.timestamp) === 'evening')
+          hasDailyLogEntries: filteredEntries.some(e => e?.collection === 'dailyLogs' && getTimePeriod(e.timestamp) === 'evening')
         }
       }
     };
