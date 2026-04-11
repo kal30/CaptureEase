@@ -738,6 +738,7 @@ const MobileCaptureDashboard = ({
             onDateChange={setSelectedDate}
             streakLabel={mobileStreakLabel}
             activeFiltersCount={timelineFilterCount}
+            calendarEntries={activeChildEntries}
             mobileLayout
             showFiltersButton
             onOpenAdvancedFilters={() => setTimelineFilterSheetOpen(true)}

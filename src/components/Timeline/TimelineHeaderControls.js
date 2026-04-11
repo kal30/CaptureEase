@@ -46,6 +46,7 @@ const TimelineHeaderControls = ({
   onDateChange,
   streakLabel = '',
   activeFiltersCount,
+  calendarEntries = [],
   mobileLayout = false,
   showFiltersButton = true,
   onOpenAdvancedFilters,
@@ -371,7 +372,7 @@ const TimelineHeaderControls = ({
       >
         <Box sx={{ p: 1 }}>
           <MiniCalendar
-            entries={[]}
+            entries={calendarEntries}
             onDayClick={(day, dayEntries, date) => handleDateChange(date)}
             currentMonth={selectedDate || new Date()}
             selectedDate={selectedDate}

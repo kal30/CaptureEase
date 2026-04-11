@@ -540,6 +540,7 @@ const TimelineWidget = ({
             selectedDate={selectedDate}
             onDateChange={(date) => setSelectedDate(date)}
             summary={{}}
+            calendarEntries={entries}
             compact={true}
             mobileLayout={true}
             hideDateFilter={true}

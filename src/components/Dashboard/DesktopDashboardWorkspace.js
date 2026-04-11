@@ -411,6 +411,7 @@ const DesktopDashboardWorkspace = ({
                 onDateChange={setSelectedDate}
                 streakLabel={activityStreakLabel}
                 activeFiltersCount={desktopTimelineFilterCount}
+                calendarEntries={activeChildEntries}
                 mobileLayout={false}
                 onOpenAdvancedFilters={handleDesktopTimelineFiltersOpen}
                 sx={{ mb: 1.5 }}
@@ -492,7 +493,8 @@ const DesktopDashboardWorkspace = ({
             getUserRoleForChild={hook.getUserRoleForChild}
             onSelectChild={handleDesktopChildSelect}
             showCareTeamSummary={false}
-            showAddChild={false}
+            onAddChild={() => hook.setShowAddChildModal?.(true)}
+            showAddChild={Boolean(hook.setShowAddChildModal)}
           />
         </Box>
       </Menu>
@@ -563,6 +565,7 @@ const DesktopDashboardWorkspace = ({
             onFiltersChange={setTimelineFilters}
             selectedDate={selectedDate}
             onDateChange={setSelectedDate}
+            calendarEntries={activeChildEntries}
             availableTags={quickTagOptions}
           />
         </Box>

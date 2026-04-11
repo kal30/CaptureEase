@@ -506,6 +506,7 @@ const UnifiedTimeline = ({
           onFiltersChange={onFiltersChange}
           selectedDate={selectedDate}
           summary={summary}
+          calendarEntries={entries}
           compact
           mobileLayout={mobileTimeLayout}
         />

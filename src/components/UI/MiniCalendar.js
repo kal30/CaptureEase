@@ -2,6 +2,7 @@ import React, { useMemo, useRef, useState } from 'react';
 import { Box, Typography, useMediaQuery, useTheme } from '@mui/material';
 import MonthNavigationControls from './MonthNavigationControls';
 import { useSwipeGesture } from '../../hooks/useSwipeGesture';
+import colors from '../../assets/theme/colors';
 
 const toMonthStart = (date) => new Date(date.getFullYear(), date.getMonth(), 1);
 const getMonthKey = (date) => `${date.getFullYear()}-${date.getMonth()}`;
@@ -181,14 +182,16 @@ const MiniCalendar = ({
 
   const activityDotStyles = {
     position: 'absolute',
-    bottom: { xs: 1, md: -1 },
-    right: { xs: 1, md: -1 },
-    width: { xs: 8, md: 6 },
-    height: { xs: 8, md: 6 },
+    bottom: { xs: 1, md: 0 },
+    right: '50%',
+    transform: 'translateX(50%)',
+    width: { xs: 7, md: 6 },
+    height: { xs: 7, md: 6 },
     borderRadius: '50%',
-    bgcolor: 'timeline.progress',
-    border: '1px solid white',
-    boxShadow: '0 1px 2px rgba(0,0,0,0.2)'
+    bgcolor: colors.app.calendar.eventDot,
+    border: `1px solid ${colors.landing.surface}`,
+    boxShadow: '0 1px 3px rgba(0,0,0,0.24)',
+    zIndex: 1,
   };
 
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
