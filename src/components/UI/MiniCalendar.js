@@ -150,13 +150,12 @@ const MiniCalendar = ({
   };
 
   const dayStyles = (dayData) => ({
-    width: { xs: 36, sm: 32, md: 24 },
-    height: { xs: 36, sm: 32, md: 28 },
+    width: { xs: 38, sm: 34, md: 28 },
+    height: { xs: 44, sm: 42, md: 36 },
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 0.15,
     borderRadius: '50%',
     fontSize: { xs: '0.85rem', md: '0.75rem' },
     fontWeight: dayData.isToday || dayData.isSelected ? 600 : 400,
@@ -173,7 +172,7 @@ const MiniCalendar = ({
     position: 'relative',
     transition: 'all 0.2s ease',
     opacity: dayData.isCurrentMonth ? 1 : 0.4,
-    minHeight: { xs: 44, md: 28 }, // Meet accessibility touch target requirements
+    minHeight: { xs: 44, md: 36 }, // Meet accessibility touch target requirements
     '&:hover': dayData.isCurrentMonth && (dayData.isToday || !dayData.isFuture) ? {
       bgcolor: dayData.isToday ? 'primary.dark' : 
                dayData.isSelected ? 'action.focus' :
@@ -183,13 +182,16 @@ const MiniCalendar = ({
   });
 
   const activityDotStyles = {
-    width: { xs: 7, md: 6 },
-    height: { xs: 7, md: 6 },
+    position: 'absolute',
+    bottom: { xs: 4, md: 3 },
+    left: '50%',
+    transform: 'translateX(-50%)',
+    width: { xs: 9, md: 8 },
+    height: { xs: 9, md: 8 },
     borderRadius: '50%',
     bgcolor: colors.app.calendar.eventDot,
     border: `1px solid ${colors.landing.surface}`,
     boxShadow: '0 1px 3px rgba(0,0,0,0.24)',
-    mt: 0.1,
     flexShrink: 0,
   };
 
