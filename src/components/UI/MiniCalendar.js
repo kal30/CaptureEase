@@ -193,7 +193,7 @@ const MiniCalendar = ({
     width: { xs: 9, md: 8 },
     height: { xs: 9, md: 8 },
     borderRadius: '50%',
-    bgcolor: colors.app.calendar.eventDot,
+    bgcolor: colors.brand.deep,
     border: `2px solid ${colors.landing.surface}`,
     boxShadow: '0 1px 4px rgba(0,0,0,0.22)',
     flexShrink: 0,
@@ -299,11 +299,11 @@ const MiniCalendar = ({
         gap: 0.5, 
         mt: 1 
       }}>
-        <Box sx={{ 
-          width: 8, 
+        <Box sx={{
+          width: 8,
           height: 8,
           borderRadius: '50%',
-          bgcolor: 'timeline.progress'
+          bgcolor: colors.brand.deep,
         }} />
         <Typography variant="caption" sx={{ fontSize: '0.7rem', color: 'text.secondary' }}>
           Has Activity

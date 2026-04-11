@@ -51,6 +51,7 @@ import UnifiedTimeline from '../../Timeline/UnifiedTimeline';
 import { getChildCareTeam } from '../../../services/childAccessService';
 import { auth } from '../../../services/firebase';
 import { getAllQuickTagOptions, getQuickTagDisplay, loadCustomQuickTags } from '../../../utils/quickTags';
+import { getCalendarDateKey } from '../../../utils/calendarDateKey';
 import { CORE_ENTRY_ACTIONS } from '../../../constants/logTypeRegistry';
 import colors from '../../../assets/theme/colors';
 import { getE2EMockData, isE2EMockEnabled } from '../../../services/e2eMock';
@@ -168,7 +169,10 @@ const MobileCaptureDashboard = ({
       if (!entry) return;
       const entryDate = entry.timestamp?.toDate?.() ? entry.timestamp.toDate() : new Date(entry.timestamp);
       if (Number.isNaN(entryDate.getTime())) return;
-      dateKeys.add(new Date(entryDate.getFullYear(), entryDate.getMonth(), entryDate.getDate()).toDateString());
+      const calendarKey = getCalendarDateKey(entryDate);
+      if (calendarKey) {
+        dateKeys.add(calendarKey);
+      }
     });
 
     return dateKeys;
@@ -472,7 +476,7 @@ const MobileCaptureDashboard = ({
 
   const MobileCalendarDay = (props) => {
     const { day, outsideCurrentMonth, ...other } = props;
-    const hasEntries = datesWithEntries.has(day.toDateString());
+    const hasEntries = datesWithEntries.has(getCalendarDateKey(day));
 
     return (
       <Box sx={{ position: 'relative' }}>
@@ -484,10 +488,10 @@ const MobileCaptureDashboard = ({
               bottom: 4,
               left: '50%',
               transform: 'translateX(-50%)',
-              width: 6,
-              height: 6,
+              width: 7,
+              height: 7,
               borderRadius: '50%',
-              bgcolor: colors.roles.careOwner.primary,
+              bgcolor: colors.brand.deep,
               border: `1px solid ${colors.landing.surface}`,
               boxShadow: `0 0 0 1px ${colors.landing.surface}`,
             }}
