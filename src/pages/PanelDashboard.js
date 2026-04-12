@@ -38,7 +38,12 @@ import { IncidentLoggingModal, IncidentFollowUpModal } from "../components/Dashb
 import PatternSuggestionModal from "../components/Dashboard/PatternSuggestionModal";
 import DailyHabitsModal from "../components/Dashboard/DailyHabitsModal";
 import MedicationsLogTab from "./MedicalLog/MedicationsLogTab";
-import { ImportLogsModal, extractTextFromImportFile, parseImportedLogs } from "../components/Dashboard/ImportLogs";
+import {
+  ImportLogsModal,
+  MAX_IMPORT_TEXT_LENGTH,
+  extractTextFromImportFile,
+  parseImportedLogs,
+} from "../components/Dashboard/ImportLogs";
 import DailyCareReport from "../components/Reports/DailyCareReport";
 import { DashboardViewProvider } from "../components/Dashboard/shared/DashboardViewContext";
 import RenderDebugOverlay from "../components/Dashboard/shared/RenderDebugOverlay";
@@ -189,6 +194,10 @@ const PanelDashboard = () => {
       setImportError('');
 
       const extractedText = await extractTextFromImportFile(file);
+      if (extractedText.length > MAX_IMPORT_TEXT_LENGTH) {
+        throw new Error('That file is too large to import. Please split it into a smaller file and try again.');
+      }
+
       const parsed = await parseImportedLogs(extractedText);
 
       if (parsed?.error) {
@@ -203,7 +212,24 @@ const PanelDashboard = () => {
       setImportRows(entries);
       setShowImportModal(true);
     } catch (error) {
-      setImportError(error.message || "We couldn't read that file. Try a simpler format.");
+      const rawMessage = String(error?.message || '').trim();
+      const normalizedMessage = rawMessage.toLowerCase();
+      const isInternalCallableFailure =
+        error?.code === 'internal' ||
+        error?.code === 'deadline-exceeded' ||
+        normalizedMessage === 'internal' ||
+        normalizedMessage.includes('504') ||
+        normalizedMessage.includes('gateway timeout') ||
+        normalizedMessage.includes('failed to load resource') ||
+        normalizedMessage.includes('net::err_failed');
+
+      if (isInternalCallableFailure) {
+        setImportError(
+          'That file took too long to import. Please split it into a smaller file or try again with fewer rows.'
+        );
+      } else {
+        setImportError(rawMessage || "We couldn't read that file. Try a simpler format.");
+      }
     } finally {
       setImportLoading(false);
     }
@@ -651,11 +677,20 @@ const PanelDashboard = () => {
 
       <Snackbar
         open={Boolean(importError)}
-        autoHideDuration={6000}
         onClose={() => setImportError('')}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        anchorOrigin={isMobile ? { vertical: 'top', horizontal: 'center' } : { vertical: 'bottom', horizontal: 'center' }}
+        sx={{ width: '100%' }}
       >
-        <Alert onClose={() => setImportError('')} severity="error" variant="filled" sx={{ width: '100%' }}>
+        <Alert
+          onClose={() => setImportError('')}
+          severity="error"
+          variant="filled"
+          sx={{
+            width: { xs: 'calc(100vw - 24px)', sm: 'auto' },
+            maxWidth: { xs: 'calc(100vw - 24px)', sm: 560 },
+            alignItems: 'flex-start',
+          }}
+        >
           {importError}
         </Alert>
       </Snackbar>

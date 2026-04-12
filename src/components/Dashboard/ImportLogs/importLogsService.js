@@ -4,6 +4,8 @@ import { httpsCallable } from 'firebase/functions';
 import { collection, doc, getDocs, query, serverTimestamp, where, writeBatch } from 'firebase/firestore';
 import { db, functions } from '../../../services/firebase';
 const parseImportedLogsCallable = httpsCallable(functions, 'parseImportedLogs');
+export const MAX_IMPORT_FILE_SIZE_BYTES = 8 * 1024 * 1024;
+export const MAX_IMPORT_TEXT_LENGTH = 250000;
 
 const getFileExtension = (fileName = '') => {
   const parts = String(fileName).toLowerCase().split('.');
@@ -68,6 +70,35 @@ const getDateKey = (value) => {
   ].join('-');
 };
 
+const normalizeImportCategory = (category) => {
+  const normalized = String(category || 'log').trim().toLowerCase();
+
+  const aliases = {
+    daily: 'log',
+    other: 'log',
+    behavior: 'challenge',
+    behavior_meltdown: 'challenge',
+    meltdown: 'challenge',
+    mood: 'mood',
+    anxiety: 'mood',
+    health: 'health',
+    milestone: 'milestone',
+    win: 'milestone',
+    sleep: 'sleep',
+    food: 'food',
+    mealtime: 'food',
+    bathroom: 'bathroom',
+    toilet: 'bathroom',
+    toileting: 'bathroom',
+    medication: 'medication',
+    medical_note: 'health',
+    log: 'log',
+    challenge: 'challenge',
+  };
+
+  return aliases[normalized] || 'log';
+};
+
 export const fetchExistingLogsForChild = async (childId) => {
   if (!childId) {
     return [];
@@ -92,13 +123,13 @@ export const fetchExistingLogsForChild = async (childId) => {
     return {
       id: snapshotDoc.id,
       childId: data.childId || childId,
-      category: data.category || 'other',
+      category: normalizeImportCategory(data.category),
       importance: data.importance === 'important' ? 'important' : 'normal',
       note: data.text || data.note || data.content || '',
       timestamp,
       dateKey: getDateKey(timestamp),
       normalizedNote: normalizeComparableText(data.text || data.note || data.content || ''),
-      normalizedCategory: String(data.category || 'other').toLowerCase(),
+      normalizedCategory: normalizeImportCategory(data.category),
     };
   });
 };
@@ -106,7 +137,7 @@ export const fetchExistingLogsForChild = async (childId) => {
 export const detectPossibleDuplicateImportRow = (row, existingLogs = []) => {
   const rowDateKey = getDateKey(row.date);
   const rowNote = normalizeComparableText(row.note);
-  const rowCategory = String(row.category || 'other').toLowerCase();
+  const rowCategory = normalizeImportCategory(row.category);
 
   if (!rowNote || !existingLogs.length) {
     return { matched: false, reason: '' };
@@ -118,7 +149,7 @@ export const detectPossibleDuplicateImportRow = (row, existingLogs = []) => {
       continue;
     }
 
-    const categoryMatches = rowCategory === (existing.normalizedCategory || String(existing.category || 'other').toLowerCase());
+    const categoryMatches = rowCategory === (existing.normalizedCategory || normalizeImportCategory(existing.category));
     const dateMatches = !rowDateKey || !existing.dateKey || rowDateKey === existing.dateKey;
     const exactNoteMatch = rowNote === existingNote;
     const noteContainsMatch = rowNote.length >= 12 && (
@@ -141,6 +172,10 @@ export const detectPossibleDuplicateImportRow = (row, existingLogs = []) => {
 export const extractTextFromImportFile = async (file) => {
   if (!file) {
     throw new Error('No file selected.');
+  }
+
+  if (file.size > MAX_IMPORT_FILE_SIZE_BYTES) {
+    throw new Error('That file is too large to import. Please split it into a smaller file and try again.');
   }
 
   const extension = getFileExtension(file.name);
@@ -177,6 +212,10 @@ export const extractTextFromImportFile = async (file) => {
 };
 
 export const parseImportedLogs = async (text) => {
+  if (typeof text === 'string' && text.length > MAX_IMPORT_TEXT_LENGTH) {
+    throw new Error('That file is too large to import. Please split it into a smaller file and try again.');
+  }
+
   const response = await parseImportedLogsCallable({ text });
   return response.data;
 };
@@ -209,7 +248,7 @@ export const saveImportedLogs = async ({
       createdAt: serverTimestamp(),
       text: row.note,
       status: 'active',
-      category: row.category || 'other',
+      category: normalizeImportCategory(row.category),
       tags: [],
       timestamp: safeDate,
       entryDate: safeDate.toDateString(),
