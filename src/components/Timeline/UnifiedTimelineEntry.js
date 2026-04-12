@@ -18,13 +18,13 @@ import {
 } from '@mui/icons-material';
 import { alpha, useTheme } from '@mui/material/styles';
 import { getEntryTypeMeta, mapLegacyType } from '../../constants/timeline';
-import { getIncidentDisplayInfo, getJournalDisplayInfo } from '../../constants/uiDisplayConstants';
+import { getDailyLogDisplayInfo, getIncidentDisplayInfo } from '../../constants/uiDisplayConstants';
 import { getCanonicalEntryDisplayInfo, getLogTypeByCategory, getLogTypeByEntry } from '../../constants/logTypeRegistry';
 import colors from '../../assets/theme/colors';
 
 /**
  * UnifiedTimelineEntry - Single timeline entry display with expandable details
- * Handles incidents, daily logs, journal entries, and follow-ups
+ * Handles incidents, daily logs, and follow-ups
  * 
  * @param {Object} props
  * @param {Object} props.entry - Timeline entry data
@@ -44,7 +44,7 @@ const UnifiedTimelineEntry = ({
 }) => {
   // Get centralized display info
   const incidentDisplay = getIncidentDisplayInfo();
-  const journalDisplay = getJournalDisplayInfo();
+  const dailyLogDisplay = getDailyLogDisplayInfo();
 
   const theme = useTheme();
   const normalizedType = mapLegacyType(entry.type);
@@ -52,7 +52,7 @@ const UnifiedTimelineEntry = ({
   const categoryType = getLogTypeByEntry(entry);
   const categoryMeta = getLogTypeByCategory(categoryType.category || entry.category || entry.type);
   const categoryDisplay = getCanonicalEntryDisplayInfo(entry);
-  const isDailyLogEntry = entry.collection === 'dailyLogs' || normalizedType === 'journal';
+  const isDailyLogEntry = entry.collection === 'dailyLogs' || normalizedType === 'dailyLog';
   const typeColor = entry.color || categoryMeta.palette?.dot || theme.palette.timeline?.entries?.[typeMeta.key] || theme.palette.primary.main;
 
   // Get user role color using centralized theme.palette.roles
@@ -91,11 +91,11 @@ const UnifiedTimelineEntry = ({
           secondary: entry.description || entry.summary,
           hasMedia: entry.mediaAttachments?.length > 0
         };
-      case 'journal':
+      case 'dailyLog':
         return {
           primary: isDailyLogEntry
-            ? (entry.titlePrefix || entry.title || categoryDisplay.label || journalDisplay.label)
-            : (entry.title || `${journalDisplay.label} Entry`),
+            ? (entry.titlePrefix || entry.title || categoryDisplay.label || dailyLogDisplay.label)
+            : (entry.title || `${dailyLogDisplay.label} Entry`),
           secondary: combinedText
             ? combinedText.substring(0, 100) + (combinedText.length > 100 ? '...' : '')
             : null,
@@ -281,10 +281,10 @@ const UnifiedTimelineEntry = ({
               </Stack>
             )}
 
-            {normalizedType === 'journal' && (
+            {normalizedType === 'dailyLog' && (
               <Stack spacing={1}>
                 <Typography variant="subtitle2" gutterBottom>
-                  Full {journalDisplay.label} Entry
+                  Full {dailyLogDisplay.label} Entry
                 </Typography>
                 <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
                   {entry.content}

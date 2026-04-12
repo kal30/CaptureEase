@@ -1,14 +1,11 @@
 import React, { useState, useEffect } from "react";
 import {
   Box,
-  Modal,
   TextField,
   Typography,
   Chip,
-  IconButton,
   Alert,
 } from "@mui/material";
-import { Close as CloseIcon } from "@mui/icons-material";
 import Autocomplete, { createFilterOptions } from "@mui/material/Autocomplete";
 import { useTranslation } from 'react-i18next';
 import AllergyChip from "../UI/Allergies";
@@ -23,7 +20,13 @@ import { doc, updateDoc } from "firebase/firestore";
 import { db } from "../../services/firebase";
 import { USER_ROLES } from "../../constants/roles";
 import ChildPhotoUploader from "./ChildPhotoUploader";
-import { ThemeCard, GradientButton, CustomizableAutocomplete } from "../UI";
+import {
+  GradientButton,
+  CustomizableAutocomplete,
+  LogFormShell,
+  ThemeSpacing,
+  ThemeText,
+} from "../UI";
 import { useAsyncForm } from "../../hooks/useAsyncForm";
 
 const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
@@ -211,62 +214,50 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
   }
 
   return (
-    <Modal open={open} onClose={handleClose}>
-      <Box
-        sx={{
-          position: "absolute",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          width: { xs: '90vw', sm: 500, md: 600 },
-          maxHeight: '90vh',
-          overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column'
-        }}
-      >
-        <ThemeCard variant="modal" elevated sx={{ display: 'flex', flexDirection: 'column' }}>
-        {/* Header */}
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 3, pb: 2, borderBottom: 1, borderColor: 'divider' }}>
-          <Box>
-            <Typography variant="h5" sx={{ fontWeight: 600, color: 'text.primary' }}>
-              {t('common:modal.edit_item', { item: child?.name || t('terms:profile_one') })}
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-              {t('terms:update_profile_description')}
-            </Typography>
-          </Box>
-          <IconButton
-            onClick={handleClose}
-            sx={{
-              color: 'text.secondary',
-              '&:hover': {
-                color: 'text.primary',
-                backgroundColor: 'action.hover'
-              }
-            }}
+    <LogFormShell
+      open={open}
+      onClose={handleClose}
+      title={t('common:modal.edit_item', { item: child?.name || t('terms:profile_one') })}
+      subtitle={t('terms:update_profile_description')}
+      mobileBreakpoint={1023.95}
+      maxWidth="sm"
+      footer={(
+        <Box sx={{ pt: 0.5 }}>
+          <GradientButton
+            variant="gradient"
+            color="success"
+            onClick={handleSubmit}
+            fullWidth
+            disabled={childForm.loading}
+            elevated
+            size="large"
           >
-            <CloseIcon />
-          </IconButton>
+            {childForm.loading ? t('common:actions.saving') : t('common:actions.save_changes')}
+          </GradientButton>
         </Box>
+      )}
+    >
+      <ThemeSpacing variant="modal-content">
+        {childForm.error && (
+          <Alert
+            severity="error"
+            sx={{ mb: 3 }}
+            onClose={() => childForm.clearError()}
+          >
+            {childForm.error}
+          </Alert>
+        )}
 
-        {/* Scrollable Content */}
-        <Box sx={{ flex: 1, overflow: 'auto', p: 3 }}>
-          {childForm.error && (
-            <Alert 
-              severity="error" 
-              sx={{ mb: 3 }} 
-              onClose={() => childForm.clearError()}
-            >
-              {childForm.error}
-            </Alert>
-          )}
-          {/* Basic Information Section */}
-          <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: colors.brand.ink }}>
-            Basic Information
-          </Typography>
+        <ChildPhotoUploader
+          setPhoto={setPhoto}
+          photoURL={photoURL}
+          setPhotoURL={setPhotoURL}
+          label="Profile photo"
+        />
 
-          <TextField
+        <ThemeText variant="section-header">Basic Information</ThemeText>
+
+        <TextField
           label={t('terms:profile_name')}
           variant="outlined"
           fullWidth
@@ -334,139 +325,114 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
           )}
         />
 
-        <ChildPhotoUploader
-          setPhoto={setPhoto}
-          photoURL={photoURL}
-          setPhotoURL={setPhotoURL}
-        />
+        {canEditMedicalInfo && (
+          <Box sx={{ mt: 4, pt: 3, borderTop: 1, borderColor: 'divider' }}>
+            <Typography variant="h6" sx={{ mb: 1, fontWeight: 600, color: colors.brand.deep }}>
+              {t('terms:medical_behavioral_profile')}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              This information helps us understand specific needs and identify patterns in behavior and wellbeing.
+            </Typography>
+          </Box>
+        )}
 
-          {/* Medical & Behavioral Profile Section - Only for Primary/Co-Parents */}
-          {canEditMedicalInfo && (
-            <Box sx={{ mt: 4, pt: 3, borderTop: 1, borderColor: 'divider' }}>
-              <Typography variant="h6" sx={{ mb: 1, fontWeight: 600, color: colors.brand.deep }}>
-                {t('terms:medical_behavioral_profile')}
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                This information helps us understand specific needs and identify patterns in behavior and wellbeing.
-              </Typography>
-            </Box>
-          )}
+        {canEditMedicalInfo && (
+          <CustomizableAutocomplete
+            options={FOOD_ALLERGY_OPTIONS}
+            value={foodAllergies}
+            onChange={(event, newValue) => {
+              setFoodAllergies(newValue);
+            }}
+            label="Food Allergies & Sensitivities"
+            addText="Add allergy"
+            renderTags={(value, getTagProps) =>
+              value.map((option, index) => (
+                <AllergyChip
+                  key={index}
+                  allergy={option}
+                  variant="compact"
+                  inForm={true}
+                  {...getTagProps({ index })}
+                />
+              ))
+            }
+            sx={{ mb: 3 }}
+          />
+        )}
 
-          {canEditMedicalInfo && (
+        {canEditMedicalInfo && (
+          <>
             <CustomizableAutocomplete
-              options={FOOD_ALLERGY_OPTIONS}
-              value={foodAllergies}
-              onChange={(event, newValue) => {
-                setFoodAllergies(newValue);
-              }}
-              label="Food Allergies & Sensitivities"
-              addText="Add allergy"
-              renderTags={(value, getTagProps) =>
-                value.map((option, index) => (
-                  <AllergyChip
-                    key={index}
-                    allergy={option}
-                    variant="compact"
-                    inForm={true}
-                    {...getTagProps({ index })}
-                  />
-                ))
-              }
+              options={DIETARY_OPTIONS}
+              value={dietaryRestrictions}
+              onChange={(event, newValue) => setDietaryRestrictions(newValue)}
+              label="Dietary Restrictions"
+              addText="Add diet"
+              helperText="Special diets or food preferences"
               sx={{ mb: 3 }}
             />
-          )}
 
-          {canEditMedicalInfo && (
-            <>
-              <CustomizableAutocomplete
-                options={DIETARY_OPTIONS}
-                value={dietaryRestrictions}
-                onChange={(event, newValue) => setDietaryRestrictions(newValue)}
-                label="Dietary Restrictions"
-                addText="Add diet"
-                helperText="Special diets or food preferences"
-                sx={{ mb: 3 }}
-              />
+            <CustomizableAutocomplete
+              options={SENSORY_OPTIONS}
+              value={sensoryIssues}
+              onChange={(event, newValue) => setSensoryIssues(newValue)}
+              label="Sensory Issues"
+              addText="Add sensitivity"
+              helperText="Light, sound, touch, or other sensitivities"
+              sx={{ mb: 3 }}
+            />
 
-              <CustomizableAutocomplete
-                options={SENSORY_OPTIONS}
-                value={sensoryIssues}
-                onChange={(event, newValue) => setSensoryIssues(newValue)}
-                label="Sensory Issues"
-                addText="Add sensitivity"
-                helperText="Light, sound, touch, or other sensitivities"
-                sx={{ mb: 3 }}
-              />
+            <CustomizableAutocomplete
+              options={TRIGGER_OPTIONS}
+              value={behavioralTriggers}
+              onChange={(event, newValue) => setBehavioralTriggers(newValue)}
+              label="Behavioral Triggers"
+              addText="Add trigger"
+              helperText="Situations that may cause stress or behavioral changes"
+              sx={{ mb: 3 }}
+            />
 
-              <CustomizableAutocomplete
-                options={TRIGGER_OPTIONS}
-                value={behavioralTriggers}
-                onChange={(event, newValue) => setBehavioralTriggers(newValue)}
-                label="Behavioral Triggers"
-                addText="Add trigger"
-                helperText="Situations that may cause stress or behavioral changes"
-                sx={{ mb: 3 }}
-              />
+            <Autocomplete
+              multiple
+              freeSolo
+              options={[]}
+              value={currentMedications}
+              onChange={(event, newValue) => setCurrentMedications(newValue)}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Current Medications"
+                  variant="outlined"
+                  placeholder="Quick summary for profile context — use Medical Log for detailed dose tracking"
+                  helperText="Quick summary for profile context — use Medical Log for detailed dose tracking"
+                  sx={{ mb: 3 }}
+                />
+              )}
+            />
 
-              <Autocomplete
-                multiple
-                freeSolo
-                options={[]}
-                value={currentMedications}
-                onChange={(event, newValue) => setCurrentMedications(newValue)}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Current Medications"
-                    variant="outlined"
-                    placeholder="Quick summary for profile context — use Medical Log for detailed dose tracking"
-                    helperText="Quick summary for profile context — use Medical Log for detailed dose tracking"
-                    sx={{ mb: 3 }}
-                  />
-                )}
-              />
+            <CustomizableAutocomplete
+              options={SLEEP_OPTIONS}
+              value={sleepIssues}
+              onChange={(event, newValue) => setSleepIssues(newValue)}
+              label="Sleep Issues"
+              addText="Add sleep issue"
+              helperText="Any sleep challenges or patterns"
+              sx={{ mb: 3 }}
+            />
 
-              <CustomizableAutocomplete
-                options={SLEEP_OPTIONS}
-                value={sleepIssues}
-                onChange={(event, newValue) => setSleepIssues(newValue)}
-                label="Sleep Issues"
-                addText="Add sleep issue"
-                helperText="Any sleep challenges or patterns"
-                sx={{ mb: 3 }}
-              />
-
-              <CustomizableAutocomplete
-                options={COMMUNICATION_OPTIONS}
-                value={communicationNeeds}
-                onChange={(event, newValue) => setCommunicationNeeds(newValue)}
-                label="Communication Needs"
-                addText="Add communication need"
-                helperText="How your child communicates and any support they need"
-                sx={{ mb: 3 }}
-              />
-            </>
-          )}
-
-        </Box>
-
-        {/* Footer */}
-        <Box sx={{ p: 3, borderTop: 1, borderColor: 'divider', bgcolor: 'grey.50' }}>
-          <GradientButton
-            variant="gradient"
-            color="success"
-            onClick={handleSubmit}
-            fullWidth
-            disabled={childForm.loading}
-            elevated
-            size="large"
-          >
-            {childForm.loading ? t('common:actions.saving') : t('common:actions.save_changes')}
-          </GradientButton>
-        </Box>
-        </ThemeCard>
-      </Box>
-    </Modal>
+            <CustomizableAutocomplete
+              options={COMMUNICATION_OPTIONS}
+              value={communicationNeeds}
+              onChange={(event, newValue) => setCommunicationNeeds(newValue)}
+              label="Communication Needs"
+              addText="Add communication need"
+              helperText="How your child communicates and any support they need"
+              sx={{ mb: 3 }}
+            />
+          </>
+        )}
+      </ThemeSpacing>
+    </LogFormShell>
   );
 };
 

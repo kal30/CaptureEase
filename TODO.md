@@ -71,6 +71,11 @@ These are the shared UI pieces we should consolidate so desktop and mobile stop 
   - calendar dropdown
   - search bar
   - filters rail
+- [ ] Unified calendar wrapper
+  - one shared calendar component for timeline and date picking
+  - activity dots for days with entries
+  - picker and timeline modes in one API
+  - replace separate mobile / desktop calendar paths
 - [ ] Timeline chip styles
   - entry-type chips
   - tag chips

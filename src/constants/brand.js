@@ -14,20 +14,24 @@ export const BRAND_WORDMARK_VARIANTS = {
     fontSize: { xs: "1.45rem", md: "1.7rem", lg: "1.9rem" },
     letterSpacing: "-0.05em",
     lineHeight: 1,
+    iconSize: { xs: 26, md: 30, lg: 32 },
   },
   compact: {
     fontSize: "1.55rem",
     letterSpacing: "-0.05em",
     lineHeight: 1,
+    iconSize: 28,
   },
   minimal: {
     fontSize: { xs: "1.5rem", md: "1.75rem" },
     letterSpacing: "-0.05em",
     lineHeight: 1,
+    iconSize: { xs: 26, md: 30 },
   },
   heroInline: {
     fontSize: "inherit",
     letterSpacing: "-0.05em",
     lineHeight: 1,
+    iconSize: 0,
   },
 };

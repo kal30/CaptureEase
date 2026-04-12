@@ -10,7 +10,7 @@ export const TIMELINE_TYPES = {
     label: LOG_TYPES.log.displayLabel,
     icon: LOG_TYPES.log.icon,
     color: LOG_TYPES.log.palette.dot,
-    entryGroup: 'journal',
+    entryGroup: 'dailyLog',
     collection: 'dailyLogs',
     isRootCollection: true
   },
@@ -204,11 +204,12 @@ export const getTimelineEntries = (childId, callback) => {
       let q;
       
       if (typeConfig.isRootCollection) {
-        // Root collection with childId filter (like dailyCare)
+        // Root collection with childId filter (like dailyCare / dailyLogs).
+        // Sort client-side in emitEntries so we don't require composite indexes
+        // for every root collection + timestamp combination.
         q = query(
           collection(db, typeConfig.collection),
-          where('childId', '==', childId),
-          orderBy('timestamp', 'desc')
+          where('childId', '==', childId)
         );
       } else if (typeConfig.isChildSubCollection) {
         // Child subcollection (like children/[childId]/timeline)

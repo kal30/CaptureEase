@@ -1,6 +1,6 @@
 /* SensoryButton.css */
 .sensory-button {
-  /* Use theme journal.hoverIcon for background */
+  /* Use theme dailyLog.hoverIcon for background */
   color: #fff;
   margin-bottom: 1rem;
   border-radius: 8px;
@@ -10,7 +10,7 @@
 }
 
 .sensory-button:hover {
-  /* Use theme journal.deleteHover for hover */
+  /* Use theme dailyLog.deleteHover for hover */
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
 }
 
@@ -51,11 +51,11 @@
 }
 
 .sensory-list-icon:hover {
-  /* Use theme journal.hoverIcon */
+  /* Use theme dailyLog.hoverIcon */
 }
 
 .sensory-list-delete-icon:hover {
-  /* Use theme journal.deleteHover */
+  /* Use theme dailyLog.deleteHover */
 }
 
 .no-entries-message {

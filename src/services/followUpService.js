@@ -136,9 +136,9 @@ export const testNotification = async () => {
   const hasPermission = await requestNotificationPermission();
   if (hasPermission) {
     const actions = [
-      { action: 'resolved', title: '😊 Resolved', icon: '/favicon.ico' },
-      { action: 'improved', title: '😐 Improved', icon: '/favicon.ico' },
-      { action: 'no_change', title: '😞 No Change', icon: '/favicon.ico' }
+      { action: 'resolved', title: '😊 Resolved', icon: '/lifelog-icon-192.png' },
+      { action: 'improved', title: '😐 Improved', icon: '/lifelog-icon-192.png' },
+      { action: 'no_change', title: '😞 No Change', icon: '/lifelog-icon-192.png' }
     ];
     
     showNotification(

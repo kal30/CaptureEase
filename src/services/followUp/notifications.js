@@ -54,8 +54,8 @@ const showServiceWorkerNotification = async (title, body, icon, data, actions) =
   try {
     await serviceWorkerRegistration.showNotification(title, {
       body,
-      icon: '/favicon.ico',
-      badge: '/favicon.ico',
+      icon: '/lifelog-icon-192.png',
+      badge: '/lifelog-icon-32.png',
       tag: data.incidentId || 'incident-followup',
       requireInteraction: true,
       data: data,
@@ -73,8 +73,8 @@ const showServiceWorkerNotification = async (title, body, icon, data, actions) =
 const showRegularNotification = (title, body, icon, data) => {
   const notification = new Notification(title, {
     body,
-    icon: '/favicon.ico',
-    badge: '/favicon.ico',
+    icon: '/lifelog-icon-192.png',
+    badge: '/lifelog-icon-32.png',
     tag: data.incidentId || 'incident-followup',
     requireInteraction: true,
     data: data,
@@ -93,4 +93,3 @@ const showRegularNotification = (title, body, icon, data) => {
 
   return notification;
 };
-

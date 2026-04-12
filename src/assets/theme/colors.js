@@ -160,7 +160,7 @@ const colors = {
       progressBackground: "rgba(109, 40, 217, 0.05)",
       progressBorder: "rgba(109, 40, 217, 0.1)",
     },
-    journal: {
+    dailyLog: {
       chipBg: "#A3B18A",
       hoverIcon: "#EB684A",
       deleteHover: "#F4B860",
@@ -182,7 +182,7 @@ const colors = {
     timeline: {
       incident: "#DC2626",
       dailyHabit: "#059669",
-      journal: "#8B5CF6",
+      dailyLog: "#8B5CF6",
       therapyNote: "#0891B2",
       morning: "#0284C7",
       afternoon: "#F59E0B",

@@ -3,9 +3,8 @@ import { Box, Container, Paper, Typography } from "@mui/material";
 import { landingColors } from "../../assets/theme/landingTheme";
 
 const founderStoryParagraphs = [
-  "For years I scrambled to remember what happened before every therapy appointment. Behaviors, triggers, good days, hard days - all buried in phone notes.",
-  "Everyone caring for your child sees the same timeline in real time. A caregiver logs a meltdown at 1 PM. You see it before the 2 PM appointment. The therapist walks in already knowing.",
-  "No more “I didn’t know that happened.”",
+  "It takes a village to raise a child, but usually, one parent is stuck holding all the notes. Whether it’s a grandparent helping out for the afternoon or a therapist at school, everyone can jot down a quick update in real-time.",
+  "You’ll walk into your next appointment with the full story in your pocket—not buried in your memory.",
 ];
 
 const SocialProofSection = () => {
@@ -34,7 +33,7 @@ const SocialProofSection = () => {
                   mb: { xs: 2.5, md: 3 },
                 }}
               >
-                I have two nephews with autism. I built the app I always needed.
+                One timeline for the whole village.
               </Typography>
 
               <Box
@@ -72,7 +71,7 @@ const SocialProofSection = () => {
                   color: "#7C6AAE",
                 }}
               >
-                Kalyani, Founder and Autism Mom
+                — Kalyani, Founder & Fellow Caregiver
               </Typography>
             </Box>
           </Box>

@@ -16,23 +16,20 @@ const ExpertProgram = () => {
         <Box>
           <Box sx={expertLeftColumnStyles}>
             <Typography variant="h2" sx={expertTitleStyles}>
-              I have two nephews with autism. I built the app I always needed.
+              One timeline for the whole village.
             </Typography>
             <Typography variant="body1" sx={expertBodyTextStyles}>
-              For years I scrambled to remember what happened before every
-              therapy appointment. Behaviors, triggers, good days, hard days —
-              all buried in phone notes.
+              It takes a village to raise a child, but usually, one parent is
+              stuck holding all the notes. Whether it’s a grandparent helping
+              out for the afternoon or a therapist at school, everyone can jot
+              down a quick update in real-time.
             </Typography>
             <Typography sx={expertBodyTextStyles}>
-              Everyone caring for your child sees the same timeline in real
-              time. A caregiver logs a meltdown at 1 PM. You see it before the
-              2 PM appointment. The therapist walks in already knowing.
-            </Typography>
-            <Typography sx={expertBodyTextStyles}>
-              No more “I didn’t know that happened.”
+              You’ll walk into your next appointment with the full story in your
+              pocket—not buried in your memory.
             </Typography>
             <Typography sx={expertSubTitleStyles}>
-              Kalyani, founder and autism mom
+              — Kalyani, Founder & Fellow Caregiver
             </Typography>
           </Box>
         </Box>

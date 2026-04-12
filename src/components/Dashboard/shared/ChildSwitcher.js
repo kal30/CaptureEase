@@ -142,13 +142,15 @@ export const ChildSwitcherPanel = ({
   onSelectChild,
   onAddChild,
   showCareTeamSummary = false,
-  showAddChild = false,
+  showAddChild = null,
   title = 'Who are we logging for today?',
   subtitle = '',
   addChildLabel = 'Add Child',
   currentLabel = 'Current',
   switchLabel = 'Switch',
 }) => {
+  const canAddChild = typeof onAddChild === 'function'
+    && (showAddChild === null ? true : Boolean(showAddChild));
   const renderRoleLabel = (childId) => getRoleLabel(getUserRoleForChild?.(childId));
 
   return (
@@ -272,7 +274,7 @@ export const ChildSwitcherPanel = ({
           );
         })}
 
-        {showAddChild && typeof onAddChild === 'function' ? (
+        {canAddChild ? (
           <Button
             onClick={() => onAddChild?.()}
             fullWidth

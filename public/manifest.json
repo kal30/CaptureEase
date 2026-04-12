@@ -3,17 +3,17 @@
   "name": "Lifelog",
   "icons": [
     {
-      "src": "favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/x-icon"
+      "src": "lifelog-icon-32.png",
+      "sizes": "32x32",
+      "type": "image/png"
     },
     {
-      "src": "captureez-icon-192.png",
+      "src": "lifelog-icon-192.png",
       "type": "image/png",
       "sizes": "192x192"
     },
     {
-      "src": "captureez-icon-512.png",
+      "src": "lifelog-icon-512.png",
       "type": "image/png",
       "sizes": "512x512"
     }

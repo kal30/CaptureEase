@@ -47,7 +47,42 @@ const IMPORTANCE_OPTIONS = [
   { value: 'important', label: 'Important' },
 ];
 
-const CATEGORY_TO_COLOR = (category) => CATEGORY_COLORS[category] || CATEGORY_COLORS.log;
+const DEFAULT_CATEGORY_COLORS =
+  CATEGORY_COLORS.dailyLog ||
+  CATEGORY_COLORS.behavior ||
+  CATEGORY_COLORS.health ||
+  CATEGORY_COLORS.mood ||
+  CATEGORY_COLORS.milestone || {
+    bg: '#F5F5F5',
+    text: '#555555',
+    border: '#AAAAAA',
+    dot: '#AAAAAA',
+  };
+
+const CATEGORY_TO_COLOR = (category) => CATEGORY_COLORS[category] || DEFAULT_CATEGORY_COLORS;
+
+const normalizeImportSaveError = (error) => {
+  const rawMessage = String(error?.message || '').trim();
+  const normalizedMessage = rawMessage.toLowerCase();
+
+  if (
+    error?.code === 'permission-denied' ||
+    normalizedMessage.includes('missing or insufficient permissions') ||
+    normalizedMessage.includes('permission-denied')
+  ) {
+    return 'You do not have permission to import logs for this child. Check that you are signed in with the right account and have access to this child.';
+  }
+
+  if (
+    error?.code === 'deadline-exceeded' ||
+    normalizedMessage.includes('gateway timeout') ||
+    normalizedMessage.includes('504')
+  ) {
+    return 'That import took too long to save. Please split it into a smaller file and try again.';
+  }
+
+  return rawMessage || 'Something went wrong while saving the import.';
+};
 
 const toDateInputValue = (value) => {
   if (!value) return '';
@@ -210,7 +245,7 @@ const ImportLogsModal = ({
       });
       onImported?.(result.count, selectedChild);
     } catch (saveError) {
-      setError(saveError.message || 'Something went wrong while saving the import.');
+      setError(normalizeImportSaveError(saveError));
     } finally {
       setSaving(false);
     }
@@ -310,7 +345,7 @@ const ImportLogsModal = ({
         ) : (
           <>
             {error ? (
-              <Alert severity="error" sx={{ mb: 2 }}>
+              <Alert severity="error" onClose={() => setError('')} sx={{ mb: 2 }}>
                 {error}
               </Alert>
             ) : null}
@@ -424,11 +459,11 @@ const ImportLogsModal = ({
                           />
                         </TableCell>
                         <TableCell sx={{ minWidth: 160, verticalAlign: 'top' }}>
-                          <Select
-                            size="small"
-                            fullWidth
-                            value={row.category}
-                            onChange={(event) => handleRowChange(row.id, 'category', event.target.value)}
+                            <Select
+                              size="small"
+                              fullWidth
+                              value={row.category}
+                              onChange={(event) => handleRowChange(row.id, 'category', event.target.value)}
                             renderValue={(value) => (
                               <Box
                                 sx={{
@@ -438,9 +473,9 @@ const ImportLogsModal = ({
                                   py: 0.4,
                                   borderRadius: 0.5,
                                   border: '1px solid',
-                                  borderColor: categoryColors.border,
-                                  bgcolor: categoryColors.bg,
-                                  color: categoryColors.text,
+                                  borderColor: categoryColors?.border || DEFAULT_CATEGORY_COLORS.border,
+                                  bgcolor: categoryColors?.bg || DEFAULT_CATEGORY_COLORS.bg,
+                                  color: categoryColors?.text || DEFAULT_CATEGORY_COLORS.text,
                                   fontWeight: 700,
                                   textTransform: 'capitalize',
                                 }}
@@ -465,7 +500,7 @@ const ImportLogsModal = ({
                                         width: 10,
                                         height: 10,
                                         borderRadius: '50%',
-                                        bgcolor: optionColors.dot,
+                                        bgcolor: optionColors?.dot || DEFAULT_CATEGORY_COLORS.dot,
                                       }}
                                     />
                                     {option.label}

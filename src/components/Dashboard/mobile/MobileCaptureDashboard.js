@@ -41,7 +41,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { PickersDay } from '@mui/x-date-pickers/PickersDay';
-import { useDashboardView } from '../shared/DashboardViewContext';
+import { ACTIVE_TIMELINE_DATE_STORAGE_KEY, useDashboardView } from '../shared/DashboardViewContext';
 import { ChildSwitcherPanel, ChildSwitcherTrigger } from '../shared/ChildSwitcher';
 import ChildActionsMenuContent from '../shared/ChildActionsMenuContent';
 import TimelineHeaderControls from '../../Timeline/TimelineHeaderControls';
@@ -51,6 +51,7 @@ import UnifiedTimeline from '../../Timeline/UnifiedTimeline';
 import { getChildCareTeam } from '../../../services/childAccessService';
 import { auth } from '../../../services/firebase';
 import { getAllQuickTagOptions, getQuickTagDisplay, loadCustomQuickTags } from '../../../utils/quickTags';
+import { getCalendarDateKey } from '../../../utils/calendarDateKey';
 import { CORE_ENTRY_ACTIONS } from '../../../constants/logTypeRegistry';
 import colors from '../../../assets/theme/colors';
 import { getE2EMockData, isE2EMockEnabled } from '../../../services/e2eMock';
@@ -168,7 +169,10 @@ const MobileCaptureDashboard = ({
       if (!entry) return;
       const entryDate = entry.timestamp?.toDate?.() ? entry.timestamp.toDate() : new Date(entry.timestamp);
       if (Number.isNaN(entryDate.getTime())) return;
-      dateKeys.add(new Date(entryDate.getFullYear(), entryDate.getMonth(), entryDate.getDate()).toDateString());
+      const calendarKey = getCalendarDateKey(entryDate);
+      if (calendarKey) {
+        dateKeys.add(calendarKey);
+      }
     });
 
     return dateKeys;
@@ -220,6 +224,20 @@ const MobileCaptureDashboard = ({
     setMobileActionsSheetOpen(false);
     setSelectedDate(new Date());
   }, [activeChild?.id]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const selectedDateKey = getCalendarDateKey(selectedDate);
+    if (selectedDateKey) {
+      window.localStorage.setItem(ACTIVE_TIMELINE_DATE_STORAGE_KEY, selectedDateKey);
+      window.dispatchEvent(new CustomEvent('captureez:timeline-date-changed', {
+        detail: { dateKey: selectedDateKey },
+      }));
+    }
+  }, [selectedDate]);
 
   useEffect(() => {
     if (isE2EMockEnabled()) {
@@ -426,7 +444,7 @@ const MobileCaptureDashboard = ({
   };
 
   const handleQuickNote = () => {
-    onQuickEntry?.(activeChild, 'quick_note');
+    onQuickEntry?.(activeChild, 'quick_note', undefined, selectedDate);
   };
 
   const toggleTimelineEntryType = (typeKey) => {
@@ -472,7 +490,7 @@ const MobileCaptureDashboard = ({
 
   const MobileCalendarDay = (props) => {
     const { day, outsideCurrentMonth, ...other } = props;
-    const hasEntries = datesWithEntries.has(day.toDateString());
+    const hasEntries = datesWithEntries.has(getCalendarDateKey(day));
 
     return (
       <Box sx={{ position: 'relative' }}>
@@ -484,10 +502,10 @@ const MobileCaptureDashboard = ({
               bottom: 4,
               left: '50%',
               transform: 'translateX(-50%)',
-              width: 6,
-              height: 6,
+              width: 7,
+              height: 7,
               borderRadius: '50%',
-              bgcolor: colors.roles.careOwner.primary,
+              bgcolor: colors.brand.deep,
               border: `1px solid ${colors.landing.surface}`,
               boxShadow: `0 0 0 1px ${colors.landing.surface}`,
             }}
@@ -738,6 +756,7 @@ const MobileCaptureDashboard = ({
             onDateChange={setSelectedDate}
             streakLabel={mobileStreakLabel}
             activeFiltersCount={timelineFilterCount}
+            calendarEntries={activeChildEntries}
             mobileLayout
             showFiltersButton
             onOpenAdvancedFilters={() => setTimelineFilterSheetOpen(true)}
@@ -767,6 +786,7 @@ const MobileCaptureDashboard = ({
             showDaySummary={false}
             mobileTimeLayout={true}
             streakLabel={activityStreakLabel}
+            calendarEntries={activeChildEntries}
           />
         </Box>
       </Paper>

@@ -11,7 +11,6 @@ export const COLLECTIONS = {
   CHILD_ACCESS: 'child_access',
   INCIDENTS: 'incidents',
   DAILY_LOGS: 'daily_logs',
-  JOURNAL_ENTRIES: 'journal_entries',
   FOLLOW_UPS: 'follow_ups',
   CUSTOM_CATEGORIES: 'custom_categories',
   USER_PREFERENCES: 'user_preferences',

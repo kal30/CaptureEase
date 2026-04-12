@@ -23,7 +23,7 @@ import { alpha, useTheme } from '@mui/material/styles';
 
 /**
  * DailyLogEntry - Expandable card component for unified daily log entries
- * Handles both timeline entries (journal, medical, etc.) and incidents with type-specific styling
+ * Handles both timeline entries (daily logs, medical, etc.) and incidents with type-specific styling
  * 
  * @param {Object} entry - Unified entry object from useUnifiedDailyLog
  * @param {Function} formatTime - Function to format timestamp
@@ -381,7 +381,7 @@ const IncidentDetails = ({ incident, originalIncident }) => {
 };
 
 /**
- * Detailed view for timeline entries (journal, medical, etc.)
+ * Detailed view for timeline entries (daily logs, medical, etc.)
  */
 const TimelineEntryDetails = ({ entry }) => {
   const theme = useTheme();

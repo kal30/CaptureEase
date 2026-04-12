@@ -1,14 +1,9 @@
 import React, { useState } from "react";
 import {
-  Box,
-  Modal,
   TextField,
   Chip,
-  IconButton,
-  Typography,
   Alert,
 } from "@mui/material";
-import { Close as CloseIcon } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import AllergyChip from "../UI/Allergies";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -18,11 +13,11 @@ import { db } from "../../services/firebase";
 import ChildPhotoUploader from "./ChildPhotoUploader";
 import colors from "../../assets/theme/colors";
 import {
-  ThemeCard,
   EnhancedLoadingButton,
   ThemeSpacing,
   ThemeText,
   CustomizableAutocomplete,
+  LogFormShell,
 } from "../UI";
 import { useAsyncForm } from "../../hooks/useAsyncForm";
 import {
@@ -167,97 +162,66 @@ const AddChildModal = ({ open, onClose, onSuccess }) => {
   };
 
   return (
-    <Modal open={open} onClose={handleClose}>
-      <Box
-        sx={{
-          position: "absolute",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          width: 600,
-          maxHeight: "90vh",
-          overflow: "auto",
-        }}
-      >
-        <ThemeCard
-          variant="modal"
+    <LogFormShell
+      open={open}
+      onClose={handleClose}
+      title={t("common:modal.add_new", { item: t("terms:profile_one") })}
+      subtitle={t("terms:create_profile_description")}
+      mobileBreakpoint={1023.95}
+      maxWidth="sm"
+      footer={(
+        <EnhancedLoadingButton
+          variant="success-gradient"
+          loading={childForm.loading}
+          loadingStyle="pulse"
+          loadingText={`${t("common:actions.add")}ing ${t("terms:profile_one").toLowerCase()}...`}
+          onClick={handleSubmit}
+          fullWidth
           elevated
-          sx={{ display: "flex", flexDirection: "column" }}
+          size="large"
         >
-          {/* Header */}
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              p: 3,
-              pb: 2,
-              borderBottom: 1,
-              borderColor: "divider",
-            }}
-          >
-            <Box>
-              <Typography
-                variant="h5"
-                sx={{ fontWeight: 600, color: "text.primary" }}
-              >
-                {t("common:modal.add_new", { item: t("terms:profile_one") })}
-              </Typography>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ mt: 0.5 }}
-              >
-                {t("terms:create_profile_description")}
-              </Typography>
-            </Box>
-            <IconButton
-              onClick={handleClose}
-              sx={{
-                color: "text.secondary",
-                "&:hover": {
-                  color: "text.primary",
-                  backgroundColor: "action.hover",
-                },
-              }}
-            >
-              <CloseIcon />
-            </IconButton>
-          </Box>
+          {t("common:actions.add")} {t("terms:profile_one")}
+        </EnhancedLoadingButton>
+      )}
+    >
+      {childForm.error && (
+        <Alert
+          severity="error"
+          sx={{ mb: 3 }}
+          onClose={() => childForm.clearError()}
+        >
+          {childForm.error}
+        </Alert>
+      )}
+      <ThemeSpacing variant="modal-content">
+        <ChildPhotoUploader
+          setPhoto={setPhoto}
+          photoURL={photoURL}
+          setPhotoURL={setPhotoURL}
+          label="Profile photo"
+        />
 
-          {/* Content */}
-          <Box sx={{ flex: 1, overflow: "auto", p: 3 }}>
-            {childForm.error && (
-              <Alert
-                severity="error"
-                sx={{ mb: 3 }}
-                onClose={() => childForm.clearError()}
-              >
-                {childForm.error}
-              </Alert>
-            )}
-            <ThemeSpacing variant="modal-content">
-              <ThemeSpacing variant="field">
-                <TextField
-                  label={t("terms:profile_name")}
-                  variant="outlined"
-                  fullWidth
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                />
-              </ThemeSpacing>
+        <ThemeSpacing variant="field">
+          <TextField
+            label={t("terms:profile_name")}
+            variant="outlined"
+            fullWidth
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+        </ThemeSpacing>
 
-              <ThemeSpacing variant="field">
-                <TextField
-                  label={t("terms:profile_age")}
-                  variant="outlined"
-                  fullWidth
-                  value={age}
-                  onChange={(e) => setAge(e.target.value)}
-                />
-              </ThemeSpacing>
+        <ThemeSpacing variant="field">
+          <TextField
+            label={t("terms:profile_age")}
+            variant="outlined"
+            fullWidth
+            value={age}
+            onChange={(e) => setAge(e.target.value)}
+          />
+        </ThemeSpacing>
 
-              <CustomizableAutocomplete
+        <CustomizableAutocomplete
                 options={CONDITION_OPTIONS}
                 getOptionLabel={(option) =>
                   typeof option === "string" ? option : option.label
@@ -300,129 +264,96 @@ const AddChildModal = ({ open, onClose, onSuccess }) => {
               />
 
               {/* Medical & Behavioral Profile */}
-              <ThemeText variant="section-header">
-                📋 {t("terms:medical_behavioral_profile")}
-              </ThemeText>
-              <ThemeText variant="form-helper">
-                This information helps us identify patterns and correlations in
-                daily tracking
-              </ThemeText>
+        <ThemeText variant="section-header">
+          📋 {t("terms:medical_behavioral_profile")}
+        </ThemeText>
+        <ThemeText variant="form-helper">
+          This information helps us identify patterns and correlations in
+          daily tracking
+        </ThemeText>
 
-              <CustomizableAutocomplete
-                options={FOOD_ALLERGY_OPTIONS}
-                value={foodAllergies}
-                onChange={(event, newValue) => setFoodAllergies(newValue)}
-                label="Food Allergies & Intolerances"
-                addText="Add allergy"
-                renderTags={(value, getTagProps) =>
-                  value.map((option, index) => (
-                    <AllergyChip
-                      key={index}
-                      allergy={option}
-                      variant="compact"
-                      inForm={true}
-                      {...getTagProps({ index })}
-                    />
-                  ))
-                }
-                sx={{ mb: 3 }}
+        <CustomizableAutocomplete
+          options={FOOD_ALLERGY_OPTIONS}
+          value={foodAllergies}
+          onChange={(event, newValue) => setFoodAllergies(newValue)}
+          label="Food Allergies & Intolerances"
+          addText="Add allergy"
+          renderTags={(value, getTagProps) =>
+            value.map((option, index) => (
+              <AllergyChip
+                key={index}
+                allergy={option}
+                variant="compact"
+                inForm={true}
+                {...getTagProps({ index })}
               />
+            ))
+          }
+          sx={{ mb: 3 }}
+        />
 
-              <CustomizableAutocomplete
-                options={DIETARY_OPTIONS}
-                value={dietaryRestrictions}
-                onChange={(event, newValue) => setDietaryRestrictions(newValue)}
-                label="Dietary Restrictions"
-                addText="Add diet"
-                helperText="Special diets or restrictions they follow"
-                sx={{ mb: 3 }}
-              />
+        <CustomizableAutocomplete
+          options={DIETARY_OPTIONS}
+          value={dietaryRestrictions}
+          onChange={(event, newValue) => setDietaryRestrictions(newValue)}
+          label="Dietary Restrictions"
+          addText="Add diet"
+          helperText="Special diets or restrictions they follow"
+          sx={{ mb: 3 }}
+        />
 
-              <CustomizableAutocomplete
-                options={SENSORY_OPTIONS}
-                value={sensoryIssues}
-                onChange={(event, newValue) => setSensoryIssues(newValue)}
-                label="Sensory Sensitivities"
-                addText="Add sensitivity"
-                helperText="Things they are sensitive to"
-                sx={{ mb: 3 }}
-              />
+        <CustomizableAutocomplete
+          options={SENSORY_OPTIONS}
+          value={sensoryIssues}
+          onChange={(event, newValue) => setSensoryIssues(newValue)}
+          label="Sensory Sensitivities"
+          addText="Add sensitivity"
+          helperText="Things they are sensitive to"
+          sx={{ mb: 3 }}
+        />
 
-              <CustomizableAutocomplete
-                options={TRIGGER_OPTIONS}
-                value={behavioralTriggers}
-                onChange={(event, newValue) => setBehavioralTriggers(newValue)}
-                label="Known Behavioral Triggers"
-                addText="Add trigger"
-                helperText="Situations or things that tend to cause challenges"
-                sx={{ mb: 3 }}
-              />
+        <CustomizableAutocomplete
+          options={TRIGGER_OPTIONS}
+          value={behavioralTriggers}
+          onChange={(event, newValue) => setBehavioralTriggers(newValue)}
+          label="Known Behavioral Triggers"
+          addText="Add trigger"
+          helperText="Situations or things that tend to cause challenges"
+          sx={{ mb: 3 }}
+        />
 
-              <CustomizableAutocomplete
-                options={[]}
-                value={currentMedications}
-                onChange={(event, newValue) => setCurrentMedications(newValue)}
-                label="Current Medications"
-                addText="Add medication"
-                helperText="Quick summary for profile context — use Medical Log for detailed dose tracking"
-                placeholder="Quick summary for profile context — use Medical Log for detailed dose tracking"
-                sx={{ mb: 3 }}
-              />
+        <CustomizableAutocomplete
+          options={[]}
+          value={currentMedications}
+          onChange={(event, newValue) => setCurrentMedications(newValue)}
+          label="Current Medications"
+          addText="Add medication"
+          helperText="Quick summary for profile context — use Medical Log for detailed dose tracking"
+          placeholder="Quick summary for profile context — use Medical Log for detailed dose tracking"
+          sx={{ mb: 3 }}
+        />
 
-              <CustomizableAutocomplete
-                options={SLEEP_OPTIONS}
-                value={sleepIssues}
-                onChange={(event, newValue) => setSleepIssues(newValue)}
-                label="Sleep Issues"
-                addText="Add sleep issue"
-                helperText="Any sleep-related challenges"
-                sx={{ mb: 3 }}
-              />
+        <CustomizableAutocomplete
+          options={SLEEP_OPTIONS}
+          value={sleepIssues}
+          onChange={(event, newValue) => setSleepIssues(newValue)}
+          label="Sleep Issues"
+          addText="Add sleep issue"
+          helperText="Any sleep-related challenges"
+          sx={{ mb: 3 }}
+        />
 
-              <CustomizableAutocomplete
-                options={COMMUNICATION_OPTIONS}
-                value={communicationNeeds}
-                onChange={(event, newValue) => setCommunicationNeeds(newValue)}
-                label="Communication Needs"
-                addText="Add communication need"
-                helperText="How they communicate best"
-                sx={{ mb: 3 }}
-              />
-
-              {/* ChildPhotoUploader component */}
-              <ChildPhotoUploader
-                setPhoto={setPhoto}
-                photoURL={photoURL}
-                setPhotoURL={setPhotoURL}
-              />
-            </ThemeSpacing>
-          </Box>
-
-          {/* Footer */}
-          <Box
-            sx={{
-              p: 3,
-              borderTop: 1,
-              borderColor: "divider",
-              bgcolor: "grey.50",
-            }}
-          >
-            <EnhancedLoadingButton
-              variant="success-gradient"
-              loading={childForm.loading}
-              loadingStyle="pulse"
-              loadingText={`${t("common:actions.add")}ing ${t("terms:profile_one").toLowerCase()}...`}
-              onClick={handleSubmit}
-              fullWidth
-              elevated
-              size="large"
-            >
-              {t("common:actions.add")} {t("terms:profile_one")}
-            </EnhancedLoadingButton>
-          </Box>
-        </ThemeCard>
-      </Box>
-    </Modal>
+        <CustomizableAutocomplete
+          options={COMMUNICATION_OPTIONS}
+          value={communicationNeeds}
+          onChange={(event, newValue) => setCommunicationNeeds(newValue)}
+          label="Communication Needs"
+          addText="Add communication need"
+          helperText="How they communicate best"
+          sx={{ mb: 3 }}
+        />
+      </ThemeSpacing>
+    </LogFormShell>
   );
 };
 

@@ -2,6 +2,8 @@ import React, { useMemo, useRef, useState } from 'react';
 import { Box, Typography, useMediaQuery, useTheme } from '@mui/material';
 import MonthNavigationControls from './MonthNavigationControls';
 import { useSwipeGesture } from '../../hooks/useSwipeGesture';
+import colors from '../../assets/theme/colors';
+import { getCalendarDateKey, getCalendarEntryDateKey, getCalendarDateKeys } from '../../utils/calendarDateKey';
 
 const toMonthStart = (date) => new Date(date.getFullYear(), date.getMonth(), 1);
 const getMonthKey = (date) => `${date.getFullYear()}-${date.getMonth()}`;
@@ -19,6 +21,7 @@ const getMonthKey = (date) => `${date.getFullYear()}-${date.getMonth()}`;
  */
 const MiniCalendar = ({
   entries = [],
+  activityDateKeys = [],
   onDayClick,
   currentMonth,
   selectedDate = null
@@ -69,6 +72,7 @@ const MiniCalendar = ({
   const calendarData = useMemo(() => {
     const today = new Date();
     const monthToDisplay = new Date(displayMonth.getFullYear(), displayMonth.getMonth(), 1);
+    const todayKey = getCalendarDateKey(today);
     
     // Get first day of month and adjust to start on Sunday
     const firstDayOfMonth = new Date(monthToDisplay);
@@ -80,11 +84,14 @@ const MiniCalendar = ({
     // Generate days (6 weeks = 42 days to cover all possible month layouts)
     const days = [];
     const entriesByDay = {};
+    const activityKeys = activityDateKeys.length > 0
+      ? new Set(activityDateKeys)
+      : getCalendarDateKeys(entries);
     
     // Group entries by day
     entries.forEach(entry => {
-      const entryDate = entry.timestamp?.toDate?.() || new Date(entry.timestamp);
-      const dateKey = entryDate.toDateString();
+      const dateKey = getCalendarEntryDateKey(entry);
+      if (!dateKey) return;
       
       if (!entriesByDay[dateKey]) {
         entriesByDay[dateKey] = [];
@@ -97,22 +104,22 @@ const MiniCalendar = ({
       const currentDate = new Date(startDate);
       currentDate.setDate(startDate.getDate() + i);
       
-      const dateKey = currentDate.toDateString();
+      const dateKey = getCalendarDateKey(currentDate);
       const dayEntries = entriesByDay[dateKey] || [];
-      const isToday = currentDate.toDateString() === today.toDateString();
+      const isToday = getCalendarDateKey(currentDate) === todayKey;
       // Compare only date parts, not time, to properly identify future dates
       const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
       const currentDateOnly = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
       const isFuture = currentDateOnly > todayDateOnly;
       const isCurrentMonth = currentDate.getMonth() === monthToDisplay.getMonth();
-      const isSelected = selectedDate && currentDate.toDateString() === selectedDate.toDateString();
+      const isSelected = selectedDate && getCalendarDateKey(currentDate) === getCalendarDateKey(selectedDate);
       
       days.push({
         date: currentDate,
         day: currentDate.getDate(),
         dateKey,
         entries: dayEntries,
-        hasActivity: dayEntries.length > 0,
+        hasActivity: activityKeys.has(dateKey) || dayEntries.length > 0,
         isToday,
         isFuture,
         isCurrentMonth,
@@ -124,7 +131,7 @@ const MiniCalendar = ({
       days, 
       monthName: monthToDisplay.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
     };
-  }, [entries, displayMonth, selectedDate]);
+  }, [entries, displayMonth, selectedDate, activityDateKeys]);
 
   const handleDayClick = (e, dayData) => {
     // Allow clicking on any current month day that is today or in the past
@@ -149,11 +156,14 @@ const MiniCalendar = ({
   };
 
   const dayStyles = (dayData) => ({
-    width: { xs: 36, sm: 32, md: 24 },
-    height: { xs: 36, sm: 32, md: 24 },
+    width: { xs: 38, sm: 34, md: 28 },
+    height: { xs: 50, sm: 46, md: 42 },
     display: 'flex',
+    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 0.15,
+    py: 0.3,
     borderRadius: '50%',
     fontSize: { xs: '0.85rem', md: '0.75rem' },
     fontWeight: dayData.isToday || dayData.isSelected ? 600 : 400,
@@ -170,7 +180,7 @@ const MiniCalendar = ({
     position: 'relative',
     transition: 'all 0.2s ease',
     opacity: dayData.isCurrentMonth ? 1 : 0.4,
-    minHeight: { xs: 44, md: 24 }, // Meet accessibility touch target requirements
+    minHeight: { xs: 44, md: 36 }, // Meet accessibility touch target requirements
     '&:hover': dayData.isCurrentMonth && (dayData.isToday || !dayData.isFuture) ? {
       bgcolor: dayData.isToday ? 'primary.dark' : 
                dayData.isSelected ? 'action.focus' :
@@ -180,15 +190,16 @@ const MiniCalendar = ({
   });
 
   const activityDotStyles = {
+    color: colors.app.timeline.dailyLog,
+    fontSize: { xs: 13, md: 12 },
+    lineHeight: 1,
+    fontWeight: 900,
     position: 'absolute',
-    bottom: { xs: 1, md: -1 },
-    right: { xs: 1, md: -1 },
-    width: { xs: 8, md: 6 },
-    height: { xs: 8, md: 6 },
-    borderRadius: '50%',
-    bgcolor: 'timeline.progress',
-    border: '1px solid white',
-    boxShadow: '0 1px 2px rgba(0,0,0,0.2)'
+    bottom: { xs: 2, md: 1 },
+    left: '50%',
+    transform: 'translateX(-50%)',
+    zIndex: 2,
+    pointerEvents: 'none',
   };
 
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -244,39 +255,48 @@ const MiniCalendar = ({
           >
             <Typography
               variant="caption"
+            sx={{
+              fontSize: 'inherit',
+              fontWeight: 'inherit',
+              color: dayData.isToday ? 'primary.contrastText' : 'inherit',
+              lineHeight: 1,
+              position: 'relative',
+              zIndex: 1,
+            }}
+          >
+            {dayData.day}
+          </Typography>
+          {/* Activity dot */}
+          {dayData.hasActivity && dayData.isCurrentMonth && (
+            <Typography
+              aria-hidden="true"
               sx={{
-                fontSize: 'inherit',
-                fontWeight: 'inherit',
-                color: dayData.isToday ? 'primary.contrastText' : 'inherit'
+                ...activityDotStyles,
               }}
             >
-              {dayData.day}
+              •
             </Typography>
-            
-            {/* Activity dot */}
-            {dayData.hasActivity && dayData.isCurrentMonth && (
-              <Box sx={activityDotStyles} />
-            )}
+          )}
           </Box>
         ))}
       </Box>
       
       {/* Legend - only show on mobile */}
       <Box sx={{ 
-        display: { xs: 'flex', md: 'none' },
+        display: 'flex',
         alignItems: 'center', 
         justifyContent: 'center',
         gap: 0.5, 
         mt: 1 
       }}>
-        <Box sx={{ 
-          width: 8, 
+        <Box sx={{
+          width: 8,
           height: 8,
           borderRadius: '50%',
-          bgcolor: 'timeline.progress'
+          bgcolor: colors.brand.deep,
         }} />
         <Typography variant="caption" sx={{ fontSize: '0.7rem', color: 'text.secondary' }}>
-          Has Activity
+          Has activity
         </Typography>
       </Box>
     </Box>

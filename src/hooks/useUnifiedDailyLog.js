@@ -274,7 +274,7 @@ const calculateDayStats = (allEntries, incidents, timelineEntries) => {
   const stats = {
     totalEntries: allEntries.length,
     incidentCount: incidents.length,
-    journalEntries: timelineEntries.filter(entry => entry.type === 'daily_note').length,
+    dailyLogEntries: timelineEntries.filter(entry => entry.type === 'daily_note').length,
     medicalEntries: timelineEntries.filter(entry => ['medical_event', 'medication_log'].includes(entry.type)).length,
     behaviorEntries: allEntries.filter(entry => 
       entry.type === 'behavior' || 

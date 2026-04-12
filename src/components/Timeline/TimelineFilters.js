@@ -54,6 +54,7 @@ const TimelineFilters = ({
   mobileLayout = false,
   hideDateFilter = false,
   availableTags = [],
+  calendarEntries = [],
   sx = {}
 }) => {
   const theme = useTheme();
@@ -360,7 +361,7 @@ const TimelineFilters = ({
             >
               <Box sx={{ p: 1 }}>
                 <MiniCalendar
-                  entries={[]} 
+                  entries={calendarEntries}
                   onDayClick={(day, dayEntries, date) => handleDateChange(date)}
                   currentMonth={selectedDate || new Date()}
                   selectedDate={selectedDate}

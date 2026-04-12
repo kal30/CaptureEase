@@ -14,7 +14,7 @@ import { db } from '../firebase';
 
 /**
  * Get therapy notes for a specific child and date
- * Follows same pattern as incidentDataService, journalDataService, etc.
+ * Follows same pattern as incidentDataService, dailyLogDataService, etc.
  * @param {string} childId - Child ID
  * @param {Date} selectedDate - Date to fetch therapy notes for
  * @returns {Promise<Array>} - Array of therapy note objects

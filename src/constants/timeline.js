@@ -1,11 +1,11 @@
 // Theme-driven timeline type metadata and helpers
-import { getIncidentDisplayInfo, getJournalDisplayInfo, getDailyHabitsDisplayInfo } from './uiDisplayConstants';
+import { getIncidentDisplayInfo, getDailyLogDisplayInfo, getDailyHabitsDisplayInfo } from './uiDisplayConstants';
 import { LOG_TYPES, SPECIAL_FILTER_TYPES } from './logTypeRegistry';
 
 // Dynamic function to get entry types with centralized labels
 export const getEntryTypes = () => {
   const incidentDisplay = getIncidentDisplayInfo();
-  const journalDisplay = getJournalDisplayInfo();
+  const dailyLogDisplay = getDailyLogDisplayInfo();
   const dailyHabitsDisplay = getDailyHabitsDisplayInfo();
   
   return {
@@ -21,17 +21,17 @@ export const getEntryTypes = () => {
       icon: dailyHabitsDisplay.emoji,
       paletteKey: 'timeline.entries.dailyHabit',
     },
-    journal: {
-      key: 'journal',
-      label: journalDisplay.label,
-      icon: journalDisplay.emoji,
-      paletteKey: 'timeline.entries.journal',
+    dailyLog: {
+      key: 'dailyLog',
+      label: dailyLogDisplay.label,
+      icon: dailyLogDisplay.emoji,
+      paletteKey: 'timeline.entries.dailyLog',
     },
     importantMoment: {
       key: 'importantMoment',
       label: SPECIAL_FILTER_TYPES.importantMoment.label,
       icon: SPECIAL_FILTER_TYPES.importantMoment.icon,
-      paletteKey: 'timeline.entries.journal',
+      paletteKey: 'timeline.entries.dailyLog',
     },
     behavior: {
       key: 'behavior',
@@ -91,7 +91,7 @@ export const ENTRY_TYPES = getEntryTypes();
 export const ENTRY_TYPE = {
   INCIDENT: 'incident',
   DAILY_HABIT: 'dailyHabit',
-  JOURNAL: 'journal',
+  DAILY_LOG: 'dailyLog',
   IMPORTANT_MOMENT: 'importantMoment',
   BEHAVIOR: 'behavior',
   HEALTH: 'health',
@@ -120,15 +120,15 @@ export const mapLegacyType = (type) => {
   // Collection-based mapping (preferred):
   // - incidents collection → 'incident' type
   // - dailyCare collection → 'dailyHabit' type  
-  // - dailyLogs collection → 'journal' type
+  // - dailyLogs collection → 'dailyLog' type
   // - therapyNotes collection → 'therapyNote' type
   
   if (type === 'incident') return 'incident';
   if (type === 'followUp') return 'incident'; // Follow-ups should display as incidents
-  if (type === 'journal') return 'journal'; // dailyLogs collection = journal entries
+  if (type === 'dailyLog') return 'dailyLog'; // dailyLogs collection = daily log entries
   if (type === 'importantMoment') return 'importantMoment';
   if (Object.keys(LOG_TYPES).includes(type)) {
-    return type === 'log' ? 'journal' : type;
+    return type === 'log' ? 'dailyLog' : type;
   }
   if (type === 'dailyHabit') return 'dailyHabit'; // dailyCare collection = daily habits
   if (type === 'therapyNote') return 'therapyNote'; // therapyNotes collection = therapy notes
@@ -140,7 +140,7 @@ export const mapLegacyType = (type) => {
 export const getEntryTypeMeta = (type) => {
   const normalized = mapLegacyType(type);
   const entryTypes = getEntryTypes();
-  return entryTypes[normalized] || entryTypes.journal; // Default to journal instead of removed dailyNote
+  return entryTypes[normalized] || entryTypes.dailyLog;
 };
 
 // Time-of-day periods for grouping entries

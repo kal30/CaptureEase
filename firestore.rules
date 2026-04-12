@@ -493,18 +493,6 @@ service cloud.firestore {
         (!('category' in request.resource.data) || request.resource.data.category in ['mealtime','mood','sleep','milestone','challenge','medical_note','medication','food','bathroom','health','log']);
     }
     
-    match /journal_entries/{entryId} {
-      // CREATE: Owner, Care Partners, Caregivers (NOT Therapists)
-      allow create: if canCreateIncidentLogs() &&
-        request.resource.data.keys().hasAll(['createdBy', 'createdAt', 'childId']);
-      
-      // READ: All roles with child access
-      allow read: if canReadChildData();
-      
-      // UPDATE: Owner can edit all, others edit own (NOT Therapists) + SOFT DELETE
-      allow update: if canUpdateIncidentLogs() || canSoftDelete();
-    }
-    
     match /follow_ups/{followUpId} {
       // CREATE: Owner, Care Partners, Caregivers (NOT Therapists)
       allow create: if canCreateIncidentLogs() &&

@@ -116,6 +116,7 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
   const [selectedChild, setSelectedChild] = useState(null);
   const [entryType, setEntryType] = useState("micro"); // 'micro' or 'full'
   const [quickEntryStep, setQuickEntryStep] = useState(0);
+  const [quickEntryDate, setQuickEntryDate] = useState(null);
   const [expandedCards, setExpandedCards] = useState({});
   const [expandedCategories, setExpandedCategories] = useState({});
   const [highlightedActions] = useState({});
@@ -410,7 +411,7 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
     return cleanup;
   }, [children, isMockMode]);
 
-  const handleQuickDataEntry = (child, type, event) => {
+  const handleQuickDataEntry = (child, type, event, dateValue = null) => {
     if (event) {
       event.stopPropagation();
       event.preventDefault();
@@ -449,10 +450,11 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
       return;
     }
 
-    if (type === "journal") {
+    if (type === "dailyLog") {
       setSelectedChild(child);
       setEntryType("full");
       setQuickEntryStep(0);
+      setQuickEntryDate(dateValue || null);
       setShowQuickEntry(true);
       return;
     }
@@ -463,6 +465,7 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
     } else {
       setSelectedChild(child);
       setEntryType("full");
+      setQuickEntryDate(dateValue || null);
       // Set initial step based on type
       if (type === "quick_note") {
         setQuickEntryStep(2);
@@ -530,11 +533,13 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
 
     setShowQuickEntry(false);
     setSelectedChild(null);
+    setQuickEntryDate(null);
   };
 
   const handleQuickEntrySkip = () => {
     setShowQuickEntry(false);
     setSelectedChild(null);
+    setQuickEntryDate(null);
   };
 
   const toggleCard = (childId) => {
@@ -915,6 +920,7 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
     selectedChild,
     entryType,
     quickEntryStep,
+    quickEntryDate,
     currentChildId,
     USER_ROLES,
     isReadOnlyForChild,

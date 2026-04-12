@@ -25,6 +25,7 @@ import { useDashboardView } from './shared/DashboardViewContext';
 import { ChildSwitcherPanel, ChildSwitcherTrigger } from './shared/ChildSwitcher';
 import ChildActionsMenuContent from './shared/ChildActionsMenuContent';
 import { getAllQuickTagOptions, loadCustomQuickTags } from '../../utils/quickTags';
+import { getCalendarDateKey } from '../../utils/calendarDateKey';
 import { getRoleDisplay } from '../../constants/roles';
 import { CORE_ENTRY_ACTIONS } from '../../constants/logTypeRegistry';
 import TimelineFilters from '../Timeline/TimelineFilters';
@@ -34,6 +35,7 @@ import UnifiedTimeline from '../Timeline/UnifiedTimeline';
 import MiniCalendar from '../UI/MiniCalendar';
 import colors from '../../assets/theme/colors';
 import { getE2EMockData, isE2EMockEnabled } from '../../services/e2eMock';
+import { ACTIVE_TIMELINE_DATE_STORAGE_KEY } from './shared/DashboardViewContext';
 
 const formatStreakLabel = (streak = 0) => {
   if (!streak || streak < 1) {
@@ -102,6 +104,20 @@ const DesktopDashboardWorkspace = ({
     setSelectedDate(new Date());
   }, [activeChild?.id]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const selectedDateKey = getCalendarDateKey(selectedDate);
+    if (selectedDateKey) {
+      window.localStorage.setItem(ACTIVE_TIMELINE_DATE_STORAGE_KEY, selectedDateKey);
+      window.dispatchEvent(new CustomEvent('captureez:timeline-date-changed', {
+        detail: { dateKey: selectedDateKey },
+      }));
+    }
+  }, [selectedDate]);
+
   const handleQuickAction = (actionKey) => {
     if (!activeChild) return;
 
@@ -125,7 +141,7 @@ const DesktopDashboardWorkspace = ({
 
   const handleQuickNote = () => {
     if (!activeChild) return;
-    onQuickEntry?.(activeChild, 'quick_note');
+    onQuickEntry?.(activeChild, 'quick_note', undefined, selectedDate);
   };
 
   const handleDesktopChildMenuOpen = (event) => {
@@ -411,6 +427,7 @@ const DesktopDashboardWorkspace = ({
                 onDateChange={setSelectedDate}
                 streakLabel={activityStreakLabel}
                 activeFiltersCount={desktopTimelineFilterCount}
+                calendarEntries={activeChildEntries}
                 mobileLayout={false}
                 onOpenAdvancedFilters={handleDesktopTimelineFiltersOpen}
                 sx={{ mb: 1.5 }}
@@ -424,6 +441,7 @@ const DesktopDashboardWorkspace = ({
                 showFilters={false}
                 showDaySummary
                 streakLabel={activityStreakLabel}
+                calendarEntries={activeChildEntries}
               />
             </Paper>
           </Box>
@@ -476,12 +494,14 @@ const DesktopDashboardWorkspace = ({
           sx: {
             mt: 1,
             minWidth: 280,
+            maxHeight: '80vh',
             borderRadius: '18px',
             border: `1px solid ${colors.landing.borderLight}`,
             boxShadow: `0 24px 60px ${colors.landing.shadowPanel}`,
             bgcolor: 'rgba(255,255,255,0.98)',
             backdropFilter: 'blur(16px)',
-            overflow: 'hidden',
+            overflowY: 'auto',
+            overflowX: 'hidden',
           },
           }}
         >
@@ -492,7 +512,8 @@ const DesktopDashboardWorkspace = ({
             getUserRoleForChild={hook.getUserRoleForChild}
             onSelectChild={handleDesktopChildSelect}
             showCareTeamSummary={false}
-            showAddChild={false}
+            onAddChild={() => hook.setShowAddChildModal?.(true)}
+            showAddChild={Boolean(hook.setShowAddChildModal)}
           />
         </Box>
       </Menu>
@@ -563,6 +584,7 @@ const DesktopDashboardWorkspace = ({
             onFiltersChange={setTimelineFilters}
             selectedDate={selectedDate}
             onDateChange={setSelectedDate}
+            calendarEntries={activeChildEntries}
             availableTags={quickTagOptions}
           />
         </Box>

@@ -181,7 +181,7 @@ const QuickEntrySection = ({
               title={`${action.label}: ${action.description}`}
             >
               <Typography sx={{ fontSize: "0.65rem" }}>
-                {status[action.key] && action.key === 'journal' ? "📅" : status[action.key] ? "✓" : action.emoji}
+                {status[action.key] && action.key === 'dailyLog' ? "📅" : status[action.key] ? "✓" : action.emoji}
               </Typography>
             </Box>
           ))}
