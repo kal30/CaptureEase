@@ -1,13 +1,13 @@
 import React from 'react';
 import { Box, Button, CircularProgress } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
+import { incidentTheme } from '../incidentTheme';
 
 const ActionButtons = ({ 
   onCancel,
   onSave,
   canSave,
   loading,
-  incidentConfig 
 }) => {
   return (
     <Box sx={{ display: 'flex', gap: 2, mt: 4 }}>
@@ -25,10 +25,10 @@ const ActionButtons = ({
         startIcon={loading ? <CircularProgress size={20} /> : <SaveIcon />}
         sx={{
           flex: 2,
-          bgcolor: incidentConfig?.color,
+          bgcolor: incidentTheme.save,
+          color: '#FFFFFF',
           '&:hover': {
-            bgcolor: incidentConfig?.color,
-            filter: 'brightness(0.9)',
+            bgcolor: incidentTheme.saveHover,
           },
         }}
       >

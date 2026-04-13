@@ -7,7 +7,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { getDayDateRange, isWithinDateRange } from './dateUtils';
-import { getLogTypeByEntry, getTimelineMetaForCategory } from '../../constants/logTypeRegistry';
+import { getLogTypeByEntry, getTimelineMetaForCategory, isBehaviorIncidentEntry, LOG_TYPES } from '../../constants/logTypeRegistry';
 import { dedupeTimelineEntries } from './timelineDeduping';
 
 const buildDailyLogTitle = (data, categoryMeta) => {
@@ -40,23 +40,46 @@ const mapDailyLogEntry = (doc) => {
   const data = doc.data();
   const categoryType = getLogTypeByEntry(data);
   const categoryMeta = getTimelineMetaForCategory(categoryType.category);
-  const notesText = data.notes || data.sleepDetails?.notes || data.bathroomDetails?.notes || data.content || null;
+  const isBehaviorIncident = isBehaviorIncidentEntry(data);
+  const notesText = data.notes || data.sleepDetails?.notes || data.bathroomDetails?.notes || data.incidentData?.notes || data.content || null;
+  const severityLabel = data.severityLabel || data.incidentData?.severityLabel || (data.severity ? `Severity ${data.severity}` : null);
+  const triggerSummary = data.triggerSummary || data.incidentData?.triggerSummary || null;
+  const contextSnapshot = data.contextSnapshot || data.incidentData?.contextSnapshot || null;
 
   return {
     id: doc.id,
     ...data,
     timestamp: data.timestamp?.toDate() || new Date(data.createdAt),
     category: categoryType.category,
-    type: categoryMeta.type,
-    timelineType: categoryMeta.timelineType,
+    type: isBehaviorIncident ? 'behavior' : categoryMeta.type,
+    timelineType: isBehaviorIncident ? 'incident' : categoryMeta.timelineType,
     collection: 'dailyLogs',
-    title: buildDailyLogTitle(data, categoryMeta),
-    titlePrefix: categoryMeta.titlePrefix,
-    label: categoryMeta.label,
-    icon: categoryMeta.icon,
-    color: categoryMeta.color,
-    content: notesText,
+    title: isBehaviorIncident ? 'Behavior' : buildDailyLogTitle(data, categoryMeta),
+    titlePrefix: isBehaviorIncident ? 'Behavior' : categoryMeta.titlePrefix,
+    label: isBehaviorIncident ? LOG_TYPES.behavior.displayLabel : categoryMeta.label,
+    icon: isBehaviorIncident ? LOG_TYPES.behavior.icon : categoryMeta.icon,
+    color: isBehaviorIncident ? LOG_TYPES.behavior.palette.dot : categoryMeta.color,
+    content: isBehaviorIncident
+      ? [
+          severityLabel ? `Severity: ${severityLabel}${data.severity != null ? ` (${data.severity})` : ''}` : null,
+          notesText ? `Notes: ${notesText}` : null,
+          contextSnapshot?.patternInsight ? contextSnapshot.patternInsight : null,
+        ].filter(Boolean).join(' • ')
+      : notesText,
     notes: notesText,
+    severity: data.severity,
+    severityLabel,
+    triggerSummary,
+    remedy: data.remedy || data.incidentData?.remedy || null,
+    suspectedTriggers: data.suspectedTriggers || data.incidentData?.suspectedTriggers || [],
+    contextSnapshot,
+    incidentData: data.incidentData || {},
+    entryType: isBehaviorIncident ? 'incident' : data.entryType,
+    incidentStyle: isBehaviorIncident,
+    incidentCategoryId: isBehaviorIncident ? 'behavior' : data.incidentCategoryId,
+    incidentCategoryLabel: isBehaviorIncident ? 'Behavior' : data.incidentCategoryLabel,
+    incidentCategoryColor: isBehaviorIncident ? categoryMeta.color : data.incidentCategoryColor,
+    incidentCategoryIcon: isBehaviorIncident ? categoryMeta.icon : data.incidentCategoryIcon,
   };
 };
 

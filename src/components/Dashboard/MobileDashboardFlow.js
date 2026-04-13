@@ -11,6 +11,7 @@ const MobileDashboardFlow = ({
   timelineSummary,
   onRefreshDashboard,
   onQuickEntry,
+  onTrack,
   onEditChild,
   onDeleteChild,
   onInviteTeamMember,
@@ -58,6 +59,7 @@ const MobileDashboardFlow = ({
       onRefreshRoles={onRefreshRoles}
       onRefreshDashboard={onRefreshDashboard}
       onQuickEntry={onQuickEntry}
+      onTrack={onTrack}
       onEditChild={onEditChild}
       onDeleteChild={onDeleteChild}
       onInviteTeamMember={onInviteTeamMember}

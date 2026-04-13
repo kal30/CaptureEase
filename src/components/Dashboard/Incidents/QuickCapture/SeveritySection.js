@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Typography, Slider, Paper, Chip } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import colors from '../../../../assets/theme/colors';
+import { incidentTheme, incidentSectionSx } from '../incidentTheme';
 
 const SeveritySection = ({ 
   severity, 
@@ -24,20 +24,14 @@ const SeveritySection = ({
   return (
     <Paper 
       elevation={0}
-      sx={{ 
-        p: 3, 
-        mb: 3, 
-        borderRadius: '16px',
-        border: `1px solid ${colors.app.cards.border}`,
-        backgroundColor: colors.app.cards.background
-      }}
+      sx={{ p: 3, mb: 3, ...incidentSectionSx('#FFFFFF') }}
     >
       <Typography 
         variant="subtitle1" 
         gutterBottom 
         sx={{ 
           fontWeight: 600,
-          color: colors.app.text.strong
+          color: theme.palette.text.primary
         }}
       >
         📊 Severity Level: {severity}/10
@@ -54,18 +48,18 @@ const SeveritySection = ({
           valueLabelDisplay="on"
           sx={{
             '& .MuiSlider-thumb': {
-              backgroundColor: severityConfig?.color,
+              backgroundColor: severityConfig?.color || incidentTheme.severityHigh,
               width: 24,
               height: 24,
             },
             '& .MuiSlider-track': {
-              backgroundColor: severityConfig?.color,
+              backgroundColor: severityConfig?.color || incidentTheme.severityHigh,
             },
             '& .MuiSlider-rail': {
-              backgroundColor: colors.app.cards.border,
+              backgroundColor: incidentTheme.border,
             },
             '& .MuiSlider-valueLabel': {
-              backgroundColor: severityConfig?.color,
+              backgroundColor: severityConfig?.color || incidentTheme.severityHigh,
             },
           }}
         />
@@ -74,8 +68,8 @@ const SeveritySection = ({
           <Chip
             label={`${severityConfig?.label} - ${severityConfig?.description}`}
             sx={{
-              bgcolor: severityConfig?.color,
-              color: 'white',
+              bgcolor: severityConfig?.color || incidentTheme.severityHigh,
+              color: severityConfig?.color === incidentTheme.severityHigh ? incidentTheme.severityText : 'white',
               fontWeight: 600,
             }}
           />

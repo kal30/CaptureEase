@@ -19,7 +19,8 @@ import {
 import { alpha, useTheme } from '@mui/material/styles';
 import { getEntryTypeMeta, mapLegacyType } from '../../constants/timeline';
 import { getDailyLogDisplayInfo, getIncidentDisplayInfo } from '../../constants/uiDisplayConstants';
-import { getCanonicalEntryDisplayInfo, getLogTypeByCategory, getLogTypeByEntry } from '../../constants/logTypeRegistry';
+import { getCanonicalEntryDisplayInfo, getLogTypeByCategory, getLogTypeByEntry, isBehaviorIncidentEntry } from '../../constants/logTypeRegistry';
+import { getSeverityMeta } from '../../services/incidentService';
 import colors from '../../assets/theme/colors';
 
 /**
@@ -53,6 +54,7 @@ const UnifiedTimelineEntry = ({
   const categoryMeta = getLogTypeByCategory(categoryType.category || entry.category || entry.type);
   const categoryDisplay = getCanonicalEntryDisplayInfo(entry);
   const isDailyLogEntry = entry.collection === 'dailyLogs' || normalizedType === 'dailyLog';
+  const isBehaviorIncident = isBehaviorIncidentEntry(entry);
   const typeColor = entry.color || categoryMeta.palette?.dot || theme.palette.timeline?.entries?.[typeMeta.key] || theme.palette.primary.main;
 
   // Get user role color using centralized theme.palette.roles
@@ -83,15 +85,39 @@ const UnifiedTimelineEntry = ({
   const getPreviewContent = () => {
     const notesText = entry.notes || entry.sleepDetails?.notes || entry.bathroomDetails?.notes || '';
     const combinedText = [entry.text, entry.content, notesText].filter(Boolean).join(' — ');
+    const behaviorPrimaryText = entry.text
+      || entry.description
+      || entry.summary
+      || entry.incidentData?.description
+      || entry.incidentData?.notes
+      || entry.notes
+      || 'Behavior logged';
+    const behaviorSeverityText = entry.severity
+      ? (() => {
+          const severityMeta = getSeverityMeta('other');
+          const severityInfo = severityMeta[entry.severity];
+          if (severityInfo) {
+            return `${severityInfo.label} (${entry.severity}/10) - ${severityInfo.description}`;
+          }
+          return `Severity: ${entry.severityLabel || entry.severity} (${entry.severity}/10)`;
+        })()
+      : null;
 
     switch (entry.type) {
       case 'incident':
         return {
           primary: `${entry.incidentType || incidentDisplay.label} - ${entry.severity || 'Unknown'} severity`,
-          secondary: entry.description || entry.summary,
+          secondary: entry.content || entry.description || entry.summary || entry.notes || entry.remedy || entry.triggers?.join(', '),
           hasMedia: entry.mediaAttachments?.length > 0
         };
       case 'dailyLog':
+        if (isBehaviorIncident) {
+          return {
+            primary: behaviorPrimaryText,
+            secondary: behaviorSeverityText,
+            hasMedia: false
+          };
+        }
         return {
           primary: isDailyLogEntry
             ? (entry.titlePrefix || entry.title || categoryDisplay.label || dailyLogDisplay.label)
@@ -107,15 +133,16 @@ const UnifiedTimelineEntry = ({
       case 'sleep':
       case 'food':
       case 'milestone':
+        if (isBehaviorIncident) {
+          return {
+            primary: behaviorPrimaryText,
+            secondary: behaviorSeverityText,
+            hasMedia: false
+          };
+        }
         return {
           primary: entry.title || typeMeta.label,
           secondary: entry.text || entry.content || entry.notes,
-          hasMedia: false
-        };
-      case 'dailyLog':
-        return {
-          primary: entry.title || entry.titlePrefix || categoryMeta.trackLabel || categoryMeta.displayLabel || `${entry.activityType || 'Activity'}`,
-          secondary: combinedText || entry.description,
           hasMedia: false
         };
       case 'followUp':
@@ -236,18 +263,50 @@ const UnifiedTimelineEntry = ({
             </Typography>
             
             {previewContent.secondary && (
-              <Typography 
-                variant="body2" 
-                color="text.secondary"
-                sx={{ 
-                  display: '-webkit-box',
-                  WebkitLineClamp: isExpanded ? 'unset' : 2,
-                  WebkitBoxOrient: 'vertical',
-                  overflow: 'hidden'
-                }}
-              >
-                {previewContent.secondary}
-              </Typography>
+              isBehaviorIncident ? (
+                <Box
+                  sx={{
+                    mt: 0.5,
+                    px: 1.2,
+                    py: 0.55,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    borderRadius: 999,
+                    bgcolor: alpha(typeColor, 0.16),
+                    color: typeColor,
+                    fontWeight: 700,
+                    maxWidth: '100%',
+                  }}
+                >
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: typeColor,
+                      fontWeight: 700,
+                      lineHeight: 1.25,
+                      display: '-webkit-box',
+                      WebkitLineClamp: isExpanded ? 'unset' : 1,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    {previewContent.secondary}
+                  </Typography>
+                </Box>
+              ) : (
+                <Typography 
+                  variant="body2" 
+                  color="text.secondary"
+                  sx={{ 
+                    display: '-webkit-box',
+                    WebkitLineClamp: isExpanded ? 'unset' : 2,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden'
+                  }}
+                >
+                  {previewContent.secondary}
+                </Typography>
+              )
             )}
           </Box>
         </Box>
@@ -258,11 +317,53 @@ const UnifiedTimelineEntry = ({
             <Divider sx={{ mb: 2 }} />
             
             {/* Detailed Content based on entry type */}
-            {normalizedType === 'incident' && (
+            {(normalizedType === 'incident' || isBehaviorIncident) && (
               <Stack spacing={1}>
                 <Typography variant="subtitle2" gutterBottom>
-                  {incidentDisplay.label} Details
+                  {isBehaviorIncident ? 'Behavior Details' : `${incidentDisplay.label} Details`}
                 </Typography>
+                {(!isBehaviorIncident && entry.severity) && (
+                  <Typography variant="body2">
+                    <strong>Severity:</strong> {entry.severityLabel || entry.severity}{entry.severity ? ` (${entry.severity}/10)` : ''}
+                  </Typography>
+                )}
+                {entry.notes && (
+                  <Typography variant="body2">
+                    <strong>Notes:</strong> {entry.notes}
+                  </Typography>
+                )}
+                {entry.contextSnapshot?.patternInsight && (
+                  <Typography variant="body2">
+                    <strong>Pattern insight:</strong> {entry.contextSnapshot.patternInsight}
+                  </Typography>
+                )}
+                {entry.contextSnapshot && (
+                  <Box sx={{ mt: 1, p: 1.25, borderRadius: 2, bgcolor: 'rgba(230, 241, 251, 0.65)', border: '1px solid', borderColor: 'rgba(29, 94, 166, 0.12)' }}>
+                    <Typography variant="caption" sx={{ display: 'block', fontWeight: 700, mb: 0.5 }}>
+                      Context snapshot
+                    </Typography>
+                    {Array.isArray(entry.contextSnapshot.medicationsTaken) && entry.contextSnapshot.medicationsTaken.length > 0 && (
+                      <Typography variant="body2">
+                        <strong>Meds:</strong> {entry.contextSnapshot.medicationsTaken.join(', ')}
+                      </Typography>
+                    )}
+                    {entry.contextSnapshot.foodLogged && (
+                      <Typography variant="body2">
+                        <strong>Food:</strong> {entry.contextSnapshot.foodLogged}
+                      </Typography>
+                    )}
+                    {Array.isArray(entry.contextSnapshot.activities) && entry.contextSnapshot.activities.length > 0 && (
+                      <Typography variant="body2">
+                        <strong>Activities:</strong> {entry.contextSnapshot.activities.join(', ')}
+                      </Typography>
+                    )}
+                    {entry.contextSnapshot.sleepQuality && (
+                      <Typography variant="body2">
+                        <strong>Sleep:</strong> {entry.contextSnapshot.sleepQuality}
+                      </Typography>
+                    )}
+                  </Box>
+                )}
                 {entry.triggers && (
                   <Typography variant="body2">
                     <strong>Triggers:</strong> {Array.isArray(entry.triggers) ? entry.triggers.join(', ') : entry.triggers}
@@ -281,7 +382,7 @@ const UnifiedTimelineEntry = ({
               </Stack>
             )}
 
-            {normalizedType === 'dailyLog' && (
+            {normalizedType === 'dailyLog' && !isBehaviorIncident && (
               <Stack spacing={1}>
                 <Typography variant="subtitle2" gutterBottom>
                   Full {dailyLogDisplay.label} Entry
@@ -292,7 +393,7 @@ const UnifiedTimelineEntry = ({
               </Stack>
             )}
 
-            {normalizedType === 'dailyLog' && (
+            {normalizedType === 'dailyLog' && !isBehaviorIncident && (
               <Stack spacing={1}>
                 <Typography variant="subtitle2" gutterBottom>
                   Activity Details

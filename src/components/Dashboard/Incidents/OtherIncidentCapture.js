@@ -1,141 +1,391 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
+  Alert,
   Box,
-  Typography,
-  TextField,
-  Slider,
   Button,
-  Paper,
   Chip,
   CircularProgress,
-  Autocomplete,
-  Alert
+  Stack,
+  TextField,
+  Typography,
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import { useTheme } from '@mui/material/styles';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '../../../services/firebase';
-import { 
+import {
   addIncident,
-  createIncidentWithSmartFollowUp, 
-  INCIDENT_TYPES, 
-  getSeverityScale,
-  getSimilarIncidentNames,
   checkForCategorySuggestion,
-  getCustomCategories 
 } from '../../../services/incidentService';
+import { saveBehaviorIncident } from '../../../services/behaviorIncidentService';
+import { getTimelineEntries } from '../../../services/timelineService';
 import { useAsyncForm } from '../../../hooks/useAsyncForm';
-import { useAsyncOperation } from '../../../hooks/useAsyncOperation';
 import CategoryCreationModal from '../CategoryCreationModal';
-import colors from '../../../assets/theme/colors';
+import { incidentTheme } from './incidentTheme';
 
-const OtherIncidentCapture = ({ 
-  childId, 
-  childName, 
-  onBack, 
-  onSaved, 
+const TRIGGER_GROUPS = [
+  {
+    key: 'medication_timing',
+    label: 'Medication timing',
+  },
+  {
+    key: 'food_dietary',
+    label: 'Food / Dietary',
+  },
+  {
+    key: 'activity_people',
+    label: 'Activity / Therapist / People',
+  },
+  {
+    key: 'sleep_quality',
+    label: 'Sleep quality',
+  },
+  {
+    key: 'sensory_environment',
+    label: 'Sensory / Environment',
+  },
+  {
+    key: 'other',
+    label: 'Other',
+  },
+];
+
+const SEVERITY_PRESETS = [
+  {
+    key: 'low',
+    label: 'Low',
+    value: 2,
+    description: 'Mild concern',
+    bg: '#EAF7EE',
+    border: '#B9E3C6',
+    text: '#25603B',
+  },
+  {
+    key: 'moderate',
+    label: 'Moderate',
+    value: 5,
+    description: 'Noticeable issue',
+    bg: '#FFF6DB',
+    border: '#F2D98B',
+    text: '#8A5A00',
+  },
+  {
+    key: 'high',
+    label: 'High',
+    value: 6,
+    description: 'Significant impact',
+    bg: incidentTheme.severityHigh,
+    border: '#F2C08F',
+    text: incidentTheme.severityText,
+  },
+  {
+    key: 'critical',
+    label: 'Critical',
+    value: 9,
+    description: 'Urgent help needed',
+    bg: '#FECACA',
+    border: '#F59CA3',
+    text: '#8C1D18',
+  },
+];
+
+const formatTimeLabel = (date) => {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+    return '';
+  }
+
+  return date.toLocaleTimeString([], {
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+};
+
+const toDate = (value) => {
+  if (!value) return null;
+  if (value instanceof Date) return value;
+  if (typeof value?.toDate === 'function') return value.toDate();
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
+const getLocalDayKey = (date) => {
+  const target = toDate(date) || new Date();
+  const year = target.getFullYear();
+  const month = String(target.getMonth() + 1).padStart(2, '0');
+  const day = String(target.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const getDisplayText = (entry) => {
+  const title = String(entry?.title || entry?.content || entry?.notes || 'Entry').trim();
+  if (!title) return 'Entry';
+
+  const withoutPrefix = title.includes(':') ? title.split(':').slice(1).join(':').trim() : title;
+  return withoutPrefix || title;
+};
+
+const buildContextSummary = (entry) => {
+  const label = getDisplayText(entry);
+  const timeLabel = formatTimeLabel(toDate(entry?.timestamp));
+
+  if (!timeLabel) {
+    return label;
+  }
+
+  if (label.includes('@')) {
+    return label;
+  }
+
+  return `${label} @ ${timeLabel}`;
+};
+
+const getClosestEntry = (entries, predicate, incidentTime, maxMinutes = Infinity) => {
+  const matches = entries
+    .map((entry) => ({
+      entry,
+      date: toDate(entry.timestamp),
+    }))
+    .filter(({ entry, date }) => date && predicate(entry))
+    .filter(({ date }) => date <= incidentTime)
+    .map(({ entry, date }) => ({
+      entry,
+      date,
+      diffMinutes: Math.round((incidentTime - date) / 60000),
+    }))
+    .filter(({ diffMinutes }) => diffMinutes >= 0 && diffMinutes <= maxMinutes)
+    .sort((a, b) => a.diffMinutes - b.diffMinutes);
+
+  return matches[0] || null;
+};
+
+const getSleepEntry = (entries, incidentTime) => {
+  const matches = entries
+    .map((entry) => ({
+      entry,
+      date: toDate(entry.timestamp),
+    }))
+    .filter(({ entry, date }) => date && (entry.type === 'sleep' || /sleep/i.test(`${entry.title || ''} ${entry.content || ''}`)))
+    .filter(({ date }) => date <= incidentTime)
+    .map(({ entry, date }) => ({
+      entry,
+      date,
+      diffMinutes: Math.round((incidentTime - date) / 60000),
+    }))
+    .filter(({ diffMinutes }) => diffMinutes >= 0 && diffMinutes <= 24 * 60)
+    .sort((a, b) => a.diffMinutes - b.diffMinutes);
+
+  return matches[0] || null;
+};
+
+const buildContextItems = (entries, incidentTime) => {
+  const medication = getClosestEntry(
+    entries,
+    (entry) => entry.type === 'medication' || /med/i.test(`${entry.title || ''} ${entry.content || ''}`),
+    incidentTime,
+    180
+  );
+  const food = getClosestEntry(
+    entries,
+    (entry) => entry.type === 'food' || /food|meal|snack|eat/i.test(`${entry.title || ''} ${entry.content || ''}`),
+    incidentTime,
+    360
+  );
+  const activity = getClosestEntry(
+    entries,
+    (entry) => entry.type === 'activity' || /activity|therapy|outing|people/i.test(`${entry.title || ''} ${entry.content || ''}`),
+    incidentTime,
+    360
+  );
+  const sleep = getSleepEntry(entries, incidentTime);
+
+  return [
+    medication && {
+      key: 'medication',
+      label: 'Medications logged',
+      value: buildContextSummary(medication.entry),
+      note: medication.diffMinutes <= 60
+        ? `Timing signal: Medication given ${medication.diffMinutes} min before incident`
+        : `Medication logged ${medication.diffMinutes} min before incident`,
+    },
+    food && {
+      key: 'food',
+      label: 'Food logged',
+      value: buildContextSummary(food.entry),
+      note: food.diffMinutes <= 120
+        ? `Food logged ${food.diffMinutes} min before incident`
+        : `Food logged earlier today`,
+    },
+    activity && {
+      key: 'activity',
+      label: 'Activity logged',
+      value: buildContextSummary(activity.entry),
+      note: activity.diffMinutes <= 120
+        ? `Activity happened ${activity.diffMinutes} min before incident`
+        : `Activity earlier today`,
+    },
+    sleep && {
+      key: 'sleep',
+      label: 'Sleep last night',
+      value: buildContextSummary(sleep.entry),
+      note: `Sleep logged ${sleep.diffMinutes} min before incident`,
+    },
+  ].filter(Boolean);
+};
+
+const buildFallbackContextSnapshot = (items = [], insight = '') => {
+  const medications = items.find((item) => item.key === 'medication');
+  const food = items.find((item) => item.key === 'food');
+  const activity = items.find((item) => item.key === 'activity');
+  const sleep = items.find((item) => item.key === 'sleep');
+
+  return {
+    medicationsTaken: medications?.value ? [medications.value] : ['Not logged yet'],
+    foodLogged: food?.value || 'Not logged yet',
+    activities: activity?.value ? [activity.value] : ['Not logged yet'],
+    sleepQuality: sleep?.value || 'Not logged yet',
+    dataCompleteness: {
+      hasMedicationData: Boolean(medications),
+      hasFoodData: Boolean(food),
+      hasActivityData: Boolean(activity),
+      hasSleepData: Boolean(sleep),
+    },
+    patternInsight: insight || 'Timing signal: No clear same-day pattern yet',
+  };
+};
+
+const OtherIncidentCapture = ({
+  childId,
+  childName,
+  onSaved,
   onClose,
   onCategoryCreated,
   isCustomCategory = false,
-  customCategoryType = null
+  customCategoryType = null,
+  incidentTypeOverride = null,
 }) => {
   const theme = useTheme();
   const [user] = useAuthState(auth);
   const [incidentName, setIncidentName] = useState('');
   const [severity, setSeverity] = useState(5);
   const [notes, setNotes] = useState('');
-  const [similarNames, setSimilarNames] = useState([]);
+  const [incidentDateTime, setIncidentDateTime] = useState(new Date());
+  const [selectedTriggers, setSelectedTriggers] = useState([]);
+  const [timelineEntries, setTimelineEntries] = useState([]);
+  const [showMoreContext, setShowMoreContext] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [categorySuggestion, setCategorySuggestion] = useState(null);
-  const [customCategories, setCustomCategories] = useState({});
 
-  // Use async form hook for incident submission
   const incidentForm = useAsyncForm({
-    validate: ({ incidentName, isCustomCategory }) => {
-      if (!isCustomCategory && !incidentName?.trim()) {
-        throw new Error('Please enter an incident name');
+    validate: ({ incidentName: inputName, isCustomCategory: custom }) => {
+      if (!custom && !incidentTypeOverride && !inputName?.trim()) {
+        throw new Error('Please enter what happened');
       }
-    }
+    },
   });
 
-  // Use async operation hook for suggestions loading
-  const suggestionsOperation = useAsyncOperation();
-
-  // Load custom categories on mount
   useEffect(() => {
-    const loadCustomCategories = async () => {
-      if (childId) {
-        try {
-          const categories = await getCustomCategories(childId);
-          setCustomCategories(categories);
-        } catch (error) {
-          console.error('Error loading custom categories:', error);
-        }
+    if (!childId) return undefined;
+
+    const unsubscribe = getTimelineEntries(childId, (entries) => {
+      setTimelineEntries(entries || []);
+    });
+
+    return () => {
+      if (typeof unsubscribe === 'function') {
+        unsubscribe();
       }
     };
-
-    loadCustomCategories();
   }, [childId]);
 
-  // Get incident config based on whether it's a custom category or "Other"
-  const getIncidentConfig = () => {
-    if (isCustomCategory && customCategoryType) {
-      return customCategories[customCategoryType] || INCIDENT_TYPES.OTHER;
+  const incidentTime = useMemo(
+    () => (incidentDateTime instanceof Date ? incidentDateTime : new Date()),
+    [incidentDateTime]
+  );
+  const selectedSeverityPreset = SEVERITY_PRESETS.find((preset) => preset.value === severity) || SEVERITY_PRESETS[1];
+
+  const contextItems = useMemo(
+    () => buildContextItems(timelineEntries, incidentTime),
+    [timelineEntries, incidentTime]
+  );
+
+  const patternInsight = useMemo(() => {
+    const medication = contextItems.find((item) => item.key === 'medication');
+    if (medication?.note?.startsWith('Timing signal')) {
+      return medication.note;
     }
-    return INCIDENT_TYPES.OTHER;
-  };
 
-  const incidentConfig = getIncidentConfig();
-  const severityScale = getSeverityScale(isCustomCategory ? 'other' : 'other');
-  const severityConfig = severityScale[severity];
+    const activity = contextItems.find((item) => item.key === 'activity');
+    if (activity?.note) {
+      return `Timing signal: ${activity.note}`;
+    }
 
-  // Load similar incident names for autocomplete
-  useEffect(() => {
-    const loadSimilarNames = async () => {
-      if (incidentName.length >= 2) {
-        const names = await suggestionsOperation.execute(async () => {
-          return await getSimilarIncidentNames(childId, incidentName);
-        });
-        if (names) {
-          setSimilarNames(names);
-        }
-      } else {
-        setSimilarNames([]);
-      }
-    };
+    const food = contextItems.find((item) => item.key === 'food');
+    if (food?.note) {
+      return `Timing signal: ${food.note}`;
+    }
 
-    const debounceTimer = setTimeout(loadSimilarNames, 300);
-    return () => clearTimeout(debounceTimer);
-  }, [incidentName, childId, suggestionsOperation]);
+    return 'Timing signal: No clear same-day pattern yet';
+  }, [contextItems]);
 
-  const handleSeverityChange = (event, newValue) => {
-    setSeverity(newValue);
-  };
+  const canSave = isCustomCategory || Boolean(incidentTypeOverride) || incidentName.trim().length > 0;
 
   const handleSave = () => {
     incidentForm.submitForm(
       async () => {
+        const triggerText = selectedTriggers
+          .map((triggerKey) => TRIGGER_GROUPS.find((group) => group.key === triggerKey)?.label)
+          .filter(Boolean)
+          .join(', ');
+
+        const isBehaviorFlow = incidentTypeOverride === 'behavioral' || incidentTypeOverride === 'behavior';
+        const incidentTimestamp = new Date(incidentTime);
         const incidentData = {
-          type: isCustomCategory ? customCategoryType : 'other',
+          type: isCustomCategory
+            ? customCategoryType
+            : (incidentTypeOverride || 'other'),
           customIncidentName: isCustomCategory ? '' : incidentName.trim(),
           severity,
-          remedy: notes || 'General observation and monitoring',
-          notes,
+          remedy: triggerText || 'General observation and monitoring',
+          triggerSummary: triggerText,
+          suspectedTriggers: selectedTriggers,
+          notes: notes.trim(),
+          description: incidentName.trim() || notes.trim(),
+          incidentDateTime: incidentTimestamp.toISOString(),
+          incidentDayKey: getLocalDayKey(incidentTimestamp),
+          entryDateLabel: incidentTimestamp.toDateString(),
           authorId: user?.uid,
           authorName: user?.displayName || user?.email?.split('@')[0] || 'User',
-          authorEmail: user?.email
+          authorEmail: user?.email,
         };
 
-        await addIncident(childId, incidentData, true, childName || 'child');
+        if (isBehaviorFlow) {
+          const savedEntry = await saveBehaviorIncident({
+            childId,
+            incidentData,
+            userId: user?.uid,
+            fallbackContextSnapshot: buildFallbackContextSnapshot(contextItems, patternInsight),
+          });
 
-        // Only check for category suggestions if this is a regular "Other" incident
-        if (!isCustomCategory) {
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('captureez:timeline-entry-created', {
+              detail: {
+                ...savedEntry.entry,
+                timestamp: incidentTimestamp,
+                childId,
+              },
+            }));
+          }
+        } else {
+          await addIncident(childId, incidentData, true, childName || 'child');
+        }
+
+        if (!isCustomCategory && !incidentTypeOverride) {
           const suggestionCheck = await checkForCategorySuggestion(childId, incidentName.trim());
-          
+
           if (suggestionCheck.shouldSuggest) {
             setCategorySuggestion(suggestionCheck.suggestion);
             setShowCategoryModal(true);
-            return; // Don't call onSaved yet, let the category modal handle it
+            return;
           }
         }
 
@@ -145,229 +395,294 @@ const OtherIncidentCapture = ({
     );
   };
 
-  const handleCategoryCreated = (result) => {
+  const handleCategoryCreated = () => {
     setShowCategoryModal(false);
     setCategorySuggestion(null);
-    // Notify parent component that a category was created so it can refresh
+
     if (onCategoryCreated) {
       onCategoryCreated();
     }
-    onSaved(); // Now call onSaved after handling the category
+
+    onSaved();
   };
 
   const handleCategoryModalClose = () => {
     setShowCategoryModal(false);
     setCategorySuggestion(null);
-    onSaved(); // Still call onSaved even if they don't create the category
+    onSaved();
   };
 
-  const getSeverityMarks = () => {
-    const marks = [];
-    for (let i = 1; i <= 10; i++) {
-      marks.push({
-        value: i,
-        label: i.toString()
-      });
-    }
-    return marks;
+  const toggleTrigger = (triggerKey) => {
+    setSelectedTriggers((current) =>
+      current.includes(triggerKey)
+        ? current.filter((item) => item !== triggerKey)
+        : [...current, triggerKey]
+    );
   };
 
-  const canSave = isCustomCategory || incidentName.trim().length > 0;
+  const updateIncidentDate = (nextDateValue) => {
+    const nextDate = nextDateValue ? new Date(nextDateValue) : new Date();
+    nextDate.setHours(incidentTime.getHours(), incidentTime.getMinutes(), 0, 0);
+    setIncidentDateTime(nextDate);
+  };
+
+  const updateIncidentTime = (nextTimeValue) => {
+    const nextDate = new Date(incidentTime);
+    const [hours, minutes] = String(nextTimeValue || '00:00')
+      .split(':')
+      .map((value) => Number(value));
+
+    nextDate.setHours(Number.isFinite(hours) ? hours : 0, Number.isFinite(minutes) ? minutes : 0, 0, 0);
+    setIncidentDateTime(nextDate);
+  };
+
+  const dateFieldValue = `${incidentTime.getFullYear()}-${String(incidentTime.getMonth() + 1).padStart(2, '0')}-${String(incidentTime.getDate()).padStart(2, '0')}`;
+  const timeFieldValue = `${String(incidentTime.getHours()).padStart(2, '0')}:${String(incidentTime.getMinutes()).padStart(2, '0')}`;
+  const visibleContextItems = showMoreContext ? contextItems : contextItems.slice(0, 3);
+  const saveLabel = incidentForm.loading ? 'Saving...' : 'Save incident';
 
   return (
-    <Box sx={{ p: 4, backgroundColor: colors.app.cards.background, minHeight: '100%' }}>
+    <Box
+      sx={{
+        minHeight: '100%',
+        bgcolor: incidentTheme.header,
+        px: { xs: 1.5, sm: 2 },
+        py: { xs: 1.5, sm: 2 },
+      }}
+    >
       {incidentForm.error && (
-        <Alert 
-          severity="error" 
-          sx={{ mb: 3 }} 
-          onClose={() => incidentForm.clearError()}
-        >
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => incidentForm.clearError()}>
           {incidentForm.error}
         </Alert>
       )}
 
-      {/* Incident Name Input */}
-      <Paper 
-        elevation={0}
-        sx={{ 
-          p: 3, 
-          mb: 3, 
-          borderRadius: '16px',
-          border: `1px solid ${colors.app.cards.border}`,
-          backgroundColor: colors.app.cards.background
-        }}
-      >
-        <Typography 
-          variant="subtitle1" 
-          gutterBottom 
-          sx={{ 
-            fontWeight: 600,
-            color: colors.app.text.strong
-          }}
-        >
-          Incident Name
-        </Typography>
-        <Autocomplete
+      <Stack spacing={2.5}>
+        <Box sx={{ px: 0 }}>
+          <TextField
+          fullWidth
+          multiline
+          minRows={3}
+          maxRows={8}
           value={incidentName}
-          onChange={(event, newValue) => {
-            setIncidentName(newValue || '');
-          }}
-          onInputChange={(event, newInputValue) => {
-            setIncidentName(newInputValue);
-          }}
-          options={similarNames}
-          loading={suggestionsOperation.loading}
-          freeSolo
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              placeholder="e.g., 'New Rash', 'Upset Stomach', 'Difficulty Swallowing'"
-              fullWidth
-              InputProps={{
-                ...params.InputProps,
-                endAdornment: (
-                  <>
-                    {suggestionsOperation.loading ? <CircularProgress color="inherit" size={20} /> : null}
-                    {params.InputProps.endAdornment}
-                  </>
-                ),
-              }}
-            />
-          )}
-          renderOption={(props, option) => (
-            <Box component="li" {...props}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Typography variant="body2">{option}</Typography>
-                <Chip size="small" label="Previous" variant="outlined" />
-              </Box>
-            </Box>
-          )}
-        />
-        <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-          Describe what happened. If you've logged something similar before, suggestions will appear.
-        </Typography>
-      </Paper>
-
-      {/* Severity Slider */}
-      <Paper 
-        elevation={0}
-        sx={{ 
-          p: 3, 
-          mb: 3, 
-          borderRadius: '16px',
-          border: `1px solid ${colors.app.cards.border}`,
-          backgroundColor: colors.app.cards.background
-        }}
-      >
-        <Typography 
-          variant="subtitle1" 
-          gutterBottom 
-          sx={{ 
-            fontWeight: 600,
-            color: colors.app.text.strong
-          }}
-        >
-          Severity Level: {severity}/10
-        </Typography>
-        <Box sx={{ px: 2, py: 2 }}>
-          <Slider
-            value={severity}
-            onChange={handleSeverityChange}
-            min={1}
-            max={10}
-            step={1}
-            marks={getSeverityMarks()}
-            valueLabelDisplay="on"
+          onChange={(event) => setIncidentName(event.target.value)}
+            placeholder="What happened?"
             sx={{
-              '& .MuiSlider-thumb': {
-                backgroundColor: severityConfig.color,
-                width: 24,
-                height: 24,
-              },
-              '& .MuiSlider-track': {
-                backgroundColor: severityConfig.color,
-              },
-              '& .MuiSlider-rail': {
-                backgroundColor: theme.palette.grey[300],
-              },
-              '& .MuiSlider-valueLabel': {
-                backgroundColor: severityConfig.color,
-              },
+              mt: 0,
             }}
           />
-          <Box sx={{ mt: 2, textAlign: 'center' }}>
-            <Chip
-              label={`${severityConfig.label} - ${severityConfig.description}`}
-              sx={{
-                bgcolor: severityConfig.color,
-                color: 'white',
-                fontWeight: 600,
-              }}
+        </Box>
+
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="caption" sx={{ mb: 0.5, display: 'block', fontWeight: 700, letterSpacing: '0.02em' }}>
+              Date
+            </Typography>
+            <TextField
+              fullWidth
+              type="date"
+              value={dateFieldValue}
+              onChange={(event) => updateIncidentDate(event.target.value)}
+              InputLabelProps={{ shrink: true }}
             />
           </Box>
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="caption" sx={{ mb: 0.5, display: 'block', fontWeight: 700, letterSpacing: '0.02em' }}>
+              Time
+            </Typography>
+            <TextField
+              fullWidth
+              type="time"
+              value={timeFieldValue}
+              onChange={(event) => updateIncidentTime(event.target.value)}
+              InputLabelProps={{ shrink: true }}
+            />
+          </Box>
+        </Stack>
+
+        <Box>
+          <Typography variant="caption" sx={{ mb: 0.5, display: 'block', fontWeight: 700, letterSpacing: '0.02em' }}>
+            Severity
+          </Typography>
+          <Typography variant="body2" sx={{ mb: 1, color: theme.palette.text.secondary }}>
+            {selectedSeverityPreset.label} - {selectedSeverityPreset.description}
+          </Typography>
+          <Box sx={{ display: 'flex', flexWrap: 'nowrap', gap: 1.25, overflowX: 'auto', pb: 0.5, WebkitOverflowScrolling: 'touch' }}>
+            {SEVERITY_PRESETS.map((preset) => {
+              const selected = severity === preset.value;
+              return (
+                <Chip
+                  key={preset.key}
+                  clickable
+                  onClick={() => setSeverity(preset.value)}
+                  label={preset.label}
+                  sx={{
+                    minWidth: 96,
+                    flexShrink: 0,
+                    borderRadius: 999,
+                    px: 1.5,
+                    py: 2.2,
+                    fontWeight: 800,
+                    bgcolor: selected ? preset.bg : 'rgba(255,255,255,0.7)',
+                    color: selected ? preset.text : theme.palette.text.primary,
+                    border: `1px solid ${selected ? preset.border : incidentTheme.border}`,
+                    '&:hover': {
+                      bgcolor: selected ? preset.bg : 'rgba(255,255,255,0.95)',
+                    },
+                  }}
+                />
+              );
+            })}
+          </Box>
         </Box>
-      </Paper>
 
-      {/* Notes */}
-      <Paper 
-        elevation={0}
-        sx={{ 
-          p: 3, 
-          mb: 3, 
-          borderRadius: '16px',
-          border: `1px solid ${colors.app.cards.border}`,
-          backgroundColor: colors.app.cards.background
-        }}
-      >
-        <Typography 
-          variant="subtitle1" 
-          gutterBottom 
-          sx={{ 
-            fontWeight: 600,
-            color: colors.app.text.strong
-          }}
-        >
-          Additional Context
-        </Typography>
-        <TextField
-          fullWidth
-          placeholder="Describe what happened, potential triggers, how the child reacted..."
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          multiline
-          rows={4}
-          variant="outlined"
-        />
-      </Paper>
-
-      {/* Action Buttons */}
-      <Box sx={{ display: 'flex', gap: 2, mt: 4 }}>
-        <Button
-          variant="outlined"
-          onClick={onClose}
-          sx={{ flex: 1 }}
-        >
-          Cancel
-        </Button>
-        <Button
-          variant="contained"
-          onClick={handleSave}
-          disabled={!canSave || incidentForm.loading}
-          startIcon={incidentForm.loading ? <CircularProgress size={20} /> : <SaveIcon />}
+        <Box
           sx={{
-            flex: 2,
-            bgcolor: incidentConfig.color,
-            '&:hover': {
-              bgcolor: incidentConfig.color,
-              filter: 'brightness(0.9)',
-            },
+            px: 0,
+            py: { xs: 2, sm: 2.25 },
+            bgcolor: incidentTheme.context,
+            borderRadius: 2,
           }}
         >
-          {incidentForm.loading ? 'Saving...' : 'Save Incident'}
-        </Button>
-      </Box>
+          <Typography variant="h6" sx={{ fontWeight: 800, mb: 1.25, color: '#184D83' }}>
+            Context from today
+          </Typography>
+          <Typography sx={{ fontWeight: 700, color: '#184D83', mb: 1.5 }}>
+            ⚠ {patternInsight}
+          </Typography>
 
-      {/* Category Creation Modal */}
+          {visibleContextItems.length > 0 ? (
+            <Stack spacing={1.5}>
+              {visibleContextItems.map((item) => (
+                <Box key={item.key} sx={{ pb: 1.25, borderBottom: '1px solid rgba(17, 24, 39, 0.08)' }}>
+                  <Typography sx={{ fontWeight: 800, mb: 0.25, color: '#184D83' }}>
+                    {item.label}
+                  </Typography>
+                  <Typography sx={{ color: '#1D5EA6', fontWeight: 500 }}>
+                    {item.value}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#3B82F6', mt: 0.25 }}>
+                    {item.note}
+                  </Typography>
+                </Box>
+              ))}
+            </Stack>
+          ) : (
+            <Typography sx={{ color: '#1D5EA6' }}>
+              No earlier logs found for today yet.
+            </Typography>
+          )}
+
+          {contextItems.length > 3 ? (
+            <Button
+              variant="text"
+              onClick={() => setShowMoreContext((value) => !value)}
+              sx={{ mt: 1.25, px: 0, fontWeight: 700, color: '#1D5EA6' }}
+            >
+              {showMoreContext ? 'Show less context' : 'Show more context'}
+            </Button>
+          ) : null}
+        </Box>
+
+        <Box
+          sx={{
+            px: 0,
+            py: { xs: 2, sm: 2.25 },
+            bgcolor: incidentTheme.triggers,
+            borderRadius: 2,
+          }}
+        >
+          <Typography variant="h6" sx={{ fontWeight: 800, mb: 1.25, color: '#8A264B' }}>
+            What might have triggered this?
+          </Typography>
+
+          <Box sx={{ display: 'flex', flexWrap: 'nowrap', gap: 1.25, overflowX: 'auto', pb: 0.5, WebkitOverflowScrolling: 'touch' }}>
+            {TRIGGER_GROUPS.map((group) => {
+              const selected = selectedTriggers.includes(group.key);
+              return (
+                <Chip
+                  key={group.key}
+                  clickable
+                  onClick={() => toggleTrigger(group.key)}
+                  label={group.label}
+                  sx={{
+                    borderRadius: 999,
+                    px: 1.5,
+                    py: 2.2,
+                    fontWeight: 700,
+                    flexShrink: 0,
+                    bgcolor: selected ? '#F7B8CC' : 'rgba(255,255,255,0.55)',
+                    color: selected ? '#7B2248' : '#8A264B',
+                    border: `1px solid ${selected ? '#F07AA8' : 'rgba(123, 34, 72, 0.2)'}`,
+                    '&:hover': {
+                      bgcolor: selected ? '#F7B8CC' : 'rgba(255,255,255,0.8)',
+                    },
+                  }}
+                />
+              );
+            })}
+          </Box>
+
+          <TextField
+            fullWidth
+            multiline
+            minRows={3}
+            value={notes}
+            onChange={(event) => setNotes(event.target.value)}
+            placeholder="Additional notes..."
+            sx={{
+              mt: 2,
+            }}
+          />
+        </Box>
+
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: { xs: 'column', sm: 'row' },
+            gap: 1.5,
+            mt: 0.25,
+            pb: 0.5,
+          }}
+        >
+          <Button
+            variant="outlined"
+            onClick={onClose}
+            sx={{
+              flex: 1,
+              minHeight: 52,
+              borderRadius: 3,
+              color: theme.palette.text.primary,
+              borderColor: incidentTheme.border,
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleSave}
+            disabled={!canSave || incidentForm.loading}
+            startIcon={incidentForm.loading ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
+            sx={{
+              flex: 2,
+              minHeight: 52,
+              borderRadius: 3,
+              bgcolor: incidentTheme.save,
+              color: '#FFFFFF',
+              '&:hover': {
+                bgcolor: incidentTheme.saveHover,
+              },
+              '&.Mui-disabled': {
+                bgcolor: incidentTheme.save,
+                opacity: 0.55,
+                color: '#FFFFFF',
+              },
+            }}
+          >
+            {saveLabel}
+          </Button>
+        </Box>
+      </Stack>
+
       <CategoryCreationModal
         open={showCategoryModal}
         onClose={handleCategoryModalClose}

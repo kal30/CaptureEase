@@ -7,7 +7,6 @@ import {
   FormControl,
   Chip,
   IconButton,
-  ListItemIcon,
   Drawer,
   InputLabel,
   Paper,
@@ -15,14 +14,11 @@ import {
   MenuItem,
   Select,
   SwipeableDrawer,
-  Stack,
-  TextField,
   FormControlLabel,
   Switch,
   Typography,
 } from '@mui/material';
 import {
-  AutoAwesomeOutlined as AutoAwesomeIcon,
   CalendarToday as CalendarTodayIcon,
   DeleteOutline as DeleteIcon,
   EditOutlined as EditIcon,
@@ -30,7 +26,6 @@ import {
   ForumOutlined as ForumOutlinedIcon,
   GroupsOutlined as GroupsIcon,
   FilterListRounded as FilterListRoundedIcon,
-  NoteAltOutlined as NoteAltOutlinedIcon,
   KeyboardArrowDown as KeyboardArrowDownIcon,
   MenuOutlined as MenuIcon,
   Search as SearchIcon,
@@ -52,24 +47,10 @@ import { getChildCareTeam } from '../../../services/childAccessService';
 import { auth } from '../../../services/firebase';
 import { getAllQuickTagOptions, getQuickTagDisplay, loadCustomQuickTags } from '../../../utils/quickTags';
 import { getCalendarDateKey } from '../../../utils/calendarDateKey';
-import { CORE_ENTRY_ACTIONS } from '../../../constants/logTypeRegistry';
 import colors from '../../../assets/theme/colors';
+import DashboardActionBoard from '../DashboardActionBoard';
 import { getE2EMockData, isE2EMockEnabled } from '../../../services/e2eMock';
 import { getChildProfileCompletion } from '../../../utils/profileCompletion';
-
-const quickActions = CORE_ENTRY_ACTIONS.map((action) => ({
-  key: action.key,
-  label: action.label,
-  emoji: action.icon,
-  border: action.color,
-}));
-
-const timelineFilters = CORE_ENTRY_ACTIONS.map((action) => ({
-  key: action.type,
-  label: action.label,
-  emoji: action.icon,
-  color: action.color,
-}));
 
 const timelineUserRoleOptions = [
   { value: USER_ROLES.CARE_OWNER, label: 'Care Owner' },
@@ -111,6 +92,7 @@ const MobileCaptureDashboard = ({
   getUserRoleForChild,
   onRefreshDashboard,
   onQuickEntry,
+  onTrack,
   onEditChild,
   onDeleteChild,
   onDailyReport,
@@ -386,7 +368,6 @@ const MobileCaptureDashboard = ({
   }, [onRefreshDashboard, isRefreshing]);
 
   const hasTimelineEntries = (allEntries[activeChild?.id] || []).length > 0;
-  const shouldGuideToQuickLog = !hasTimelineEntries;
   const timelineFilterCount = getActiveTimelineFilterCount({
     searchText,
     entryTypes: activeEntryTypes,
@@ -429,29 +410,6 @@ const MobileCaptureDashboard = ({
   if (!activeChild) {
     return null;
   }
-
-  const handleQuickAction = (actionKey) => {
-    switch (actionKey) {
-      case 'meds':
-        onOpenMedicalLog?.(activeChild);
-        break;
-      case 'sleep':
-        onOpenSleepLog?.(activeChild);
-        break;
-      case 'food':
-        onOpenFoodLog?.(activeChild);
-        break;
-      case 'toilet':
-        onOpenBathroomLog?.(activeChild);
-        break;
-      default:
-        break;
-    }
-  };
-
-  const handleQuickNote = () => {
-    onQuickEntry?.(activeChild, 'quick_note', undefined, selectedDate);
-  };
 
   const toggleTimelineEntryType = (typeKey) => {
     setActiveEntryTypes((prev) => {
@@ -666,78 +624,15 @@ const MobileCaptureDashboard = ({
           </Box>
         </Box>
 
-        <Box sx={{ p: 1.25, backgroundColor: colors.landing.surface }}>
-          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 2 }}>
-            {quickActions.map((action) => (
-              <Button
-                key={action.key}
-                onClick={() => handleQuickAction(action.key)}
-                variant="outlined"
-                sx={{
-                  minHeight: 106,
-                  borderRadius: '14px',
-                  borderWidth: '2px',
-                  borderColor: action.border,
-                  bgcolor: colors.landing.surface,
-                  color: colors.landing.heroText,
-                  textTransform: 'none',
-                  fontWeight: 900,
-                  boxShadow: `0 4px 10px ${colors.landing.shadowSoft}`,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 0.65,
-                  position: 'relative',
-                  animation: shouldGuideToQuickLog ? 'quickLogPulse 2.8s ease-in-out infinite' : 'none',
-                  '@keyframes quickLogPulse': {
-                    '0%, 100%': {
-                      boxShadow: `0 4px 10px ${colors.landing.shadowSoft}, 0 0 0 0 ${alpha(colors.brand.ink, 0.0)}`,
-                    },
-                    '50%': {
-                      boxShadow: `0 8px 18px ${colors.landing.shadowSoft}, 0 0 0 10px ${alpha(colors.brand.ink, 0.05)}`,
-                    },
-                  },
-                  '&:hover': {
-                    borderColor: action.border,
-                    borderWidth: '2px',
-                    bgcolor: colors.landing.surfaceSoft,
-                  },
-                }}
-              >
-                <Box sx={{ fontSize: '1.85rem', lineHeight: 1, color: action.border }}>{action.emoji}</Box>
-                <Box sx={{ fontSize: '1rem', lineHeight: 1.05 }}>{action.label}</Box>
-              </Button>
-            ))}
-          </Box>
-
-          <Button
-            fullWidth
-            variant="outlined"
-            onClick={handleQuickNote}
-            data-cy="mobile-quick-note"
-            startIcon={<NoteAltOutlinedIcon sx={{ fontSize: 19, color: colors.brand.tealBlue }} />}
-            sx={{
-              mt: 1.1,
-              minHeight: 58,
-              borderRadius: '14px',
-              borderWidth: '2px',
-              textTransform: 'none',
-              fontWeight: 900,
-              color: colors.landing.heroText,
-              borderColor: colors.brand.tealBlue,
-              bgcolor: colors.landing.surface,
-              position: 'relative',
-              animation: shouldGuideToQuickLog ? 'quickLogPulse 2.8s ease-in-out infinite' : 'none',
-              '&:hover': {
-                borderColor: colors.brand.deep,
-                borderWidth: '2px',
-                bgcolor: colors.landing.surface,
-              },
-            }}
-          >
-            Quick Note (auto-classified)
-          </Button>
-
-        </Box>
+        <DashboardActionBoard
+          child={activeChild}
+          onTrack={onTrack}
+          onOpenSleepLog={onOpenSleepLog}
+          onOpenFoodLog={onOpenFoodLog}
+          onOpenBathroomLog={onOpenBathroomLog}
+          onQuickEntry={onQuickEntry}
+          sx={{ m: 1.25, mt: 0, mb: 2 }}
+        />
       </Paper>
 
       <Paper

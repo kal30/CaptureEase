@@ -19,9 +19,10 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import SaveIcon from '@mui/icons-material/Save';
 import CloseIcon from '@mui/icons-material/Close';
 import FavoriteBorderOutlinedIcon from '@mui/icons-material/FavoriteBorderOutlined';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { doc, updateDoc } from 'firebase/firestore';
 import { getEntryTypeMeta, mapLegacyType, ENTRY_TYPE } from "../../constants/timeline";
-import { getLogTypeByCategory, getLogTypeByEntry } from "../../constants/logTypeRegistry";
+import { getLogTypeByCategory, getLogTypeByEntry, isBehaviorIncidentEntry, LOG_TYPES } from "../../constants/logTypeRegistry";
 
 import TimelineFilters from "./TimelineFilters";
 import { useUnifiedTimelineData } from "../../hooks/useUnifiedTimelineData";
@@ -84,6 +85,16 @@ const UnifiedTimeline = ({
   }, []);
 
   const resolveCategoryColor = React.useCallback((entry) => {
+    if (entry.incidentStyle || entry.entryType === 'incident' || isBehaviorIncidentEntry(entry)) {
+      const incidentColor = entry.incidentCategoryColor || LOG_TYPES.behavior.palette.dot || colors.app.timeline.incident;
+      return {
+        bg: colors.app.cards.background,
+        text: incidentColor,
+        border: colors.app.cards.border,
+        dot: incidentColor,
+      };
+    }
+
     if (entry.collection === 'incidents') {
       const incidentColor = entry.incidentCategoryColor || colors.app.timeline.incident;
       return {
@@ -155,6 +166,7 @@ const UnifiedTimeline = ({
   const [entryMenuEntry, setEntryMenuEntry] = React.useState(null);
   const [localEntryUpdates, setLocalEntryUpdates] = React.useState({});
   const [deletedEntryIds, setDeletedEntryIds] = React.useState({});
+  const [expandedCards, setExpandedCards] = React.useState({});
   const currentUser = auth.currentUser;
 
   const extractTags = React.useCallback((inputText = '') => {
@@ -240,6 +252,13 @@ const UnifiedTimeline = ({
     }
   }, []);
 
+  const handleToggleEntryExpanded = React.useCallback((entryId) => {
+    setExpandedCards((current) => ({
+      ...current,
+      [entryId]: !current[entryId],
+    }));
+  }, []);
+
   const visibleEntries = React.useMemo(() => {
     return entries
       .filter((entry) => !deletedEntryIds[entry.id])
@@ -286,22 +305,28 @@ const UnifiedTimeline = ({
     const meta = getEntryTypeMeta(typeForTimeline);
     const defaultEntryLabel = meta.label.replace(/s$/, '');
     const categoryMeta = entry.category ? getLogTypeByCategory(entry.category) : null;
+    const isBehaviorIncident = entry.collection === 'dailyLogs'
+      && isBehaviorIncidentEntry(entry);
     const entryLabel = entry.collection === 'incidents'
       ? (entry.incidentCategoryLabel || defaultEntryLabel)
       : entry.collection === 'dailyCare'
         ? (entry.categoryLabel || defaultEntryLabel)
         : entry.collection === 'dailyLogs'
-          ? (entry.titlePrefix
+          ? (isBehaviorIncident
+            ? (entry.incidentCategoryLabel || 'Behavior')
+            : (entry.titlePrefix
             || entry.title
             || entry.label
             || entry.categoryLabel
             || categoryMeta?.trackLabel
             || categoryMeta?.displayLabel
-            || defaultEntryLabel)
+            || defaultEntryLabel))
           : (entry.title || defaultEntryLabel);
     const timelineColors = resolveCategoryColor(entry);
     const entryColor = timelineColors.dot;
-    const entryIcon = entry.collection === 'incidents'
+    const entryIcon = isBehaviorIncident
+      ? (entry.incidentCategoryIcon || LOG_TYPES.behavior.icon)
+      : entry.collection === 'incidents'
       ? (entry.incidentCategoryIcon || meta.icon)
       : entry.collection === 'dailyCare'
         ? (entry.categoryIcon || meta.icon)
@@ -313,7 +338,8 @@ const UnifiedTimeline = ({
   }, [getContrastText, resolveCategoryColor]);
 
   const renderEntryBody = React.useCallback((entry, entryType) => {
-    if (entryType === ENTRY_TYPE.INCIDENT) {
+    const isBehaviorIncident = isBehaviorIncidentEntry(entry);
+    if (entryType === ENTRY_TYPE.INCIDENT || isBehaviorIncident) {
       return entry.isGroupedIncident
         ? <GroupedIncidentDetails entry={entry} />
         : <IncidentDetails entry={entry} />;
@@ -331,8 +357,9 @@ const UnifiedTimeline = ({
   }, []);
 
   const getMobileEntrySummary = React.useCallback((entry, entryType) => {
-    if (entryType === ENTRY_TYPE.INCIDENT) {
-      return entry.summary || entry.description || entry.notes || entry.remedy || null;
+    const isBehaviorIncident = isBehaviorIncidentEntry(entry);
+    if (entryType === ENTRY_TYPE.INCIDENT || isBehaviorIncident) {
+      return entry.summary || entry.description || entry.notes || entry.remedy || entry.content || null;
     }
 
     if (entryType === ENTRY_TYPE.DAILY_HABIT) {
@@ -409,10 +436,11 @@ const UnifiedTimeline = ({
   }, []);
 
   const getMobileEntryMeta = React.useCallback((entry, entryType) => {
-    if (entryType === ENTRY_TYPE.INCIDENT) {
+    const isBehaviorIncident = isBehaviorIncidentEntry(entry);
+    if (entryType === ENTRY_TYPE.INCIDENT || isBehaviorIncident) {
       const meta = [];
       if (entry.severity) {
-        meta.push(`Severity ${entry.severity}/10`);
+        meta.push(`Severity ${entry.severityLabel || entry.severity}/10`);
       }
       if (entry.duration) {
         meta.push(`Lasted ${entry.duration}`);
@@ -777,11 +805,21 @@ const UnifiedTimeline = ({
                 });
                 const presentation = getEntryPresentation(entry);
                 const canEditDesktopEntry = entry.collection === 'dailyLogs'
-                  && ((entry.createdBy || entry.userId || entry.authorId) === currentUser?.uid);
+                  && (
+                    entry.incidentStyle ||
+                    entry.entryType === 'incident' ||
+                    isBehaviorIncidentEntry(entry) ||
+                    (entry.createdBy || entry.userId || entry.authorId) === currentUser?.uid
+                  );
                 const mobileAttachment = getMobileEntryAttachment(entry, presentation.entryType);
                 const mobileMeta = getMobileEntryMeta(entry, presentation.entryType);
                 const canEditMobileEntry = entry.collection === 'dailyLogs'
-                  && ((entry.createdBy || entry.userId || entry.authorId) === currentUser?.uid);
+                  && (
+                    entry.incidentStyle ||
+                    entry.entryType === 'incident' ||
+                    isBehaviorIncidentEntry(entry) ||
+                    (entry.createdBy || entry.userId || entry.authorId) === currentUser?.uid
+                  );
                 const isEditingMobileEntry = editingEntryId === entry.id;
                 const loggerInitials = entry.loggedByUser
                   ? String(entry.loggedByUser)
@@ -856,27 +894,37 @@ const UnifiedTimeline = ({
                     </Box>
 
                     <Box
-                        sx={{
-                          px: 1.1,
-                          py: 1.05,
-                          backgroundColor: colors.app.cards.background,
-                          border: `1px solid ${colors.app.cards.border}`,
-                          borderRadius: { xs: 0.5, md: 0.7 },
-                          boxShadow: `0 1px 2px ${colors.app.cards.shadowSoft}`,
-                          display: 'flex',
-                          flexDirection: 'column',
+                      sx={{
+                        px: 1.1,
+                        py: 1.05,
+                        backgroundColor: colors.app.cards.background,
+                        border: `1px solid ${colors.app.cards.border}`,
+                        borderRadius: { xs: 0.5, md: 0.7 },
+                        boxShadow: `0 1px 2px ${colors.app.cards.shadowSoft}`,
+                        display: 'flex',
+                        flexDirection: 'column',
                         gap: 0.85,
                       }}
-                      >
+                    >
                     <Box
                       sx={{
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
-                          gap: 0.75,
+                        gap: 0.75,
+                        cursor: 'pointer',
                       }}
                       id={`timeline-entry-${entry.id}`}
                       data-entry-id={entry.id}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => handleToggleEntryExpanded(entry.id)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          handleToggleEntryExpanded(entry.id);
+                        }
+                      }}
                     >
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, minWidth: 0, flexWrap: 'wrap' }}>
                           <Box
@@ -910,10 +958,32 @@ const UnifiedTimeline = ({
                           </Typography>
                         </Box>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.3, flexShrink: 0 }}>
+                          <IconButton
+                            size="small"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              handleToggleEntryExpanded(entry.id);
+                            }}
+                            sx={{
+                              width: 26,
+                              height: 26,
+                              borderRadius: 0.35,
+                              color: 'text.secondary',
+                              backgroundColor: colors.app.cards.shadowPanel,
+                              transform: expandedCards[entry.id] ? 'rotate(180deg)' : 'rotate(0deg)',
+                              transition: 'transform 0.2s ease',
+                            }}
+                            aria-label={expandedCards[entry.id] ? 'Collapse entry' : 'Expand entry'}
+                          >
+                            <KeyboardArrowDownIcon sx={{ fontSize: 18 }} />
+                          </IconButton>
                           {canEditMobileEntry ? (
                             <IconButton
                               size="small"
-                              onClick={(event) => handleEntryMenuOpen(event, entry)}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                handleEntryMenuOpen(event, entry);
+                              }}
                               disabled={Boolean(actionLoadingId)}
                               sx={{
                                 width: 26,
@@ -991,6 +1061,21 @@ const UnifiedTimeline = ({
                         >
                           {getMobileEntrySummary(entry, presentation.entryType)}
                         </Typography>
+                      ) : null}
+
+                      {Boolean(expandedCards[entry.id]) && !isEditingMobileEntry ? (
+                        <Box
+                          sx={{
+                            mt: 0.25,
+                            pt: 0.75,
+                            borderTop: `1px solid ${colors.app.cards.border}`,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 0.75,
+                          }}
+                        >
+                          {renderEntryBody(entry, presentation.entryType)}
+                        </Box>
                       ) : null}
 
                       {mobileAttachment && !isEditingMobileEntry ? (
@@ -1117,7 +1202,10 @@ const UnifiedTimeline = ({
                   });
                   const presentation = getEntryPresentation(entry);
                   const canEditDesktopEntry = entry.collection === 'dailyLogs'
-                    && ((entry.createdBy || entry.userId || entry.authorId) === currentUser?.uid);
+                    && (
+                      isBehaviorIncidentEntry(entry) ||
+                      (entry.createdBy || entry.userId || entry.authorId) === currentUser?.uid
+                    );
 
                   return (
                     <TimelineItem

@@ -69,6 +69,7 @@ export const addIncident = async (childId, incidentData) => {
       customIncidentName: incidentData.customIncidentName || '',
       severity: incidentData.severity,
       remedy: incidentData.remedy,
+      triggerSummary: incidentData.triggerSummary || '',
       customRemedy: incidentData.customRemedy || '',
       notes: incidentData.notes || '',
       timestamp: incidentData.incidentDateTime || serverTimestamp(),
@@ -91,6 +92,39 @@ export const addIncident = async (childId, incidentData) => {
       status: 'active',
     };
     const docRef = await addDoc(collection(db, 'incidents'), docData);
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('captureez:timeline-entry-created', {
+        detail: {
+          id: docRef.id,
+          childId,
+          collection: 'incidents',
+          type: docData.type,
+          timelineType: 'incident',
+          category: 'incident',
+          title: docData.customIncidentName || 'Behavior Incident',
+          content: docData.notes || docData.remedy || 'Incident logged',
+          notes: docData.notes || '',
+          triggerSummary: docData.triggerSummary || '',
+          timestamp: docData.timestamp,
+          authorId: docData.authorId,
+          authorName: docData.authorName,
+          authorEmail: docData.authorEmail,
+          color: '#F5BED5',
+          icon: '🌋',
+          incidentData: {
+            severity: docData.severity,
+            remedy: docData.remedy,
+            triggerSummary: docData.triggerSummary,
+            customRemedy: docData.customRemedy,
+            notes: docData.notes,
+            followUpScheduled: docData.followUpScheduled,
+            followUpCompleted: docData.followUpCompleted,
+            followUpResponses: [],
+          },
+        },
+      }));
+    }
     return docRef.id;
   } catch (error) {
     console.error('Error adding incident:', error);

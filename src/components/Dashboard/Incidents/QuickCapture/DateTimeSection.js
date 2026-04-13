@@ -3,26 +3,23 @@ import { Paper, Typography } from '@mui/material';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import colors from '../../../../assets/theme/colors';
+import { useTheme } from '@mui/material/styles';
+import { incidentSectionSx } from '../incidentTheme';
 
 const DateTimeSection = ({ value, onChange }) => {
+  const theme = useTheme();
+
   return (
     <Paper 
       elevation={0}
-      sx={{ 
-        p: 3, 
-        mb: 3, 
-        borderRadius: '16px',
-        border: `1px solid ${colors.app.cards.border}`,
-        backgroundColor: colors.app.cards.background
-      }}
+      sx={{ p: 3, mb: 3, ...incidentSectionSx('#FFFFFF') }}
     >
       <Typography 
         variant="subtitle1" 
         gutterBottom 
         sx={{ 
           fontWeight: 600,
-          color: colors.app.text.strong
+          color: theme.palette.text.primary
         }}
       >
         ⏰ When did this incident occur?

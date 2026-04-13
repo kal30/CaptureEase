@@ -10,7 +10,7 @@ import { archiveChild } from "../services/childService";
 import { useDailyCareStatus } from "./useDailyCareStatus";
 import { listenForFollowUps, initializeNotificationsForPendingFollowUps, processQuickResponses, startQuickResponseListener } from "../services/followUpService";
 import { analyzeOtherIncidentPatterns, getIncidents } from "../services/incidentService";
-import { getTimelineMetaForCategory } from "../constants/logTypeRegistry";
+import { LOG_TYPES, getTimelineMetaForCategory, isBehaviorIncidentEntry } from "../constants/logTypeRegistry";
 import { getE2EMockDashboardState, isE2EMockEnabled } from "../services/e2eMock";
 
 const toEntryDate = (timestamp) => timestamp?.toDate?.() || new Date(timestamp);
@@ -301,7 +301,7 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
 
     const handleTimelineEntryCreated = (event) => {
       const entry = event?.detail;
-      if (!entry || entry.collection !== 'dailyLogs' || !entry.childId) {
+      if (!entry || !entry.childId) {
         return;
       }
 
@@ -310,27 +310,82 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
         return;
       }
 
+      if (entry.collection === 'incidents') {
+        const incidentMeta = getTimelineMetaForCategory('behavior', { importantMoment: false });
+        const optimisticIncident = {
+          id: entry.id || `local-${Date.now()}`,
+          childId: entry.childId,
+          type: entry.type || 'behavioral',
+          timelineType: 'incident',
+          collection: 'incidents',
+          category: 'incident',
+          title: entry.title || entry.content || 'Incident',
+          content: entry.content || entry.notes || entry.triggerSummary || '',
+          notes: entry.notes || null,
+          triggerSummary: entry.triggerSummary || entry.remedy || '',
+          timestamp: entryTimestamp,
+          icon: entry.icon || incidentMeta.icon,
+          color: entry.color || incidentMeta.color,
+          tags: entry.tags || [],
+          importantMoment: !!entry.importantMoment,
+          author: entry.authorName || entry.author || entry.loggedByUser || entry.authorEmail || 'Unknown',
+          loggedByUser: entry.authorName || entry.author || entry.loggedByUser || entry.authorEmail || 'Unknown',
+          userRole: entry.authorRole || null,
+          userId: entry.authorId || entry.createdBy || null,
+          incidentData: entry.incidentData || {},
+        };
+
+        setIncidents((current) => ({
+          ...current,
+          [entry.childId]: [
+            optimisticIncident,
+            ...((current[entry.childId] || []).filter((item) => item.id !== optimisticIncident.id)),
+          ],
+        }));
+        return;
+      }
+
+      if (entry.collection !== 'dailyLogs') {
+        return;
+      }
+
       const meta = getTimelineMetaForCategory(entry.category, { importantMoment: !!entry.importantMoment });
+      const isBehaviorStyleEntry = isBehaviorIncidentEntry(entry);
+      const notesText = entry.notes || entry.incidentData?.notes || null;
+      const severityLabel = entry.severityLabel || entry.incidentData?.severityLabel || null;
+      const triggerSummary = entry.triggerSummary || entry.incidentData?.triggerSummary || null;
       const optimisticEntry = {
         id: entry.id || `local-${Date.now()}`,
         childId: entry.childId,
-        type: meta.type,
-        timelineType: meta.type,
+        type: isBehaviorStyleEntry ? 'behavior' : meta.type,
+        timelineType: isBehaviorStyleEntry ? 'incident' : meta.type,
         collection: 'dailyLogs',
         category: entry.category || 'log',
         title: entry.title || entry.titlePrefix || entry.text || meta.label,
-        content: entry.text || entry.content || '',
+        content: entry.content || entry.text || entry.incidentData?.notes || '',
         text: entry.text || entry.content || '',
-        notes: entry.notes || entry.bathroomDetails?.notes || null,
+        notes: notesText,
         timestamp: entryTimestamp,
-        icon: meta.icon,
-        color: meta.color,
+        icon: isBehaviorStyleEntry ? LOG_TYPES.behavior.icon : meta.icon,
+        color: isBehaviorStyleEntry ? LOG_TYPES.behavior.palette.dot : meta.color,
         tags: entry.tags || [],
         importantMoment: !!entry.importantMoment,
         author: entry.authorName || entry.author || entry.loggedByUser || entry.authorEmail || 'Unknown',
         loggedByUser: entry.authorName || entry.author || entry.loggedByUser || entry.authorEmail || 'Unknown',
         userRole: entry.authorRole || null,
         userId: entry.authorId || entry.createdBy || null,
+        incidentStyle: isBehaviorStyleEntry,
+        entryType: isBehaviorStyleEntry ? 'incident' : entry.entryType,
+        contextSnapshot: entry.contextSnapshot || entry.incidentData?.contextSnapshot || null,
+        incidentData: entry.incidentData || {},
+        severity: entry.severity,
+        severityLabel,
+        triggerSummary,
+        remedy: entry.remedy || entry.incidentData?.remedy || null,
+        incidentCategoryId: isBehaviorStyleEntry ? 'behavior' : entry.incidentCategoryId,
+        incidentCategoryLabel: isBehaviorStyleEntry ? 'Behavior' : entry.incidentCategoryLabel,
+        incidentCategoryColor: isBehaviorStyleEntry ? LOG_TYPES.behavior.palette.dot : entry.incidentCategoryColor,
+        incidentCategoryIcon: isBehaviorStyleEntry ? LOG_TYPES.behavior.icon : entry.incidentCategoryIcon,
       };
 
       setRecentEntries((current) => {
@@ -441,6 +496,13 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
       setDailyHabitsChild(child);
       setDailyHabitsInitialCategoryId(null);
       setShowDailyHabitsModal(true);
+      return;
+    }
+
+    if (type === "activity") {
+      setDailyCareAction(type);
+      setDailyCareChild(child);
+      setShowDailyCareModal(true);
       return;
     }
 

@@ -95,6 +95,52 @@ export const getDailyCareConfig = (actionType, child) => {
       ]
     },
 
+    activity: {
+      title: 'Activity Check',
+      icon: '📍',
+      description: `Capture therapy sessions, outings, and routines for ${child?.name}`,
+      fields: [
+        {
+          key: 'activityTypes',
+          label: 'What kind of activity was it?',
+          description: 'Select all that apply',
+          type: 'chips',
+          multiple: true,
+          options: [
+            { label: 'Therapy', value: 'therapy', emoji: '🧑‍⚕️' },
+            { label: 'Outing', value: 'outing', emoji: '🛝' },
+            { label: 'Routine', value: 'routine', emoji: '🔁' },
+            { label: 'Appointment', value: 'appointment', emoji: '📅' },
+            { label: 'Play', value: 'play', emoji: '🧸' },
+            { label: 'Social', value: 'social', emoji: '👥' },
+            { label: 'Other', value: 'other', emoji: '✨' },
+          ],
+          required: true,
+        },
+        {
+          key: 'engagement',
+          label: 'How engaged were they?',
+          description: 'Rate how involved they seemed during the activity',
+          type: 'scale',
+          min: 1,
+          max: 5,
+          labels: ['😴 Low', '😐 Fair', '🙂 Good', '😊 Great', '🤩 Fully engaged'],
+          required: true,
+          defaultValue: 3,
+        },
+        {
+          key: 'notes',
+          label: 'Activity Notes',
+          description: 'Any useful context about the activity?',
+          type: 'text',
+          multiline: true,
+          rows: 3,
+          placeholder: 'e.g., Went to the park after speech therapy, calm and focused...',
+          required: false,
+        },
+      ],
+    },
+
     food_health: {
       title: 'Food & Medicine',
       icon: '🍎',

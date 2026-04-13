@@ -129,15 +129,29 @@ export const saveHabitEntry = async (habitEntry) => {
 export const getHabitEntries = async (childId, startDate, endDate, categories = []) => {
   try {
     // Build query for dailyCare collection
-    let q = query(
-      collection(db, "dailyCare"),
-      where("childId", "==", childId),
-      where("timestamp", ">=", startDate),
-      where("timestamp", "<=", endDate),
-      orderBy("timestamp", "desc")
-    );
+    let querySnapshot;
+    try {
+      const q = query(
+        collection(db, "dailyCare"),
+        where("childId", "==", childId),
+        where("timestamp", ">=", startDate),
+        where("timestamp", "<=", endDate),
+        orderBy("timestamp", "desc")
+      );
+      querySnapshot = await getDocs(q);
+    } catch (indexError) {
+      if (!String(indexError?.message || '').includes('index')) {
+        throw indexError;
+      }
 
-    const querySnapshot = await getDocs(q);
+      console.warn('🔥 Index missing for dailyCare, using fallback query');
+      const fallbackQuery = query(
+        collection(db, "dailyCare"),
+        where("childId", "==", childId)
+      );
+      querySnapshot = await getDocs(fallbackQuery);
+    }
+
     const entries = [];
     
     querySnapshot.forEach((doc) => {
@@ -162,7 +176,12 @@ export const getHabitEntries = async (childId, startDate, endDate, categories = 
       }
     });
 
-    return entries;
+    return entries
+      .filter((entry) => {
+        const entryDate = entry.timestamp?.toDate ? entry.timestamp.toDate() : new Date(entry.timestamp);
+        return entryDate >= startDate && entryDate <= endDate;
+      })
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
   } catch (error) {
     console.error("Error getting habit entries:", error);
     throw error;

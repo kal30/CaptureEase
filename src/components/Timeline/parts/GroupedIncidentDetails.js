@@ -38,9 +38,27 @@ const GroupedIncidentDetails = ({ entry }) => {
         </Typography>
 
         {/* Show description/notes for incidents - try multiple field names */}
-        {(entry.description || entry.notes || entry.summary) && (
+        {(entry.content || entry.description || entry.notes || entry.summary) && (
           <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1, lineHeight: 1.4 }}>
-            {entry.description || entry.notes || entry.summary}
+            {entry.content || entry.description || entry.notes || entry.summary}
+          </Typography>
+        )}
+
+        {entry.severity && (
+          <Typography variant="body2" sx={{ color: 'text.primary', mb: 1, lineHeight: 1.4 }}>
+            <strong>Severity:</strong> {entry.severity}/10
+          </Typography>
+        )}
+
+        {entry.notes && (
+          <Typography variant="body2" sx={{ color: 'text.primary', mb: 1, lineHeight: 1.4 }}>
+            <strong>Notes:</strong> {entry.notes}
+          </Typography>
+        )}
+
+        {(entry.triggerSummary || entry.triggers?.length > 0) && (
+          <Typography variant="body2" sx={{ color: 'text.primary', mb: 1, lineHeight: 1.4 }}>
+            <strong>Possible triggers:</strong> {entry.triggerSummary || entry.triggers.join(', ')}
           </Typography>
         )}
 

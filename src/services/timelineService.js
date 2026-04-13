@@ -148,7 +148,13 @@ const normalizeTimelineEntry = (doc, type) => {
       }
       const actionType = data.actionType || 'Daily Care';
       const careData = data.data || {};
-      title = `${actionType.charAt(0).toUpperCase() + actionType.slice(1)}: ${careData.value || careData.mood || careData.rating || 'Update'}`;
+      const activityLabel = Array.isArray(careData.activityTypes)
+        ? careData.activityTypes
+          .map((item) => String(item).replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase()))
+          .join(', ')
+        : careData.activityType || null;
+      const valueLabel = activityLabel || careData.value || careData.mood || careData.rating || careData.engagement || 'Update';
+      title = `${actionType.charAt(0).toUpperCase() + actionType.slice(1)}: ${valueLabel}`;
       content = careData.notes || data.notes || careData.description || '';
       break;
     case 'child_timeline':

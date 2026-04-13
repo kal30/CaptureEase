@@ -52,9 +52,23 @@ export const LOG_TYPES = {
     filterLabel: 'Toilet',
     trackLabel: 'Toilet',
     icon: '🚽',
-    palette: createPalette('#F5E8DB', '#7A4B22', '#B8773A'),
+    palette: createPalette('#EAF6F4', '#2C6A5E', '#C9E3DD'),
     trackChip: true,
     trackOrder: 4,
+    filterGroup: 'entryType',
+  },
+  activity: {
+    id: 'activity',
+    category: 'activity',
+    type: 'activity',
+    timelineType: 'activity',
+    displayLabel: 'Activity',
+    filterLabel: 'Activity',
+    trackLabel: 'Activity',
+    icon: '📍',
+    palette: createPalette('#F7C9AF', '#7D351C', '#E5A88D'),
+    trackChip: true,
+    trackOrder: 5,
     filterGroup: 'entryType',
   },
   health: {
@@ -76,11 +90,12 @@ export const LOG_TYPES = {
     type: 'behavior',
     timelineType: 'behavior',
     displayLabel: 'Behavior',
-    filterLabel: 'Behavior / Meltdown',
+    filterLabel: 'Behavior',
     trackLabel: 'Behavior',
     icon: '🌋',
-    palette: createPalette('#FFF0E6', '#C4420A', '#E8683A'),
-    trackChip: false,
+    palette: createPalette('#F5BED5', '#7B2248', '#E099B6'),
+    trackChip: true,
+    trackOrder: 6,
     filterGroup: 'flagged',
   },
   mood: {
@@ -89,7 +104,7 @@ export const LOG_TYPES = {
     type: 'mood',
     timelineType: 'mood',
     displayLabel: 'Mood',
-    filterLabel: 'Anxiety',
+    filterLabel: 'Mood',
     trackLabel: 'Mood',
     icon: '😰',
     palette: createPalette('#FFF0F5', '#9E1A4A', '#D44D7A'),
@@ -228,6 +243,20 @@ export const CORE_ENTRY_ACTIONS = [
     icon: LOG_TYPES.bathroom.icon,
     color: LOG_TYPES.bathroom.palette.dot,
   },
+  {
+    key: 'activity',
+    type: 'activity',
+    label: LOG_TYPES.activity.displayLabel,
+    icon: LOG_TYPES.activity.icon,
+    color: LOG_TYPES.activity.palette.dot,
+  },
+  {
+    key: 'behavior',
+    type: 'behavior',
+    label: LOG_TYPES.behavior.displayLabel,
+    icon: LOG_TYPES.behavior.icon,
+    color: LOG_TYPES.behavior.palette.dot,
+  },
 ];
 
 export const TIMELINE_FILTER_SECTIONS = {
@@ -311,9 +340,25 @@ const inferBathroomCategory = (entry = {}) => {
   return BATHROOM_KEYWORDS.some((keyword) => haystack.includes(keyword));
 };
 
+export const isBehaviorIncidentEntry = (entry = {}) => Boolean(
+  entry?.incidentStyle ||
+  entry?.entryType === 'incident' ||
+  entry?.incidentData ||
+  (entry?.collection === 'dailyLogs' && (
+    entry?.severity != null ||
+    entry?.triggerSummary ||
+    entry?.notes ||
+    entry?.remedy
+  ))
+);
+
 export const getLogTypeByEntry = (entry = {}) => {
   if (!entry || typeof entry !== 'object') {
     return LOG_TYPES.log;
+  }
+
+  if (isBehaviorIncidentEntry(entry)) {
+    return LOG_TYPES.behavior;
   }
 
   const directCategory = entry.category || entry.timelineType || entry.type;
@@ -367,12 +412,21 @@ export const getTimelineMetaForCategory = (category, { importantMoment = false }
 export const getCanonicalEntryDisplayInfo = (entry = {}) => {
   const categoryType = getLogTypeByEntry(entry);
   const categoryMeta = getLogTypeByCategory(categoryType.category || entry.category || entry.type);
+  const isBehaviorIncident = isBehaviorIncidentEntry(entry);
 
   return {
     category: categoryType.category || entry.category || entry.type || 'log',
-    label: categoryMeta.trackLabel || categoryMeta.displayLabel || categoryMeta.filterLabel || 'Log',
-    icon: categoryMeta.icon || '•',
-    palette: categoryMeta.palette || null,
-    titlePrefix: categoryMeta.trackLabel || categoryMeta.displayLabel || 'Log',
+    label: isBehaviorIncident
+      ? LOG_TYPES.behavior.displayLabel
+      : (categoryMeta.trackLabel || categoryMeta.displayLabel || categoryMeta.filterLabel || 'Log'),
+    icon: isBehaviorIncident
+      ? LOG_TYPES.behavior.icon
+      : (categoryMeta.icon || '•'),
+    palette: isBehaviorIncident
+      ? LOG_TYPES.behavior.palette
+      : (categoryMeta.palette || null),
+    titlePrefix: isBehaviorIncident
+      ? LOG_TYPES.behavior.displayLabel
+      : (categoryMeta.trackLabel || categoryMeta.displayLabel || 'Log'),
   };
 };

@@ -184,6 +184,7 @@ export const getCompletionStats = async (childId, startDate, endDate) => {
       mood: 0,
       sleep: 0,
       energy: 0,
+      activity: 0,
       food_health: 0,
       safety: 0,
       totalDays: Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)),
@@ -217,6 +218,7 @@ const getActionTitle = (actionType) => {
     mood: 'Mood Check',
     sleep: 'Sleep Quality',
     energy: 'Energy Level',
+    activity: 'Activity Check',
     food_health: 'Food & Medicine',
     safety: 'Safety Check',
   };
