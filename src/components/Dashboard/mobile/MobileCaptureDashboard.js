@@ -55,6 +55,7 @@ import { getCalendarDateKey } from '../../../utils/calendarDateKey';
 import { CORE_ENTRY_ACTIONS } from '../../../constants/logTypeRegistry';
 import colors from '../../../assets/theme/colors';
 import { getE2EMockData, isE2EMockEnabled } from '../../../services/e2eMock';
+import { getChildProfileCompletion } from '../../../utils/profileCompletion';
 
 const quickActions = CORE_ENTRY_ACTIONS.map((action) => ({
   key: action.key,
@@ -152,6 +153,10 @@ const MobileCaptureDashboard = ({
     [activeChildId, children]
   );
   const activeChildEntries = useMemo(() => allEntries[activeChild?.id] || [], [allEntries, activeChild?.id]);
+  const activeChildProfileCompletion = useMemo(
+    () => getChildProfileCompletion(activeChild || {}),
+    [activeChild]
+  );
   const activeChildSummary = useMemo(
     () => timelineSummary?.[activeChild?.id] || timelineSummary || {},
     [activeChild?.id, timelineSummary]
@@ -189,6 +194,7 @@ const MobileCaptureDashboard = ({
   const activeChildWarningLabel = useMemo(() => {
     const medicalProfile = activeChild?.medicalProfile || {};
     const foodAllergies = Array.isArray(medicalProfile.foodAllergies) ? medicalProfile.foodAllergies : [];
+    const medicationDetails = Array.isArray(medicalProfile.medicationDetails) ? medicalProfile.medicationDetails : [];
     const currentMedications = Array.isArray(medicalProfile.currentMedications) ? medicalProfile.currentMedications : [];
 
     const firstAllergy = foodAllergies.find(Boolean);
@@ -199,7 +205,7 @@ const MobileCaptureDashboard = ({
       return label;
     }
 
-    const firstMedication = currentMedications.find(Boolean);
+    const firstMedication = medicationDetails.find(Boolean) || currentMedications.find(Boolean);
     if (firstMedication) {
       if (typeof firstMedication === 'string') {
         return `Medication: ${firstMedication}`;
@@ -611,8 +617,9 @@ const MobileCaptureDashboard = ({
               child={activeChild}
               onClick={openSwitchMenu}
               showRole={false}
-              showBorder={false}
               avatarSize={26}
+              completionPercent={activeChildProfileCompletion < 100 ? activeChildProfileCompletion : null}
+              onCompletionClick={() => onEditChild?.(activeChild)}
             />
 
             {hasChatAvailable && onMessages ? (
@@ -907,6 +914,7 @@ const MobileCaptureDashboard = ({
             }}
             showCareTeamSummary
             showAddChild={Boolean(onAddChildClick)}
+            activeChild={activeChild}
             subtitle="Choose who you&apos;re logging for. The care team and your role are shown on each profile."
           />
         </Box>

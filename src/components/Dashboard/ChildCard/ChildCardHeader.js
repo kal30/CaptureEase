@@ -1,5 +1,5 @@
 import React, { memo, useEffect, useMemo, useState } from 'react';
-import { Box, Chip, IconButton, Tooltip, Typography } from '@mui/material';
+import { Box, Button, Chip, IconButton, Tooltip, Typography } from '@mui/material';
 import { useMediaQuery, useTheme } from '@mui/material';
 import { ChatBubbleOutlineRounded } from '@mui/icons-material';
 import ChildAvatar from '../../UI/ChildAvatar';
@@ -10,6 +10,7 @@ import { getChildCareTeam } from '../../../services/childAccessService';
 import { ROLE_DISPLAY, USER_ROLES } from '../../../constants/roles';
 import { getRoleColor, getRoleColorAlpha } from '../../../assets/theme/roleColors';
 import colors from '../../../assets/theme/colors';
+import { getChildProfileCompletion } from '../../../utils/profileCompletion';
 
 /**
  * ChildCardHeader - Header section of child card with avatar, basic info, and actions
@@ -106,8 +107,14 @@ const ChildCardHeader = memo(({
     child.diagnosis ||
     child.concerns ||
     child.conditions ||
-    child.medicalProfile?.foodAllergies?.length > 0
+    child.medicalProfile?.foodAllergies?.length > 0 ||
+    child.medicalProfile?.medicationDetails?.length > 0 ||
+    child.medicalProfile?.currentMedications?.length > 0
   );
+  const profileCompletion = getChildProfileCompletion(child || {});
+  const profileSetupCompleted = profileCompletion >= 100;
+  const hasTimelineActivity = (timelineSummary.todayCount || timelineSummary.weekCount || timelineSummary.activityStreak || 0) > 0;
+  const shouldShowProfileSetupNudge = Boolean(child?.id && onEditChild && !profileSetupCompleted && hasTimelineActivity);
   const metricChips = [
     hasEntriesToday
       ? {
@@ -297,6 +304,54 @@ const ChildCardHeader = memo(({
             </Box>
           </>
         )}
+
+        {shouldShowProfileSetupNudge ? (
+          <Box
+            sx={{
+              mt: { xs: 0.6, md: 1 },
+              mb: { xs: 0.4, md: 0.75 },
+              p: { xs: 1, md: 1.25 },
+              borderRadius: 2,
+              border: `1px solid ${colors.brand.tint}`,
+              backgroundColor: colors.brand.ice,
+              display: 'flex',
+              flexDirection: { xs: 'column', sm: 'row' },
+              alignItems: { xs: 'flex-start', sm: 'center' },
+              justifyContent: 'space-between',
+              gap: 1,
+            }}
+          >
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant="body2" sx={{ fontWeight: 700, color: colors.brand.deep, lineHeight: 1.25 }}>
+                    Profile {profileCompletion}% complete
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'text.secondary', lineHeight: 1.25 }}>
+                Add allergies, meds, and sensory details later.
+              </Typography>
+            </Box>
+
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={(event) => {
+                event.stopPropagation();
+                onEditChild?.(child);
+              }}
+              sx={{
+                flexShrink: 0,
+                borderColor: colors.brand.tint,
+                color: colors.brand.deep,
+                bgcolor: colors.landing.surface,
+                '&:hover': {
+                  borderColor: colors.brand.ink,
+                  bgcolor: colors.brand.sand,
+                },
+              }}
+            >
+              Finish profile
+            </Button>
+          </Box>
+        ) : null}
 
         {showCollapsedSummaryLine ? (
           <Typography

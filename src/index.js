@@ -28,4 +28,14 @@ if (process.env.NODE_ENV === "production") {
   registerServiceWorker();
 } else {
   unregisterServiceWorker();
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      registrations.forEach((registration) => registration.unregister());
+    }).catch(() => {});
+  }
+
+  if ('caches' in window) {
+    caches.keys().then((keys) => Promise.all(keys.map((key) => caches.delete(key)))).catch(() => {});
+  }
 }

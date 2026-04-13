@@ -1,4 +1,4 @@
-import { collection, onSnapshot, query, orderBy, where } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, where } from 'firebase/firestore';
 import { db } from './firebase';
 import { LOG_TYPES, getTimelineMetaForCategory } from '../constants/logTypeRegistry';
 import { dedupeTimelineEntries } from './timeline/timelineDeduping';
@@ -183,11 +183,43 @@ const normalizeTimelineEntry = (doc, type) => {
 
 // Fetch timeline entries for a specific child
 export const getTimelineEntries = (childId, callback) => {
-  const unsubscribeFunctions = [];
-  const entriesByType = {};
+  let isCancelled = false;
+  let refreshTimer = null;
 
-  const emitEntries = () => {
-    const sortedEntries = dedupeTimelineEntries(Object.values(entriesByType)
+  const buildQueryForType = (typeConfig) => {
+    if (typeConfig.isRootCollection) {
+      return query(
+        collection(db, typeConfig.collection),
+        where('childId', '==', childId)
+      );
+    }
+
+    return query(
+      collection(db, 'children', childId, typeConfig.collection),
+      orderBy('timestamp', 'desc')
+    );
+  };
+
+  const fetchEntries = async () => {
+    const results = await Promise.all(
+      Object.values(TIMELINE_TYPES).map(async (typeConfig) => {
+        try {
+          const snapshot = await getDocs(buildQueryForType(typeConfig));
+          return snapshot.docs
+            .map((doc) => normalizeTimelineEntry(doc, typeConfig.type))
+            .filter(Boolean);
+        } catch (error) {
+          console.error(`Error fetching ${typeConfig.collection}:`, error);
+          return [];
+        }
+      })
+    );
+
+    if (isCancelled) {
+      return;
+    }
+
+    const sortedEntries = dedupeTimelineEntries(results
       .flat()
       .sort((a, b) => {
         const aTime = a.timestamp?.toDate?.() || new Date(a.timestamp) || new Date(0);
@@ -198,61 +230,14 @@ export const getTimelineEntries = (childId, callback) => {
     callback(sortedEntries);
   };
 
-  // Subscribe to each collection
-  Object.values(TIMELINE_TYPES).forEach(typeConfig => {
-    try {
-      let q;
-      
-      if (typeConfig.isRootCollection) {
-        // Root collection with childId filter (like dailyCare / dailyLogs).
-        // Sort client-side in emitEntries so we don't require composite indexes
-        // for every root collection + timestamp combination.
-        q = query(
-          collection(db, typeConfig.collection),
-          where('childId', '==', childId)
-        );
-      } else if (typeConfig.isChildSubCollection) {
-        // Child subcollection (like children/[childId]/timeline)
-        q = query(
-          collection(db, 'children', childId, typeConfig.collection),
-          orderBy('timestamp', 'desc')
-        );
-      } else {
-        // Legacy: Child-specific collection (traditional structure)
-        q = query(
-          collection(db, 'children', childId, typeConfig.collection),
-          orderBy('timestamp', 'desc')
-        );
-      }
+  fetchEntries();
+  refreshTimer = window.setInterval(fetchEntries, 30000);
 
-      const unsubscribe = onSnapshot(q, (snapshot) => {
-        entriesByType[typeConfig.type] = snapshot.docs
-          .map(doc => normalizeTimelineEntry(doc, typeConfig.type))
-          .filter(Boolean);
-        emitEntries();
-      }, (error) => {
-        console.error(`Error fetching ${typeConfig.collection}:`, error);
-        entriesByType[typeConfig.type] = [];
-        emitEntries();
-      });
-
-      unsubscribeFunctions.push(unsubscribe);
-    } catch (error) {
-      console.error(`Error setting up listener for ${typeConfig.collection}:`, error);
-      entriesByType[typeConfig.type] = [];
-      emitEntries();
-    }
-  });
-
-  // Return cleanup function
   return () => {
-    unsubscribeFunctions.forEach(unsubscribe => {
-      try {
-        unsubscribe();
-      } catch (error) {
-        console.error('Error unsubscribing:', error);
-      }
-    });
+    isCancelled = true;
+    if (refreshTimer) {
+      window.clearInterval(refreshTimer);
+    }
   };
 };
 

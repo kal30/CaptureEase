@@ -35,6 +35,7 @@ import UnifiedTimeline from '../Timeline/UnifiedTimeline';
 import MiniCalendar from '../UI/MiniCalendar';
 import colors from '../../assets/theme/colors';
 import { getE2EMockData, isE2EMockEnabled } from '../../services/e2eMock';
+import { getChildProfileCompletion } from '../../utils/profileCompletion';
 import { ACTIVE_TIMELINE_DATE_STORAGE_KEY } from './shared/DashboardViewContext';
 
 const formatStreakLabel = (streak = 0) => {
@@ -80,6 +81,10 @@ const DesktopDashboardWorkspace = ({
   const activeChildEntries = useMemo(
     () => hook.allEntries?.[activeChild?.id] || [],
     [activeChild?.id, hook.allEntries]
+  );
+  const activeChildProfileCompletion = useMemo(
+    () => getChildProfileCompletion(activeChild || {}),
+    [activeChild]
   );
 
   const activityStreakLabel = formatStreakLabel(activeChildSummary.activityStreak || 0);
@@ -246,33 +251,37 @@ const DesktopDashboardWorkspace = ({
             mb: 2,
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
-            <ChildSwitcherTrigger
-              child={activeChild}
-              roleLabel={dashboardRoleLabel || 'Care Owner'}
-              showRole
-              showBorder
-              avatarSize={36}
-              onClick={handleDesktopChildMenuOpen}
-            />
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
+              <ChildSwitcherTrigger
+                child={activeChild}
+                roleLabel={dashboardRoleLabel || 'Care Owner'}
+                showRole
+                avatarSize={36}
+                completionPercent={activeChildProfileCompletion < 100 ? activeChildProfileCompletion : null}
+                onCompletionClick={() => hook.handleEditChild?.(activeChild)}
+                onClick={handleDesktopChildMenuOpen}
+              />
 
-            <IconButton
-              onClick={handleDesktopMenuOpen}
-              data-cy="dashboard-actions-menu"
-              sx={{
-                width: 36,
-                height: 36,
-                borderRadius: '50%',
-                color: colors.landing.textMuted,
-                bgcolor: 'transparent',
-                boxShadow: 'none',
-                '&:hover': {
-                  bgcolor: alpha(colors.landing.textMuted, 0.08),
-                },
-              }}
-            >
-              <MenuOutlinedIcon sx={{ fontSize: 20 }} />
-            </IconButton>
+              <IconButton
+                onClick={handleDesktopMenuOpen}
+                data-cy="dashboard-actions-menu"
+                sx={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: '50%',
+                  color: colors.landing.textMuted,
+                  bgcolor: 'transparent',
+                  boxShadow: 'none',
+                  '&:hover': {
+                    bgcolor: alpha(colors.landing.textMuted, 0.08),
+                  },
+                }}
+              >
+                <MenuOutlinedIcon sx={{ fontSize: 20 }} />
+              </IconButton>
+            </Box>
+
           </Box>
         </Paper>
 
@@ -514,6 +523,7 @@ const DesktopDashboardWorkspace = ({
             showCareTeamSummary={false}
             onAddChild={() => hook.setShowAddChildModal?.(true)}
             showAddChild={Boolean(hook.setShowAddChildModal)}
+            activeChild={activeChild}
           />
         </Box>
       </Menu>

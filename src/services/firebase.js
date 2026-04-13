@@ -1,7 +1,7 @@
 // src/firebase.js
 import { initializeApp } from "firebase/app";
 import { connectAuthEmulator, getAuth } from "firebase/auth";
-import { connectFirestoreEmulator, getFirestore } from "firebase/firestore";
+import { connectFirestoreEmulator, initializeFirestore } from "firebase/firestore";
 import { connectFunctionsEmulator, getFunctions } from "firebase/functions";
 import { getStorage } from "firebase/storage";
 import { isE2EMockEnabled, subscribeE2EAuth } from "./e2eMock";
@@ -67,7 +67,7 @@ const getFirebaseConfigFromEnv = () => {
   return firebaseConfig;
 };
 
-const appEnv = process.env.REACT_APP_APP_ENV || "prod";
+const appEnv = process.env.REACT_APP_APP_ENV || "test";
 const envFirebaseConfig = getFirebaseConfigFromEnv();
 
 const firebaseConfig =
@@ -86,13 +86,21 @@ if (shouldLogFirebaseProject) {
   // Helpful while the repo is transitioning from the old CaptureEz layout.
   // We want it to be obvious which Firebase project the app is using.
   console.info(
-    `[firebase] appEnv=${appEnv} projectId=${firebaseConfig.projectId}`,
+    `[firebase] appEnv=${appEnv} Firebase project=${firebaseConfig.projectId}`,
   );
 }
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+
+// Firestore watch streams can trip browser-specific WebChannel issues in dev.
+// Force long polling to keep realtime listeners stable across local/test/prod.
+export const db = initializeFirestore(app, {
+  experimentalForceLongPolling: true,
+  experimentalLongPollingOptions: {
+    timeoutSeconds: 25,
+  },
+});
 export const storage = getStorage(app);
 export const functions = getFunctions(app, "us-central1");
 

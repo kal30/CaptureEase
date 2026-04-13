@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { collection, onSnapshot, query, where, orderBy } from 'firebase/firestore';
+import { collection, query, where, orderBy } from 'firebase/firestore';
 import { 
   withTimelinePermissions,
   getCareOwnerTimelineView 
@@ -218,81 +218,6 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
 
     window.addEventListener('captureez:timeline-entry-created', handleQuickEntryCreated);
     return () => window.removeEventListener('captureez:timeline-entry-created', handleQuickEntryCreated);
-  }, [childId, selectedDate]);
-
-  useEffect(() => {
-    if (!childId || !selectedDate) {
-      return undefined;
-    }
-
-    const { start, end } = (() => {
-      const startDate = new Date(selectedDate);
-      startDate.setHours(0, 0, 0, 0);
-      const endDate = new Date(selectedDate);
-      endDate.setHours(23, 59, 59, 999);
-      return { start: startDate, end: endDate };
-    })();
-
-    const dailyLogsQuery = query(
-      collection(db, 'dailyLogs'),
-      where('childId', '==', childId),
-      where('status', '==', 'active'),
-      where('timestamp', '>=', start),
-      where('timestamp', '<=', end),
-      orderBy('timestamp', 'desc')
-    );
-
-    let didCancel = false;
-
-    const unsubscribe = onSnapshot(
-      dailyLogsQuery,
-      (snapshot) => {
-        if (didCancel) {
-          return;
-        }
-
-        const nextDailyLogs = dedupeTimelineEntries(
-          snapshot.docs
-            .map((doc) => {
-              const data = doc.data();
-              const categoryType = getLogTypeByEntry(data);
-              const categoryMeta = getTimelineMetaForCategory(categoryType.category, { importantMoment: !!data.importantMoment });
-              const notesText = data.notes || data.sleepDetails?.notes || data.bathroomDetails?.notes || data.content || null;
-
-              return {
-                id: doc.id,
-                ...data,
-                timestamp: data.timestamp?.toDate ? data.timestamp.toDate() : new Date(data.createdAt),
-                category: categoryType.category,
-                type: categoryMeta.type,
-                timelineType: categoryMeta.timelineType,
-                collection: 'dailyLogs',
-                title: buildDailyLogTitle(data, categoryMeta),
-                titlePrefix: categoryMeta.titlePrefix,
-                label: categoryMeta.label,
-                icon: categoryMeta.icon,
-                color: categoryMeta.color,
-                content: notesText,
-                notes: notesText,
-              };
-            })
-            .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-        );
-
-        setRawEntries((current) => ({
-          ...current,
-          dailyLogs: nextDailyLogs,
-        }));
-      },
-      (snapshotError) => {
-        console.error('Error listening for live timeline updates:', snapshotError);
-      }
-    );
-
-    return () => {
-      didCancel = true;
-      unsubscribe();
-    };
   }, [childId, selectedDate]);
 
   // Process and filter entries

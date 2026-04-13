@@ -18,7 +18,7 @@ import GoogleAuth from "../components/AuthProviders/GoogleAuth"; // Keep Google 
 import ResponsiveLayout from "../components/Layout/ResponsiveLayout";
 import { createUserProfile } from "../services/userService";
 import colors from "../assets/theme/colors";
-import { PRODUCT_NAME_TITLE } from "../constants/config";
+import { PRODUCT_NAME_TITLE, PRODUCT_NAME } from "../constants/config";
 
 const Register = () => {
   const [email, setEmail] = useState("");
@@ -108,6 +108,8 @@ const Register = () => {
         <Paper
           elevation={6}
           sx={{
+            position: "relative",
+            overflow: "hidden",
             p: { xs: 3, sm: 4 },
             display: "flex",
             flexDirection: "column",
@@ -117,105 +119,140 @@ const Register = () => {
             borderRadius: "12px",
           }}
         >
-        <Typography
-          component="h1"
-          variant="h5"
-          sx={{ mb: 3, fontWeight: "bold", color: "primary.main" }}
-        >
-          Sign Up for {PRODUCT_NAME_TITLE}
-        </Typography>
-        {email && (
-          <Alert severity="info" sx={{ width: "100%", mb: 2 }}>
-            You&apos;re starting with your email first. Finish setting up your
-            account below.
-          </Alert>
-        )}
-        {error && (
-          <Alert severity="error" sx={{ width: "100%", mb: 2 }}>
-            {error}
-          </Alert>
-        )}
-        <Box
-          component="form"
-          onSubmit={handleRegister}
-          noValidate
-          sx={{ mt: 1, width: "100%" }}
-        >
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            id="email"
-            label="Email Address"
-            name="email"
-            autoComplete="email"
-            autoFocus
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            id="fullName"
-            label="Full Name"
-            name="fullName"
-            autoComplete="name"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-          />
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            name="password"
-            label="Password"
-            type="password"
-            id="password"
-            autoComplete="new-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            name="confirmPassword"
-            label="Confirm Password"
-            type="password"
-            id="confirmPassword"
-            autoComplete="new-password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-          />
-          <EnhancedLoadingButton
-            type="submit"
-            fullWidth
-            variant="success-gradient"
-            loading={loading}
-            loadingStyle="pulse"
-            loadingText="Creating account..."
+          <Box
+            aria-hidden="true"
             sx={{
-              mt: 3,
-              mb: 2,
-              py: 1.5,
+              position: "absolute",
+              top: 18,
+              right: -6,
+              fontSize: { xs: "3rem", sm: "3.4rem" },
+              fontWeight: 800,
+              letterSpacing: "-0.08em",
+              lineHeight: 1,
+              color: colors.brand.ink,
+              opacity: 0.08,
+              pointerEvents: "none",
+              userSelect: "none",
+              textTransform: "lowercase",
             }}
           >
-            Register
-          </EnhancedLoadingButton>
-        </Box>
-        <Divider sx={{ width: "100%", my: 2 }}>OR</Divider>
-        <GoogleAuth buttonText="Sign Up with Google" />
-        <Box sx={{ mt: 2 }}>
-          <Link
-            to="/login"
-            variant="body2"
-            style={{ textDecoration: "none", color: colors.brand.deep }}
+            {PRODUCT_NAME}
+          </Box>
+          <Typography
+            component="h1"
+            variant="h5"
+            sx={{
+              mb: 1.5,
+              fontWeight: "bold",
+              color: "primary.main",
+              position: "relative",
+              zIndex: 1,
+            }}
           >
-            {"Already have an account? Sign In"}
-          </Link>
-        </Box>
-      </Paper>
+            Sign Up for {PRODUCT_NAME_TITLE}
+          </Typography>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{
+              mb: 2,
+              textAlign: "center",
+              position: "relative",
+              zIndex: 1,
+            }}
+          >
+            Use Google first for the quickest setup, or register with email below.
+          </Typography>
+          {error && (
+            <Alert severity="error" sx={{ width: "100%", mb: 2, position: "relative", zIndex: 1 }}>
+              {error}
+            </Alert>
+          )}
+          <Box sx={{ width: "100%", mb: 2, position: "relative", zIndex: 1 }}>
+            <GoogleAuth buttonText="Sign Up with Google" onError={setError} />
+          </Box>
+          <Divider sx={{ width: "100%", my: 2, position: "relative", zIndex: 1 }}>
+            or use email
+          </Divider>
+          <Box
+            component="form"
+            onSubmit={handleRegister}
+            noValidate
+            sx={{ mt: 1, width: "100%", position: "relative", zIndex: 1 }}
+          >
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              id="email"
+              label="Email Address"
+              name="email"
+              autoComplete="email"
+              autoFocus
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              id="fullName"
+              label="Full Name"
+              name="fullName"
+              autoComplete="name"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+            />
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              name="password"
+              label="Password"
+              type="password"
+              id="password"
+              autoComplete="new-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              name="confirmPassword"
+              label="Confirm Password"
+              type="password"
+              id="confirmPassword"
+              autoComplete="new-password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+            />
+            <EnhancedLoadingButton
+              type="submit"
+              fullWidth
+              variant="success-gradient"
+              loading={loading}
+              loadingStyle="pulse"
+              loadingText="Creating account..."
+              sx={{
+                mt: 3,
+                mb: 2,
+                py: 1.5,
+              }}
+            >
+              Register
+            </EnhancedLoadingButton>
+          </Box>
+          <Box sx={{ mt: 2, position: "relative", zIndex: 1 }}>
+            <Link
+              to="/login"
+              variant="body2"
+              style={{ textDecoration: "none", color: colors.brand.deep }}
+            >
+              {"Already have an account? Sign In"}
+            </Link>
+          </Box>
+        </Paper>
       </Box>
     </ResponsiveLayout>
   );

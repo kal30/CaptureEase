@@ -20,7 +20,11 @@ import { USER_ROLES } from '../../../constants/roles';
 import colors from '../../../assets/theme/colors';
 
 const getWarningLabel = (child) => {
-  const childWarning = child?.medicalProfile?.foodAllergies?.find(Boolean) || child?.medicalProfile?.currentMedications?.find(Boolean);
+  const medicalProfile = child?.medicalProfile || {};
+  const childWarning =
+    medicalProfile.foodAllergies?.find(Boolean) ||
+    medicalProfile.medicationDetails?.find(Boolean) ||
+    medicalProfile.currentMedications?.find(Boolean);
 
   if (!childWarning) {
     return null;
@@ -32,7 +36,14 @@ const getWarningLabel = (child) => {
       : `${childWarning} Allergy`;
   }
 
-  return childWarning?.name || childWarning?.medication || childWarning?.title || null;
+  const name = childWarning?.name || childWarning?.medication || childWarning?.title;
+  if (name) {
+    return childWarning?.category
+      ? `Medication: ${name}`
+      : name;
+  }
+
+  return null;
 };
 
 const SectionLabel = ({ children }) => (
