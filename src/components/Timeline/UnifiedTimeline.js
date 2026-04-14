@@ -609,6 +609,7 @@ const UnifiedTimeline = ({
               px: { xs: 0, md: 0.5 },
               backgroundColor: colors.app.cards.background,
               borderRadius: '14px',
+              overflow: 'visible',
             }}
           >
               <Stack spacing={0} role="list">

@@ -222,83 +222,53 @@ const TimelineEntryRow = ({
         width: '100%',
         display: 'flex',
         alignItems: 'stretch',
-        gap: { xs: 0.75, sm: 0.9 },
-        px: { xs: 0.6, sm: 0.75 },
-        py: { xs: 0.65, sm: 0.8 },
+        gap: { xs: 1, sm: 1.2 },
+        pl: { xs: 2, sm: 2.5 },
+        pr: { xs: 1.2, sm: 1.5 },
+        py: { xs: 0.75, sm: 0.95 },
         mb: 0,
         backgroundColor: '#FFFFFF',
         borderBottom: isLast ? 'none' : '1px solid rgba(226, 232, 240, 0.95)',
-        overflow: 'hidden',
+        borderLeft: `2px solid ${accentColor}`,
+        overflow: 'visible',
       }}
     >
+      {/* Icon on border */}
       <Box
         sx={{
-          position: 'relative',
-          width: { xs: 50, sm: 56 },
-          flex: '0 0 auto',
+          position: 'absolute',
+          left: '-12px',
+          top: '50%',
+          transform: 'translateY(-50%)',
+          width: 24,
+          height: 24,
+          borderRadius: '50%',
+          border: `2px solid ${accentColor}`,
+          color: accentColor,
+          bgcolor: '#FFFFFF',
           display: 'flex',
-          flexDirection: 'column',
           alignItems: 'center',
-          gap: 0.35,
-          pt: 0.1,
-          minHeight: 44,
+          justifyContent: 'center',
+          fontSize: '0.84rem',
+          lineHeight: 1,
+          flexShrink: 0,
+          zIndex: 1,
         }}
       >
-        <Box
-          sx={{
-            position: 'absolute',
-            left: '50%',
-            top: 0,
-            bottom: 0,
-            width: 2,
-            transform: 'translateX(-50%)',
-            bgcolor: alpha(accentColor, 0.18),
-            borderRadius: 999,
-          }}
-        />
-        {time ? (
-          <Typography
-            variant="caption"
-            sx={{
-              color: 'text.secondary',
-              fontSize: { xs: '0.66rem', sm: '0.7rem' },
-              fontWeight: 800,
-              lineHeight: 1.05,
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {time}
-          </Typography>
-        ) : null}
-        <Box
-          sx={{
-            width: { xs: 24, sm: 26 },
-            height: { xs: 24, sm: 26 },
-            borderRadius: '9999px',
-            border: '2px solid',
-            borderColor: accentColor,
-            color: accentColor,
-            bgcolor: '#FFFFFF',
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: { xs: '0.78rem', sm: '0.84rem' },
-            lineHeight: 1,
-          }}
-        >
-          {icon}
-        </Box>
+        {icon}
       </Box>
 
+      {/* Main content area */}
       <Box
         sx={{
           minWidth: 0,
           flex: '1 1 auto',
           display: 'flex',
           flexDirection: 'column',
-          gap: 0.35,
+          gap: 0.45,
         }}
       >
+        {/* Header: time, label, meta, actions */}
         <Box
           sx={{
             display: 'flex',
@@ -309,72 +279,98 @@ const TimelineEntryRow = ({
             minWidth: 0,
           }}
         >
+          {/* Time and label section */}
           <Box
             sx={{
               display: 'flex',
-              alignItems: 'center',
-              gap: 0.55,
-              flexWrap: 'wrap',
+              flexDirection: 'column',
+              gap: 0.3,
               minWidth: 0,
+              flex: '0 1 auto',
             }}
           >
-            <Chip
-              label={label}
-              size="small"
+            {time ? (
+              <Typography
+                variant="caption"
+                sx={{
+                  color: 'text.secondary',
+                  fontSize: '0.65rem',
+                  fontWeight: 700,
+                  lineHeight: 1,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {time}
+              </Typography>
+            ) : null}
+
+            {/* Label row with subtype and initials */}
+            <Box
               sx={{
-                height: 24,
-                fontSize: '0.68rem',
-                fontWeight: 900,
-                bgcolor: alpha(accentColor, 0.12),
-                color: accentColor,
-                border: `1px solid ${alpha(accentColor, 0.18)}`,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 0.55,
+                flexWrap: 'wrap',
+                minWidth: 0,
               }}
-            />
-            {subtype && kind !== 'behavior' && subtype.trim().toLowerCase() !== String(label).trim().toLowerCase() ? (
+            >
               <Typography
                 component="span"
                 sx={{
-                  fontWeight: 800,
-                  fontSize: { xs: '0.78rem', sm: '0.84rem' },
-                  lineHeight: 1.15,
-                  color: 'text.secondary',
-                  minWidth: 0,
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
+                  fontSize: '0.68rem',
+                  fontWeight: 900,
+                  color: accentColor,
+                  lineHeight: 1.2,
                 }}
               >
-                {subtype}
+                {label}
               </Typography>
-            ) : null}
+              {subtype && kind !== 'behavior' && subtype.trim().toLowerCase() !== String(label).trim().toLowerCase() ? (
+                <Typography
+                  component="span"
+                  sx={{
+                    fontWeight: 800,
+                    fontSize: '0.78rem',
+                    lineHeight: 1.15,
+                    color: 'text.secondary',
+                    minWidth: 0,
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}
+                >
+                  {subtype}
+                </Typography>
+              ) : null}
+              {hasInitials ? (
+                <Chip
+                  label={initials}
+                  size="small"
+                  sx={{
+                    height: 24,
+                    fontSize: '0.62rem',
+                    fontWeight: 800,
+                    bgcolor: '#FFFFFF',
+                    color: 'text.secondary',
+                    border: '1px solid',
+                    borderColor: 'rgba(203, 213, 225, 0.95)',
+                  }}
+                />
+              ) : null}
+            </Box>
           </Box>
 
+          {/* Right side: meta badge and actions */}
           <Stack
             direction="row"
             spacing={0.35}
             sx={{
               flexShrink: 0,
               alignItems: 'center',
-              flexWrap: 'nowrap',
               justifyContent: 'flex-end',
             }}
           >
             {renderMetaBadge()}
-            {hasInitials ? (
-              <Chip
-                label={initials}
-                size="small"
-                sx={{
-                  height: 24,
-                  fontSize: '0.62rem',
-                  fontWeight: 800,
-                  bgcolor: '#FFFFFF',
-                  color: 'text.secondary',
-                  border: '1px solid',
-                  borderColor: 'rgba(203, 213, 225, 0.95)',
-                }}
-              />
-            ) : null}
             {showActions ? (
               <>
                 <IconButton
@@ -389,6 +385,7 @@ const TimelineEntryRow = ({
                     color: 'text.secondary',
                     border: '1px solid',
                     borderColor: 'rgba(203, 213, 225, 0.95)',
+                    pr: 0.5,
                   }}
                   aria-label="Entry actions"
                 >
@@ -418,6 +415,7 @@ const TimelineEntryRow = ({
           </Stack>
         </Box>
 
+        {/* Content area */}
         {isEditing ? (
           <TextField
             fullWidth
@@ -442,7 +440,7 @@ const TimelineEntryRow = ({
                 variant="body2"
                 sx={{
                   color: '#0F172A',
-                  fontSize: { xs: '0.9rem', sm: '0.95rem' },
+                  fontSize: '0.9rem',
                   lineHeight: 1.35,
                   fontWeight: 600,
                   whiteSpace: 'normal',
@@ -474,7 +472,7 @@ const TimelineEntryRow = ({
                 <Typography
                   variant="caption"
                   sx={{
-                    fontSize: { xs: '0.62rem', sm: '0.64rem' },
+                    fontSize: '0.64rem',
                     lineHeight: 1.2,
                     fontStyle: 'italic',
                     color: '#7C5C00',
@@ -493,7 +491,7 @@ const TimelineEntryRow = ({
               <Typography
                 variant="caption"
                 sx={{
-                  fontSize: { xs: '0.68rem', sm: '0.7rem' },
+                  fontSize: '0.68rem',
                   lineHeight: 1.2,
                   fontWeight: 800,
                   color: '#7C5C00',
@@ -503,35 +501,37 @@ const TimelineEntryRow = ({
               </Typography>
             ) : null}
 
-            {kind === 'behavior' && notesText ? (
+            {/* Notes - show for all entry types if present */}
+            {notesText ? (
               <Typography
                 variant="caption"
                 sx={{
-                  fontSize: { xs: '0.68rem', sm: '0.7rem' },
+                  fontSize: '0.68rem',
                   lineHeight: 1.2,
                   fontWeight: 700,
                   color: '#374151',
                 }}
               >
-                Notes: {notesText}
+                {kind === 'behavior' ? 'Notes: ' : ''}{notesText}
               </Typography>
+            ) : null}
+
+            {/* Detail rows and context flags */}
+            {!isEditing ? (
+              <Box
+                sx={{
+                  mt: 0.15,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 0.45,
+                }}
+              >
+                {kind === 'behavior' ? renderBehaviorContextFlags() : null}
+                {renderDetailRows()}
+              </Box>
             ) : null}
           </>
         )}
-
-        {!isEditing ? (
-          <Box
-            sx={{
-              mt: 0.15,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 0.45,
-            }}
-          >
-            {kind === 'behavior' ? renderBehaviorContextFlags() : null}
-            {renderDetailRows()}
-          </Box>
-        ) : null}
       </Box>
 
       {isEditing ? (

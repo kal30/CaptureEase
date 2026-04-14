@@ -546,18 +546,10 @@ const MobileCaptureDashboard = ({
         ) : null}
       </Box>
 
-      <Paper
-        elevation={0}
+      <Box
         sx={{
-          position: 'sticky',
-          top: 0,
-          zIndex: (theme) => theme.zIndex.appBar + 2,
-          borderRadius: '14px',
-          overflow: 'hidden',
-          border: `1px solid ${colors.landing.borderLight}`,
-          boxShadow: `0 16px 36px ${colors.landing.shadowSoft}`,
           mb: 1.5,
-          bgcolor: colors.landing.surface,
+          bgcolor: 'transparent',
         }}
       >
         <Box
@@ -631,9 +623,9 @@ const MobileCaptureDashboard = ({
           onOpenFoodLog={onOpenFoodLog}
           onOpenBathroomLog={onOpenBathroomLog}
           onQuickEntry={onQuickEntry}
-          sx={{ m: 1.25, mt: 0, mb: 2 }}
+          sx={{ mt: 1.25, mb: 2 }}
         />
-      </Paper>
+      </Box>
 
       <Paper
         ref={timelineRef}
