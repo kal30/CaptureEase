@@ -1,3 +1,5 @@
+import { ACTIVITY_TYPE_OPTIONS } from '../../constants/activityThemes';
+
 // Configuration for Daily Care actions
 export const getDailyCareConfig = (actionType, child) => {
   const configs = {
@@ -103,18 +105,10 @@ export const getDailyCareConfig = (actionType, child) => {
         {
           key: 'activityTypes',
           label: 'What kind of activity was it?',
-          description: 'Select all that apply',
+          description: 'Select one that best fits',
           type: 'chips',
-          multiple: true,
-          options: [
-            { label: 'Therapy', value: 'therapy', emoji: '🧑‍⚕️' },
-            { label: 'Outing', value: 'outing', emoji: '🛝' },
-            { label: 'Routine', value: 'routine', emoji: '🔁' },
-            { label: 'Appointment', value: 'appointment', emoji: '📅' },
-            { label: 'Play', value: 'play', emoji: '🧸' },
-            { label: 'Social', value: 'social', emoji: '👥' },
-            { label: 'Other', value: 'other', emoji: '✨' },
-          ],
+          multiple: false,
+          options: ACTIVITY_TYPE_OPTIONS,
           required: true,
         },
         {
@@ -124,9 +118,8 @@ export const getDailyCareConfig = (actionType, child) => {
           type: 'scale',
           min: 1,
           max: 5,
-          labels: ['😴 Low', '😐 Fair', '🙂 Good', '😊 Great', '🤩 Fully engaged'],
+          labels: ['😴 Refused', '😐 Passive', '🙂 Participated', '😊 Engaged', '🤩 Focused'],
           required: true,
-          defaultValue: 3,
         },
         {
           key: 'notes',

@@ -374,7 +374,19 @@ const OtherIncidentCapture = ({
                 childId,
               },
             }));
+
+            window.dispatchEvent(new CustomEvent('captureez:timeline-refresh', {
+              detail: {
+                childId,
+                entryId: savedEntry.id,
+                timestamp: incidentTimestamp,
+                collection: 'dailyLogs',
+              },
+            }));
           }
+
+          onSaved();
+          return;
         } else {
           await addIncident(childId, incidentData, true, childName || 'child');
         }

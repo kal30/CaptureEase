@@ -104,6 +104,14 @@ export const saveBehaviorIncident = async ({ childId, incidentData, userId, fall
         childId,
       },
     }));
+
+    window.dispatchEvent(new CustomEvent('captureez:timeline-refresh', {
+      detail: {
+        childId,
+        collection: 'dailyLogs',
+        entryId: docRef.id,
+      },
+    }));
   }
 
   return {

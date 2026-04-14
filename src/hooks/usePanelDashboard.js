@@ -345,29 +345,47 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
         return;
       }
 
-      if (entry.collection !== 'dailyLogs') {
+      if (entry.collection !== 'dailyLogs' && entry.collection !== 'dailyCare') {
         return;
       }
 
-      const meta = getTimelineMetaForCategory(entry.category, { importantMoment: !!entry.importantMoment });
+      const meta = getTimelineMetaForCategory(entry.category || (entry.collection === 'dailyCare' ? 'activity' : null), { importantMoment: !!entry.importantMoment });
       const isBehaviorStyleEntry = isBehaviorIncidentEntry(entry);
+      const isDailyCareActivity = entry.collection === 'dailyCare' && entry.actionType === 'activity';
       const notesText = entry.notes || entry.incidentData?.notes || null;
       const severityLabel = entry.severityLabel || entry.incidentData?.severityLabel || null;
       const triggerSummary = entry.triggerSummary || entry.incidentData?.triggerSummary || null;
       const optimisticEntry = {
         id: entry.id || `local-${Date.now()}`,
         childId: entry.childId,
-        type: isBehaviorStyleEntry ? 'behavior' : meta.type,
-        timelineType: isBehaviorStyleEntry ? 'incident' : meta.type,
-        collection: 'dailyLogs',
-        category: entry.category || 'log',
-        title: entry.title || entry.titlePrefix || entry.text || meta.label,
+        type: isBehaviorStyleEntry
+          ? 'behavior'
+          : isDailyCareActivity
+            ? 'dailyHabit'
+            : meta.type,
+        timelineType: isBehaviorStyleEntry
+          ? 'incident'
+          : isDailyCareActivity
+            ? 'dailyHabit'
+            : meta.type,
+        collection: entry.collection || 'dailyLogs',
+        category: isDailyCareActivity ? 'activity' : (entry.category || 'log'),
+        actionType: entry.actionType || null,
+        title: isDailyCareActivity ? 'Activity' : (entry.title || entry.titlePrefix || entry.text || meta.label),
         content: entry.content || entry.text || entry.incidentData?.notes || '',
         text: entry.text || entry.content || '',
         notes: notesText,
         timestamp: entryTimestamp,
-        icon: isBehaviorStyleEntry ? LOG_TYPES.behavior.icon : meta.icon,
-        color: isBehaviorStyleEntry ? LOG_TYPES.behavior.palette.dot : meta.color,
+        icon: isBehaviorStyleEntry
+          ? LOG_TYPES.behavior.icon
+          : isDailyCareActivity
+            ? (entry.activityThemeIcon || entry.categoryIcon || meta.icon)
+            : meta.icon,
+        color: isBehaviorStyleEntry
+          ? LOG_TYPES.behavior.palette.dot
+          : isDailyCareActivity
+            ? (entry.activityThemeColor || entry.categoryColor || meta.color)
+            : meta.color,
         tags: entry.tags || [],
         importantMoment: !!entry.importantMoment,
         author: entry.authorName || entry.author || entry.loggedByUser || entry.authorEmail || 'Unknown',
@@ -375,7 +393,7 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
         userRole: entry.authorRole || null,
         userId: entry.authorId || entry.createdBy || null,
         incidentStyle: isBehaviorStyleEntry,
-        entryType: isBehaviorStyleEntry ? 'incident' : entry.entryType,
+        entryType: isBehaviorStyleEntry ? 'incident' : (isDailyCareActivity ? 'dailyHabit' : entry.entryType),
         contextSnapshot: entry.contextSnapshot || entry.incidentData?.contextSnapshot || null,
         incidentData: entry.incidentData || {},
         severity: entry.severity,
@@ -383,9 +401,15 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
         triggerSummary,
         remedy: entry.remedy || entry.incidentData?.remedy || null,
         incidentCategoryId: isBehaviorStyleEntry ? 'behavior' : entry.incidentCategoryId,
-        incidentCategoryLabel: isBehaviorStyleEntry ? 'Behavior' : entry.incidentCategoryLabel,
-        incidentCategoryColor: isBehaviorStyleEntry ? LOG_TYPES.behavior.palette.dot : entry.incidentCategoryColor,
-        incidentCategoryIcon: isBehaviorStyleEntry ? LOG_TYPES.behavior.icon : entry.incidentCategoryIcon,
+        incidentCategoryLabel: isBehaviorStyleEntry
+          ? 'Behavior'
+          : (isDailyCareActivity ? 'Activity' : entry.incidentCategoryLabel),
+        incidentCategoryColor: isBehaviorStyleEntry
+          ? LOG_TYPES.behavior.palette.dot
+          : (isDailyCareActivity ? (entry.activityThemeColor || entry.categoryColor || meta.color) : entry.incidentCategoryColor),
+        incidentCategoryIcon: isBehaviorStyleEntry
+          ? LOG_TYPES.behavior.icon
+          : (isDailyCareActivity ? (entry.activityThemeIcon || entry.categoryIcon || meta.icon) : entry.incidentCategoryIcon),
       };
 
       setRecentEntries((current) => {

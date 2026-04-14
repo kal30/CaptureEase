@@ -102,6 +102,8 @@ const normalizeTimelineEntry = (doc, type) => {
   const noteMeta = type === 'daily_note'
     ? getTimelineMetaForCategory(data.category)
     : null;
+  const careData = type === 'daily_care' ? (data.data || {}) : {};
+  const isActivity = type === 'daily_care' && data.actionType === 'activity';
   
   // Extract common fields with fallbacks for different data structures
   let title = '';
@@ -146,16 +148,26 @@ const normalizeTimelineEntry = (doc, type) => {
       if (data.actionType === 'sleep') {
         return null;
       }
-      const actionType = data.actionType || 'Daily Care';
-      const careData = data.data || {};
-      const activityLabel = Array.isArray(careData.activityTypes)
-        ? careData.activityTypes
-          .map((item) => String(item).replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase()))
-          .join(', ')
-        : careData.activityType || null;
-      const valueLabel = activityLabel || careData.value || careData.mood || careData.rating || careData.engagement || 'Update';
-      title = `${actionType.charAt(0).toUpperCase() + actionType.slice(1)}: ${valueLabel}`;
-      content = careData.notes || data.notes || careData.description || '';
+      const actionType = data.actionType || 'daily_care';
+      const activityTypeLabel = careData.activityThemeLabel
+        || data.activityThemeLabel
+        || (Array.isArray(careData.activityTypes)
+          ? careData.activityTypes
+            .map((item) => String(item).replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase()))
+            .join(', ')
+          : careData.activityType || data.activityType || null);
+      const activityContent = [
+        activityTypeLabel || 'Activity',
+        careData.notes || data.notes || careData.description || null,
+      ].filter(Boolean).join(' • ');
+      if (isActivity) {
+        title = 'Activity';
+        content = activityContent;
+      } else {
+        const valueLabel = activityTypeLabel || careData.value || careData.mood || careData.rating || careData.engagement || 'Update';
+        title = `${actionType.charAt(0).toUpperCase() + actionType.slice(1)}: ${valueLabel}`;
+        content = careData.notes || data.notes || careData.description || '';
+      }
       break;
     case 'child_timeline':
       // Handle child timeline entries  
@@ -174,15 +186,22 @@ const normalizeTimelineEntry = (doc, type) => {
     id: doc.id,
     childId: data.childId || null,
     type: noteMeta?.type || type,
+    actionType: data.actionType || null,
     title,
-    titlePrefix: data.titlePrefix || noteMeta?.label || null,
+    titlePrefix: data.titlePrefix || (isActivity ? 'Activity' : noteMeta?.label) || null,
     content,
     notes: data.notes || data.bathroomDetails?.notes || data.description || null,
     timestamp,
     author: data.author || data.createdBy || data.userId || 'Unknown',
     ...(noteMeta || typeConfig),
-    category: data.category || 'log',
+    category: data.category || (isActivity ? 'activity' : 'log'),
+    categoryLabel: isActivity ? 'Activity' : (data.categoryLabel || noteMeta?.label || typeConfig.label || null),
+    categoryColor: isActivity ? (careData.activityThemeColor || careData.categoryColor || typeConfig.color) : (data.categoryColor || noteMeta?.color || typeConfig.color || null),
+    categoryIcon: isActivity ? LOG_TYPES.activity.icon : (data.categoryIcon || noteMeta?.icon || typeConfig.icon || null),
     timelineType: noteMeta?.type || type,
+    activityThemeKey: careData.activityThemeKey || data.activityThemeKey || null,
+    activityThemeColor: careData.activityThemeColor || data.activityThemeColor || null,
+    activityThemeLabel: careData.activityThemeLabel || data.activityThemeLabel || null,
     originalData: data // Keep original data for detailed views
   };
 };

@@ -119,6 +119,7 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
   const { getUserRoleForChild } = useRole();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [refreshToken, setRefreshToken] = useState(0);
   const [customCategories, setCustomCategories] = useState({});
   const [rawEntries, setRawEntries] = useState({
     incidents: [],
@@ -162,7 +163,7 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
     };
 
     fetchAllData();
-  }, [childId, selectedDate]);
+  }, [childId, selectedDate, refreshToken]);
 
   useEffect(() => {
     if (!childId) {
@@ -247,12 +248,19 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
         return;
       }
 
-      if (entry.collection !== 'dailyLogs') {
+      if (entry.collection !== 'dailyLogs' && entry.collection !== 'dailyCare') {
         return;
       }
 
-      const categoryMeta = getQuickNoteMeta(entry);
+      const categoryMeta = entry.collection === 'dailyCare'
+        ? getQuickNoteMeta({
+            ...entry,
+            category: 'activity',
+            actionType: entry.actionType || 'activity',
+          })
+        : getQuickNoteMeta(entry);
       const isBehaviorStyleEntry = isBehaviorIncidentEntry(entry);
+      const isDailyCareActivity = entry.collection === 'dailyCare' && entry.actionType === 'activity';
       const incidentSnapshot = entry.contextSnapshot || entry.incidentData?.contextSnapshot || null;
       const notesText = entry.notes || entry.incidentData?.notes || null;
       const severityLabel = entry.severityLabel || entry.incidentData?.severityLabel || null;
@@ -260,14 +268,32 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
       const optimisticDailyLog = {
         ...entry,
         timestamp: entryTimestamp,
-        type: isBehaviorStyleEntry ? 'behavior' : categoryMeta.type,
-        timelineType: isBehaviorStyleEntry ? 'incident' : categoryMeta.timelineType,
-        title: getQuickDailyLogTitle(entry, categoryMeta),
+        type: isBehaviorStyleEntry
+          ? 'behavior'
+          : isDailyCareActivity
+            ? 'dailyHabit'
+            : categoryMeta.type,
+        timelineType: isBehaviorStyleEntry
+          ? 'incident'
+          : isDailyCareActivity
+            ? 'dailyHabit'
+            : categoryMeta.timelineType,
+        title: isDailyCareActivity
+          ? 'Activity'
+          : getQuickDailyLogTitle(entry, categoryMeta),
         titlePrefix: categoryMeta.titlePrefix,
-        color: isBehaviorStyleEntry ? LOG_TYPES.behavior.palette.dot : categoryMeta.color,
-        categoryIcon: isBehaviorStyleEntry ? LOG_TYPES.behavior.icon : categoryMeta.icon,
+        color: isBehaviorStyleEntry
+          ? LOG_TYPES.behavior.palette.dot
+          : isDailyCareActivity
+            ? (entry.activityThemeColor || entry.categoryColor || categoryMeta.color)
+            : categoryMeta.color,
+        categoryIcon: isBehaviorStyleEntry
+          ? LOG_TYPES.behavior.icon
+          : isDailyCareActivity
+            ? (entry.activityThemeIcon || entry.categoryIcon || categoryMeta.icon)
+            : categoryMeta.icon,
         incidentStyle: isBehaviorStyleEntry,
-        entryType: isBehaviorStyleEntry ? 'incident' : entry.entryType,
+        entryType: isBehaviorStyleEntry ? 'incident' : (isDailyCareActivity ? 'dailyHabit' : entry.entryType),
         contextSnapshot: incidentSnapshot,
         incidentData: entry.incidentData || {},
         severity: entry.severity,
@@ -275,9 +301,15 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
         triggerSummary,
         remedy: entry.remedy || entry.incidentData?.remedy || null,
         incidentCategoryId: isBehaviorStyleEntry ? 'behavior' : entry.incidentCategoryId,
-        incidentCategoryLabel: isBehaviorStyleEntry ? 'Behavior' : entry.incidentCategoryLabel,
-        incidentCategoryColor: isBehaviorStyleEntry ? LOG_TYPES.behavior.palette.dot : entry.incidentCategoryColor,
-        incidentCategoryIcon: isBehaviorStyleEntry ? LOG_TYPES.behavior.icon : entry.incidentCategoryIcon,
+        incidentCategoryLabel: isBehaviorStyleEntry
+          ? 'Behavior'
+          : (isDailyCareActivity ? 'Activity' : entry.incidentCategoryLabel),
+        incidentCategoryColor: isBehaviorStyleEntry
+          ? LOG_TYPES.behavior.palette.dot
+          : (isDailyCareActivity ? (entry.activityThemeColor || entry.categoryColor || categoryMeta.color) : entry.incidentCategoryColor),
+        incidentCategoryIcon: isBehaviorStyleEntry
+          ? LOG_TYPES.behavior.icon
+          : (isDailyCareActivity ? (entry.activityThemeIcon || entry.categoryIcon || categoryMeta.icon) : entry.incidentCategoryIcon),
         isImportantMoment: !!entry.importantMoment,
         ...getEntryUser(entry),
       };
@@ -294,6 +326,27 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
     window.addEventListener('captureez:timeline-entry-created', handleQuickEntryCreated);
     return () => window.removeEventListener('captureez:timeline-entry-created', handleQuickEntryCreated);
   }, [childId, selectedDate]);
+
+  useEffect(() => {
+    if (!childId) {
+      return undefined;
+    }
+
+    const handleTimelineRefresh = (event) => {
+      const entry = event?.detail;
+      if (!entry || entry.childId !== childId) {
+        return;
+      }
+
+      setRefreshToken((current) => current + 1);
+    };
+
+    window.addEventListener('captureez:timeline-refresh', handleTimelineRefresh);
+
+    return () => {
+      window.removeEventListener('captureez:timeline-refresh', handleTimelineRefresh);
+    };
+  }, [childId]);
 
   // Process and filter entries
   const processedData = useMemo(() => {

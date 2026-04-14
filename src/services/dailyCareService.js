@@ -60,6 +60,36 @@ export const saveDailyCareEntry = async (entryData) => {
     // Save to daily care collection
     const docRef = await addDoc(collection(db, "dailyCare"), entry);
 
+    if (typeof window !== 'undefined') {
+      const eventDetail = {
+        id: docRef.id,
+        ...entry,
+        actionType,
+        childId,
+        timestamp: entry.timestamp,
+        collection: 'dailyCare',
+        category: 'daily_care',
+        title: getActionTitle(actionType),
+        activityThemeKey: data?.activityThemeKey || null,
+        activityThemeColor: data?.activityThemeColor || null,
+        activityThemeLabel: data?.activityThemeLabel || null,
+        categoryLabel: data?.categoryLabel || null,
+        categoryColor: data?.categoryColor || null,
+      };
+
+      window.dispatchEvent(new CustomEvent('captureez:timeline-entry-created', {
+        detail: eventDetail,
+      }));
+
+      window.dispatchEvent(new CustomEvent('captureez:timeline-refresh', {
+        detail: {
+          childId,
+          collection: 'dailyCare',
+          entryId: docRef.id,
+        },
+      }));
+    }
+
     if (actionType === 'sleep') {
       const sleepIssues = Array.isArray(data?.sleepIssues)
         ? data.sleepIssues.filter((issue) => issue && issue !== 'none')
