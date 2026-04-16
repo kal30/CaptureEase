@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   Box,
   Dialog,
@@ -28,6 +28,25 @@ const LogFormShell = ({
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down(mobileBreakpoint));
   const useDrawer = forceDrawer || isMobile;
+  const bodyRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const scrollNode = bodyRef.current;
+    if (!scrollNode) {
+      return;
+    }
+
+    requestAnimationFrame(() => {
+      if (typeof scrollNode.scrollTo === "function") {
+        scrollNode.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      }
+      scrollNode.scrollTop = 0;
+    });
+  }, [open]);
 
   const surfaceSx = {
     display: 'flex',
@@ -89,7 +108,7 @@ const LogFormShell = ({
         />
         {headerContent ? <Box sx={{ mt: 1.5 }}>{headerContent}</Box> : null}
       </Box>
-      <Box sx={{ ...bodyStyles, ...bodySxOverride }}>{children}</Box>
+      <Box ref={bodyRef} sx={{ ...bodyStyles, ...bodySxOverride }}>{children}</Box>
       {footer ? <Box sx={footerSx}>{footer}</Box> : null}
     </Box>
   );

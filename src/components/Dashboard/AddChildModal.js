@@ -27,7 +27,7 @@ import { archiveMedicationRecord, saveMedicationRecord } from "./shared/medicati
 
 const PROFILE_SETUP_PROGRESS = 20;
 
-const AddChildModal = ({ open, onClose, onSuccess }) => {
+const AddChildModal = ({ open, onClose, onSuccess, onViewTodayMedications }) => {
   const { t } = useTranslation(["terms", "common"]);
   const storage = getStorage();
   const documentInputRefs = useRef({});
@@ -618,6 +618,34 @@ const AddChildModal = ({ open, onClose, onSuccess }) => {
       />
   );
 
+  const renderMedicationHeaderAction = () => (
+    <Button
+      type="button"
+      variant="text"
+      onClick={() => {
+        if (createdChildId) {
+          onViewTodayMedications?.(createdChildId);
+        }
+      }}
+      disabled={!createdChildId}
+      sx={{
+        minWidth: 0,
+        px: 0,
+        py: 0,
+        textTransform: "none",
+        fontWeight: 700,
+        color: colors.brand.deep,
+        justifyContent: "flex-start",
+        "&:hover": {
+          bgcolor: "transparent",
+          textDecoration: "underline",
+        },
+      }}
+    >
+      View today&apos;s medications
+    </Button>
+  );
+
 
   return (
     <LogFormShell
@@ -675,6 +703,7 @@ const AddChildModal = ({ open, onClose, onSuccess }) => {
         setCommunicationNeeds={setCommunicationNeeds}
         renderDocumentDropZone={renderDocumentDropZone}
         renderMedicationDetails={renderMedicationDetails}
+        renderMedicationHeaderAction={renderMedicationHeaderAction}
         medicationDetails={medicationDetails}
         uploadedDocuments={uploadedDocuments}
         openSections={openSections}

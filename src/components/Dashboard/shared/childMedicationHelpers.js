@@ -92,18 +92,21 @@ export const createMedicationSchedule = (overrides = {}) => ({
   time: String(overrides.time || getCurrentLocalTime()).trim(),
 });
 
-export const normalizeMedicationSchedule = (entry = {}) => ({
-  id: entry.id || `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+export const normalizeMedicationSchedule = (entry = {}, fallbackId = "") => ({
+  id: entry.id || fallbackId || `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
   dose: String(entry.dose || "").trim(),
   unit: String(entry.unit || "mg").trim() || "mg",
-  time: String(entry.time || getCurrentLocalTime()).trim(),
+  time: String(entry.time || "").trim(),
 });
 
 export const createMedicationDetail = (overrides = {}) => {
   const today = new Date().toISOString().slice(0, 10);
   const form = overrides.form || "pill";
   const schedules = Array.isArray(overrides.schedules) && overrides.schedules.length
-    ? overrides.schedules.map(normalizeMedicationSchedule)
+    ? overrides.schedules.map((schedule, index) => normalizeMedicationSchedule(
+        schedule,
+        `${overrides.id || "med"}-${index}`
+      ))
     : [createMedicationSchedule({ dose: overrides.dose || "", unit: overrides.unit || "mg", time: overrides.time || "" })];
   const firstSchedule = schedules[0] || createMedicationSchedule();
 
@@ -126,20 +129,25 @@ export const createMedicationDetail = (overrides = {}) => {
   };
 };
 
-export const normalizeMedicationDetail = (entry = {}) => {
+export const normalizeMedicationDetail = (entry = {}, fallbackId = "") => {
   const name = String(entry.name || "").trim();
   const form = entry.form || "pill";
+  const resolvedId = entry.id || fallbackId || `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const schedules = Array.isArray(entry.schedules) && entry.schedules.length
-    ? entry.schedules.map(normalizeMedicationSchedule)
-    : [createMedicationSchedule({
+    ? entry.schedules.map((schedule, index) => normalizeMedicationSchedule(
+        schedule,
+        `${resolvedId}-${index}`
+      ))
+    : [normalizeMedicationSchedule({
+        id: `${resolvedId}-0`,
         dose: entry.dose || "",
         unit: entry.unit || "mg",
         time: entry.time || "",
-      })];
+      }, `${resolvedId}-0`)];
   const firstSchedule = schedules[0] || createMedicationSchedule();
 
   return {
-    id: entry.id || `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    id: resolvedId,
     name,
     dose: firstSchedule.dose || String(entry.dose || "").trim(),
     unit: firstSchedule.unit || String(entry.unit || "mg").trim() || "mg",

@@ -56,6 +56,7 @@ const mapDailyLogEntry = (doc) => {
     localDate: data.localDate || sleepDetails.localDate || null,
     localTime: data.localTime || sleepDetails.localTime || null,
     sleepAnchorDate,
+    logCategory: categoryType.category,
     category: categoryType.category,
     type: isBehaviorIncident ? 'behavior' : categoryMeta.type,
     timelineType: isBehaviorIncident ? 'incident' : categoryMeta.timelineType,

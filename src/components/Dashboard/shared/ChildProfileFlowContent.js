@@ -50,6 +50,7 @@ const ChildProfileFlowContent = ({
   setCommunicationNeeds,
   renderDocumentDropZone,
   renderMedicationDetails,
+  renderMedicationHeaderAction,
   medicationDetails = [],
   currentStep = 1,
   onStepChange,
@@ -70,10 +71,10 @@ const ChildProfileFlowContent = ({
     medications: Array.isArray(uploadedDocuments?.medications) ? uploadedDocuments.medications : [],
     behavioral: Array.isArray(uploadedDocuments?.behavioral) ? uploadedDocuments.behavioral : [],
   };
-  const stepLabels = ["Basics", "Health", "Medication", "Behavioral", "Finish"];
-  const activeStep = stage === "intake" && !isEditMode ? 1 : currentStep || 1;
+  const stepLabels = ["Basics", "Health", "Medication Management", "Behavioral", "Finish"];
+  const activeStep = currentStep || 1;
 
-  const canNavigate = (stepNumber) => isEditMode || stage !== "intake" || stepNumber === 1;
+  const canNavigate = () => true;
 
   const stepFrameSx = {
     px: 0,
@@ -91,12 +92,21 @@ const ChildProfileFlowContent = ({
         display: "flex",
         alignItems: "center",
         flexWrap: "nowrap",
-        gap: 0.75,
+        gap: { xs: 0.5, sm: 0.75 },
+        width: "100%",
         overflowX: "auto",
         overflowY: "hidden",
-        pb: 0.25,
+        pb: 0.5,
+        pr: { xs: 0.5, sm: 0 },
         WebkitOverflowScrolling: "touch",
+        touchAction: "pan-x",
+        scrollSnapType: "x proximity",
         scrollbarWidth: "none",
+        position: "sticky",
+        top: 0,
+        zIndex: 2,
+        backgroundColor: "background.paper",
+        pt: 0.5,
         "&::-webkit-scrollbar": { display: "none" },
       }}
     >
@@ -117,6 +127,9 @@ const ChildProfileFlowContent = ({
             sx={{
               borderRadius: 999,
               flex: "0 0 auto",
+              minHeight: 32,
+              whiteSpace: "nowrap",
+              scrollSnapAlign: "start",
               fontWeight: 700,
               cursor: navigable ? "pointer" : "default",
               bgcolor: isActive
@@ -143,7 +156,7 @@ const ChildProfileFlowContent = ({
   );
 
   const renderShell = (title, subtitle, content, options = {}) => {
-    const { flat = false } = options;
+    const { flat = false, headerAction = null } = options;
 
     return (
       <Stack
@@ -165,6 +178,11 @@ const ChildProfileFlowContent = ({
             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.35, lineHeight: 1.35 }}>
               {subtitle}
             </Typography>
+          ) : null}
+          {headerAction ? (
+            <Box sx={{ mt: 0.5 }}>
+              {headerAction}
+            </Box>
           ) : null}
         </Box>
 
@@ -327,13 +345,16 @@ const ChildProfileFlowContent = ({
 
   const renderMedicationStep = () =>
     renderShell(
-      "Medication",
-      "Saved medications come first. Add or edit only when needed.",
+      "Medication Management",
+      "Add or edit medications here. Daily logging lives in the log screen.",
       <Stack spacing={1.55}>
         {renderStepAlerts()}
         {renderMedicationDetails?.()}
       </Stack>
-    , { flat: true });
+    , {
+      flat: true,
+      headerAction: renderMedicationHeaderAction?.(),
+    });
 
   const renderBehavioralStep = () =>
     renderShell(
@@ -452,7 +473,7 @@ const ChildProfileFlowContent = ({
         )}
         {renderReviewCard("Health", healthSummary, 2)}
         {renderReviewCard(
-          "Medication",
+          "Medication Management",
           `${activeMedicationCount} active medication${activeMedicationCount === 1 ? "" : "s"}`,
           3
         )}

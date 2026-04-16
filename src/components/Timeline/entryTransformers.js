@@ -213,19 +213,40 @@ const getFoodDetails = (entry = {}) => {
 
 const getMedicationDetails = (entry = {}) => {
   const medicationDetails = entry.medicationDetails || entry.data?.medicationDetails || {};
-  const rows = [];
-  const dosage = medicationDetails.dosage || entry.title || entry.text || entry.content || '';
-  const timeTaken = medicationDetails.timeTaken || entry.timeTaken || entry.timestampText || '';
+  const medicationName = normalizeText(
+    medicationDetails.medicationName
+    || medicationDetails.name
+    || entry.categoryLabel
+    || entry.titlePrefix
+    || entry.title
+    || entry.text
+    || entry.content
+  );
+  const dosage = normalizeText(
+    medicationDetails.dosage
+    || medicationDetails.dose
+    || entry.dosage
+    || entry.dose
+  );
+  const unit = normalizeText(
+    medicationDetails.unit
+    || entry.unit
+  );
+  const givenLabel = normalizeText(
+    medicationDetails.statusLabel
+    || entry.statusLabel
+    || entry.status
+    || 'given'
+  ).toLowerCase();
 
-  if (dosage) {
-    rows.push({ label: 'Dose', value: String(dosage) });
-  }
+  const dosageText = [dosage, unit].filter(Boolean).join(' ').trim();
+  const headline = [medicationName, dosageText ? `• ${dosageText}` : '', givenLabel ? `${givenLabel}` : '']
+    .filter(Boolean)
+    .join(' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 
-  if (timeTaken) {
-    rows.push({ label: 'Time', value: String(timeTaken) });
-  }
-
-  return rows;
+  return headline ? [{ label: 'Summary', value: headline }] : [];
 };
 
 const getSleepDetails = (entry = {}) => {
@@ -369,7 +390,26 @@ export const transformTimelineEntry = (entry = {}, presentation = {}, timeString
       : kind === 'food'
         ? normalizeText(getFoodHeadline(entry))
         : kind === 'meds'
-          ? normalizeText(entry.notes || entry.description || entry.text || entry.content || 'Medication logged')
+          ? normalizeText(
+              [
+                entry.medicationDetails?.medicationName
+                || entry.medicationDetails?.name
+                || entry.categoryLabel
+                || entry.titlePrefix
+                || entry.title
+                || entry.text
+                || entry.content
+                || 'Medication',
+                [
+                  entry.medicationDetails?.dosage
+                  || entry.medicationDetails?.dose
+                  || entry.dosage
+                  || entry.dose,
+                  entry.medicationDetails?.unit || entry.unit,
+                ].filter(Boolean).join(' ').trim(),
+                'given',
+              ].filter(Boolean).join(' • ')
+            )
           : kind === 'sleep'
             ? normalizeText(entry.notes || entry.description || entry.summary || entry.content || entry.text || 'Sleep logged')
             : kind === 'toilet'
@@ -383,7 +423,7 @@ export const transformTimelineEntry = (entry = {}, presentation = {}, timeString
       : kind === 'food'
         ? normalizeText(getFoodMealType(entry))
         : kind === 'meds'
-          ? normalizeText(entry.medicationDetails?.medicationName || entry.categoryLabel || entry.titlePrefix || '')
+          ? ''
           : kind === 'sleep'
             ? normalizeText(entry.sleepDetails?.quality || entry.categoryLabel || entry.titlePrefix || '')
             : kind === 'toilet'
@@ -440,7 +480,7 @@ export const transformTimelineEntry = (entry = {}, presentation = {}, timeString
       : kind === 'food'
         ? getFoodDetails(entry)
         : kind === 'meds'
-          ? getMedicationDetails(entry)
+          ? []
           : kind === 'sleep'
             ? getSleepDetails(entry)
             : kind === 'toilet'

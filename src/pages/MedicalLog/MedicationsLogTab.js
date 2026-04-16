@@ -22,7 +22,7 @@ import BulkMedicationLogDialog from './components/BulkMedicationLogDialog';
 import MedicationSideEffectDialog from './components/MedicationSideEffectDialog';
 import { uploadIncidentMedia } from '../../components/Dashboard/Incidents/Media/mediaUploadService';
 
-const MedicationsLogTab = ({ childId, childName }) => {
+const MedicationsLogTab = ({ childId, childName, initialShowArchived = false }) => {
   const theme = useTheme(); // Get theme object
   const [user] = useAuthState(auth);
   const [medications, setMedications] = useState([]);
@@ -60,8 +60,12 @@ const MedicationsLogTab = ({ childId, childName }) => {
 
   
 
-  const [showArchived, setShowArchived] = useState(false);
+  const [showArchived, setShowArchived] = useState(Boolean(initialShowArchived));
   const activeMedications = medications.filter((med) => !med.isArchived);
+
+  useEffect(() => {
+    setShowArchived(Boolean(initialShowArchived));
+  }, [initialShowArchived]);
 
   useEffect(() => {
     const loadMedications = async () => {

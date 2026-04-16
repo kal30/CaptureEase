@@ -1,14 +1,9 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Box,
   Container,
   Typography,
   Modal,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  IconButton,
-  Drawer,
   SwipeableDrawer,
   CircularProgress,
   Fade,
@@ -18,8 +13,7 @@ import {
   Alert,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import { useNavigate } from "react-router-dom";
-import CloseIcon from "@mui/icons-material/Close";
+import { useLocation, useNavigate } from "react-router-dom";
 
 // Hooks and Services
 import { usePanelDashboard } from "../hooks/usePanelDashboard";
@@ -38,7 +32,7 @@ import BathroomLogSheet from "../components/Dashboard/BathroomLogSheet";
 import { IncidentLoggingModal, IncidentFollowUpModal } from "../components/Dashboard/Incidents";
 import PatternSuggestionModal from "../components/Dashboard/PatternSuggestionModal";
 import DailyHabitsModal from "../components/Dashboard/DailyHabitsModal";
-import MedicationsLogTab from "./MedicalLog/MedicationsLogTab";
+import BulkMedicationLogDialog from "./MedicalLog/components/BulkMedicationLogDialog";
 import { ImportLogsModal, extractTextFromImportFile, parseImportedLogs } from "../components/Dashboard/ImportLogs";
 import DailyCareReport from "../components/Reports/DailyCareReport";
 import { DashboardViewProvider } from "../components/Dashboard/shared/DashboardViewContext";
@@ -49,10 +43,20 @@ import { PRODUCT_NAME_TITLE } from "../constants/config";
 
 const PanelDashboard = () => {
   const theme = useTheme();
+  const location = useLocation();
   const navigate = useNavigate();
   const isMobile = useMediaQuery('(max-width:1023.95px)');
   const isDesktop = !isMobile;
   const hook = usePanelDashboard({ activeChildOnly: isMobile });
+  const dashboardChildren = hook.children;
+  const dashboardSelectedChild = hook.selectedChild;
+  const dashboardSetCurrentChildId = hook.setCurrentChildId;
+  const dashboardHandleEditChild = hook.handleEditChild;
+  const dashboardHandleDeleteChild = hook.handleDeleteChild;
+  const dashboardHandleInviteTeamMember = hook.handleInviteTeamMember;
+  const dashboardHandleMessages = hook.handleMessages;
+  const dashboardHandleShowCareReport = hook.handleShowCareReport;
+  const dashboardSetShowAddChildModal = hook.setShowAddChildModal;
   const importFileInputRef = useRef(null);
   const [showImportModal, setShowImportModal] = useState(false);
   const [importRows, setImportRows] = useState([]);
@@ -61,6 +65,7 @@ const PanelDashboard = () => {
   const [importError, setImportError] = useState('');
   const [showMedicalLogPanel, setShowMedicalLogPanel] = useState(false);
   const [medicalLogChild, setMedicalLogChild] = useState(null);
+  const [editChildInitialStep, setEditChildInitialStep] = useState(1);
   useMountDebug('PanelDashboard');
   trackRenderDebug('PanelDashboard', {
     isMobile,
@@ -70,13 +75,13 @@ const PanelDashboard = () => {
     currentChildId: hook.currentChildId || 'none',
   });
 
-  const handleImportLogsClick = (child) => {
+  const handleImportLogsClick = useCallback((child) => {
     setImportInitialChildId(child?.id || hook.currentChildId || hook.children[0]?.id || '');
     if (importFileInputRef.current) {
       importFileInputRef.current.value = '';
       importFileInputRef.current.click();
     }
-  };
+  }, [hook.children, hook.currentChildId]);
 
   const handleViewImportedCalendar = (child) => {
     const childId = child?.id || importInitialChildId;
@@ -110,10 +115,35 @@ const PanelDashboard = () => {
   };
 
   useEffect(() => {
+    const requestedChildId = location.state?.openChildMedicationManager?.childId;
+    if (!requestedChildId || !dashboardChildren.length) {
+      return;
+    }
+
+    const requestedChild = dashboardChildren.find((child) => child.id === requestedChildId);
+    if (!requestedChild) {
+      return;
+    }
+
+    dashboardSetCurrentChildId(requestedChild.id);
+    setEditChildInitialStep(3);
+    dashboardHandleEditChild(requestedChild);
+
+    navigate(location.pathname, { replace: true, state: null });
+  }, [
+    dashboardChildren,
+    dashboardSetCurrentChildId,
+    dashboardHandleEditChild,
+    location.pathname,
+    location.state,
+    navigate,
+  ]);
+
+  useEffect(() => {
     const handleDashboardAction = (event) => {
       const action = event?.detail?.action;
       const childId = event?.detail?.childId;
-      const child = hook.children.find((item) => item.id === childId) || hook.selectedChild || hook.children[0] || null;
+      const child = dashboardChildren.find((item) => item.id === childId) || dashboardSelectedChild || dashboardChildren[0] || null;
 
       if (!action) {
         return;
@@ -121,24 +151,24 @@ const PanelDashboard = () => {
 
       switch (action) {
         case "add-child":
-          hook.setShowAddChildModal(true);
+          dashboardSetShowAddChildModal(true);
           break;
         case "view-care-team":
           navigate('/care-team');
           break;
         case "invite-caregiver":
           if (child) {
-            hook.handleInviteTeamMember(child.id);
+            dashboardHandleInviteTeamMember(child.id);
           }
           break;
         case "start-chat":
           if (child) {
-            hook.handleMessages(child);
+            dashboardHandleMessages(child);
           }
           break;
         case "prep-for-therapy":
           if (child) {
-            hook.handleShowCareReport(child);
+            dashboardHandleShowCareReport(child);
           }
           break;
         case "import-logs":
@@ -146,12 +176,12 @@ const PanelDashboard = () => {
           break;
         case "edit-child":
           if (child) {
-            hook.handleEditChild(child);
+            dashboardHandleEditChild(child);
           }
           break;
         case "delete-child":
           if (child) {
-            hook.handleDeleteChild(child);
+            dashboardHandleDeleteChild(child);
           }
           break;
         default:
@@ -165,14 +195,14 @@ const PanelDashboard = () => {
       window.removeEventListener("captureez:dashboard-action", handleDashboardAction);
     };
   }, [
-    hook.children,
-    hook.handleDeleteChild,
-    hook.handleEditChild,
-    hook.handleInviteTeamMember,
-    hook.handleMessages,
-    hook.handleShowCareReport,
-    hook.selectedChild,
-    hook.setShowAddChildModal,
+    dashboardChildren,
+    dashboardHandleDeleteChild,
+    dashboardHandleEditChild,
+    dashboardHandleInviteTeamMember,
+    dashboardHandleMessages,
+    dashboardHandleShowCareReport,
+    dashboardSelectedChild,
+    dashboardSetShowAddChildModal,
     navigate,
     handleImportLogsClick,
   ]);
@@ -493,6 +523,12 @@ const PanelDashboard = () => {
       <AddChildModal
         open={hook.showAddChildModal}
         onClose={() => hook.setShowAddChildModal(false)}
+        onViewTodayMedications={(childId) => {
+          hook.setShowAddChildModal(false);
+          if (childId) {
+            handleOpenMedicalLog({ id: childId });
+          }
+        }}
         onSuccess={hook.handleAddChildSuccess}
       />
 
@@ -500,11 +536,23 @@ const PanelDashboard = () => {
         open={hook.showEditChildModal}
         child={hook.selectedChildForEdit}
         userRole={hook.selectedChildForEdit ? hook.getUserRoleForChild?.(hook.selectedChildForEdit.id) : null}
+        initialStep={editChildInitialStep}
+        onViewTodayMedications={(child) => {
+          hook.setShowEditChildModal(false);
+          hook.setSelectedChildForEdit(null);
+          if (child) {
+            handleOpenMedicalLog(child);
+          }
+        }}
         onClose={() => {
+          setEditChildInitialStep(1);
           hook.setShowEditChildModal(false);
           hook.setSelectedChildForEdit(null);
         }}
-        onSuccess={hook.handleEditChildSuccess}
+        onSuccess={() => {
+          setEditChildInitialStep(1);
+          hook.handleEditChildSuccess();
+        }}
       />
 
       <DailyCareModal
@@ -605,71 +653,12 @@ const PanelDashboard = () => {
         }}
       />
 
-      {isMobile ? (
-        <Drawer
-          anchor="bottom"
-          open={showMedicalLogPanel}
-          onClose={handleCloseMedicalLog}
-          PaperProps={{
-            sx: {
-              borderTopLeftRadius: 4,
-              borderTopRightRadius: 4,
-              maxHeight: '92vh',
-            },
-          }}
-        >
-          <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Box>
-              <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                {medicalLogChild?.name ? `${medicalLogChild.name}'s Medications` : 'Medications'}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Child-specific medication list and dose logging
-              </Typography>
-            </Box>
-            <IconButton onClick={handleCloseMedicalLog} aria-label="close medical log">
-              <CloseIcon />
-            </IconButton>
-          </Box>
-          <Box sx={{ p: 2, overflowY: 'auto' }}>
-            <MedicationsLogTab childId={medicalLogChild?.id || hook.currentChildId} />
-          </Box>
-        </Drawer>
-      ) : (
-        <Dialog
-          open={showMedicalLogPanel}
-          onClose={handleCloseMedicalLog}
-          fullWidth
-          maxWidth="lg"
-          PaperProps={{
-            sx: {
-              borderRadius: 3,
-              minHeight: '70vh',
-            },
-          }}
-        >
-          <DialogTitle sx={{ pr: 6 }}>
-            <Box>
-              <Typography variant="h5" sx={{ fontWeight: 700 }}>
-                {medicalLogChild?.name ? `${medicalLogChild.name}'s Medications` : 'Medications'}
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                Child-specific medication list and dose logging
-              </Typography>
-            </Box>
-            <IconButton
-              onClick={handleCloseMedicalLog}
-              aria-label="close medical log"
-              sx={{ position: 'absolute', right: 16, top: 16 }}
-            >
-              <CloseIcon />
-            </IconButton>
-          </DialogTitle>
-          <DialogContent sx={{ pt: 0, pb: 3 }}>
-            <MedicationsLogTab childId={medicalLogChild?.id || hook.currentChildId} />
-          </DialogContent>
-        </Dialog>
-      )}
+      <BulkMedicationLogDialog
+        open={showMedicalLogPanel}
+        childId={medicalLogChild?.id || hook.currentChildId}
+        childName={medicalLogChild?.name || ''}
+        onClose={handleCloseMedicalLog}
+      />
 
       <Modal
         open={importLoading}

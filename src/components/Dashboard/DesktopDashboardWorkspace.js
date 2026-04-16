@@ -42,6 +42,7 @@ const DesktopDashboardWorkspace = ({
   onOpenSleepLog,
   onOpenFoodLog,
   onOpenBathroomLog,
+  onOpenMedicalLog,
   onImportLogs,
   onGoToCareTeam,
 }) => {
@@ -252,6 +253,7 @@ const DesktopDashboardWorkspace = ({
           <DashboardActionBoard
             child={activeChild}
             onTrack={hook.handleTrack}
+            onOpenMedicalLog={onOpenMedicalLog}
             onOpenSleepLog={onOpenSleepLog}
             onOpenFoodLog={onOpenFoodLog}
             onOpenBathroomLog={onOpenBathroomLog}

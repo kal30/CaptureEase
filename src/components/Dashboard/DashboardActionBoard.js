@@ -241,6 +241,7 @@ const ActionCard = ({ card, onClick, isCompact = false, colSpan = 1 }) => (
 const DashboardActionBoard = ({
   child,
   onTrack,
+  onOpenMedicalLog,
   onOpenSleepLog,
   onOpenFoodLog,
   onOpenBathroomLog,
@@ -254,7 +255,9 @@ const DashboardActionBoard = ({
   const handleCardClick = (key) => {
     switch (key) {
       case 'meds':
-        if (typeof onTrack === 'function') {
+        if (typeof onOpenMedicalLog === 'function') {
+          onOpenMedicalLog(child);
+        } else if (typeof onTrack === 'function') {
           onTrack(child, 'medication');
         } else {
           onQuickEntry?.(child, 'medication');

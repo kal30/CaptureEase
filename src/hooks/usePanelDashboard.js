@@ -358,6 +358,7 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
       const optimisticEntry = {
         id: entry.id || `local-${Date.now()}`,
         childId: entry.childId,
+        logCategory: isDailyCareActivity ? 'activity' : (entry.logCategory || entry.category || meta.category || meta.type),
         type: isBehaviorStyleEntry
           ? 'behavior'
           : isDailyCareActivity
@@ -811,6 +812,10 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
     }
 
     setCurrentChildId(child.id);
+
+    if (initialCategoryId === 'medication') {
+      return;
+    }
 
     if (initialCategoryId === 'sleep') {
       setSleepLogChild(child);

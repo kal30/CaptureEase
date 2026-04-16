@@ -2,17 +2,80 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   Box,
   Button,
-  Chip,
   Stack,
   Typography,
 } from '@mui/material';
-import { addDoc, collection, getDocs, query, serverTimestamp, where } from 'firebase/firestore';
+import { useNavigate } from 'react-router-dom';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { addDoc, collection, doc, getDocs, query, serverTimestamp, updateDoc, where } from 'firebase/firestore';
 import LogFormShell from '../../../components/UI/LogFormShell';
 import { normalizeMedicationDetail } from '../../../components/Dashboard/shared/childMedicationHelpers';
-import { db } from '../../../services/firebase';
+import { auth, db } from '../../../services/firebase';
+import { fetchMedications } from '../../../services/medicationService';
 import colors from '../../../assets/theme/colors';
+import MedicationBackfillDialog from './MedicationBackfillDialog';
 
 const todayKey = new Date().toDateString();
+const getMedicationTakenStorageKey = (childId) => `captureez:medication-log:${childId || 'unknown'}:${todayKey}`;
+const medicationTakenMemoryCache = typeof window !== 'undefined'
+  ? (window.__captureezMedicationTakenCache || (window.__captureezMedicationTakenCache = {}))
+  : {};
+
+const getCachedTakenEvents = (childId) => {
+  const cacheKey = getMedicationTakenStorageKey(childId);
+  const memoryValue = medicationTakenMemoryCache[cacheKey];
+  if (memoryValue && typeof memoryValue === 'object') {
+    return memoryValue;
+  }
+
+  const storedValue = readStoredTakenEvents(childId);
+  medicationTakenMemoryCache[cacheKey] = storedValue;
+  return storedValue;
+};
+
+const setCachedTakenEvents = (childId, nextMap) => {
+  const cacheKey = getMedicationTakenStorageKey(childId);
+  medicationTakenMemoryCache[cacheKey] = { ...(nextMap || {}) };
+  writeStoredTakenEvents(childId, medicationTakenMemoryCache[cacheKey]);
+};
+
+const readStoredTakenEvents = (childId) => {
+  if (typeof window === 'undefined' || !childId) {
+    return {};
+  }
+
+  try {
+    const cacheKey = getMedicationTakenStorageKey(childId);
+    const raw = window.localStorage.getItem(cacheKey) || window.sessionStorage.getItem(cacheKey);
+    if (!raw) {
+      return {};
+    }
+
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch (error) {
+    return {};
+  }
+};
+
+const writeStoredTakenEvents = (childId, nextMap) => {
+  if (typeof window === 'undefined' || !childId) {
+    return;
+  }
+
+  try {
+    const safeMap = Object.keys(nextMap || {}).reduce((acc, key) => {
+      acc[key] = true;
+      return acc;
+    }, {});
+    const serialized = JSON.stringify(safeMap);
+    const cacheKey = getMedicationTakenStorageKey(childId);
+    window.localStorage.setItem(cacheKey, serialized);
+    window.sessionStorage.setItem(cacheKey, serialized);
+  } catch (error) {
+    // Ignore storage failures; Firestore writes remain the source of record.
+  }
+};
 
 const parseTimeToMinutes = (timeValue) => {
   if (!timeValue) {
@@ -49,114 +112,159 @@ const buildEventKey = (medicationId, scheduleId, scheduleIndex, scheduleTime) =>
   [medicationId, scheduleId || scheduleIndex, scheduleTime || 'anytime'].join(':')
 );
 
-const getStatusMeta = (status) => {
-  switch (status) {
-    case 'taken':
-      return {
-        label: 'Taken',
-        bg: 'rgba(198, 239, 222, 0.92)',
-        color: '#166534',
-        border: 'rgba(134, 239, 172, 0.55)',
-      };
-    case 'missed':
-      return {
-        label: 'Missed',
-        bg: 'rgba(254, 226, 226, 0.95)',
-        color: '#b91c1c',
-        border: 'rgba(248, 113, 113, 0.48)',
-      };
-    default:
-      return {
-        label: 'Due',
-        bg: 'rgba(244, 241, 248, 0.9)',
-        color: '#4b5563',
-        border: 'rgba(217, 209, 238, 0.9)',
-      };
-  }
-};
-
 const MedicationRow = ({
   event,
   onMarkTaken,
+  onLogTime,
+  onUndo,
   savingKey,
+  canMarkTaken,
 }) => {
-  const statusMeta = getStatusMeta(event.status);
-  const isTaken = event.status === 'taken';
+  const isTaken = event.state === 'taken';
+  const isMissed = event.state === 'missed';
+  const isDue = event.state === 'due';
   const isSaving = savingKey === event.eventKey;
 
   return (
     <Box
       sx={{
         display: 'flex',
-        flexDirection: { xs: 'column', sm: 'row' },
-        alignItems: { xs: 'stretch', sm: 'center' },
+        alignItems: 'flex-start',
         justifyContent: 'space-between',
-        gap: 1,
-        px: { xs: 1.25, sm: 1.5 },
-        py: 1.1,
-        borderRadius: 3,
-        bgcolor: '#fff',
-        border: '1px solid rgba(217, 209, 238, 0.42)',
-        boxShadow: '0 1px 3px rgba(15, 23, 42, 0.03)',
+        gap: 1.25,
+        px: 0.25,
+        py: 1,
+        borderBottom: '1px solid rgba(217, 209, 238, 0.42)',
+        opacity: isTaken ? 0.72 : 1,
       }}
     >
       <Box sx={{ minWidth: 0, flex: '1 1 auto' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexWrap: 'wrap' }}>
-          <Typography sx={{ fontWeight: 800, lineHeight: 1.15, color: '#2f3440' }}>
-            {event.timeLabel}
-          </Typography>
-          <Chip
-            label={statusMeta.label}
-            size="small"
-            sx={{
-              height: 22,
-              borderRadius: 999,
-              bgcolor: statusMeta.bg,
-              color: statusMeta.color,
-              border: `1px solid ${statusMeta.border}`,
-              fontSize: '0.68rem',
-              fontWeight: 800,
-              '& .MuiChip-label': {
-                px: 0.8,
-              },
-            }}
-          />
-        </Box>
-
-        <Typography sx={{ mt: 0.5, fontWeight: 750, lineHeight: 1.2, color: '#111827' }}>
+        <Typography sx={{ fontWeight: 750, lineHeight: 1.2, color: '#111827' }}>
           {event.medicationName}
         </Typography>
 
         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.15, lineHeight: 1.25 }}>
           {[event.dose, event.unit].filter(Boolean).join(' ').trim() || 'Dose not set'}
         </Typography>
+
+        {!isTaken ? (
+          <Typography
+            variant="caption"
+            sx={{
+              display: 'inline-flex',
+              mt: 0.4,
+              color: isMissed ? '#b91c1c' : '#4b5563',
+              fontWeight: 700,
+              lineHeight: 1.1,
+            }}
+          >
+            {isMissed ? 'Missed' : isDue ? 'Due' : ''}
+          </Typography>
+        ) : null}
+        {isTaken && event.takenLate ? (
+          <Typography
+            variant="caption"
+            sx={{
+              display: 'block',
+              mt: 0.4,
+              color: '#6b7280',
+              fontWeight: 600,
+              lineHeight: 1.1,
+            }}
+          >
+            taken late
+          </Typography>
+        ) : null}
       </Box>
 
-      <Button
-        type="button"
-        variant={isTaken ? 'outlined' : 'contained'}
-        disabled={isTaken || isSaving}
-        onClick={() => onMarkTaken(event)}
-        sx={{
-          flex: '0 0 auto',
-          minHeight: 42,
-          borderRadius: 999,
-          textTransform: 'none',
-          whiteSpace: 'nowrap',
-          px: 1.6,
-          fontWeight: 800,
-          bgcolor: isTaken ? 'rgba(198, 239, 222, 0.92)' : '#D9D1EE',
-          color: isTaken ? '#166534' : '#4b3f73',
-          borderColor: isTaken ? 'rgba(134, 239, 172, 0.55)' : 'rgba(217, 209, 238, 0.92)',
-          boxShadow: 'none',
-          '&:hover': {
-            bgcolor: isTaken ? 'rgba(198, 239, 222, 0.92)' : '#cec2eb',
-            boxShadow: 'none',
-          },
-        }}
-      >
-        {isTaken ? 'Taken' : isSaving ? 'Saving…' : 'Mark taken'}
-      </Button>
+      <Stack direction="row" spacing={0.75} sx={{ flexShrink: 0, alignItems: 'center' }}>
+        {isTaken ? (
+          <>
+            <Typography
+              variant="body2"
+              sx={{
+                fontWeight: 800,
+                color: '#166534',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              ✓ Taken
+            </Typography>
+            {onUndo ? (
+              <Button
+                type="button"
+                variant="text"
+                onClick={() => onUndo(event)}
+                sx={{
+                  minWidth: 0,
+                  px: 0,
+                  py: 0,
+                  textTransform: 'none',
+                  fontWeight: 700,
+                  color: '#6b7280',
+                  lineHeight: 1,
+                  '&:hover': {
+                    bgcolor: 'transparent',
+                    textDecoration: 'underline',
+                  },
+                }}
+              >
+                Undo
+              </Button>
+            ) : null}
+          </>
+        ) : null}
+
+        {!isTaken ? (
+          <Stack direction="column" spacing={0.35} sx={{ alignItems: 'flex-end' }}>
+            <Button
+              type="button"
+              variant="text"
+              disabled={isSaving || !canMarkTaken}
+              onClick={() => onMarkTaken(event)}
+              sx={{
+                minWidth: 0,
+                px: 0,
+                py: 0,
+                textTransform: 'none',
+                fontWeight: 800,
+                color: '#6f5ea8',
+                lineHeight: 1,
+                '&:hover': {
+                  bgcolor: 'transparent',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              {isSaving ? 'Marking…' : 'Mark'}
+            </Button>
+            {onLogTime ? (
+              <Button
+                type="button"
+                variant="text"
+                disabled={isSaving || !canMarkTaken}
+                onClick={() => onLogTime(event)}
+                sx={{
+                  minWidth: 0,
+                  px: 0,
+                  py: 0,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  fontSize: '0.82rem',
+                  color: '#8b95a7',
+                  lineHeight: 1,
+                  '&:hover': {
+                    bgcolor: 'transparent',
+                    textDecoration: 'underline',
+                  },
+                }}
+              >
+                Log time
+              </Button>
+            ) : null}
+          </Stack>
+        ) : null}
+      </Stack>
     </Box>
   );
 };
@@ -165,14 +273,98 @@ const BulkMedicationLogDialog = ({
   open,
   childId,
   childName,
-  medications = [],
+  medications,
   onClose,
   onSaved,
   user,
 }) => {
+  const navigate = useNavigate();
+  const [authUser] = useAuthState(auth);
   const [loading, setLoading] = useState(false);
+  const [medicationLoading, setMedicationLoading] = useState(false);
+  const [resolvedMedications, setResolvedMedications] = useState([]);
   const [savingKey, setSavingKey] = useState(null);
   const [loggedEvents, setLoggedEvents] = useState({});
+  const [takenKeys, setTakenKeys] = useState(() => getCachedTakenEvents(childId));
+  const [showBackfillDialog, setShowBackfillDialog] = useState(false);
+  const [timeEntryPreset, setTimeEntryPreset] = useState(null);
+  const activeUser = user || authUser;
+  const providedMedications = useMemo(() => (
+    Array.isArray(medications) ? medications : []
+  ), [medications]);
+
+  const handleManageMedications = () => {
+    if (onClose) {
+      onClose();
+    }
+    navigate('/dashboard', {
+      state: {
+        openChildMedicationManager: {
+          childId,
+        },
+      },
+    });
+  };
+
+  const handleOpenBackfillDialog = () => {
+    setTimeEntryPreset(null);
+    setShowBackfillDialog(true);
+  };
+
+  const handleCloseBackfillDialog = () => {
+    setShowBackfillDialog(false);
+    setTimeEntryPreset(null);
+  };
+
+  const handleOpenTimeEntry = (event) => {
+    setTimeEntryPreset({
+      medicationId: event.medicationId,
+      scheduleId: event.scheduleId,
+      status: 'taken',
+      initialDate: new Date(),
+      initialTime: new Date().toTimeString().slice(0, 5),
+    });
+    setShowBackfillDialog(true);
+  };
+
+  useEffect(() => {
+    let active = true;
+
+    const loadActiveMedications = async () => {
+      if (!open || !childId) {
+        setResolvedMedications([]);
+        return;
+      }
+
+      if (providedMedications.length > 0) {
+        setResolvedMedications(providedMedications);
+        return;
+      }
+
+      setMedicationLoading(true);
+      try {
+        const fetched = await fetchMedications(childId, false);
+        if (active) {
+          setResolvedMedications(Array.isArray(fetched) ? fetched : []);
+        }
+      } catch (error) {
+        console.error('Error loading active medications:', error);
+        if (active) {
+          setResolvedMedications([]);
+        }
+      } finally {
+        if (active) {
+          setMedicationLoading(false);
+        }
+      }
+    };
+
+    loadActiveMedications();
+    return () => {
+      active = false;
+    };
+  }, [open, childId, providedMedications]);
+
 
   useEffect(() => {
     let active = true;
@@ -180,8 +372,11 @@ const BulkMedicationLogDialog = ({
     const loadLoggedEvents = async () => {
       if (!open || !childId) {
         setLoggedEvents({});
+        setTakenKeys({});
         return;
       }
+
+      setTakenKeys(getCachedTakenEvents(childId));
 
       setLoading(true);
       try {
@@ -199,6 +394,9 @@ const BulkMedicationLogDialog = ({
           if (data.entryDate !== todayKey) {
             return;
           }
+          if (data.status === 'deleted') {
+            return;
+          }
 
           const key = data.medicationScheduleKey || buildEventKey(
             data.medicationId,
@@ -210,7 +408,10 @@ const BulkMedicationLogDialog = ({
         });
 
         if (active) {
-          setLoggedEvents(nextMap);
+          setLoggedEvents((current) => ({
+            ...current,
+            ...nextMap,
+          }));
         }
       } catch (error) {
         console.error('Error loading daily medication logs:', error);
@@ -225,7 +426,22 @@ const BulkMedicationLogDialog = ({
     return () => {
       active = false;
     };
-  }, [open, childId, medications]);
+  }, [open, childId]);
+
+  useEffect(() => {
+    if (!open) {
+      setShowBackfillDialog(false);
+    }
+  }, [open]);
+
+  useEffect(() => {
+    if (!childId) {
+      return undefined;
+    }
+
+    setCachedTakenEvents(childId, takenKeys);
+    return undefined;
+  }, [childId, takenKeys]);
 
   const scheduledEvents = useMemo(() => {
     const nowMinutes = (() => {
@@ -233,9 +449,12 @@ const BulkMedicationLogDialog = ({
       return now.getHours() * 60 + now.getMinutes();
     })();
 
-    const events = (Array.isArray(medications) ? medications : [])
+    const events = (Array.isArray(resolvedMedications) ? resolvedMedications : [])
       .filter((medication) => !medication.isArchived)
-      .map((medication) => normalizeMedicationDetail(medication))
+      .map((medication, medicationIndex) => normalizeMedicationDetail(
+        medication,
+        medication.id || `med-${medicationIndex}`
+      ))
       .filter((medication) => medication.name)
       .flatMap((medication) => {
         const schedules = Array.isArray(medication.schedules) && medication.schedules.length
@@ -245,9 +464,14 @@ const BulkMedicationLogDialog = ({
         return schedules.map((schedule, scheduleIndex) => {
           const timeMinutes = parseTimeToMinutes(schedule.time);
           const eventKey = buildEventKey(medication.id, schedule.id, scheduleIndex, schedule.time);
-          const isLogged = Boolean(loggedEvents[eventKey]);
-          const isFuture = timeMinutes !== null ? timeMinutes > nowMinutes : false;
-
+          const loggedEvent = loggedEvents[eventKey];
+          const isTaken = Boolean(loggedEvent || takenKeys[eventKey]);
+          const state = isTaken ? 'taken' : (timeMinutes !== null && timeMinutes < nowMinutes ? 'missed' : 'due');
+          const takenLate = Boolean(
+            loggedEvent?.takenAt
+            && loggedEvent?.scheduledFor
+            && new Date(loggedEvent.takenAt).getTime() > new Date(loggedEvent.scheduledFor).getTime()
+          );
           return {
             eventKey,
             medicationId: medication.id,
@@ -259,14 +483,17 @@ const BulkMedicationLogDialog = ({
             medicationName: medication.name,
             dose: schedule.dose || medication.dose || '',
             unit: schedule.unit || medication.unit || 'mg',
-            status: isLogged ? 'taken' : (isFuture ? 'due' : 'missed'),
+            state,
+            isTaken,
+            takenLate,
+            loggedEvent,
           };
         });
       })
       .sort((a, b) => a.timeMinutes - b.timeMinutes || a.medicationName.localeCompare(b.medicationName));
 
     return events;
-  }, [loggedEvents, medications]);
+  }, [loggedEvents, resolvedMedications, takenKeys]);
 
   const groupedEvents = useMemo(() => {
     const groups = [];
@@ -284,71 +511,252 @@ const BulkMedicationLogDialog = ({
     return groups;
   }, [scheduledEvents]);
 
+  const persistTakenLog = async (event) => {
+    const loggedDocData = buildTakenLogData(event);
+    const docRef = await addDoc(collection(db, 'dailyLogs'), loggedDocData);
+    await updateDoc(doc(db, 'dailyLogs', docRef.id), {
+      status: 'taken',
+    });
+
+    const nextLoggedEvent = {
+      id: docRef.id,
+      ...loggedDocData,
+      status: 'taken',
+    };
+
+    setLoggedEvents((current) => ({
+      ...current,
+      [event.eventKey]: nextLoggedEvent,
+    }));
+    setTakenKeys((current) => {
+      const next = {
+        ...current,
+        [event.eventKey]: true,
+      };
+      setCachedTakenEvents(childId, next);
+      return next;
+    });
+    window.dispatchEvent(new CustomEvent('captureez:timeline-entry-created', {
+      detail: {
+        id: docRef.id,
+        collection: 'dailyLogs',
+        childId,
+        ...loggedDocData,
+      },
+    }));
+
+    return { docRef, loggedDocData };
+  };
+
+  const buildTakenLogData = (event) => {
+    const now = new Date();
+    const scheduledFor = (() => {
+      if (!event.time) {
+        return null;
+      }
+
+      const [hours, minutes] = event.time.split(':').map((value) => Number(value));
+      if (Number.isNaN(hours) || Number.isNaN(minutes)) {
+        return null;
+      }
+
+      const scheduled = new Date();
+      scheduled.setHours(hours, minutes, 0, 0);
+      return scheduled;
+    })();
+
+    const loggedDocData = {
+      childId,
+      createdBy: activeUser.uid,
+      createdAt: serverTimestamp(),
+      status: 'active',
+      category: 'medication',
+      source: 'medication_schedule_log',
+      text: `Gave ${event.medicationName} ${[event.dose, event.unit].filter(Boolean).join(' ').trim()}`.trim(),
+      timestamp: now,
+      timestampUtc: now.toISOString(),
+      entryDate: todayKey,
+      authorId: activeUser.uid,
+      authorName: activeUser.displayName || activeUser.email?.split('@')[0] || 'User',
+      authorEmail: activeUser.email,
+      medicationId: event.medicationId,
+      medicationScheduleId: event.scheduleId,
+      medicationScheduleIndex: event.scheduleIndex,
+      medicationScheduleKey: event.eventKey,
+      medicationScheduleTime: event.time,
+      medicationScheduleDose: event.dose,
+      medicationScheduleUnit: event.unit,
+      medicationName: event.medicationName,
+      scheduledFor: scheduledFor ? scheduledFor.toISOString() : null,
+      takenAt: now.toISOString(),
+    };
+
+    return loggedDocData;
+  };
+
   const handleMarkTaken = async (event) => {
-    if (!childId || !user?.uid || loggedEvents[event.eventKey] || savingKey === event.eventKey) {
+    if (
+      !childId
+      || !activeUser?.uid
+      || takenKeys[event.eventKey]
+      || savingKey === event.eventKey
+    ) {
       return;
     }
 
-    setSavingKey(event.eventKey);
-    try {
-      const now = new Date();
-      const loggedDocData = {
-        childId,
-        createdBy: user.uid,
-        createdAt: serverTimestamp(),
-        status: 'active',
-        category: 'medication',
-        source: 'medication_schedule_log',
-        text: `Gave ${event.medicationName} ${[event.dose, event.unit].filter(Boolean).join(' ').trim()}`.trim(),
-        timestamp: now,
-        timestampUtc: now.toISOString(),
-        entryDate: todayKey,
-        authorId: user.uid,
-        authorName: user.displayName || user.email?.split('@')[0] || 'User',
-        authorEmail: user.email,
-        medicationId: event.medicationId,
-        medicationScheduleId: event.scheduleId,
-        medicationScheduleIndex: event.scheduleIndex,
-        medicationScheduleKey: event.eventKey,
-        medicationScheduleTime: event.time,
-        medicationScheduleDose: event.dose,
-        medicationScheduleUnit: event.unit,
-        medicationName: event.medicationName,
-      };
+    const optimisticLog = {
+      id: `optimistic-${event.eventKey}`,
+      ...buildTakenLogData(event),
+      status: 'taken',
+    };
 
-      const docRef = await addDoc(collection(db, 'dailyLogs'), loggedDocData);
-      setLoggedEvents((current) => ({
+    setSavingKey(event.eventKey);
+    setLoggedEvents((current) => ({
+      ...current,
+      [event.eventKey]: optimisticLog,
+    }));
+    setTakenKeys((current) => {
+      const next = {
         ...current,
-        [event.eventKey]: { id: docRef.id, ...loggedDocData },
-      }));
+        [event.eventKey]: true,
+      };
+      setCachedTakenEvents(childId, next);
+      return next;
+    });
+
+    try {
+      await persistTakenLog(event);
       onSaved?.({
         eventKey: event.eventKey,
         medicationName: event.medicationName,
         time: event.timeLabel,
       });
-      window.dispatchEvent(new CustomEvent('captureez:timeline-entry-created', {
-        detail: {
-          id: docRef.id,
-          collection: 'dailyLogs',
-          childId,
-          ...loggedDocData,
-        },
-      }));
     } catch (error) {
       console.error('Error logging medication dose:', error);
+      setLoggedEvents((current) => {
+        const next = { ...current };
+        delete next[event.eventKey];
+        return next;
+      });
+      setTakenKeys((current) => {
+        const next = { ...current };
+        delete next[event.eventKey];
+        setCachedTakenEvents(childId, next);
+        return next;
+      });
     } finally {
       setSavingKey(null);
     }
   };
 
-  const eventCount = scheduledEvents.length;
+  const handleUndo = async (event) => {
+    const loggedEvent = loggedEvents[event.eventKey];
+    if (!loggedEvent?.id || savingKey === event.eventKey) {
+      return;
+    }
+
+    const previousLog = loggedEvent;
+    setSavingKey(event.eventKey);
+    setLoggedEvents((current) => {
+      const next = { ...current };
+      delete next[event.eventKey];
+      return next;
+    });
+    setTakenKeys((current) => {
+      const next = { ...current };
+      delete next[event.eventKey];
+      setCachedTakenEvents(childId, next);
+      return next;
+    });
+    try {
+      await updateDoc(doc(db, 'dailyLogs', loggedEvent.id), {
+        status: 'deleted',
+      });
+    } catch (error) {
+      console.error('Error undoing medication dose:', error);
+      setLoggedEvents((current) => ({
+        ...current,
+        [event.eventKey]: previousLog,
+      }));
+      setTakenKeys((current) => {
+        const next = {
+          ...current,
+          [event.eventKey]: true,
+        };
+        setCachedTakenEvents(childId, next);
+        return next;
+      });
+    } finally {
+      setSavingKey(null);
+    }
+  };
+
+  const handleMarkAllTaken = async (group) => {
+    if (!childId || !activeUser?.uid) {
+      return;
+    }
+
+    const pendingEvents = group.events.filter((event) => !loggedEvents[event.eventKey] && !takenKeys[event.eventKey]);
+    if (pendingEvents.length === 0) {
+      return;
+    }
+
+    setLoggedEvents((current) => {
+      const next = { ...current };
+      pendingEvents.forEach((event) => {
+        next[event.eventKey] = {
+          id: `optimistic-${event.eventKey}`,
+          ...buildTakenLogData(event),
+          status: 'taken',
+        };
+      });
+      return next;
+    });
+    setTakenKeys((current) => {
+      const next = { ...current };
+      pendingEvents.forEach((event) => {
+        next[event.eventKey] = true;
+      });
+      setCachedTakenEvents(childId, next);
+      return next;
+    });
+
+    try {
+      const results = await Promise.allSettled(
+        pendingEvents.map((event) => persistTakenLog(event))
+      );
+      const failedEvents = pendingEvents.filter((_, index) => results[index].status === 'rejected');
+
+      if (failedEvents.length > 0) {
+        console.error('Error marking some medication doses as taken:', failedEvents);
+        setLoggedEvents((current) => {
+          const next = { ...current };
+          failedEvents.forEach((event) => {
+            delete next[event.eventKey];
+          });
+          return next;
+        });
+        setTakenKeys((current) => {
+          const next = { ...current };
+          failedEvents.forEach((event) => {
+            delete next[event.eventKey];
+          });
+          setCachedTakenEvents(childId, next);
+          return next;
+        });
+      }
+    } catch (error) {
+      console.error('Error marking all medication doses as taken:', error);
+    }
+  };
 
   return (
-    <LogFormShell
+    <>
+      <LogFormShell
       open={open}
       onClose={onClose}
-      title="Medication log"
-      subtitle={childName ? `${childName} • today's scheduled doses` : "Today's scheduled doses"}
+      title="Today’s medications"
+      subtitle="Tap to mark doses as taken"
       titleBadge={childName || undefined}
       compactTitle
       mobileBreakpoint="md"
@@ -363,70 +771,118 @@ const BulkMedicationLogDialog = ({
       }}
     >
       <Stack spacing={1.25}>
-        <Box
+        <Button
+          type="button"
+          variant="text"
+          onClick={handleManageMedications}
           sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 1,
-            px: 0.25,
+            alignSelf: 'flex-start',
+            minWidth: 0,
+            px: 0,
+            py: 0,
+            textTransform: 'none',
+            fontWeight: 650,
+            color: '#6b7280',
+            '&:hover': {
+              bgcolor: 'transparent',
+              textDecoration: 'underline',
+            },
           }}
         >
-          <Typography sx={{ fontWeight: 800, color: '#2f3440' }}>
-            {eventCount > 0 ? `${eventCount} scheduled doses today` : 'No scheduled doses today'}
-          </Typography>
-          <Chip
-            label={loading ? 'Loading…' : 'Today'}
-            size="small"
-            sx={{
-              height: 24,
-              borderRadius: 999,
-              bgcolor: 'rgba(244, 241, 248, 0.82)',
-              color: colors.brand.deep,
-              border: '1px solid rgba(217, 209, 238, 0.75)',
-              fontWeight: 700,
-            }}
-          />
-        </Box>
+          Manage medications →
+        </Button>
 
-        {groupedEvents.length > 0 ? (
+        <Button
+          type="button"
+          variant="text"
+          onClick={handleOpenBackfillDialog}
+          sx={{
+            alignSelf: 'flex-start',
+            minWidth: 0,
+            px: 0,
+            py: 0,
+            textTransform: 'none',
+            fontWeight: 650,
+            color: '#6b7280',
+            '&:hover': {
+              bgcolor: 'transparent',
+              textDecoration: 'underline',
+            },
+          }}
+        >
+          Missed something earlier? Log it →
+        </Button>
+
+        {(loading || medicationLoading) ? (
+          <Box sx={{ py: 4, textAlign: 'center' }}>
+            <Typography sx={{ fontWeight: 700, color: '#6b7280' }}>
+              Loading today&apos;s doses…
+            </Typography>
+          </Box>
+        ) : groupedEvents.length > 0 ? (
           <Stack spacing={1.15}>
-            {groupedEvents.map((group) => (
-              <Box key={group.time} sx={{ minWidth: 0 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.75, px: 0.25 }}>
-                  <Typography sx={{ fontWeight: 800, color: colors.brand.navy }}>
-                    {group.time}
-                  </Typography>
-                  <Chip
-                    label={`${group.events.length} dose${group.events.length === 1 ? '' : 's'}`}
-                    size="small"
-                    sx={{
-                      height: 22,
-                      borderRadius: 999,
-                      bgcolor: 'rgba(236, 232, 245, 0.95)',
-                      color: colors.brand.deep,
-                      border: '1px solid rgba(217, 209, 238, 0.9)',
-                      fontSize: '0.68rem',
-                      fontWeight: 800,
-                      '& .MuiChip-label': {
-                        px: 0.8,
-                      },
-                    }}
-                  />
-                </Box>
+            {groupedEvents.map((group) => {
+              const completedCount = group.events.filter((event) => event.state === 'taken').length;
+              const allTaken = completedCount === group.events.length;
 
-                <Stack spacing={0.85}>
-                  {group.events.map((event) => (
-                    <MedicationRow
-                      key={event.eventKey}
-                      event={event}
-                      onMarkTaken={handleMarkTaken}
-                      savingKey={savingKey}
-                    />
-                  ))}
-                </Stack>
-              </Box>
-            ))}
+              return (
+                <Box key={group.time} sx={{ minWidth: 0 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, mb: 0.65, px: 0.25 }}>
+                    <Typography sx={{ fontWeight: 800, color: colors.brand.navy, lineHeight: 1.2 }}>
+                      {group.time} • {group.events.length} dose{group.events.length === 1 ? '' : 's'}
+                    </Typography>
+                    {allTaken ? (
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          fontWeight: 800,
+                          color: '#166534',
+                          lineHeight: 1.1,
+                        }}
+                      >
+                        ✓ All taken
+                      </Typography>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="text"
+                        onClick={() => handleMarkAllTaken(group)}
+                        disabled={loading || medicationLoading}
+                        sx={{
+                          minWidth: 0,
+                          px: 0,
+                          py: 0,
+                          textTransform: 'none',
+                          fontWeight: 700,
+                          color: '#6f5ea8',
+                          lineHeight: 1.1,
+                          '&:hover': {
+                            bgcolor: 'transparent',
+                            textDecoration: 'underline',
+                          },
+                        }}
+                      >
+                        Mark all
+                      </Button>
+                    )}
+                  </Box>
+
+                  <Stack spacing={0}>
+                    {group.events.map((event) => (
+                      <MedicationRow
+                        key={event.eventKey}
+                        event={event}
+                        onMarkTaken={handleMarkTaken}
+                        onLogTime={handleOpenTimeEntry}
+                        onUndo={handleUndo}
+                        savingKey={savingKey}
+                        canMarkTaken={Boolean(activeUser?.uid)}
+                      />
+                    ))}
+                  </Stack>
+                </Box>
+              );
+            })}
           </Stack>
         ) : (
           <Box
@@ -448,7 +904,22 @@ const BulkMedicationLogDialog = ({
           </Box>
         )}
       </Stack>
-    </LogFormShell>
+      </LogFormShell>
+
+      <MedicationBackfillDialog
+        open={showBackfillDialog}
+        childId={childId}
+        childName={childName}
+        medications={resolvedMedications}
+        initialMedicationId={timeEntryPreset?.medicationId || ''}
+        initialScheduleId={timeEntryPreset?.scheduleId || ''}
+        initialStatus={timeEntryPreset?.status || 'taken'}
+        initialDate={timeEntryPreset?.initialDate || null}
+        initialTime={timeEntryPreset?.initialTime || ''}
+        onClose={handleCloseBackfillDialog}
+        onSaved={onSaved}
+      />
+    </>
   );
 };
 

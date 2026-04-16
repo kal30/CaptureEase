@@ -78,6 +78,7 @@ export const useUnifiedDailyLog = (timelineEntries = [], incidents = [], selecte
 
         return {
           ...entry,
+          logCategory: entry.logCategory || inferredCategory || entry.category,
           category: inferredCategory || entry.category,
           entryType: isBehaviorIncident ? 'incident' : entry.type, // Keep original type (daily_note, mood_log, etc.)
           label: entry.label || displayLabel,

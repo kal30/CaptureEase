@@ -340,16 +340,25 @@ const inferBathroomCategory = (entry = {}) => {
   return BATHROOM_KEYWORDS.some((keyword) => haystack.includes(keyword));
 };
 
+const BEHAVIOR_IDENTIFIERS = new Set(['behavior', 'behavioral']);
+
 export const isBehaviorIncidentEntry = (entry = {}) => Boolean(
-  entry?.incidentStyle ||
-  entry?.entryType === 'incident' ||
-  entry?.incidentData ||
-  (entry?.collection === 'dailyLogs' && (
-    entry?.severity != null ||
-    entry?.triggerSummary ||
-    entry?.notes ||
-    entry?.remedy
-  ))
+  (
+    entry?.logCategory && String(entry.logCategory).toLowerCase() !== 'behavior'
+      ? false
+      : (
+        entry?.incidentStyle ||
+        entry?.entryType === 'incident' ||
+        entry?.incidentData ||
+        BEHAVIOR_IDENTIFIERS.has(String(entry?.category || '').toLowerCase()) ||
+        BEHAVIOR_IDENTIFIERS.has(String(entry?.timelineType || '').toLowerCase()) ||
+        BEHAVIOR_IDENTIFIERS.has(String(entry?.type || '').toLowerCase()) ||
+        BEHAVIOR_IDENTIFIERS.has(String(entry?.categoryLabel || '').toLowerCase()) ||
+        BEHAVIOR_IDENTIFIERS.has(String(entry?.titlePrefix || '').toLowerCase()) ||
+        BEHAVIOR_IDENTIFIERS.has(String(entry?.incidentCategoryId || '').toLowerCase()) ||
+        BEHAVIOR_IDENTIFIERS.has(String(entry?.label || '').toLowerCase())
+      )
+  )
 );
 
 export const getLogTypeByEntry = (entry = {}) => {
@@ -357,14 +366,15 @@ export const getLogTypeByEntry = (entry = {}) => {
     return LOG_TYPES.log;
   }
 
-  if (isBehaviorIncidentEntry(entry)) {
-    return LOG_TYPES.behavior;
+  const directCategory = entry.logCategory || entry.category || entry.timelineType || entry.type;
+  const directType = getLogTypeByCategory(directCategory);
+
+  if (directCategory && (directType !== LOG_TYPES.log || directCategory === 'log')) {
+    return directType;
   }
 
-  const directCategory = entry.category || entry.timelineType || entry.type;
-  const directType = getLogTypeByCategory(directCategory);
-  if (directType !== LOG_TYPES.log || directCategory === 'log') {
-    return directType;
+  if (isBehaviorIncidentEntry(entry)) {
+    return LOG_TYPES.behavior;
   }
 
   if (inferBathroomCategory(entry)) {

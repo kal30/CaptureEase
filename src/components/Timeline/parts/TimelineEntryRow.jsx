@@ -63,6 +63,7 @@ const TimelineEntryRow = ({
   const actionsOpen = Boolean(actionsAnchorEl);
   const hasInitials = Boolean(initials);
   const hasMetaBadge = Boolean(metaBadge);
+  const isMedicationRow = kind === 'meds';
 
   const renderMetaBadge = () => {
     if (!hasMetaBadge) {
@@ -268,14 +269,13 @@ const TimelineEntryRow = ({
       role="listitem"
       aria-label={`${label}${time ? ` at ${time}` : ''}`}
       sx={{
-        position: 'relative',
         width: '100%',
         display: 'flex',
-        alignItems: 'stretch',
-        gap: { xs: 1, sm: 1.2 },
-        pl: { xs: 2, sm: 2.5 },
-        pr: { xs: 1.2, sm: 1.5 },
-        py: { xs: 0.75, sm: 0.95 },
+        alignItems: 'center',
+        gap: { xs: 0.9, sm: 1.05 },
+        pl: { xs: 1.5, sm: 1.75 },
+        pr: { xs: 2, sm: 2.25 },
+        py: { xs: 0.6, sm: 0.78 },
         mb: 0,
         backgroundColor: '#FFFFFF',
         borderBottom: isLast ? 'none' : '1px solid rgba(226, 232, 240, 0.95)',
@@ -283,15 +283,11 @@ const TimelineEntryRow = ({
         overflow: 'visible',
       }}
     >
-      {/* Icon on border */}
       <Box
         sx={{
-          position: 'absolute',
-          left: '-12px',
-          top: '50%',
-          transform: 'translateY(-50%)',
-          width: 24,
-          height: 24,
+          flex: '0 0 auto',
+          width: 28,
+          height: 28,
           borderRadius: '50%',
           border: `2px solid ${accentColor}`,
           color: accentColor,
@@ -302,152 +298,75 @@ const TimelineEntryRow = ({
           fontSize: '0.84rem',
           lineHeight: 1,
           flexShrink: 0,
-          zIndex: 1,
+          boxSizing: 'border-box',
         }}
       >
         {icon}
       </Box>
 
-      {/* Main content area */}
       <Box
         sx={{
           minWidth: 0,
           flex: '1 1 auto',
           display: 'flex',
           flexDirection: 'column',
-          gap: 0.45,
+          gap: 0.3,
+          justifyContent: 'center',
         }}
       >
-        {/* Header: time, label, meta, actions */}
+        {time ? (
+          <Typography
+            variant="caption"
+            sx={{
+              color: 'text.secondary',
+              fontSize: '0.62rem',
+              fontFamily: 'monospace',
+              fontWeight: 700,
+              lineHeight: 1,
+              whiteSpace: 'nowrap',
+              letterSpacing: '0.02em',
+            }}
+          >
+            {time}
+          </Typography>
+        ) : null}
+
         <Box
           sx={{
             display: 'flex',
-            alignItems: 'flex-start',
-            justifyContent: 'space-between',
-            gap: 0.75,
-            width: '100%',
+            alignItems: 'center',
+            gap: 0.55,
+            flexWrap: 'wrap',
             minWidth: 0,
           }}
         >
-          {/* Time and label section */}
-          <Box
+          <Typography
+            component="span"
             sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 0.3,
-              minWidth: 0,
-              flex: '0 1 auto',
+              fontSize: isMedicationRow ? '0.84rem' : '0.88rem',
+              fontWeight: 800,
+              color: '#1F2937',
+              lineHeight: 1.15,
             }}
           >
-            {time ? (
-              <Typography
-                variant="caption"
-                sx={{
-                  color: 'text.secondary',
-                  fontSize: '0.65rem',
-                  fontFamily: 'monospace',
-                  fontWeight: 700,
-                  lineHeight: 1,
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {time}
-              </Typography>
-            ) : null}
-
-            {/* Label row with subtype and initials */}
-            <Box
+            {label}
+          </Typography>
+          {renderSubtype()}
+          {hasInitials ? (
+            <Chip
+              label={initials}
+              size="small"
               sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 0.55,
-                flexWrap: 'wrap',
-                minWidth: 0,
+                height: 24,
+                fontSize: '0.62rem',
+                fontWeight: 800,
+                bgcolor: '#FFFFFF',
+                color: 'text.secondary',
+                border: '1px solid',
+                borderColor: 'rgba(203, 213, 225, 0.95)',
               }}
-            >
-              <Typography
-                component="span"
-                sx={{
-                  fontSize: '0.88rem',
-                  fontWeight: 800,
-                  color: '#1F2937',
-                  lineHeight: 1.2,
-                }}
-              >
-                {label}
-              </Typography>
-              {renderSubtype()}
-              {hasInitials ? (
-                <Chip
-                  label={initials}
-                  size="small"
-                  sx={{
-                    height: 24,
-                    fontSize: '0.62rem',
-                    fontWeight: 800,
-                    bgcolor: '#FFFFFF',
-                    color: 'text.secondary',
-                    border: '1px solid',
-                    borderColor: 'rgba(203, 213, 225, 0.95)',
-                  }}
-                />
-              ) : null}
-            </Box>
-          </Box>
-
-          {/* Right side: meta badge and actions */}
-          <Stack
-            direction="row"
-            spacing={0.35}
-            sx={{
-              flexShrink: 0,
-              alignItems: 'center',
-              justifyContent: 'flex-end',
-            }}
-          >
-            {renderMetaBadge()}
-            {showActions ? (
-              <>
-                <IconButton
-                  size="small"
-                  onClick={handleMenuOpen}
-                  disabled={actionMenuDisabled || (!onEditEntry && !onDeleteEntry)}
-                  sx={{
-                    width: 26,
-                    height: 26,
-                    borderRadius: 0.75,
-                    bgcolor: '#FFFFFF',
-                    color: 'text.secondary',
-                    border: '1px solid',
-                    borderColor: 'rgba(203, 213, 225, 0.95)',
-                    pr: 0.5,
-                  }}
-                  aria-label="Entry actions"
-                >
-                  <MoreVertIcon sx={{ fontSize: 16 }} />
-                </IconButton>
-                <Menu
-                  anchorEl={actionsAnchorEl}
-                  open={actionsOpen}
-                  onClose={handleMenuClose}
-                  onClick={handleMenuClose}
-                >
-                  <MenuItem onClick={handleEditClick} disabled={!onEditEntry || actionMenuDisabled}>
-                    <EditIcon sx={{ fontSize: 16, mr: 1, color: 'text.secondary' }} />
-                    Edit
-                  </MenuItem>
-                  <MenuItem
-                    onClick={handleDeleteClick}
-                    disabled={!onDeleteEntry || actionMenuDisabled}
-                    sx={{ color: '#B42318' }}
-                  >
-                    <DeleteIcon sx={{ fontSize: 16, mr: 1 }} />
-                    Delete
-                  </MenuItem>
-                </Menu>
-              </>
-            ) : null}
-          </Stack>
+            />
+          ) : null}
         </Box>
 
         {/* Content area */}
@@ -475,13 +394,13 @@ const TimelineEntryRow = ({
                 variant="body2"
                 sx={{
                   color: '#475569',
-                  fontSize: '0.88rem',
-                  lineHeight: 1.35,
-                  fontWeight: 600,
+                  fontSize: isMedicationRow ? '0.84rem' : '0.88rem',
+                  lineHeight: 1.3,
+                  fontWeight: isMedicationRow ? 700 : 600,
                   whiteSpace: 'normal',
                   wordBreak: 'break-word',
                   display: '-webkit-box',
-                  WebkitLineClamp: 2,
+                  WebkitLineClamp: isMedicationRow ? 1 : 2,
                   WebkitBoxOrient: 'vertical',
                   overflow: 'hidden',
                 }}
@@ -568,6 +487,69 @@ const TimelineEntryRow = ({
           </>
         )}
       </Box>
+
+      <Stack
+        direction="row"
+        spacing={0.5}
+          sx={{
+            flex: '0 0 auto',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            minWidth: 0,
+            ml: 0.75,
+          }}
+      >
+        {renderMetaBadge()}
+        {showActions ? (
+          <>
+            <IconButton
+              size="medium"
+              onClick={handleMenuOpen}
+              disabled={actionMenuDisabled || (!onEditEntry && !onDeleteEntry)}
+              sx={{
+                width: 40,
+                height: 40,
+                borderRadius: 1.2,
+                bgcolor: 'transparent',
+                color: 'text.secondary',
+                border: '1px solid',
+                borderColor: 'transparent',
+                flexShrink: 0,
+                boxShadow: 'none',
+                '& .MuiSvgIcon-root': {
+                  fontSize: 18,
+                },
+                '&:hover': {
+                  bgcolor: alpha('#64748B', 0.06),
+                  borderColor: alpha('#64748B', 0.10),
+                },
+              }}
+              aria-label="Entry actions"
+            >
+              <MoreVertIcon />
+            </IconButton>
+            <Menu
+              anchorEl={actionsAnchorEl}
+              open={actionsOpen}
+              onClose={handleMenuClose}
+              onClick={handleMenuClose}
+            >
+              <MenuItem onClick={handleEditClick} disabled={!onEditEntry || actionMenuDisabled}>
+                <EditIcon sx={{ fontSize: 16, mr: 1, color: 'text.secondary' }} />
+                Edit
+              </MenuItem>
+              <MenuItem
+                onClick={handleDeleteClick}
+                disabled={!onDeleteEntry || actionMenuDisabled}
+                sx={{ color: '#B42318' }}
+              >
+                <DeleteIcon sx={{ fontSize: 16, mr: 1 }} />
+                Delete
+              </MenuItem>
+            </Menu>
+          </>
+        ) : null}
+      </Stack>
 
       {isEditing ? (
         <Stack direction="row" spacing={0.4} sx={{ flexShrink: 0, alignItems: 'flex-start', mt: 0.1 }}>

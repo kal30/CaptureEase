@@ -267,6 +267,7 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
       const triggerSummary = entry.triggerSummary || entry.incidentData?.triggerSummary || null;
       const optimisticDailyLog = {
         ...entry,
+        logCategory: categoryMeta.category || entry.logCategory || categoryMeta.type,
         timestamp: entryTimestamp,
         type: isBehaviorStyleEntry
           ? 'behavior'
@@ -452,6 +453,7 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
 
         return {
           id: dailyLog.id,
+          logCategory: categoryType.category,
           type: isBehaviorIncident ? 'behavior' : categoryMeta.type,
           timelineType: isBehaviorIncident ? 'incident' : categoryMeta.timelineType,
           collection: 'dailyLogs',

@@ -5,9 +5,11 @@ import {
   Chip,
   Divider,
   Popover,
+  Snackbar,
   Stack,
   Typography,
   ButtonBase,
+  Alert,
 } from '@mui/material';
 import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -160,6 +162,27 @@ const formatSleepTimestamp = (timestamp) => {
 
 const getDefaultNotes = () => ({ text: '', mediaFile: null, audioBlob: null });
 
+const formatRecordedSleepLabel = (dateValue, timeValue) => {
+  const date = dateValue instanceof Date && !Number.isNaN(dateValue.getTime())
+    ? dateValue
+    : new Date();
+
+  const [hours, minutes] = String(timeValue || '00:00').split(':').map((value) => Number(value));
+  const recordedTime = new Date(date);
+  if (!Number.isNaN(hours) && !Number.isNaN(minutes)) {
+    recordedTime.setHours(hours, minutes, 0, 0);
+  }
+
+  return `${recordedTime.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })} at ${recordedTime.toLocaleTimeString([], {
+    hour: 'numeric',
+    minute: '2-digit',
+  })}`;
+};
+
 const SleepLogSheet = ({ open, onClose, child }) => {
   const [user] = useAuthState(auth);
   const { childName } = useChildName(child?.id);
@@ -172,6 +195,8 @@ const SleepLogSheet = ({ open, onClose, child }) => {
   const [notesClearToken, setNotesClearToken] = useState(0);
   const [saving, setSaving] = useState(false);
   const [datePickerAnchor, setDatePickerAnchor] = useState(null);
+  const [confirmationOpen, setConfirmationOpen] = useState(false);
+  const [confirmationMessage, setConfirmationMessage] = useState('');
 
   useEffect(() => {
     if (!open) return;
@@ -290,6 +315,8 @@ const SleepLogSheet = ({ open, onClose, child }) => {
         },
       }));
 
+      setConfirmationMessage(`Sleep recorded for ${formatRecordedSleepLabel(nightOfDate, bedtime)}`);
+      setConfirmationOpen(true);
       setNotesClearToken((token) => token + 1);
       onClose?.();
     } catch (error) {
@@ -499,6 +526,22 @@ const SleepLogSheet = ({ open, onClose, child }) => {
           </Typography>
         </Box>
       </Stack>
+
+      <Snackbar
+        open={confirmationOpen}
+        autoHideDuration={4500}
+        onClose={() => setConfirmationOpen(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={() => setConfirmationOpen(false)}
+          severity="success"
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {confirmationMessage}
+        </Alert>
+      </Snackbar>
     </LocalizationProvider>
   );
 

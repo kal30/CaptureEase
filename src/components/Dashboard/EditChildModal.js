@@ -29,7 +29,7 @@ import {
 } from "./shared/childMedicationHelpers";
 import { archiveMedicationRecord, saveMedicationRecord } from "./shared/medicationPersistence";
 
-const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
+const EditChildModal = ({ open, onClose, child, onSuccess, userRole, initialStep = 1, onViewTodayMedications }) => {
   const { t } = useTranslation(['terms', 'common']);
   const storage = getStorage();
   const documentInputRefs = useRef({});
@@ -83,13 +83,13 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
   });
 
   useEffect(() => {
-    if (open && child) {
+    if (open && child?.id) {
       setName(child.name || "");
       setAge(child.age || "");
       setPhotoURL(child.photoURL || null);
       setSelectedConditions(child.concerns || child.conditions || []);
       setStage("intake");
-      setCurrentStep(1);
+      setCurrentStep(initialStep || 1);
       
       // Load medical profile if it exists
       const medicalProfile = child.medicalProfile || {};
@@ -122,7 +122,7 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
       // Reset form hook state when child data loads
       childForm.reset();
     }
-  }, [open, child?.id, childForm.reset]);
+  }, [open, child?.id, initialStep, childForm.reset]);
 
   const resetForm = () => {
     setStage("intake");
@@ -606,6 +606,33 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
       />
   );
 
+  const renderMedicationHeaderAction = () => (
+    <Button
+      type="button"
+      variant="text"
+      onClick={() => {
+        if (child?.id) {
+          onViewTodayMedications?.(child);
+        }
+      }}
+      sx={{
+        minWidth: 0,
+        px: 0,
+        py: 0,
+        textTransform: "none",
+        fontWeight: 700,
+        color: colors.brand.deep,
+        justifyContent: "flex-start",
+        "&:hover": {
+          bgcolor: "transparent",
+          textDecoration: "underline",
+        },
+      }}
+    >
+      View today&apos;s medications
+    </Button>
+  );
+
   const handleWizardBack = () => {
     setCurrentStep((current) => Math.max(1, current - 1));
   };
@@ -710,6 +737,7 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
         setCommunicationNeeds={setCommunicationNeeds}
         renderDocumentDropZone={renderDocumentDropZone}
         renderMedicationDetails={renderMedicationDetails}
+        renderMedicationHeaderAction={renderMedicationHeaderAction}
         medicationDetails={medicationDetails}
         uploadedDocuments={uploadedDocuments}
         openSections={openSections}

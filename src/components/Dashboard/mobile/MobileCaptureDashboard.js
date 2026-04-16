@@ -620,6 +620,7 @@ const MobileCaptureDashboard = ({
         <DashboardActionBoard
           child={activeChild}
           onTrack={onTrack}
+          onOpenMedicalLog={onOpenMedicalLog}
           onOpenSleepLog={onOpenSleepLog}
           onOpenFoodLog={onOpenFoodLog}
           onOpenBathroomLog={onOpenBathroomLog}
