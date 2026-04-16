@@ -3,6 +3,7 @@ import {
   Box,
   Typography,
   Button,
+  LinearProgress,
   Stack,
 } from "@mui/material";
 import { useTranslation } from 'react-i18next';
@@ -17,20 +18,16 @@ import { doc, updateDoc } from "firebase/firestore";
 import { db } from "../../services/firebase";
 import { USER_ROLES } from "../../constants/roles";
 import ChildProfileFlowContent from "./shared/ChildProfileFlowContent";
-import MedicationDetailCard from "./shared/MedicationDetailCard";
-import {
-  LogFormShell,
-  ThemeSpacing,
-} from "../UI";
+import ChildMedicationManager from "./shared/ChildMedicationManager";
+import { LogFormShell } from "../UI";
 import { useAsyncForm } from "../../hooks/useAsyncForm";
 import { getChildProfileCompletion } from "../../utils/profileCompletion";
 import {
   createMedicationDetail,
-  getMedicationDefaultRoute,
   normalizeMedicationDetail,
   summarizeMedicationDetail,
 } from "./shared/childMedicationHelpers";
-import { saveMedicationRecord } from "./shared/medicationPersistence";
+import { archiveMedicationRecord, saveMedicationRecord } from "./shared/medicationPersistence";
 
 const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
   const { t } = useTranslation(['terms', 'common']);
@@ -42,6 +39,7 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
     behavioral: [],
   });
   const [stage, setStage] = useState("intake");
+  const [currentStep, setCurrentStep] = useState(1);
   const [submitError, setSubmitError] = useState("");
   const [documentError, setDocumentError] = useState("");
   const [name, setName] = useState("");
@@ -54,7 +52,10 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
   const [sensoryIssues, setSensoryIssues] = useState([]);
   const [behavioralTriggers, setBehavioralTriggers] = useState([]);
   const [communicationNeeds, setCommunicationNeeds] = useState([]);
-  const [medicationDetails, setMedicationDetails] = useState([createMedicationDetail()]);
+  const [medicationDetails, setMedicationDetails] = useState([]);
+  const [medicationDraft, setMedicationDraft] = useState(createMedicationDetail());
+  const [editingMedicationId, setEditingMedicationId] = useState(null);
+  const [isMedicationEditorOpen, setIsMedicationEditorOpen] = useState(false);
   const [uploadedDocuments, setUploadedDocuments] = useState({
     medical: [],
     medications: [],
@@ -88,6 +89,7 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
       setPhotoURL(child.photoURL || null);
       setSelectedConditions(child.concerns || child.conditions || []);
       setStage("intake");
+      setCurrentStep(1);
       
       // Load medical profile if it exists
       const medicalProfile = child.medicalProfile || {};
@@ -105,7 +107,10 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
               : createMedicationDetail(normalizeMedicationDetail(item))
           ))
           : []);
-      setMedicationDetails(existingMedicationDetails.length ? existingMedicationDetails.map(normalizeMedicationDetail) : [createMedicationDetail()]);
+      setMedicationDetails(existingMedicationDetails.length ? existingMedicationDetails.map(normalizeMedicationDetail).filter((entry) => entry.name) : []);
+      setMedicationDraft(createMedicationDetail());
+      setEditingMedicationId(null);
+      setIsMedicationEditorOpen(false);
       setUploadedDocuments(child.profileDocuments || { medical: [], medications: [], behavioral: [] });
       documentSectionsRef.current = child.profileDocuments || { medical: [], medications: [], behavioral: [] };
       setOpenSections({
@@ -121,6 +126,7 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
 
   const resetForm = () => {
     setStage("intake");
+    setCurrentStep(1);
     setSubmitError("");
     setDocumentError("");
     setName("");
@@ -133,7 +139,10 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
     setSensoryIssues([]);
     setBehavioralTriggers([]);
     setCommunicationNeeds([]);
-    setMedicationDetails([createMedicationDetail()]);
+    setMedicationDetails([]);
+    setMedicationDraft(createMedicationDetail());
+    setEditingMedicationId(null);
+    setIsMedicationEditorOpen(false);
     setUploadedDocuments({ medical: [], medications: [], behavioral: [] });
     setOpenSections({ medical: true, medications: false, behavioral: false });
     documentSectionsRef.current = { medical: [], medications: [], behavioral: [] };
@@ -248,187 +257,6 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
     );
   };
 
-  const updateMedicationDetail = (id, field, value) => {
-    setMedicationDetails((current) => current.map((entry) => (
-      entry.id === id
-        ? {
-            ...entry,
-            [field]: value,
-            syncStatus: "draft",
-            ...(field === "form" ? { route: getMedicationDefaultRoute(value) } : {}),
-            ...(field === "category" && value === "prn" ? { timing: [], frequency: "as_needed" } : {}),
-            ...(field === "timing"
-              ? { timing: Array.isArray(value) ? value : entry.timing }
-              : {}),
-          }
-        : entry
-    )));
-  };
-
-  const addMedicationDetail = (preset = {}) => {
-    setMedicationDetails((current) => [...current, createMedicationDetail(preset)]);
-  };
-
-  const removeMedicationDetail = (id) => {
-    setMedicationDetails((current) => {
-      const next = current.filter((entry) => entry.id !== id);
-      return next.length > 0 ? next : [createMedicationDetail()];
-    });
-  };
-
-  const renderMedicationDetails = () => (
-    <Stack spacing={1.25} sx={{ width: "100%" }}>
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 1,
-          flexWrap: "nowrap",
-          width: "100%",
-        }}
-      >
-        <Box sx={{ minWidth: 0, flex: 1 }}>
-          <Typography sx={{ fontWeight: 800 }}>Medication list</Typography>
-        </Box>
-
-        <Button
-          onClick={() => addMedicationDetail()}
-          sx={{
-            minWidth: 0,
-            width: 42,
-            height: 42,
-            borderRadius: "50%",
-            px: 0,
-            py: 0,
-            bgcolor: colors.app.dailyCare.primary,
-            color: "#ffffff",
-            fontSize: "1.15rem",
-            lineHeight: 1,
-            textTransform: "none",
-            flexShrink: 0,
-            ml: 0.5,
-            boxShadow: "0 8px 18px rgba(45, 113, 171, 0.18)",
-            "&:hover": {
-              bgcolor: colors.app.dailyCare.dark,
-              boxShadow: "0 10px 20px rgba(45, 113, 171, 0.24)",
-            },
-          }}
-          aria-label="Add medication"
-        >
-          +
-        </Button>
-      </Box>
-
-      <Stack spacing={1.25}>
-        {medicationDetails.map((entry, index) => (
-          <MedicationDetailCard
-            key={entry.id}
-            entry={entry}
-            index={index}
-            onChange={(field, value) => updateMedicationDetail(entry.id, field, value)}
-            onRemove={() => removeMedicationDetail(entry.id)}
-            onSave={() => handleSaveMedicationDetail(entry.id)}
-          />
-        ))}
-      </Stack>
-    </Stack>
-  );
-
-  const buildMedicalProfileUpdate = (detailList = medicationDetails) => {
-    const normalizedMedicationDetails = detailList
-      .map(normalizeMedicationDetail)
-      .filter((entry) => entry.name);
-
-    const currentMedicationSummaries = normalizedMedicationDetails.map((entry) => summarizeMedicationDetail(entry));
-    const supplementEntries = normalizedMedicationDetails.filter((entry) => ["supplement", "vitamin"].includes(entry.category));
-    const completionScore = getChildProfileCompletion({
-      name,
-      age,
-      photoURL,
-      concerns: selectedConditions,
-      medicalProfile: {
-        foodAllergies,
-        dietaryRestrictions,
-        sensoryIssues,
-        behavioralTriggers,
-        currentMedications: currentMedicationSummaries,
-        medicationDetails: normalizedMedicationDetails,
-        supplements: supplementEntries,
-        communicationNeeds,
-      },
-    });
-
-    return {
-      medicalProfile: {
-        foodAllergies,
-        dietaryRestrictions,
-        sensoryIssues,
-        behavioralTriggers,
-        currentMedications: currentMedicationSummaries,
-        medicationDetails: normalizedMedicationDetails,
-        supplements: supplementEntries,
-        communicationNeeds,
-        sleepIssues: child?.medicalProfile?.sleepIssues || [],
-      },
-      profileDocuments: documentSectionsRef.current,
-      profileSetup: {
-        stage: completionScore >= 100 ? "complete" : "in_progress",
-        completed: completionScore >= 100,
-        progress: completionScore,
-        completedAt: completionScore >= 100 ? new Date().toISOString() : null,
-      },
-      };
-  };
-
-  const handleSaveMedicationDetail = async (entryId) => {
-    if (!child?.id) {
-      setSubmitError("Child profile is not ready yet.");
-      return;
-    }
-
-    const targetEntry = medicationDetails.find((entry) => entry.id === entryId);
-    if (!targetEntry) {
-      return;
-    }
-
-    const savedAt = new Date().toISOString();
-    const nextMedicationDetails = medicationDetails.map((entry) => (
-      entry.id === entryId
-        ? {
-            ...normalizeMedicationDetail(entry),
-            syncStatus: "saved",
-            savedAt,
-          }
-        : entry
-    ));
-
-    setMedicationDetails(nextMedicationDetails);
-
-    try {
-      await saveMedicationRecord({
-        childId: child.id,
-        medication: {
-          ...targetEntry,
-          syncStatus: "saved",
-          savedAt,
-        },
-        status: "saved",
-      });
-
-      const childRef = doc(db, "children", child.id);
-      await updateDoc(childRef, {
-        medicalProfile: {
-          ...buildMedicalProfileUpdate(nextMedicationDetails).medicalProfile,
-          sleepIssues: child?.medicalProfile?.sleepIssues || [],
-        },
-      });
-    } catch (error) {
-      console.error("Failed to save medication detail:", error);
-      setSubmitError(error?.message || "Could not save this medication row right now.");
-    }
-  };
-
   const handleAdvanceBasicInfo = () => {
     if (!canEdit) {
       throw new Error('You do not have permission to edit this child\'s information');
@@ -465,6 +293,7 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
         await updateDoc(childRef, updatedChild);
 
         setStage("setup");
+        setCurrentStep(2);
         return updatedChild;
       },
       { name, age }
@@ -549,58 +378,350 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole }) => {
     },
   });
 
+  const buildMedicalProfileUpdate = (detailList = medicationDetails) => {
+    const normalizedMedicationDetails = detailList
+      .map(normalizeMedicationDetail)
+      .filter((entry) => entry.name && !entry.isArchived);
+
+    const currentMedicationSummaries = normalizedMedicationDetails.map((entry) => summarizeMedicationDetail(entry));
+    const supplementEntries = normalizedMedicationDetails.filter((entry) => ["supplement", "vitamin"].includes(entry.category));
+    const completionScore = getChildProfileCompletion({
+      name,
+      age,
+      photoURL,
+      concerns: selectedConditions,
+      medicalProfile: {
+        foodAllergies,
+        dietaryRestrictions,
+        sensoryIssues,
+        behavioralTriggers,
+        currentMedications: currentMedicationSummaries,
+        medicationDetails: normalizedMedicationDetails,
+        supplements: supplementEntries,
+        communicationNeeds,
+      },
+    });
+
+    return {
+      medicalProfile: {
+        foodAllergies,
+        dietaryRestrictions,
+        sensoryIssues,
+        behavioralTriggers,
+        currentMedications: currentMedicationSummaries,
+        medicationDetails: normalizedMedicationDetails,
+        supplements: supplementEntries,
+        communicationNeeds,
+      },
+      profileDocuments: documentSectionsRef.current,
+      profileSetup: {
+        stage: completionScore >= 100 ? "complete" : "in_progress",
+        completed: completionScore >= 100,
+        progress: completionScore,
+        completedAt: completionScore >= 100 ? new Date().toISOString() : null,
+      },
+    };
+  };
+
+  const updateMedicationDraft = (field, value) => {
+    setMedicationDraft((current) => ({
+      ...current,
+      [field]: field === "schedules" && Array.isArray(value) ? value : value,
+    }));
+  };
+
+  const clearMedicationDraft = () => {
+    setMedicationDraft(createMedicationDetail());
+    setEditingMedicationId(null);
+    setIsMedicationEditorOpen(false);
+  };
+
+  const addMedicationDetail = () => {
+    setMedicationDraft(createMedicationDetail());
+    setEditingMedicationId(null);
+    setIsMedicationEditorOpen(true);
+  };
+
+  const editMedicationDetail = (entry) => {
+    if (!entry) {
+      return;
+    }
+
+    setEditingMedicationId(entry.id);
+    setMedicationDraft(normalizeMedicationDetail(entry));
+    setIsMedicationEditorOpen(true);
+  };
+
+  const handleSaveMedicationDraft = async () => {
+    if (!child?.id) {
+      setSubmitError("Child profile is not ready yet.");
+      return;
+    }
+
+    const targetEntry = normalizeMedicationDetail(medicationDraft);
+    if (!String(targetEntry.name || "").trim()) {
+      setSubmitError("Please enter a medication name.");
+      return;
+    }
+
+    const entryId = editingMedicationId || targetEntry.id;
+    const savedAt = new Date().toISOString();
+    const createdBy = child?.users?.care_owner || child?.users?.members?.[0] || "";
+    const nextMedicationDetails = editingMedicationId
+      ? medicationDetails.map((entry) => (
+          entry.id === entryId
+            ? {
+                ...targetEntry,
+                id: entryId,
+                isArchived: false,
+                archivedAt: "",
+                archivedBy: "",
+                syncStatus: "saved",
+                savedAt,
+              }
+            : entry
+        ))
+      : [
+          ...medicationDetails,
+          {
+            ...targetEntry,
+            id: entryId,
+            isArchived: false,
+            archivedAt: "",
+            archivedBy: "",
+            syncStatus: "saved",
+            savedAt,
+          },
+        ];
+
+    setMedicationDetails(nextMedicationDetails);
+
+    try {
+      await saveMedicationRecord({
+        childId: child.id,
+        medication: {
+          ...targetEntry,
+          id: entryId,
+          childId: child.id,
+          createdBy,
+          createdAt: savedAt,
+          isArchived: false,
+          archivedAt: "",
+          archivedBy: "",
+          syncStatus: "saved",
+          savedAt,
+        },
+        status: "saved",
+      });
+      const childRef = doc(db, "children", child.id);
+      await updateDoc(childRef, {
+        ...buildMedicalProfileUpdate(nextMedicationDetails),
+        medicalProfile: {
+          ...buildMedicalProfileUpdate(nextMedicationDetails).medicalProfile,
+          sleepIssues: child?.medicalProfile?.sleepIssues || [],
+        },
+      });
+
+      clearMedicationDraft();
+    } catch (error) {
+      console.error("Failed to save medication detail:", error);
+      setSubmitError(error?.message || "Could not save this medication row right now.");
+    }
+  };
+
+  const handleArchiveMedication = async (entry, archived = true) => {
+    if (!child?.id || !entry?.id) {
+      return;
+    }
+
+    const createdBy = child?.users?.care_owner || child?.users?.members?.[0] || "";
+    const confirmed = window.confirm(
+      archived
+        ? `Archive ${entry.name || "this medication"}? It will stay saved but move out of the active list.`
+        : `Unarchive ${entry.name || "this medication"}? It will return to the active list.`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    const archivedAt = archived ? new Date().toISOString() : "";
+    const archivedBy = archived ? (child?.users?.care_owner || child?.users?.members?.[0] || "") : "";
+    const nextMedicationDetails = medicationDetails.map((item) => (
+      item.id === entry.id
+        ? {
+            ...item,
+            isArchived: archived,
+            archivedAt,
+            archivedBy,
+            syncStatus: archived ? "archived" : "saved",
+          }
+        : item
+    ));
+    setMedicationDetails(nextMedicationDetails);
+
+    try {
+      await archiveMedicationRecord({
+        childId: child.id,
+        medication: {
+          ...entry,
+          childId: child.id,
+          createdBy: entry.createdBy || createdBy,
+          createdAt: entry.createdAt || new Date().toISOString(),
+          isArchived: archived,
+          archivedAt,
+          archivedBy,
+        },
+        archived,
+      });
+      const childRef = doc(db, "children", child.id);
+      await updateDoc(childRef, {
+        ...buildMedicalProfileUpdate(nextMedicationDetails),
+        medicalProfile: {
+          ...buildMedicalProfileUpdate(nextMedicationDetails).medicalProfile,
+          sleepIssues: child?.medicalProfile?.sleepIssues || [],
+        },
+      });
+      if (editingMedicationId === entry.id) {
+        clearMedicationDraft();
+      }
+    } catch (error) {
+      console.error("Failed to archive medication detail:", error);
+      setSubmitError(error?.message || "Could not update this medication right now.");
+    }
+  };
+
+  const renderMedicationDetails = () => (
+      <ChildMedicationManager
+        medications={medicationDetails}
+        draft={medicationDraft}
+        editingMedicationId={editingMedicationId}
+        isEditorOpen={isMedicationEditorOpen}
+        onDraftChange={updateMedicationDraft}
+        onSaveDraft={handleSaveMedicationDraft}
+        onEditMedication={editMedicationDetail}
+        onAddMedication={addMedicationDetail}
+        onArchiveMedication={handleArchiveMedication}
+        onClearDraft={clearMedicationDraft}
+      />
+  );
+
+  const handleWizardBack = () => {
+    setCurrentStep((current) => Math.max(1, current - 1));
+  };
+
+  const handleWizardContinue = async () => {
+    if (currentStep === 1) {
+      handleAdvanceBasicInfo();
+      return;
+    }
+
+    if (currentStep < 5) {
+      setCurrentStep((current) => Math.min(5, current + 1));
+      return;
+    }
+
+    await handleSubmit();
+  };
+
+  const wizardFooter = (
+    <Stack direction="row" spacing={1.25} sx={{ width: "100%" }}>
+      <Button
+        variant="outlined"
+        onClick={handleWizardBack}
+        disabled={currentStep === 1}
+        fullWidth
+        sx={{ py: 1.15, textTransform: "none", borderRadius: 2 }}
+      >
+        Back
+      </Button>
+      <Button
+        variant="contained"
+        onClick={handleWizardContinue}
+        fullWidth
+        sx={{
+          py: 1.15,
+          textTransform: "none",
+          borderRadius: 2,
+          bgcolor: colors.brand.ink,
+          "&:hover": { bgcolor: colors.brand.deep },
+        }}
+      >
+        Continue
+      </Button>
+    </Stack>
+  );
+
   return (
     <LogFormShell
       open={open}
       onClose={handleClose}
-      title={t('common:modal.edit_item', { item: child?.name || t('terms:profile_one') })}
+      title="Edit Child"
+      titleBadge={child?.name || null}
       subtitle={t('terms:update_profile_description')}
+      compactTitle
       mobileBreakpoint={1023.95}
       maxWidth="sm"
-      footer={null}
+      surfaceSx={{ height: "80vh", maxHeight: "80vh" }}
+      bodySx={{ px: { xs: 0, sm: 3 }, pt: { xs: 0.75, sm: 2.25 }, pb: { xs: 2, sm: 2.5 } }}
+      headerContent={
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flexWrap: "wrap" }}>
+          <Typography sx={{ fontWeight: 800, flexShrink: 0 }}>
+            {child?.name || name || "Child"}
+          </Typography>
+          <Box sx={{ flex: 1, minWidth: 160 }}>
+            <LinearProgress variant="determinate" value={profileProgress} />
+          </Box>
+          <Typography variant="body2" color="text.secondary" sx={{ flexShrink: 0 }}>
+            editing
+          </Typography>
+        </Box>
+      }
+      footer={wizardFooter}
     >
-      <ThemeSpacing variant="modal-content">
-        <ChildProfileFlowContent
-          mode="edit"
-          stage={stage}
-          submitError={submitError}
-          setSubmitError={setSubmitError}
-          documentError={documentError}
-          setDocumentError={setDocumentError}
-          name={name}
-          setName={setName}
-          age={age}
-          setAge={setAge}
-          setPhoto={setPhoto}
-          photoURL={photoURL}
-          setPhotoURL={setPhotoURL}
-          selectedConditions={selectedConditions}
-          setSelectedConditions={setSelectedConditions}
-          normalizeCondition={normalizeCondition}
-          foodAllergies={foodAllergies}
-          setFoodAllergies={setFoodAllergies}
-          dietaryRestrictions={dietaryRestrictions}
-          setDietaryRestrictions={setDietaryRestrictions}
-          sensoryIssues={sensoryIssues}
-          setSensoryIssues={setSensoryIssues}
-          behavioralTriggers={behavioralTriggers}
-          setBehavioralTriggers={setBehavioralTriggers}
-          communicationNeeds={communicationNeeds}
-          setCommunicationNeeds={setCommunicationNeeds}
-          renderDocumentDropZone={renderDocumentDropZone}
-          renderMedicationDetails={renderMedicationDetails}
-          uploadedDocuments={uploadedDocuments}
-          openSections={openSections}
-          setOpenSections={setOpenSections}
-          createdChildName={child?.name || name}
-          profileProgress={profileProgress}
-          isSubmitting={childForm.loading}
-          onCreate={handleAdvanceBasicInfo}
-          onFinish={handleSubmit}
-          onClose={handleClose}
-          t={t}
-        />
-      </ThemeSpacing>
+      <ChildProfileFlowContent
+        mode="edit"
+        stage={stage}
+        currentStep={currentStep}
+        onStepChange={setCurrentStep}
+        submitError={submitError}
+        setSubmitError={setSubmitError}
+        documentError={documentError}
+        setDocumentError={setDocumentError}
+        name={name}
+        setName={setName}
+        age={age}
+        setAge={setAge}
+        setPhoto={setPhoto}
+        photoURL={photoURL}
+        setPhotoURL={setPhotoURL}
+        selectedConditions={selectedConditions}
+        setSelectedConditions={setSelectedConditions}
+        normalizeCondition={normalizeCondition}
+        foodAllergies={foodAllergies}
+        setFoodAllergies={setFoodAllergies}
+        dietaryRestrictions={dietaryRestrictions}
+        setDietaryRestrictions={setDietaryRestrictions}
+        sensoryIssues={sensoryIssues}
+        setSensoryIssues={setSensoryIssues}
+        behavioralTriggers={behavioralTriggers}
+        setBehavioralTriggers={setBehavioralTriggers}
+        communicationNeeds={communicationNeeds}
+        setCommunicationNeeds={setCommunicationNeeds}
+        renderDocumentDropZone={renderDocumentDropZone}
+        renderMedicationDetails={renderMedicationDetails}
+        medicationDetails={medicationDetails}
+        uploadedDocuments={uploadedDocuments}
+        openSections={openSections}
+        setOpenSections={setOpenSections}
+        createdChildName={child?.name || name}
+        profileProgress={profileProgress}
+        isSubmitting={childForm.loading}
+        onCreate={handleAdvanceBasicInfo}
+        onFinish={handleSubmit}
+        onClose={handleClose}
+        t={t}
+      />
     </LogFormShell>
   );
 };

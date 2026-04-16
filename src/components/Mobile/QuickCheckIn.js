@@ -6,22 +6,17 @@ import {
   Box,
   Button,
   Chip,
-  IconButton,
   CircularProgress,
   Stack,
   Slide,
-  Avatar,
   TextField,
   Popover,
+  IconButton,
 } from '@mui/material';
-import {
-  Close as CloseIcon,
-  AccessTime as AccessTimeIcon,
-  CalendarToday as CalendarTodayIcon,
-  LocalOffer as LocalOfferIcon,
-  ExpandMore as ExpandMoreIcon,
-  Description as DescriptionIcon,
-} from '@mui/icons-material';
+import CloseIcon from '@mui/icons-material/Close';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import LocalOfferIcon from '@mui/icons-material/LocalOffer';
+import DescriptionIcon from '@mui/icons-material/Description';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -50,34 +45,38 @@ import {
 import { getCalendarDateKey } from '../../utils/calendarDateKey';
 import { ACTIVE_TIMELINE_DATE_STORAGE_KEY } from '../Dashboard/shared/DashboardViewContext';
 import { coerceCalendarDate } from '../../utils/calendarDateKey';
+import colors from '../../assets/theme/colors';
+import LogSheetTitle from '../UI/LogSheetTitle';
+import LogDateField from '../UI/LogDateField';
+import LogTimeField from '../UI/LogTimeField';
 
 const getTimeInputValue = (date = new Date()) =>
   new Date(date).toTimeString().slice(0, 5);
 
-const formatTimeLabel = (timeValue) => {
-  if (!timeValue) return 'Now';
-  const [hoursRaw, minutesRaw] = timeValue.split(':');
-  const hours = Number(hoursRaw);
-  const minutes = Number(minutesRaw);
-  if (Number.isNaN(hours) || Number.isNaN(minutes)) return 'Now';
-  const displayHours = hours % 12 || 12;
-  const suffix = hours >= 12 ? 'PM' : 'AM';
-  return `${displayHours}:${String(minutes).padStart(2, '0')} ${suffix}`;
-};
-
-const formatDateLabel = (dateValue) => {
+const formatSheetDateValue = (dateValue) => {
   if (!(dateValue instanceof Date) || Number.isNaN(dateValue.getTime())) {
     return 'Select date';
   }
 
   return dateValue.toLocaleDateString('en-US', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    year: 'numeric',
   });
 };
 
-const buildTimestampWithTime = (dateValue, timeValue) => {
+const formatLocalDateInput = (dateValue) => {
+  if (!(dateValue instanceof Date) || Number.isNaN(dateValue.getTime())) {
+    return '';
+  }
+
+  const year = dateValue.getFullYear();
+  const month = String(dateValue.getMonth() + 1).padStart(2, '0');
+  const day = String(dateValue.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const buildUtcTimestampFromLocalInput = (dateValue, timeValue) => {
   const timestamp = new Date(dateValue);
   if (timeValue) {
     const [hours, minutes] = timeValue.split(':').map((value) => Number(value));
@@ -86,6 +85,12 @@ const buildTimestampWithTime = (dateValue, timeValue) => {
     }
   }
   return timestamp;
+};
+
+const getTimezoneMetadata = () => {
+  const timeZoneName = Intl.DateTimeFormat().resolvedOptions().timeZone || null;
+  const timeZoneOffsetMinutes = -new Date().getTimezoneOffset();
+  return { timeZoneName, timeZoneOffsetMinutes };
 };
 
 const getStoredTimelineDate = () => {
@@ -112,7 +117,6 @@ const QuickCheckIn = ({ child, onComplete, onSkip, initialDate = null }) => {
   const [tagDraftOpen, setTagDraftOpen] = useState(false);
   const [tagDraftLabel, setTagDraftLabel] = useState('');
   const [tagDraftEmoji, setTagDraftEmoji] = useState(QUICK_TAG_EMOJI_CHOICES[0]);
-  const timeInputRef = useRef(null);
   const quickTagTouchStartYRef = useRef(null);
 
   useEffect(() => {
@@ -255,16 +259,6 @@ const QuickCheckIn = ({ child, onComplete, onSkip, initialDate = null }) => {
     }
   };
 
-  const handleTimePickerOpen = () => {
-    const input = timeInputRef.current;
-    if (!input) return;
-    if (typeof input.showPicker === 'function') {
-      input.showPicker();
-    } else {
-      input.click();
-    }
-  };
-
   const handleDatePickerOpen = (event) => {
     setDatePickerAnchor(event.currentTarget);
   };
@@ -297,7 +291,9 @@ const QuickCheckIn = ({ child, onComplete, onSkip, initialDate = null }) => {
 
     setSaving(true);
     try {
-      const timestamp = buildTimestampWithTime(selectedDate, selectedTime);
+      const timestampUtc = buildUtcTimestampFromLocalInput(selectedDate, selectedTime);
+      const localDate = formatLocalDateInput(selectedDate);
+      const { timeZoneName, timeZoneOffsetMinutes } = getTimezoneMetadata();
       const optimisticEntry = {
         childId: child.id,
         text: text || 'Shared media note',
@@ -305,7 +301,13 @@ const QuickCheckIn = ({ child, onComplete, onSkip, initialDate = null }) => {
         category: resolvedCategory,
         tags: combinedTags,
         importantMoment,
-        timestamp,
+        timestamp: timestampUtc,
+        timestampUtc,
+        localDate,
+        localTime: selectedTime,
+        timeZoneName,
+        timeZoneOffsetMinutes,
+        timestampSource: 'local-input',
         authorId: user?.uid,
         authorName: user?.displayName || user?.email?.split('@')[0] || 'User',
         authorEmail: user?.email,
@@ -316,7 +318,7 @@ const QuickCheckIn = ({ child, onComplete, onSkip, initialDate = null }) => {
         createdBy: user?.uid,
         createdAt: serverTimestamp(),
         ...optimisticEntry,
-        entryDate: timestamp.toDateString(),
+        entryDate: localDate,
       });
 
       let mediaUrls = [];
@@ -352,8 +354,14 @@ const QuickCheckIn = ({ child, onComplete, onSkip, initialDate = null }) => {
         tags: combinedTags,
         importantMoment,
         category: resolvedCategory,
-        timestamp,
-        entryDate: timestamp.toDateString(),
+        timestamp: timestampUtc,
+        timestampUtc,
+        localDate,
+        localTime: selectedTime,
+        timeZoneName,
+        timeZoneOffsetMinutes,
+        timestampSource: 'local-input',
+        entryDate: localDate,
         ...(mediaUrls.length > 0 && { mediaUrls }),
       });
       setNoteData({ text: '', mediaFile: null, audioBlob: null });
@@ -368,143 +376,55 @@ const QuickCheckIn = ({ child, onComplete, onSkip, initialDate = null }) => {
     <Card
       elevation={0}
       sx={{
-        border: '2px solid #cfcfcf',
-        borderRadius: { xs: '24px', md: '32px' },
-        backgroundColor: '#f8f8f8',
+        border: '1px solid #e4dcca',
+        borderRadius: { xs: '28px', md: '32px' },
+        backgroundColor: '#ffffff',
+        boxShadow: '0 18px 50px rgba(15, 23, 42, 0.08)',
         position: 'relative',
         overflow: 'hidden',
       }}
     >
-      <CardContent sx={{ p: { xs: 1.5, sm: 2, md: 2.25 } }}>
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1,
-            mb: { xs: 1, md: 1.25 },
-            px: 0.25,
-            flexWrap: 'wrap',
-          }}
-        >
-          <Avatar
-            src={child.profilePhoto}
-            alt={child.name}
-            sx={{
-              width: 32,
-              height: 32,
-              fontSize: '0.95rem',
-              fontWeight: 700,
-              bgcolor: 'primary.main',
-            }}
-          >
-            {!child.profilePhoto && child.name?.[0]?.toUpperCase()}
-          </Avatar>
-          <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, color: '#51607a' }}>
-            Logging for {child.name}
-          </Typography>
-        </Box>
+      <CardContent sx={{ p: { xs: 1.5, sm: 2.25, md: 2.5 } }}>
+        <LogSheetTitle
+          title="Quick Note"
+          titleBadge={child.name}
+          onClose={onSkip}
+          compactTitle
+        />
 
         <Box
           sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: { xs: 'flex-start', sm: 'center' },
-            mb: { xs: 1.2, md: 1.5 },
-            gap: 1.25,
-            flexWrap: 'wrap',
+            mb: 2,
+            p: { xs: 1.1, sm: 1.25 },
+            borderRadius: '24px',
+            bgcolor: colors.brand.ice,
+            border: `1px solid ${colors.brand.tint}`,
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, minWidth: 0 }}>
-            <Typography sx={{ fontSize: '1.9rem', lineHeight: 1 }}>
-              📝
-            </Typography>
-            <Typography sx={{ fontSize: { xs: '1.12rem', sm: '1.2rem', md: '1.35rem' }, fontWeight: 800, color: '#33343a', lineHeight: 1.2 }}>
-              Quick Note for {child.name}
-            </Typography>
-          </Box>
-          <IconButton onClick={onSkip} sx={{ mt: { xs: -0.5, sm: 0 }, ml: 'auto' }}>
-            <CloseIcon sx={{ fontSize: { xs: 28, md: 32 }, color: '#7d7d80' }} />
-          </IconButton>
-        </Box>
-
-        <Box sx={{ mb: 2 }}>
-          <Box
+          <Stack
+            direction="row"
+            spacing={1}
             sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 0.75,
-              mb: 0.9,
-              flexWrap: 'wrap',
+              width: '100%',
+              alignItems: 'stretch',
             }}
           >
-            <Button
-              variant="outlined"
-              onClick={handleDatePickerOpen}
-              startIcon={<CalendarTodayIcon sx={{ fontSize: 16 }} />}
-              endIcon={<ExpandMoreIcon sx={{ fontSize: 18 }} />}
-              sx={{
-                minHeight: 32,
-                px: 1.1,
-                py: 0.25,
-                borderRadius: '10px',
-                textTransform: 'none',
-                fontWeight: 800,
-                fontSize: '0.84rem',
-                color: '#334155',
-                borderColor: '#cfd8e3',
-                bgcolor: '#ffffff',
-                boxShadow: '0 1px 4px rgba(15, 23, 42, 0.04)',
-                '&:hover': {
-                  bgcolor: '#f8fafc',
-                  borderColor: '#b8c2d1',
-                },
-                '& .MuiButton-startIcon': {
-                  mr: 0.35,
-                },
-                '& .MuiButton-endIcon': {
-                  ml: 0.25,
-                },
-                width: { xs: '100%', sm: 'auto' },
-              }}
-            >
-              {formatDateLabel(selectedDate)}
-            </Button>
+            <Box sx={{ flex: 1.05, minWidth: 0 }}>
+              <LogDateField
+                label="Date"
+                value={formatSheetDateValue(selectedDate)}
+                onClick={handleDatePickerOpen}
+              />
+            </Box>
 
-            <Button
-              variant="outlined"
-              onClick={handleTimePickerOpen}
-              startIcon={<AccessTimeIcon sx={{ fontSize: 16 }} />}
-              endIcon={<ExpandMoreIcon sx={{ fontSize: 18 }} />}
-              sx={{
-                minHeight: 32,
-                px: 1.1,
-                py: 0.25,
-                borderRadius: '10px',
-                textTransform: 'none',
-                fontWeight: 800,
-                fontSize: '0.84rem',
-                color: '#334155',
-                borderColor: '#cfd8e3',
-                bgcolor: '#ffffff',
-                boxShadow: '0 1px 4px rgba(15, 23, 42, 0.04)',
-                '&:hover': {
-                  bgcolor: '#f8fafc',
-                  borderColor: '#b8c2d1',
-                },
-                '& .MuiButton-startIcon': {
-                  mr: 0.35,
-                },
-                '& .MuiButton-endIcon': {
-                  ml: 0.25,
-                },
-                width: { xs: '100%', sm: 'auto' },
-              }}
-            >
-              {formatTimeLabel(selectedTime)}
-            </Button>
-          </Box>
-
+            <Box sx={{ flex: 0.95, minWidth: 0 }}>
+              <LogTimeField
+                value={selectedTime}
+                onChange={(e) => setSelectedTime(e.target.value)}
+                label="Time"
+              />
+            </Box>
+          </Stack>
           <Popover
             open={Boolean(datePickerAnchor)}
             anchorEl={datePickerAnchor}
@@ -533,72 +453,67 @@ const QuickCheckIn = ({ child, onComplete, onSkip, initialDate = null }) => {
               />
             </LocalizationProvider>
           </Popover>
+        </Box>
 
-          <input
-            ref={timeInputRef}
-            type="time"
-            value={selectedTime}
-            onChange={(e) => setSelectedTime(e.target.value)}
-            style={{
-              position: 'absolute',
-              width: 1,
-              height: 1,
-              opacity: 0,
-              pointerEvents: 'none',
-            }}
-            aria-hidden="true"
-            tabIndex={-1}
-          />
-
+        <Box sx={{ mt: 2 }}>
           <RichTextInput
             value={noteData}
             placeholder={notePlaceholder}
             onDataChange={setNoteData}
           />
-
-          {selectedTags.length > 0 && (
-            <Box
-              sx={{
-                mt: 1,
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: 0.75,
-              }}
-            >
-              {selectedTags.map((tag) => {
-                const tagMeta = quickTagLookup.get(tag);
-                const categoryKey = QUICK_TAG_CATEGORY_MAP[tag] || 'log';
-                const categoryColors = tagMeta?.custom
-                  ? {
-                      bg: '#F8FAFC',
-                      text: '#334155',
-                      border: '#C7D9C4',
-                    }
-                  : (CATEGORY_COLORS[categoryKey] || CATEGORY_COLORS.log);
-                return (
-                  <Chip
-                    key={tag}
-                    label={tagMeta?.label || tag}
-                    onDelete={() => toggleQuickTag(tag)}
-                    sx={{
-                      borderRadius: '999px',
-                      bgcolor: categoryColors.bg,
-                      color: categoryColors.text,
-                      border: `1px solid ${categoryColors.border}`,
-                      fontWeight: 700,
-                      '& .MuiChip-deleteIcon': {
-                        color: categoryColors.text,
-                        fontSize: 16,
-                      },
-                    }}
-                  />
-                );
-              })}
-            </Box>
-          )}
         </Box>
 
-        <Box sx={{ mb: 2, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1 }}>
+        {selectedTags.length > 0 && (
+          <Box
+            sx={{
+              mt: 1,
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 0.75,
+            }}
+          >
+            {selectedTags.map((tag) => {
+              const tagMeta = quickTagLookup.get(tag);
+              const categoryKey = QUICK_TAG_CATEGORY_MAP[tag] || 'log';
+              const categoryColors = tagMeta?.custom
+                ? {
+                    bg: '#F8FAFC',
+                    text: '#334155',
+                    border: '#C7D9C4',
+                  }
+                : (CATEGORY_COLORS[categoryKey] || CATEGORY_COLORS.log);
+              return (
+                <Chip
+                  key={tag}
+                  label={tagMeta?.label || tag}
+                  onDelete={() => toggleQuickTag(tag)}
+                  sx={{
+                    borderRadius: '999px',
+                    bgcolor: categoryColors.bg,
+                    color: categoryColors.text,
+                    border: `1px solid ${categoryColors.border}`,
+                    fontWeight: 700,
+                    '& .MuiChip-deleteIcon': {
+                      color: categoryColors.text,
+                      fontSize: 16,
+                    },
+                  }}
+                />
+              );
+            })}
+          </Box>
+        )}
+
+        <Box
+          sx={{
+            mt: 1.5,
+            mb: 2,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'flex-start',
+            gap: 1,
+          }}
+        >
           <Box
             sx={{
               display: 'grid',
@@ -611,28 +526,28 @@ const QuickCheckIn = ({ child, onComplete, onSkip, initialDate = null }) => {
               variant="outlined"
               onClick={() => setImportantMoment((prev) => !prev)}
               sx={{
-                minHeight: 44,
+                minHeight: 42,
                 borderRadius: '10px',
                 textTransform: 'none',
-                fontWeight: 800,
-                fontSize: '0.92rem',
-                color: '#4b5563',
-                borderColor: '#d7dbe2',
-                bgcolor: '#f1f3f6',
-                px: 1.2,
-                py: 0.85,
+                fontWeight: 600,
+                fontSize: '0.8rem',
+                color: '#6a7280',
+                borderColor: '#dfe3ea',
+                bgcolor: '#f7f8fa',
+                px: 1,
+                py: 0.75,
                 width: '100%',
                 minWidth: 0,
                 '&:hover': {
-                  bgcolor: '#e6eaf0',
-                  borderColor: '#c8ced8',
+                  bgcolor: '#f0f2f6',
+                  borderColor: '#d3d9e2',
                 },
               }}
             >
-              <Box component="span" sx={{ fontSize: '1.1rem', mr: 0.55, lineHeight: 1 }}>
+              <Box component="span" sx={{ fontSize: '0.9rem', mr: 0.4, lineHeight: 1 }}>
                 ⭐
               </Box>
-              <Box component="span" sx={{ lineHeight: 1, whiteSpace: 'nowrap' }}>
+              <Box component="span" sx={{ lineHeight: 1, whiteSpace: 'nowrap', fontWeight: 650 }}>
                 {importantMoment ? 'Important On' : 'Flag Important'}
               </Box>
             </Button>
@@ -643,27 +558,28 @@ const QuickCheckIn = ({ child, onComplete, onSkip, initialDate = null }) => {
               endIcon={<ExpandMoreIcon sx={{ transform: showQuickTags ? 'rotate(180deg)' : 'none', transition: 'all 0.2s', color: '#102d72' }} />}
               onClick={() => setShowQuickTags((prev) => !prev)}
               sx={{
-                minHeight: 44,
+                minHeight: 42,
                 borderRadius: '10px',
-                borderColor: '#d7dbe2',
-                color: '#4b5563',
-                px: 1.1,
-                py: 0.8,
+                borderColor: '#dfe3ea',
+                color: '#6a7280',
+                px: 1,
+                py: 0.75,
                 width: '100%',
                 minWidth: 0,
                 textTransform: 'none',
-                fontSize: '0.9rem',
-                fontWeight: 700,
-                bgcolor: '#f1f3f6',
+                fontSize: '0.82rem',
+                fontWeight: 650,
+                bgcolor: '#f7f8fa',
                 '&:hover': {
-                  bgcolor: '#e6eaf0',
-                  borderColor: '#c8ced8',
+                  bgcolor: '#f0f2f6',
+                  borderColor: '#d3d9e2',
                 },
                 '& .MuiButton-startIcon': {
-                  mr: 0.35,
+                  mr: 0.25,
+                  ml: 0,
                 },
                 '& .MuiButton-endIcon': {
-                  ml: 0.35,
+                  ml: 0.25,
                 },
                 }}
               >
@@ -671,7 +587,7 @@ const QuickCheckIn = ({ child, onComplete, onSkip, initialDate = null }) => {
                 ? selectedTags.length === 1
                   ? `Tags: ${primaryTagMeta?.label || selectedTags[0]}`
                   : `Tags (${selectedTags.length})`
-              : 'Add context to your note'}
+              : 'Add context'}
             </Button>
           </Box>
         </Box>
@@ -693,21 +609,6 @@ const QuickCheckIn = ({ child, onComplete, onSkip, initialDate = null }) => {
               justifyContent: { xs: 'stretch', sm: 'flex-end' },
             }}
           >
-            <Button
-              variant="text"
-              onClick={onSkip}
-              disabled={saving}
-              sx={{
-                color: '#b4c8de',
-                fontWeight: 700,
-                fontSize: '1rem',
-                textTransform: 'none',
-                width: { xs: '100%', sm: 'auto' },
-              }}
-            >
-              Cancel
-            </Button>
-
             <StyledButton
               variant="contained"
               onClick={saveQuickNote}

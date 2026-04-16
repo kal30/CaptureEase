@@ -38,6 +38,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { PickersDay } from '@mui/x-date-pickers/PickersDay';
 import { ACTIVE_TIMELINE_DATE_STORAGE_KEY, useDashboardView } from '../shared/DashboardViewContext';
 import { ChildSwitcherPanel, ChildSwitcherTrigger } from '../shared/ChildSwitcher';
+import { getTimelineEntryDate } from '../../../services/timeline/dateUtils';
 import ChildActionsMenuContent from '../shared/ChildActionsMenuContent';
 import TimelineHeaderControls from '../../Timeline/TimelineHeaderControls';
 import { getActiveTimelineFilterCount } from '../../Timeline/utils/filterCounts';
@@ -154,7 +155,7 @@ const MobileCaptureDashboard = ({
 
     activeChildEntries.forEach((entry) => {
       if (!entry) return;
-      const entryDate = entry.timestamp?.toDate?.() ? entry.timestamp.toDate() : new Date(entry.timestamp);
+      const entryDate = getTimelineEntryDate(entry) || (entry.timestamp?.toDate?.() ? entry.timestamp.toDate() : new Date(entry.timestamp));
       if (Number.isNaN(entryDate.getTime())) return;
       const calendarKey = getCalendarDateKey(entryDate);
       if (calendarKey) {

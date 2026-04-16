@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { getIncidentDisplayInfo } from '../constants/uiDisplayConstants';
 import { getLogTypeByCategory, getLogTypeByEntry, isBehaviorIncidentEntry } from '../constants/logTypeRegistry';
 import { getIncidentTypeConfig, getSeverityScale } from '../services/incidentService';
+import { getTimelineEntryDate } from '../services/timeline/dateUtils';
 
 /**
  * Enhanced hook for creating a unified daily log view
@@ -21,13 +22,13 @@ export const useUnifiedDailyLog = (timelineEntries = [], incidents = [], selecte
     
     // Filter timeline entries for selected date
     const dayTimelineEntries = timelineEntries.filter(entry => {
-      const entryDate = entry.timestamp?.toDate?.() || new Date(entry.timestamp);
+      const entryDate = getTimelineEntryDate(entry) || entry.timestamp?.toDate?.() || new Date(entry.timestamp);
       return entryDate >= dayStart && entryDate < dayEnd;
     });
     
     // Filter incidents for selected date
     const dayIncidents = incidents.filter(incident => {
-      const incidentDate = incident.timestamp?.toDate?.() || new Date(incident.timestamp);
+      const incidentDate = getTimelineEntryDate(incident) || incident.timestamp?.toDate?.() || new Date(incident.timestamp);
       return incidentDate >= dayStart && incidentDate < dayEnd;
     });
     

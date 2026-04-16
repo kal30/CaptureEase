@@ -4,18 +4,23 @@ import {
   Button,
   Chip,
   Divider,
-  Slider,
+  Popover,
   Stack,
   TextField,
   Typography,
 } from '@mui/material';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import LogFormShell from '../UI/LogFormShell';
+import LogDateField from '../UI/LogDateField';
+import LogTimeField from '../UI/LogTimeField';
+import BristolStoolScaleSelector from '../UI/BristolStoolScaleSelector';
 import useChildName from '../../hooks/useChildName';
 import { auth, db } from '../../services/firebase';
 import { BATHROOM_SCALE } from '../../constants/habitTypes';
-import colors from '../../assets/theme/colors';
 
 const pad = (n) => String(n).padStart(2, '0');
 
@@ -41,6 +46,7 @@ const BathroomLogSheet = ({ open, onClose, child }) => {
   const [consistency, setConsistency] = useState(null);
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
+  const [datePickerAnchor, setDatePickerAnchor] = useState(null);
 
   useEffect(() => {
     if (!open) return;
@@ -65,6 +71,44 @@ const BathroomLogSheet = ({ open, onClose, child }) => {
     return Number.isNaN(timestamp.getTime()) ? new Date() : timestamp;
   }, [bathroomDate, bathroomTime]);
 
+  const bathroomDateObject = useMemo(() => {
+    const parsed = new Date(`${bathroomDate}T00:00:00`);
+    return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
+  }, [bathroomDate]);
+
+  const formatDisplayDate = (date) => {
+    if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+      return '';
+    }
+
+    return date.toLocaleDateString('en-US', {
+      month: '2-digit',
+      day: '2-digit',
+      year: 'numeric',
+    });
+  };
+
+  const handleDatePickerOpen = (event) => {
+    setDatePickerAnchor(event.currentTarget);
+  };
+
+  const handleDatePickerClose = () => {
+    setDatePickerAnchor(null);
+  };
+
+  const handleDateChange = (nextDate) => {
+    if (!nextDate || Number.isNaN(nextDate.getTime())) {
+      return;
+    }
+
+    setBathroomDate([
+      nextDate.getFullYear(),
+      String(nextDate.getMonth() + 1).padStart(2, '0'),
+      String(nextDate.getDate()).padStart(2, '0'),
+    ].join('-'));
+    handleDatePickerClose();
+  };
+
   const renderChipGroup = (options, value, onChange) => (
     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
       {options.map((option) => {
@@ -83,18 +127,12 @@ const BathroomLogSheet = ({ open, onClose, child }) => {
     </Box>
   );
 
-  const selectedConsistency = consistency ? BATHROOM_SCALE[consistency] : null;
-  const consistencyMarks = Object.keys(BATHROOM_SCALE).map((value) => ({
-    value: Number(value),
-    label: value,
-  }));
-  const consistencyValue = consistency || 3;
   const showConsistencyScale = !bathroomType || isBowelMovementType(bathroomType);
-  const handleConsistencyChange = (_, value) => {
+  const handleConsistencyChange = (nextValue) => {
     if (!isBowelMovementType(bathroomType)) {
       setBathroomType('Bowel movement');
     }
-    setConsistency(value);
+    setConsistency(nextValue);
   };
 
   const handleSave = async () => {
@@ -162,127 +200,97 @@ const BathroomLogSheet = ({ open, onClose, child }) => {
   };
 
   const formBody = (
-    <Stack spacing={2.5}>
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+    <LocalizationProvider dateAdapter={AdapterDateFns}>
+      <Stack spacing={2.5}>
+        <Box
+          sx={{
+            p: { xs: 1.1, sm: 1.25 },
+            borderRadius: '24px',
+            bgcolor: '#F4F1F8',
+            border: '1px solid #D9D1EE',
+          }}
+        >
+          <Stack direction="row" spacing={1.25} sx={{ width: '100%' }}>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <LogDateField
+                label="Date"
+                value={formatDisplayDate(bathroomDateObject)}
+                onClick={handleDatePickerOpen}
+              />
+
+              <Popover
+                open={Boolean(datePickerAnchor)}
+                anchorEl={datePickerAnchor}
+                onClose={handleDatePickerClose}
+                anchorOrigin={{
+                  vertical: 'bottom',
+                  horizontal: 'left',
+                }}
+                transformOrigin={{
+                  vertical: 'top',
+                  horizontal: 'left',
+                }}
+                PaperProps={{
+                  sx: {
+                    mt: 1,
+                    borderRadius: '16px',
+                    boxShadow: '0 18px 40px rgba(15, 23, 42, 0.18)',
+                    overflow: 'hidden',
+                  },
+                }}
+              >
+                <DateCalendar
+                  value={bathroomDateObject}
+                  onChange={handleDateChange}
+                  maxDate={new Date()}
+                />
+              </Popover>
+            </Box>
+
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <LogTimeField
+                label="Time"
+                value={bathroomTime}
+                onChange={(e) => setBathroomTime(e.target.value)}
+              />
+            </Box>
+          </Stack>
+        </Box>
+
+        <Box>
+          <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 700 }}>
+            Type
+          </Typography>
+          {renderChipGroup(toiletingTypes, bathroomType, setBathroomType)}
+        </Box>
+
+        <Box>
+          <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 700 }}>
+            Location
+          </Typography>
+          {renderChipGroup(locationTypes, location, setLocation)}
+        </Box>
+
+        {showConsistencyScale ? (
+          <Box>
+            <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 700 }}>
+              Bristol stool scale
+            </Typography>
+            <BristolStoolScaleSelector value={consistency} onChange={handleConsistencyChange} />
+          </Box>
+        ) : null}
+
         <TextField
           fullWidth
-          type="date"
-          label="Date"
-          value={bathroomDate}
-          onChange={(e) => setBathroomDate(e.target.value)}
-          InputLabelProps={{ shrink: true }}
-          sx={{ minWidth: 0 }}
-        />
-        <TextField
-          fullWidth
-          type="time"
-          label="Time"
-          value={bathroomTime}
-          onChange={(e) => setBathroomTime(e.target.value)}
-          InputLabelProps={{ shrink: true }}
-          sx={{ minWidth: 0 }}
+          multiline
+          rows={2}
+          label="Notes"
+          placeholder="Any additional context"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
         />
       </Stack>
-
-      <Box>
-        <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 700 }}>
-          Type
-        </Typography>
-        {renderChipGroup(toiletingTypes, bathroomType, setBathroomType)}
-      </Box>
-
-      <Box>
-        <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 700 }}>
-          Location
-        </Typography>
-        {renderChipGroup(locationTypes, location, setLocation)}
-      </Box>
-
-      {showConsistencyScale ? (
-        <Box>
-          <Slider
-            value={consistencyValue}
-            onChange={handleConsistencyChange}
-            min={1}
-            max={7}
-            step={1}
-            marks={consistencyMarks}
-            sx={{
-              mt: 0.5,
-              mb: 2,
-              color: selectedConsistency?.color || '#CBD5E1',
-              '& .MuiSlider-thumb': {
-                bgcolor: selectedConsistency?.color || '#64748B',
-                width: 30,
-                height: 30,
-                '&:hover, &.Mui-focusVisible': {
-                  boxShadow: '0 0 0 8px rgba(100, 116, 139, 0.15)',
-                },
-              },
-              '& .MuiSlider-track': {
-                height: 6,
-                border: 'none',
-              },
-              '& .MuiSlider-rail': {
-                height: 6,
-                opacity: 1,
-                bgcolor: 'rgba(148, 163, 184, 0.18)',
-              },
-              '& .MuiSlider-mark': {
-                width: 2,
-                height: 2,
-                borderRadius: '50%',
-                bgcolor: 'currentColor',
-              },
-              '& .MuiSlider-markLabel': {
-                fontSize: '0.8rem',
-                fontWeight: 600,
-                mt: 1.5,
-              },
-              '& .MuiSlider-markLabelActive': {
-                color: selectedConsistency?.color || 'text.primary',
-              },
-            }}
-          />
-          <Box
-            sx={{
-              bgcolor: selectedConsistency?.color
-                ? `${selectedConsistency.color}18`
-                : colors.landing.sageLight,
-              borderRadius: 2,
-              p: 2,
-              mt: 3,
-              textAlign: 'center',
-            }}
-          >
-            <Typography
-              variant="body2"
-              sx={{
-                fontWeight: 800,
-                color: selectedConsistency?.color || colors.brand.deep,
-              }}
-            >
-              {selectedConsistency ? selectedConsistency.label : 'Select a consistency level'}
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-              {selectedConsistency
-                ? selectedConsistency.description
-                : 'Pick the stool form that best matches the bowel movement.'}
-            </Typography>
-          </Box>
-        </Box>
-      ) : null}
-
-      <TextField
-        fullWidth
-        multiline
-        rows={2}
-        label="Notes"
-        placeholder="Any additional context"
-        value={notes}
-        onChange={(e) => setNotes(e.target.value)}
-      />
-    </Stack>
+    </LocalizationProvider>
   );
 
   const footerActions = (
@@ -291,18 +299,14 @@ const BathroomLogSheet = ({ open, onClose, child }) => {
       <Box
         sx={{
           display: 'flex',
-          gap: 1.5,
-          flexDirection: { xs: 'column', sm: 'row' },
+          justifyContent: 'flex-end',
         }}
       >
-        <Button fullWidth variant="outlined" onClick={onClose} disabled={saving}>
-          Cancel
-        </Button>
         <Button
-          fullWidth
           variant="contained"
           onClick={handleSave}
           disabled={saving || !child?.id || !user?.uid}
+          sx={{ width: { xs: '100%', sm: 'auto' } }}
         >
           {saving ? 'Saving...' : 'Save bathroom log'}
         </Button>
@@ -314,8 +318,9 @@ const BathroomLogSheet = ({ open, onClose, child }) => {
     <LogFormShell
       open={open}
       onClose={onClose}
-      title={`Log Bathroom for ${resolvedChildName}`}
-      subtitle="Child-specific bathroom and toileting tracking"
+      title="Bathroom"
+      titleBadge={resolvedChildName}
+      compactTitle
       footer={footerActions}
       mobileBreakpoint="md"
       maxWidth="sm"

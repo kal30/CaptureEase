@@ -9,6 +9,7 @@ import {
   DialogContent,
   IconButton,
   Drawer,
+  SwipeableDrawer,
   CircularProgress,
   Fade,
   Button,
@@ -420,26 +421,73 @@ const PanelDashboard = () => {
       />
 
       {/* Modals */}
-      <Modal
-        open={hook.showQuickEntry}
-        onClose={hook.handleQuickEntrySkip}
-        sx={{ display: "flex", alignItems: "center", justifyContent: "center", p: 2 }}
-      >
-        <Box sx={{ maxWidth: 600, width: "100%", maxHeight: "90vh", overflow: "auto" }}>
-          {hook.selectedChild && hook.entryType === "micro" && (
-            <div>Micro data collection not available</div>
-          )}
-          {hook.selectedChild && hook.entryType === "full" && (
-            <QuickCheckIn
-              child={hook.selectedChild}
-              onComplete={hook.handleQuickEntryComplete}
-              onSkip={hook.handleQuickEntrySkip}
-              initialStep={hook.quickEntryStep}
-              initialDate={hook.quickEntryDate}
-            />
-          )}
-        </Box>
-      </Modal>
+      {isMobile ? (
+        <SwipeableDrawer
+          anchor="bottom"
+          open={hook.showQuickEntry}
+          onOpen={() => {}}
+          onClose={hook.handleQuickEntrySkip}
+          disableBackdropTransition
+          disableDiscovery
+          PaperProps={{
+            sx: {
+              borderRadius: '20px 20px 0 0',
+              bgcolor: colors.landing.surface,
+              borderTop: `1px solid ${colors.landing.borderLight}`,
+              boxShadow: `0 -18px 48px ${colors.landing.shadowPanel}`,
+              maxHeight: '92vh',
+              pb: 'env(safe-area-inset-bottom)',
+              overflow: 'hidden',
+            },
+          }}
+        >
+          <Box sx={{ px: 1.25, pt: 0.75, pb: 1.25, overflow: 'auto' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
+              <Box
+                sx={{
+                  width: 36,
+                  height: 4,
+                  borderRadius: 9999,
+                  bgcolor: colors.landing.borderLight,
+                }}
+              />
+            </Box>
+            {hook.selectedChild && hook.entryType === "micro" && (
+              <div>Micro data collection not available</div>
+            )}
+            {hook.selectedChild && hook.entryType === "full" && (
+              <QuickCheckIn
+                child={hook.selectedChild}
+                onComplete={hook.handleQuickEntryComplete}
+                onSkip={hook.handleQuickEntrySkip}
+                initialStep={hook.quickEntryStep}
+                initialDate={hook.quickEntryDate}
+              />
+            )}
+          </Box>
+        </SwipeableDrawer>
+      ) : (
+        <Modal
+          open={hook.showQuickEntry}
+          onClose={hook.handleQuickEntrySkip}
+          sx={{ display: "flex", alignItems: "center", justifyContent: "center", p: 2 }}
+        >
+          <Box sx={{ maxWidth: 600, width: "100%", maxHeight: "90vh", overflow: "auto" }}>
+            {hook.selectedChild && hook.entryType === "micro" && (
+              <div>Micro data collection not available</div>
+            )}
+            {hook.selectedChild && hook.entryType === "full" && (
+              <QuickCheckIn
+                child={hook.selectedChild}
+                onComplete={hook.handleQuickEntryComplete}
+                onSkip={hook.handleQuickEntrySkip}
+                initialStep={hook.quickEntryStep}
+                initialDate={hook.quickEntryDate}
+              />
+            )}
+          </Box>
+        </Modal>
+      )}
 
 
       <AddChildModal

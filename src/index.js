@@ -5,7 +5,6 @@ import "./i18n";
 import "./assets/css/App.css";
 import reportWebVitals from "./reportWebVitals";
 import { ErrorProvider } from "./contexts/ErrorContext";
-import { register as registerServiceWorker, unregister as unregisterServiceWorker } from "./serviceWorkerRegistration";
 // import suppressAllResizeObserverErrors from "./utils/suppressAllResizeObserverErrors";
 
 // Completely suppress ResizeObserver loop errors - TEMPORARILY DISABLED FOR TESTING
@@ -24,18 +23,13 @@ root.render(
 // to log results (for example: reportWebVitals(console.log))
 // or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
 reportWebVitals();
-if (process.env.NODE_ENV === "production") {
-  registerServiceWorker();
-} else {
-  unregisterServiceWorker();
 
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then((registrations) => {
-      registrations.forEach((registration) => registration.unregister());
-    }).catch(() => {});
-  }
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then((registrations) => {
+    registrations.forEach((registration) => registration.unregister());
+  }).catch(() => {});
+}
 
-  if ('caches' in window) {
-    caches.keys().then((keys) => Promise.all(keys.map((key) => caches.delete(key)))).catch(() => {});
-  }
+if ('caches' in window) {
+  caches.keys().then((keys) => Promise.all(keys.map((key) => caches.delete(key)))).catch(() => {});
 }

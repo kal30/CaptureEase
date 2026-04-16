@@ -519,7 +519,7 @@ const MedicationsLogTab = ({ childId, childName }) => {
             startIcon={<MedicationOutlinedIcon />}
             onClick={handleOpenBulkLogDialog}
           >
-            Log all medications for today
+            Log today&apos;s doses
           </Button>
         ) : null}
         <Button
@@ -534,6 +534,7 @@ const MedicationsLogTab = ({ childId, childName }) => {
       <AddEditMedicationModal
         open={Boolean(showForm)}
         onClose={handleCloseMedicationForm}
+        childName={childName}
         medicationForm={medicationForm}
         medicationNotesData={medicationNotesData}
         handleMedicationFormChange={handleMedicationFormChange}
@@ -800,8 +801,13 @@ const MedicationsLogTab = ({ childId, childName }) => {
         medications={activeMedications}
         user={user}
         onClose={handleCloseBulkLogDialog}
-        onSaved={() => {
-          handleCloseBulkLogDialog();
+        onSaved={({ medicationName, time }) => {
+          setSnackbarMessage(
+            medicationName
+              ? `${medicationName}${time ? ` logged for ${time}` : ' logged'}`
+              : 'Medication dose logged'
+          );
+          setShowSnackbar(true);
         }}
       />
 

@@ -1,7 +1,6 @@
 import React from "react";
 import {
   Box,
-  Chip,
   Button,
   IconButton,
   MenuItem,
@@ -9,71 +8,58 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import SaveOutlinedIcon from "@mui/icons-material/SaveOutlined";
-import CloseIcon from "@mui/icons-material/Close";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import MedicationOutlinedIcon from "@mui/icons-material/MedicationOutlined";
-import OpacityOutlinedIcon from "@mui/icons-material/OpacityOutlined";
 import HealingOutlinedIcon from "@mui/icons-material/HealingOutlined";
+import OpacityOutlinedIcon from "@mui/icons-material/OpacityOutlined";
 import SpaOutlinedIcon from "@mui/icons-material/SpaOutlined";
 import SportsHandballOutlinedIcon from "@mui/icons-material/SportsHandballOutlined";
 import InvertColorsOutlinedIcon from "@mui/icons-material/InvertColorsOutlined";
 import AirIcon from "@mui/icons-material/Air";
-import NightlightOutlinedIcon from "@mui/icons-material/NightlightOutlined";
-import WbSunnyOutlinedIcon from "@mui/icons-material/WbSunnyOutlined";
-import WbTwilightOutlinedIcon from "@mui/icons-material/WbTwilightOutlined";
-import BedtimeRoundedIcon from "@mui/icons-material/BedtimeRounded";
-import LocalDiningOutlinedIcon from "@mui/icons-material/LocalDiningOutlined";
-import ScienceOutlinedIcon from "@mui/icons-material/ScienceOutlined";
-import MonitorHeartOutlinedIcon from "@mui/icons-material/MonitorHeartOutlined";
+import { LogTimeField } from "../../UI";
+import DoseUnitField from "./DoseUnitField";
 import {
   MEDICATION_CATEGORY_OPTIONS,
   MEDICATION_FORM_OPTIONS,
-  MEDICATION_FOOD_OPTIONS,
-  MEDICATION_FREQUENCY_OPTIONS,
-  MEDICATION_ROUTE_OPTIONS,
-  MEDICATION_TIMING_OPTIONS,
-  getMedicationRouteOptions,
-  shouldShowMedicationRoute,
+  createMedicationSchedule,
+  normalizeMedicationSchedule,
   summarizeMedicationDetail,
 } from "./childMedicationHelpers";
 import colors from "../../../assets/theme/colors";
 
 const categoryPalette = {
   prescription: {
-    surface: "rgba(74, 122, 255, 0.07)",
-    border: "rgba(74, 122, 255, 0.18)",
-    chipBg: "rgba(74, 122, 255, 0.12)",
-    chipText: "#2F5FE3",
+    tint: "rgba(74, 122, 255, 0.08)",
+    border: "rgba(74, 122, 255, 0.16)",
+    dot: "#2F5FE3",
   },
   otc: {
-    surface: "rgba(244, 178, 79, 0.08)",
+    tint: "rgba(244, 178, 79, 0.08)",
     border: "rgba(244, 178, 79, 0.18)",
-    chipBg: "rgba(244, 178, 79, 0.16)",
-    chipText: "#A96500",
+    dot: "#A96500",
   },
   supplement: {
-    surface: "rgba(64, 174, 163, 0.08)",
+    tint: "rgba(64, 174, 163, 0.08)",
     border: "rgba(64, 174, 163, 0.18)",
-    chipBg: "rgba(64, 174, 163, 0.14)",
-    chipText: "#1E7C73",
+    dot: "#1E7C73",
   },
   vitamin: {
-    surface: "rgba(150, 102, 217, 0.08)",
+    tint: "rgba(150, 102, 217, 0.08)",
     border: "rgba(150, 102, 217, 0.18)",
-    chipBg: "rgba(150, 102, 217, 0.14)",
-    chipText: "#7648C0",
+    dot: "#7648C0",
   },
   prn: {
-    surface: "rgba(217, 112, 137, 0.07)",
+    tint: "rgba(217, 112, 137, 0.07)",
     border: "rgba(217, 112, 137, 0.18)",
-    chipBg: "rgba(217, 112, 137, 0.14)",
-    chipText: "#B54E69",
+    dot: "#B54E69",
   },
   other: {
-    surface: "rgba(115, 130, 153, 0.06)",
+    tint: "rgba(115, 130, 153, 0.06)",
     border: "rgba(115, 130, 153, 0.16)",
-    chipBg: "rgba(115, 130, 153, 0.12)",
-    chipText: "#5A6679",
+    dot: "#5A6679",
   },
 };
 
@@ -88,686 +74,439 @@ const formIconMap = {
   inhaler: AirIcon,
 };
 
-const formBgMap = {
-  pill: "rgba(74, 122, 255, 0.08)",
-  tablet: "rgba(74, 122, 255, 0.08)",
-  capsule: "rgba(64, 174, 163, 0.10)",
-  liquid: "rgba(64, 174, 163, 0.10)",
-  drops: "rgba(150, 102, 217, 0.10)",
-  cream: "rgba(244, 178, 79, 0.10)",
-  suppository: "rgba(217, 112, 137, 0.10)",
-  inhaler: "rgba(115, 130, 153, 0.10)",
+const formPalette = {
+  pill: "rgba(74, 122, 255, 0.10)",
+  tablet: "rgba(74, 122, 255, 0.10)",
+  capsule: "rgba(64, 174, 163, 0.12)",
+  liquid: "rgba(64, 174, 163, 0.12)",
+  drops: "rgba(150, 102, 217, 0.12)",
+  cream: "rgba(244, 178, 79, 0.12)",
+  suppository: "rgba(217, 112, 137, 0.12)",
+  inhaler: "rgba(115, 130, 153, 0.12)",
 };
 
-const timingIcons = {
-  morning: WbSunnyOutlinedIcon,
-  afternoon: WbTwilightOutlinedIcon,
-  evening: NightlightOutlinedIcon,
-  bedtime: BedtimeRoundedIcon,
+const defaultSchedule = () => createMedicationSchedule();
+
+const ensureSchedules = (entry) => {
+  const schedules = Array.isArray(entry?.schedules) && entry.schedules.length
+    ? entry.schedules.map(normalizeMedicationSchedule)
+    : [defaultSchedule()];
+
+  return schedules.length ? schedules : [defaultSchedule()];
 };
 
-const timingStyles = {
-  morning: {
-    iconBg: "rgba(250, 204, 21, 0.14)",
-    iconColor: "#D97706",
-    chipBg: "rgba(250, 204, 21, 0.12)",
-    chipBorder: "rgba(250, 204, 21, 0.26)",
-  },
-  afternoon: {
-    iconBg: "rgba(251, 146, 60, 0.14)",
-    iconColor: "#EA580C",
-    chipBg: "rgba(251, 146, 60, 0.12)",
-    chipBorder: "rgba(251, 146, 60, 0.26)",
-  },
-  evening: {
-    iconBg: "rgba(139, 92, 246, 0.14)",
-    iconColor: "#7C3AED",
-    chipBg: "rgba(139, 92, 246, 0.12)",
-    chipBorder: "rgba(139, 92, 246, 0.26)",
-  },
-  bedtime: {
-    iconBg: "rgba(14, 165, 233, 0.14)",
-    iconColor: "#0284C7",
-    chipBg: "rgba(14, 165, 233, 0.12)",
-    chipBorder: "rgba(14, 165, 233, 0.26)",
-  },
-};
-
-const medicationLabelStyles = {
-  borderRadius: 999,
-  px: 1.05,
-  py: 0.5,
+const fieldLabelSx = {
+  fontSize: "0.68rem",
+  lineHeight: 1.1,
   fontWeight: 700,
-  textTransform: "none",
+  letterSpacing: "0.08em",
+  textTransform: "uppercase",
+  color: colors.landing.textMuted,
 };
 
-const MedicationDetailCard = ({ entry, index, onChange, onRemove, onSave }) => {
+const sectionTitleSx = {
+  fontWeight: 800,
+  color: colors.brand.navy,
+  lineHeight: 1.1,
+};
+
+const MedicationDetailCard = ({
+  entry,
+  index,
+  onChange,
+  onRemove,
+  onSave,
+  title,
+  subtitle,
+}) => {
+  const normalizedSchedules = ensureSchedules(entry);
   const category = entry.category || "prescription";
-  const palette = categoryPalette[category] || categoryPalette.other;
-  const selectedForm = entry.form || "pill";
-  const showRoute = shouldShowMedicationRoute(selectedForm);
-  const routeOptions = getMedicationRouteOptions(selectedForm);
-  const summary = summarizeMedicationDetail(entry);
-  const isPrn = category === "prn";
-  const isCustomFrequency = entry.frequency === "custom";
-  const hasAdvancedData =
-    isPrn ||
-    isCustomFrequency ||
-    (Array.isArray(entry.timing) && entry.timing.length > 0) ||
-    (entry.foodRelation && entry.foodRelation !== "anytime") ||
-    Boolean(entry.route) ||
-    Boolean(entry.maxDailyDoses);
-  const [showAdvanced, setShowAdvanced] = React.useState(hasAdvancedData);
-  const summaryParts = [summary];
-  const syncStatus = entry.syncStatus || "draft";
-  const isSaved = syncStatus === "saved";
-  const canSave = typeof onSave === "function" && Boolean(String(entry.name || "").trim());
+  const form = entry.form || "pill";
+  const categoryTheme = categoryPalette[category] || categoryPalette.other;
+  const canSave = Boolean(
+    String(entry?.name || "").trim()
+      && String(entry?.startDate || "").trim()
+      && String(entry?.category || "").trim()
+      && String(entry?.form || "").trim()
+      && normalizedSchedules.length
+      && normalizedSchedules.every((schedule) => String(schedule?.dose || "").trim() && String(schedule?.time || "").trim())
+  );
+  const summary = summarizeMedicationDetail({
+    ...entry,
+    schedules: normalizedSchedules,
+  });
 
-  React.useEffect(() => {
-    setShowAdvanced(hasAdvancedData);
-  }, [entry.id, hasAdvancedData]);
+  const updateSchedules = (nextSchedules) => {
+    onChange("schedules", nextSchedules.map((schedule, scheduleIndex) => normalizeMedicationSchedule({
+      ...schedule,
+      id: schedule.id || `${entry.id || index}-${scheduleIndex}`,
+    })));
+  };
 
-  if (showRoute && entry.route) {
-    const routeSummary = MEDICATION_ROUTE_OPTIONS.find((option) => option.value === entry.route)?.label || entry.route;
-    summaryParts.push(`Route: ${routeSummary}`);
-  }
+  const updateScheduleField = (scheduleIndex, field, value) => {
+    const nextSchedules = normalizedSchedules.map((schedule, indexValue) => (
+      indexValue === scheduleIndex
+        ? {
+            ...schedule,
+            [field]: value,
+          }
+        : schedule
+    ));
+    updateSchedules(nextSchedules);
+  };
 
-  if (isPrn && entry.maxDailyDoses) {
-    summaryParts.push(`Max ${entry.maxDailyDoses}/day`);
-  }
+  const addScheduleRow = () => {
+    updateSchedules([
+      ...normalizedSchedules,
+      defaultSchedule(),
+    ]);
+  };
 
-  const handleTimingToggle = (value) => {
-    const currentTiming = Array.isArray(entry.timing) ? entry.timing : [];
-    const nextTiming = currentTiming.includes(value)
-      ? currentTiming.filter((item) => item !== value)
-      : [...currentTiming, value];
-    onChange("timing", nextTiming);
+  const removeScheduleRow = (scheduleIndex) => {
+    if (normalizedSchedules.length <= 1) {
+      return;
+    }
+
+    updateSchedules(normalizedSchedules.filter((_, indexValue) => indexValue !== scheduleIndex));
   };
 
   return (
     <Box
       sx={{
-        width: "calc(100% + 0.5rem)",
-        mx: { xs: -0.25, sm: -0.35 },
-        px: 0,
-        py: { xs: 0.15, sm: 0.2 },
+        width: "100%",
         borderRadius: 0,
-        border: 0,
-        bgcolor: palette.surface,
+        p: 0,
+        bgcolor: "transparent",
+        border: "none",
         boxShadow: "none",
       }}
     >
-      <Stack spacing={0.65}>
+      <Stack spacing={1.05} sx={{ px: { xs: 0.2, sm: 0.35 } }}>
+        <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 1 }}>
+          <Box sx={{ minWidth: 0 }}>
+            {title ? (
+              <Typography sx={sectionTitleSx}>
+                {title}
+              </Typography>
+            ) : null}
+            {subtitle ? (
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.3, lineHeight: 1.35 }}>
+                {subtitle}
+              </Typography>
+            ) : null}
+          </Box>
+        </Box>
+
         <Box
           sx={{
+            display: "grid",
+            gridTemplateColumns: { xs: "minmax(0, 1.55fr) minmax(118px, 0.8fr)", sm: "minmax(0, 1.65fr) minmax(150px, 0.72fr)" },
+            gap: 1,
+          }}
+        >
+          <Box>
+            <Typography sx={fieldLabelSx}>Medication name</Typography>
+            <TextField
+              size="small"
+              value={entry.name || ""}
+              onChange={(event) => onChange("name", event.target.value)}
+              placeholder="e.g. Melatonin"
+              fullWidth
+              sx={{
+                mt: 0.4,
+                "& .MuiInputBase-root": {
+                  minHeight: 48,
+                  borderRadius: "12px",
+                  bgcolor: "rgba(255,255,255,0.94)",
+                  fontWeight: 600,
+                },
+                "& .MuiOutlinedInput-notchedOutline": {
+                  borderColor: "rgba(217, 209, 238, 0.58)",
+                  borderWidth: "1px",
+                },
+              }}
+            />
+          </Box>
+
+          <Box>
+            <Typography sx={fieldLabelSx}>Start date</Typography>
+            <TextField
+              size="small"
+              type="date"
+              value={entry.startDate || ""}
+              onChange={(event) => onChange("startDate", event.target.value)}
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+              sx={{
+                mt: 0.4,
+                "& .MuiInputBase-root": {
+                  minHeight: 48,
+                  borderRadius: "12px",
+                  bgcolor: "rgba(255,255,255,0.94)",
+                  fontWeight: 600,
+                },
+                "& .MuiOutlinedInput-notchedOutline": {
+                  borderColor: "rgba(217, 209, 238, 0.58)",
+                  borderWidth: "1px",
+                },
+              }}
+            />
+          </Box>
+        </Box>
+
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+            gap: 1,
+          }}
+        >
+          <Box>
+            <Typography sx={fieldLabelSx}>Category</Typography>
+            <TextField
+              select
+              size="small"
+              value={category}
+              onChange={(event) => onChange("category", event.target.value)}
+              fullWidth
+              sx={{
+                mt: 0.4,
+                "& .MuiInputBase-root": {
+                  minHeight: 48,
+                  borderRadius: "12px",
+                  bgcolor: "rgba(255,255,255,0.94)",
+                  fontWeight: 600,
+                },
+                "& .MuiOutlinedInput-notchedOutline": {
+                  borderColor: categoryTheme.border,
+                  borderWidth: "1px",
+                },
+              }}
+              SelectProps={{
+                renderValue: (selected) => {
+                  const selectedOption = MEDICATION_CATEGORY_OPTIONS.find((option) => option.value === selected);
+                  const selectedTheme = categoryPalette[selected] || categoryPalette.other;
+
+                  return (
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 0.9, minWidth: 0 }}>
+                      <Box sx={{ width: 9, height: 9, borderRadius: "50%", bgcolor: selectedTheme.dot, flexShrink: 0 }} />
+                      <Typography sx={{ fontWeight: 700, color: selectedTheme.dot, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {selectedOption?.label || "Category"}
+                      </Typography>
+                    </Box>
+                  );
+                },
+              }}
+            >
+              {MEDICATION_CATEGORY_OPTIONS.map((option) => {
+                const theme = categoryPalette[option.value] || categoryPalette.other;
+                return (
+                  <MenuItem key={option.value} value={option.value}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <Box sx={{ width: 9, height: 9, borderRadius: "50%", bgcolor: theme.dot, flexShrink: 0 }} />
+                      <Typography sx={{ fontWeight: 600 }}>{option.label}</Typography>
+                    </Box>
+                  </MenuItem>
+                );
+              })}
+            </TextField>
+          </Box>
+
+          <Box>
+            <Typography sx={fieldLabelSx}>Form</Typography>
+            <TextField
+              select
+              size="small"
+              value={form}
+              onChange={(event) => onChange("form", event.target.value)}
+              fullWidth
+              sx={{
+                mt: 0.4,
+                "& .MuiInputBase-root": {
+                  minHeight: 48,
+                  borderRadius: "12px",
+                  bgcolor: "rgba(255,255,255,0.94)",
+                  fontWeight: 600,
+                },
+                "& .MuiOutlinedInput-notchedOutline": {
+                  borderColor: "rgba(217, 209, 238, 0.58)",
+                  borderWidth: "1px",
+                },
+              }}
+              SelectProps={{
+                renderValue: (selected) => {
+                  const selectedOption = MEDICATION_FORM_OPTIONS.find((option) => option.value === selected);
+                  const SelectedIcon = formIconMap[selected] || MedicationOutlinedIcon;
+                  const formTint = formPalette[selected] || "rgba(115, 130, 153, 0.10)";
+
+                  return (
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 0.9, minWidth: 0 }}>
+                      <Box
+                        sx={{
+                          width: 18,
+                          height: 18,
+                          borderRadius: "50%",
+                          bgcolor: formTint,
+                          color: colors.brand.deep,
+                          flexShrink: 0,
+                          display: "grid",
+                          placeItems: "center",
+                        }}
+                      >
+                        <SelectedIcon sx={{ fontSize: 12 }} />
+                      </Box>
+                      <Typography sx={{ fontWeight: 700, color: colors.brand.navy }}>
+                        {selectedOption?.label || "Form"}
+                      </Typography>
+                    </Box>
+                  );
+                },
+              }}
+            >
+              {MEDICATION_FORM_OPTIONS.map((option) => {
+                const OptionIcon = formIconMap[option.value] || MedicationOutlinedIcon;
+                return (
+                  <MenuItem key={option.value} value={option.value}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <Box sx={{ width: 20, height: 20, borderRadius: "50%", bgcolor: formPalette[option.value] || "rgba(115,130,153,0.12)", display: "grid", placeItems: "center", color: colors.brand.deep }}>
+                        <OptionIcon sx={{ fontSize: 12 }} />
+                      </Box>
+                      <Typography sx={{ fontWeight: 600 }}>{option.label}</Typography>
+                    </Box>
+                  </MenuItem>
+                );
+              })}
+            </TextField>
+          </Box>
+        </Box>
+
+        <Box>
+          <Typography sx={{ ...fieldLabelSx, mb: 0.75 }}>Dosage schedule</Typography>
+          <Stack spacing={0.85}>
+            {normalizedSchedules.map((schedule, scheduleIndex) => {
+              const isLast = scheduleIndex === normalizedSchedules.length - 1;
+
+              return (
+                <Box
+                  key={schedule.id || `${entry.id || index}-${scheduleIndex}`}
+                  sx={{
+                    display: "flex",
+                    alignItems: "stretch",
+                    gap: 0.7,
+                    flexWrap: "nowrap",
+                    minWidth: 0,
+                  }}
+                >
+                  <Box sx={{ flex: "1.35 1 0%", minWidth: 0 }}>
+                    <DoseUnitField
+                      dose={schedule.dose}
+                      unit={schedule.unit || "mg"}
+                      onDoseChange={(value) => updateScheduleField(scheduleIndex, "dose", value)}
+                      onUnitChange={(value) => updateScheduleField(scheduleIndex, "unit", value)}
+                    />
+                  </Box>
+
+                  <Box sx={{ flex: "0.95 1 0%", minWidth: 120 }}>
+                    <LogTimeField
+                      value={schedule.time || ""}
+                      onChange={(event) => updateScheduleField(scheduleIndex, "time", event.target.value)}
+                      showLabel={false}
+                      sx={{
+                        "& .MuiInputBase-root": {
+                          minHeight: 48,
+                          borderRadius: "12px",
+                        },
+                        "& input": {
+                          paddingTop: "0.82rem",
+                          paddingBottom: "0.82rem",
+                          fontWeight: 600,
+                          fontSize: "0.96rem",
+                        },
+                      }}
+                    />
+                  </Box>
+
+                  <IconButton
+                    size="small"
+                    onClick={isLast ? addScheduleRow : () => removeScheduleRow(scheduleIndex)}
+                    aria-label={isLast ? "Add schedule row" : "Remove schedule row"}
+                      sx={{
+                      flexShrink: 0,
+                      width: 38,
+                      height: 38,
+                      mt: 0.3,
+                      borderRadius: "10px",
+                      border: "1px solid rgba(217, 209, 238, 0.58)",
+                      bgcolor: "rgba(255,255,255,0.9)",
+                      color: colors.brand.deep,
+                    }}
+                  >
+                    {isLast ? <AddRoundedIcon fontSize="small" /> : <DeleteOutlineIcon fontSize="small" />}
+                  </IconButton>
+                </Box>
+              );
+            })}
+          </Stack>
+        </Box>
+
+        <Box
+          sx={{
+            pt: 0.35,
             display: "flex",
-            alignItems: "flex-start",
+            flexDirection: { xs: "column", sm: "row" },
+            alignItems: { xs: "stretch", sm: "center" },
             justifyContent: "space-between",
             gap: 1,
           }}
         >
-          <Box sx={{ minWidth: 0 }}>
-            <Typography sx={{ fontWeight: 800, lineHeight: 1.1 }}>
-              Medication {index + 1}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Save this row when you are ready to keep it.
-            </Typography>
-          </Box>
+          <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.35 }}>
+            {summary || "Fill the row to create a quick medication summary."}
+          </Typography>
 
-          <Stack direction="row" alignItems="center" spacing={0.75} sx={{ flexShrink: 0 }}>
-            <Chip
-              label={isSaved ? "Saved" : "Draft"}
-              size="small"
-              sx={{
-                bgcolor: isSaved ? "rgba(64, 174, 163, 0.14)" : "rgba(115, 130, 153, 0.10)",
-                color: isSaved ? "#1E7C73" : colors.landing.textMuted,
-                fontWeight: 800,
-                letterSpacing: "0.02em",
-              }}
-            />
+          <Stack direction="row" spacing={0.75} sx={{ width: { xs: "100%", sm: "auto" }, justifyContent: "flex-end" }}>
             <IconButton
-              size="small"
+              type="button"
               onClick={onRemove}
-              aria-label={`Remove medication ${index + 1}`}
+              aria-label="Cancel medication"
               sx={{
-                bgcolor: "rgba(255,255,255,0.85)",
-                border: "1px solid",
-                borderColor: "divider",
-                boxShadow: "0 4px 12px rgba(60, 72, 88, 0.04)",
-                flexShrink: 0,
+                width: 38,
+                height: 38,
+                borderRadius: "10px",
+                border: "1px solid rgba(217, 209, 238, 0.58)",
+                color: colors.brand.deep,
+                bgcolor: "rgba(255,255,255,0.88)",
+                "&:hover": {
+                  borderColor: "rgba(194, 181, 229, 1)",
+                  bgcolor: "rgba(255,255,255,0.96)",
+                },
               }}
             >
-              <CloseIcon fontSize="small" />
+              <CloseRoundedIcon fontSize="small" />
+            </IconButton>
+
+            <IconButton
+              type="button"
+              onClick={onSave}
+              disabled={!canSave}
+              aria-label="Save medication"
+              sx={{
+                width: 38,
+                height: 38,
+                borderRadius: "10px",
+                border: "1px solid rgba(217, 209, 238, 0.58)",
+                color: canSave ? colors.brand.ink : "rgba(73, 79, 92, 0.35)",
+                bgcolor: canSave ? colors.landing.sageLight : "rgba(115, 130, 153, 0.12)",
+                "&:hover": canSave
+                  ? {
+                      borderColor: "rgba(194, 181, 229, 1)",
+                      bgcolor: "rgba(244, 241, 248, 0.94)",
+                    }
+                  : undefined,
+              }}
+            >
+              <CheckRoundedIcon fontSize="small" />
             </IconButton>
           </Stack>
-        </Box>
-
-        <Box
-          sx={{
-            display: "flex",
-            flexWrap: "wrap",
-            alignItems: "center",
-            gap: 0.35,
-            pt: 0.2,
-          }}
-        >
-          <TextField
-            size="small"
-            select
-            label="Category"
-            value={category}
-            onChange={(event) => onChange("category", event.target.value)}
-            sx={{
-              flex: { xs: "1 1 100%", sm: "0 0 170px" },
-              "& .MuiInputBase-root": {
-                borderRadius: 999,
-              },
-            }}
-            SelectProps={{
-              renderValue: (selected) => {
-                const option = MEDICATION_CATEGORY_OPTIONS.find((item) => item.value === selected);
-                const optionPalette = categoryPalette[selected] || categoryPalette.other;
-
-                return (
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: 0 }}>
-                    <Box
-                      sx={{
-                        width: 9,
-                        height: 9,
-                        borderRadius: "50%",
-                        bgcolor: optionPalette.chipText,
-                        flexShrink: 0,
-                      }}
-                    />
-                    <Typography
-                      component="span"
-                      sx={{
-                        fontWeight: 700,
-                        color: optionPalette.chipText,
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}
-                    >
-                      {option?.label || "Category"}
-                    </Typography>
-                  </Box>
-                );
-              },
-            }}
-          >
-            {MEDICATION_CATEGORY_OPTIONS.map((option) => (
-              <MenuItem key={option.value} value={option.value}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <Box
-                    sx={{
-                      width: 10,
-                      height: 10,
-                      borderRadius: "50%",
-                      bgcolor: (categoryPalette[option.value] || categoryPalette.other).chipText,
-                      flexShrink: 0,
-                    }}
-                  />
-                  <Typography sx={{ fontWeight: 600 }}>{option.label}</Typography>
-                </Box>
-              </MenuItem>
-            ))}
-          </TextField>
-
-          <TextField
-            size="small"
-            select
-            label="How often"
-            value={entry.frequency}
-            onChange={(event) => onChange("frequency", event.target.value)}
-            sx={{
-              flex: { xs: "1 1 100%", sm: "0 0 170px" },
-              "& .MuiInputBase-root": {
-                borderRadius: 999,
-              },
-            }}
-            SelectProps={{
-              renderValue: (selected) => {
-                const option = MEDICATION_FREQUENCY_OPTIONS.find((item) => item.value === selected);
-                return option?.label || "How often";
-              },
-            }}
-          >
-            {MEDICATION_FREQUENCY_OPTIONS.map((option) => (
-              <MenuItem key={option.value} value={option.value}>
-                {option.label}
-              </MenuItem>
-            ))}
-          </TextField>
-
-          {isCustomFrequency ? (
-            <Box
-              sx={{
-                flex: { xs: "1 1 100%", sm: "1 1 220px" },
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 0.5,
-                px: 0.6,
-                py: 0.25,
-                borderRadius: 999,
-                border: "1px solid",
-                borderColor: palette.border,
-                bgcolor: "rgba(255,255,255,0.72)",
-                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.55)",
-                minWidth: 0,
-              }}
-            >
-              <Chip
-                label="Custom"
-                size="small"
-                sx={{
-                  ...medicationLabelStyles,
-                  px: 0.65,
-                  py: 0.1,
-                  bgcolor: palette.chipBg,
-                  color: palette.chipText,
-                  minHeight: 20,
-                }}
-              />
-              <TextField
-                variant="standard"
-                size="small"
-                value={entry.customFrequency || ""}
-                onChange={(event) => onChange("customFrequency", event.target.value)}
-                placeholder="Every 3h"
-                fullWidth
-                InputProps={{
-                  disableUnderline: true,
-                }}
-                sx={{
-                  minWidth: 0,
-                  flex: 1,
-                  "& .MuiInputBase-input": {
-                    py: 0.1,
-                    fontSize: "0.78rem",
-                    fontWeight: 600,
-                  },
-                }}
-              />
-            </Box>
-          ) : null}
-        </Box>
-
-        <Box
-          sx={{
-            display: "grid",
-            gridTemplateColumns: "1fr",
-            gap: 0.5,
-          }}
-        >
-          <TextField
-            size="small"
-            label="Medication name"
-            value={entry.name}
-            onChange={(event) => onChange("name", event.target.value)}
-            fullWidth
-          />
-        </Box>
-
-        <Box
-          sx={{
-            display: "grid",
-            gridTemplateColumns: {
-              xs: "1fr",
-              sm: "minmax(0, 1fr) minmax(120px, 0.48fr)",
-            },
-            gap: 0.5,
-          }}
-        >
-          <TextField
-            size="small"
-            label="Dose"
-            value={entry.dose}
-            onChange={(event) => onChange("dose", event.target.value)}
-            fullWidth
-          />
-          <TextField
-            size="small"
-            label="Unit"
-            value={entry.unit}
-            onChange={(event) => onChange("unit", event.target.value)}
-            fullWidth
-            placeholder="mg, ml, puffs"
-          />
-        </Box>
-
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.75 }}>
-          <Typography
-            sx={{
-              fontWeight: 500,
-              color: colors.landing.textMuted,
-              textTransform: "none",
-              letterSpacing: 0,
-              fontSize: "0.72rem",
-              lineHeight: 1.1,
-              mb: -0.15,
-            }}
-          >
-            Form
-          </Typography>
-          <Box
-            sx={{
-              display: "flex",
-              gap: 0.2,
-              overflowX: "auto",
-              pb: 0.5,
-              flexWrap: "nowrap",
-              "&::-webkit-scrollbar": { height: 6 },
-              "&::-webkit-scrollbar-thumb": { borderRadius: 999, background: "rgba(115,130,153,0.18)" },
-            }}
-          >
-            {MEDICATION_FORM_OPTIONS.map((option) => {
-              const SelectedIcon = formIconMap[option.value] || MedicationOutlinedIcon;
-              const isActive = selectedForm === option.value;
-              const optionBg = formBgMap[option.value] || "rgba(115,130,153,0.08)";
-
-              return (
-                <Box
-                  key={option.value}
-                  component="button"
-                  type="button"
-                  onClick={() => onChange("form", option.value)}
-                  sx={{
-                    cursor: "pointer",
-                    borderRadius: 999,
-                    border: "1px solid",
-                    borderColor: isActive ? palette.border : "divider",
-                    bgcolor: isActive ? optionBg : "background.paper",
-                    px: 0.72,
-                    py: 0.5,
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 0.28,
-                    flexShrink: 0,
-                    whiteSpace: "nowrap",
-                    transition: "all 0.2s ease",
-                    "&:hover": {
-                      borderColor: palette.border,
-                      transform: "translateY(-1px)",
-                    },
-                  }}
-                >
-                  <Box
-                    sx={{
-                      width: 16,
-                      height: 16,
-                      borderRadius: "50%",
-                      display: "grid",
-                      placeItems: "center",
-                      bgcolor: "rgba(255,255,255,0.6)",
-                      color: colors.brand.deep,
-                      flexShrink: 0,
-                    }}
-                  >
-                    <SelectedIcon fontSize="inherit" />
-                  </Box>
-                  <Typography sx={{ fontWeight: 700, lineHeight: 1 }}>
-                    {option.label}
-                  </Typography>
-                </Box>
-              );
-            })}
-          </Box>
-        </Box>
-
-        <Box
-          sx={{
-            display: "grid",
-            gridTemplateColumns: "1fr",
-            gap: 0.5,
-          }}
-        >
-          <TextField
-            size="small"
-            label="Start date"
-            type="date"
-            value={entry.startDate}
-            onChange={(event) => onChange("startDate", event.target.value)}
-            fullWidth
-            InputLabelProps={{ shrink: true }}
-          />
-          <TextField
-            size="small"
-            label="Notes"
-            value={entry.notes}
-            onChange={(event) => onChange("notes", event.target.value)}
-            fullWidth
-            multiline
-            minRows={2}
-            placeholder="Optional reminders or instructions"
-          />
-        </Box>
-
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 0.75,
-            flexWrap: "wrap",
-          }}
-        >
-          <Button
-            size="small"
-            variant="text"
-            onClick={() => setShowAdvanced((current) => !current)}
-            sx={{
-              minWidth: 0,
-              px: 0,
-              py: 0,
-              textTransform: "none",
-              fontWeight: 700,
-              color: colors.brand.deep,
-            }}
-          >
-            {showAdvanced ? "Hide details" : "More details"}
-          </Button>
-
-          <Typography variant="caption" color="text.secondary">
-            Timing, food, and route stay tucked away.
-          </Typography>
-        </Box>
-
-        {showAdvanced ? (
-          <Stack spacing={0.85}>
-            {isPrn ? (
-              <Box
-                sx={{
-                  display: "grid",
-                  gridTemplateColumns: { xs: "1fr", sm: "minmax(0, 0.7fr) 1fr" },
-                  gap: 0.5,
-                }}
-              >
-                <TextField
-                  size="small"
-                  label="Max doses/day"
-                  value={entry.maxDailyDoses}
-                  onChange={(event) => onChange("maxDailyDoses", event.target.value)}
-                  fullWidth
-                  helperText="Used for PRN medications."
-                />
-                <Box
-                  sx={{
-                    p: 1.1,
-                    borderRadius: 2,
-                    bgcolor: "rgba(115, 130, 153, 0.08)",
-                    border: "1px solid",
-                    borderColor: "divider",
-                    display: "flex",
-                    alignItems: "center",
-                  }}
-                >
-                  <Typography variant="body2" color="text.secondary">
-                    Timing is hidden for PRN.
-                  </Typography>
-                </Box>
-              </Box>
-            ) : (
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 0.55 }}>
-                <Typography variant="caption" sx={{ fontWeight: 700, color: "text.secondary" }}>
-                  Timing
-                </Typography>
-                <Stack
-                  direction="row"
-                  spacing={0.4}
-                  useFlexGap={false}
-                  sx={{
-                    flexWrap: "nowrap",
-                    overflowX: "auto",
-                    pb: 0.4,
-                    "&::-webkit-scrollbar": { height: 6 },
-                    "&::-webkit-scrollbar-thumb": { borderRadius: 999, background: "rgba(115,130,153,0.18)" },
-                  }}
-                >
-              {MEDICATION_TIMING_OPTIONS.map((option) => {
-                const active = Array.isArray(entry.timing) && entry.timing.includes(option.value);
-                const TimingIcon = timingIcons[option.value] || WbSunnyOutlinedIcon;
-                const timingStyle = timingStyles[option.value] || timingStyles.morning;
-
-                return (
-                  <Chip
-                    key={option.value}
-                    label={option.label}
-                    icon={<TimingIcon fontSize="small" />}
-                    onClick={() => handleTimingToggle(option.value)}
-                    variant={active ? "filled" : "outlined"}
-                    sx={{
-                      ...medicationLabelStyles,
-                      px: 0.8,
-                      py: 0.4,
-                      bgcolor: active ? timingStyle.chipBg : "transparent",
-                      color: active ? timingStyle.iconColor : colors.brand.navy,
-                      borderColor: active ? timingStyle.chipBorder : "divider",
-                      "& .MuiChip-icon": {
-                        color: active ? timingStyle.iconColor : colors.brand.deep,
-                        bgcolor: timingStyle.iconBg,
-                        borderRadius: "50%",
-                        width: 22,
-                        height: 22,
-                        display: "grid",
-                        placeItems: "center",
-                        marginLeft: 0.25,
-                      },
-                    }}
-                  />
-                );
-              })}
-                </Stack>
-              </Box>
-            )}
-
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 0.55 }}>
-              <Typography variant="caption" sx={{ fontWeight: 700, color: "text.secondary" }}>
-                Food relation
-              </Typography>
-              <Stack direction="row" spacing={0.5} useFlexGap flexWrap="wrap">
-                {MEDICATION_FOOD_OPTIONS.map((option) => {
-                  const active = entry.foodRelation === option.value;
-                  const iconMap = {
-                    before_food: <ScienceOutlinedIcon fontSize="small" />,
-                    with_food: <LocalDiningOutlinedIcon fontSize="small" />,
-                    anytime: <MonitorHeartOutlinedIcon fontSize="small" />,
-                  };
-
-                  return (
-                    <Chip
-                      key={option.value}
-                      label={option.label}
-                      icon={iconMap[option.value]}
-                      onClick={() => onChange("foodRelation", option.value)}
-                      variant={active ? "filled" : "outlined"}
-                      sx={{
-                        ...medicationLabelStyles,
-                        bgcolor: active ? palette.chipBg : "transparent",
-                        color: active ? palette.chipText : colors.brand.navy,
-                        borderColor: active ? palette.border : "divider",
-                      }}
-                    />
-                  );
-                })}
-              </Stack>
-            </Box>
-
-            {showRoute ? (
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 0.55 }}>
-                <Typography variant="caption" sx={{ fontWeight: 700, color: "text.secondary" }}>
-                  How to give
-                </Typography>
-                <Stack direction="row" spacing={0.5} useFlexGap flexWrap="wrap">
-                  {routeOptions.map((routeValue) => {
-                    const routeLabel = MEDICATION_ROUTE_OPTIONS.find((option) => option.value === routeValue)?.label || routeValue;
-                    const active = entry.route === routeValue;
-                    return (
-                      <Chip
-                        key={routeValue}
-                        label={routeLabel}
-                        onClick={() => onChange("route", routeValue)}
-                        variant={active ? "filled" : "outlined"}
-                        sx={{
-                          ...medicationLabelStyles,
-                          bgcolor: active ? palette.chipBg : "transparent",
-                          color: active ? palette.chipText : colors.brand.navy,
-                          borderColor: active ? palette.border : "divider",
-                        }}
-                      />
-                    );
-                  })}
-                </Stack>
-              </Box>
-            ) : null}
-          </Stack>
-        ) : null}
-
-        <Box
-          sx={{
-            pt: 0.5,
-            display: "flex",
-            alignItems: { xs: "stretch", sm: "center" },
-            justifyContent: "space-between",
-            gap: 0.75,
-            flexWrap: "wrap",
-          }}
-        >
-          <Typography variant="body2" color="text.secondary">
-            {summaryParts.filter(Boolean).join(" • ") || "Fill in the row to generate a quick summary."}
-          </Typography>
-
-          {typeof onSave === "function" ? (
-            <Stack direction="row" spacing={0.75} alignItems="center" sx={{ width: { xs: "100%", sm: "auto" }, justifyContent: { xs: "space-between", sm: "flex-end" } }}>
-              <Button
-                size="small"
-                variant={isSaved ? "outlined" : "contained"}
-                startIcon={<SaveOutlinedIcon fontSize="small" />}
-                onClick={onSave}
-                disabled={!canSave}
-                sx={{
-                  borderRadius: 999,
-                  textTransform: "none",
-                  minWidth: 0,
-                  px: 0.65,
-                  py: 0.15,
-                  minHeight: 20,
-                  fontSize: "0.62rem",
-                  bgcolor: isSaved ? "background.paper" : colors.dashboard?.childHeader?.finishProfileBg || "rgba(240,207,195,0.5)",
-                  color: colors.brand.navy,
-                  borderColor: isSaved ? "divider" : colors.dashboard?.childHeader?.finishProfileBorder || "rgba(240,207,195,0.55)",
-                  boxShadow: isSaved ? "none" : "0 6px 16px rgba(60,72,88,0.06)",
-                  "&:hover": {
-                    bgcolor: isSaved ? "background.paper" : colors.dashboard?.childHeader?.finishProfileHoverBg || "rgba(240,207,195,0.7)",
-                    boxShadow: "none",
-                  },
-                }}
-              >
-                {isSaved ? "Saved" : "Save medication"}
-              </Button>
-            </Stack>
-          ) : null}
         </Box>
       </Stack>
     </Box>

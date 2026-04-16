@@ -3,12 +3,10 @@ import {
   Box,
   Dialog,
   Drawer,
-  IconButton,
-  Typography,
   useMediaQuery,
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
 import { useTheme } from '@mui/material/styles';
+import LogSheetTitle from './LogSheetTitle';
 import colors from '../../assets/theme/colors';
 
 const LogFormShell = ({
@@ -16,8 +14,13 @@ const LogFormShell = ({
   onClose,
   title,
   subtitle,
+  titleBadge,
+  headerContent,
+  compactTitle = false,
   children,
   footer,
+  bodySx: bodySxOverride = {},
+  surfaceSx: surfaceSxOverride = {},
   mobileBreakpoint = 'md',
   maxWidth = 'sm',
   forceDrawer = false,
@@ -46,84 +49,47 @@ const LogFormShell = ({
           height: 'min(88dvh, 88vh)',
           maxHeight: 'min(88dvh, 88vh)',
         }),
+    ...surfaceSxOverride,
   };
 
   const headerSx = {
     flex: 'none',
-    display: 'flex',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    gap: 2,
     px: { xs: 3, sm: 4 },
     pt: { xs: 2.5, sm: 3 },
-    pb: 2.5,
+    pb: 2.25,
     borderBottom: `1px solid ${colors.app.cards.border}`,
   };
 
-  const bodySx = {
+  const bodyStyles = {
     flex: '1 1 auto',
     minHeight: 0,
     overflowY: 'auto',
     overflowX: 'hidden',
-    px: { xs: 3, sm: 4 },
+    px: { xs: 1.5, sm: 4 },
     pt: 2.75,
     pb: 2.5,
   };
 
   const footerSx = {
     flex: 'none',
-    px: { xs: 3, sm: 4 },
+    px: { xs: 1.5, sm: 4 },
     pb: { xs: 3, sm: 4 },
     pt: 0.5,
   };
 
-  const titleBlock = (
-    <Box sx={{ pr: 1, minWidth: 0, flex: 1 }}>
-      <Typography
-        variant="h5"
-        sx={{
-          fontWeight: 800,
-          color: 'text.primary',
-          lineHeight: 1.1,
-          fontSize: { xs: '1.5rem', sm: '1.75rem' },
-        }}
-      >
-        {title}
-      </Typography>
-      {subtitle ? (
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          sx={{ mt: 0.75, fontSize: { xs: '0.95rem', sm: '1rem' } }}
-        >
-          {subtitle}
-        </Typography>
-      ) : null}
-    </Box>
-  );
-
-  const closeButton = (
-    <IconButton
-      onClick={onClose}
-      sx={{
-        flexShrink: 0,
-        width: 48,
-        height: 48,
-        bgcolor: colors.app.cards.shadowSoft,
-        '&:hover': { bgcolor: colors.app.cards.shadowHover },
-      }}
-    >
-      <CloseIcon sx={{ fontSize: 30 }} />
-    </IconButton>
-  );
-
   const content = (
     <Box className="log-form-shell-print" sx={surfaceSx}>
       <Box sx={headerSx}>
-        {titleBlock}
-        {closeButton}
+        <LogSheetTitle
+          title={title}
+          titleBadge={titleBadge}
+          subtitle={subtitle}
+          onClose={onClose}
+          compactTitle={compactTitle}
+        />
+        {headerContent ? <Box sx={{ mt: 1.5 }}>{headerContent}</Box> : null}
       </Box>
-      <Box sx={bodySx}>{children}</Box>
+      <Box sx={{ ...bodyStyles, ...bodySxOverride }}>{children}</Box>
       {footer ? <Box sx={footerSx}>{footer}</Box> : null}
     </Box>
   );
@@ -145,8 +111,10 @@ const LogFormShell = ({
             width: '100%',
             maxWidth: '100vw',
             overflowX: 'hidden',
+            overflowY: 'hidden',
             height: '85vh',
             maxHeight: '85vh',
+            ...surfaceSxOverride,
           },
         }}
       >
@@ -156,7 +124,7 @@ const LogFormShell = ({
               width: 46,
               height: 5,
               borderRadius: 999,
-              bgcolor: colors.app.text.muted,
+              bgcolor: '#b8c0cc',
             }}
           />
         </Box>
@@ -176,6 +144,8 @@ const LogFormShell = ({
         sx: {
           ...surfaceSx,
           width: '100%',
+          overflowY: 'hidden',
+          ...surfaceSxOverride,
         },
       }}
     >

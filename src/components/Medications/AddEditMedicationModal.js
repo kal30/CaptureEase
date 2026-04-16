@@ -1,35 +1,19 @@
 import React from "react";
 import {
   Box,
-  Typography,
   Button,
-  Modal,
+  Grid,
   TextField,
   Autocomplete,
-  Grid,
+  Typography,
 } from "@mui/material";
+import LogFormShell from "../UI/LogFormShell";
 import RichTextInput from "../UI/RichTextInput";
-
-const style = {
-  position: "absolute",
-  top: "50%",
-  left: "50%",
-  transform: "translate(-50%, -50%)",
-  width: { xs: '92vw', sm: 720, md: 900 },
-  maxWidth: '92vw',
-  maxHeight: '90vh',
-  bgcolor: "background.paper",
-  border: "1px solid",
-  borderColor: "divider",
-  borderRadius: 2,
-  boxShadow: 24,
-  p: 2,
-  overflowY: 'auto',
-};
 
 const AddEditMedicationModal = ({
   open,
   onClose,
+  childName,
   medicationForm,
   handleMedicationFormChange,
   handleMedicationSubmit,
@@ -40,19 +24,48 @@ const AddEditMedicationModal = ({
   medicationNotesData,
   setMedicationNotesData,
 }) => {
+  const title = editingMedicationId ? "Edit Medication" : "Medication";
+  const subtitle = editingMedicationId
+    ? "Update medication details and notes"
+    : "Add medication details and notes";
+
+  const footer = (
+    <Box sx={{ display: "flex", gap: 1, justifyContent: "flex-end", flexWrap: "wrap" }}>
+      <Button
+        type="submit"
+        variant="contained"
+        onClick={handleMedicationSubmit}
+        sx={{ width: { xs: "100%", sm: "auto" } }}
+      >
+        {editingMedicationId ? "Update Medication" : "Add Medication"}
+      </Button>
+      {editingMedicationId ? (
+        <Button variant="outlined" onClick={handleCancelEdit} sx={{ width: { xs: "100%", sm: "auto" } }}>
+          Cancel
+        </Button>
+      ) : (
+        <Button variant="outlined" onClick={onClose} sx={{ width: { xs: "100%", sm: "auto" } }}>
+          Done
+        </Button>
+      )}
+    </Box>
+  );
+
   return (
-    <Modal
+    <LogFormShell
       open={open}
       onClose={onClose}
-      aria-labelledby="add-edit-medication-title"
-      aria-describedby="add-edit-medication-description"
+      title={title}
+      titleBadge={childName || null}
+      subtitle={subtitle}
+      compactTitle
+      footer={footer}
+      mobileBreakpoint="md"
+      maxWidth="md"
     >
-      <Box sx={style}>
-        <Typography id="add-edit-medication-title" variant="h6" component="h2">
-          {editingMedicationId ? "Edit Medication" : "Add New Medication"}
-        </Typography>
+      <Box>
         <Grid container spacing={2}>
-          <Grid item xs={12} sm={12}>
+          <Grid item xs={12}>
             <Autocomplete
               freeSolo
               fullWidth
@@ -67,21 +80,20 @@ const AddEditMedicationModal = ({
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  margin="normal"
                   required
                   fullWidth
                   id="name"
                   label="Medication Name"
                   name="name"
                   onChange={handleMedicationFormChange}
-                  sx={{ width: '100%' }}
+                  sx={{ width: "100%" }}
                 />
               )}
             />
           </Grid>
+
           <Grid item xs={12} sm={6}>
             <TextField
-              margin="normal"
               required
               fullWidth
               id="dosage"
@@ -91,9 +103,9 @@ const AddEditMedicationModal = ({
               onChange={handleMedicationFormChange}
             />
           </Grid>
+
           <Grid item xs={12} sm={6}>
             <TextField
-              margin="normal"
               required
               fullWidth
               id="frequency"
@@ -103,25 +115,23 @@ const AddEditMedicationModal = ({
               onChange={handleMedicationFormChange}
             />
           </Grid>
+
           <Grid item xs={12} sm={6}>
             <TextField
-              margin="normal"
               required
               fullWidth
               id="startDate"
               label="Start Date"
               name="startDate"
               type="date"
-              InputLabelProps={{
-                shrink: true,
-              }}
+              InputLabelProps={{ shrink: true }}
               value={medicationForm.startDate}
               onChange={handleMedicationFormChange}
             />
           </Grid>
+
           <Grid item xs={12} sm={6}>
             <TextField
-              margin="normal"
               fullWidth
               id="prescribingDoctor"
               label="Prescribing Doctor"
@@ -130,6 +140,7 @@ const AddEditMedicationModal = ({
               onChange={handleMedicationFormChange}
             />
           </Grid>
+
           <Grid item xs={12}>
             <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 700 }}>
               Notes
@@ -141,30 +152,8 @@ const AddEditMedicationModal = ({
             />
           </Grid>
         </Grid>
-        <Box sx={{ mt: 2, display: "flex", gap: 1 }}>
-          <Button
-            type="submit"
-            variant="contained"
-            onClick={handleMedicationSubmit}
-          >
-            {editingMedicationId ? "Update Medication" : "Add Medication"}
-          </Button>
-          {editingMedicationId && (
-            <Button variant="outlined" onClick={handleCancelEdit}>
-              Cancel
-            </Button>
-          )}
-          {!editingMedicationId && (
-            <Button
-              variant="outlined"
-              onClick={onClose} // Use onClose for the Done button when adding new
-            >
-              Done
-            </Button>
-          )}
-        </Box>
       </Box>
-    </Modal>
+    </LogFormShell>
   );
 };
 

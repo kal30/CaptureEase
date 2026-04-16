@@ -28,6 +28,7 @@ import { useTimelineProgress } from '../../hooks/useTimelineProgress';
 import { trackRenderDebug, useMountDebug } from '../../utils/renderDebug';
 import { CATEGORY_COLORS } from '../../constants/categoryColors';
 import { getCanonicalEntryDisplayInfo, getLogTypeByCategory, getLogTypeByEntry } from '../../constants/logTypeRegistry';
+import { getTimelineEntryDate } from '../../services/timeline/dateUtils';
 
 /**
  * TimelineWidget - Self-contained timeline component with progress visualization and unified daily log
@@ -219,7 +220,7 @@ const TimelineWidget = ({
         return normalizeSearchableText(entry).includes(searchTerm);
       })
       .map((entry) => {
-        const entryDate = entry.timestamp?.toDate ? entry.timestamp.toDate() : new Date(entry.timestamp);
+        const entryDate = getTimelineEntryDate(entry) || (entry.timestamp?.toDate ? entry.timestamp.toDate() : new Date(entry.timestamp));
         const previewSource = entry.text || entry.summary || entry.content || entry.description || entry.notes || entry.note || '';
         const preview = String(previewSource).trim().replace(/\s+/g, ' ');
         const categoryKey = entry.category || entry.type || 'log';

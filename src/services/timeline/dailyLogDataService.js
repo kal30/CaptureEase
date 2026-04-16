@@ -6,7 +6,7 @@ import {
   getDocs,
 } from 'firebase/firestore';
 import { db } from '../firebase';
-import { getDayDateRange, isWithinDateRange } from './dateUtils';
+import { getDayDateRange, isWithinDateRange, isTimelineEntryOnDate } from './dateUtils';
 import { getLogTypeByEntry, getTimelineMetaForCategory, isBehaviorIncidentEntry, LOG_TYPES } from '../../constants/logTypeRegistry';
 import { dedupeTimelineEntries } from './timelineDeduping';
 
@@ -41,15 +41,21 @@ const mapDailyLogEntry = (doc) => {
   const categoryType = getLogTypeByEntry(data);
   const categoryMeta = getTimelineMetaForCategory(categoryType.category);
   const isBehaviorIncident = isBehaviorIncidentEntry(data);
+  const sleepDetails = data.sleepDetails || {};
   const notesText = data.notes || data.sleepDetails?.notes || data.bathroomDetails?.notes || data.incidentData?.notes || data.content || null;
   const severityLabel = data.severityLabel || data.incidentData?.severityLabel || (data.severity ? `Severity ${data.severity}` : null);
   const triggerSummary = data.triggerSummary || data.incidentData?.triggerSummary || null;
   const contextSnapshot = data.contextSnapshot || data.incidentData?.contextSnapshot || null;
+  const sleepAnchorDate = sleepDetails.anchorDate || data.anchorDate || sleepDetails.localDate || data.localDate || data.entryDate || null;
 
   return {
     id: doc.id,
     ...data,
     timestamp: data.timestamp?.toDate() || new Date(data.createdAt),
+    anchorDate: sleepAnchorDate,
+    localDate: data.localDate || sleepDetails.localDate || null,
+    localTime: data.localTime || sleepDetails.localTime || null,
+    sleepAnchorDate,
     category: categoryType.category,
     type: isBehaviorIncident ? 'behavior' : categoryMeta.type,
     timelineType: isBehaviorIncident ? 'incident' : categoryMeta.timelineType,
@@ -98,14 +104,14 @@ export const getDailyLogEntries = async (childId, selectedDate) => {
         collection(db, 'dailyLogs'),
         where('childId', '==', childId),
         where('status', '==', 'active'),
-        where('timestamp', '>=', start),
-        where('timestamp', '<=', end)
+        orderBy('timestamp', 'desc')
       );
 
       const snapshot = await getDocs(dailyLogQuery);
       return dedupeTimelineEntries(
         snapshot.docs
           .map(mapDailyLogEntry)
+          .filter((entry) => isTimelineEntryOnDate(entry, selectedDate) || isWithinDateRange(entry.timestamp, start, end))
           .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
       );
     } catch (indexError) {
@@ -122,7 +128,7 @@ export const getDailyLogEntries = async (childId, selectedDate) => {
         return dedupeTimelineEntries(
           snapshot.docs
             .map(mapDailyLogEntry)
-            .filter((entry) => isWithinDateRange(entry.timestamp, start, end))
+            .filter((entry) => isTimelineEntryOnDate(entry, selectedDate) || isWithinDateRange(entry.timestamp, start, end))
             .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
         );
       }

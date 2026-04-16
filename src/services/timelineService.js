@@ -196,7 +196,9 @@ const normalizeTimelineEntry = (doc, type) => {
     ...(noteMeta || typeConfig),
     category: data.category || (isActivity ? 'activity' : 'log'),
     categoryLabel: isActivity ? 'Activity' : (data.categoryLabel || noteMeta?.label || typeConfig.label || null),
-    categoryColor: isActivity ? (careData.activityThemeColor || careData.categoryColor || typeConfig.color) : (data.categoryColor || noteMeta?.color || typeConfig.color || null),
+    categoryColor: isActivity
+      ? (careData.activityThemeColor || careData.categoryColor || LOG_TYPES.activity.palette.dot)
+      : (data.categoryColor || noteMeta?.color || typeConfig.color || null),
     categoryIcon: isActivity ? LOG_TYPES.activity.icon : (data.categoryIcon || noteMeta?.icon || typeConfig.icon || null),
     timelineType: noteMeta?.type || type,
     activityThemeKey: careData.activityThemeKey || data.activityThemeKey || null,

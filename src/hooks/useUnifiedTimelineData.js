@@ -494,6 +494,7 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
       // Transform daily habits (from dailyCare collection)
       ...childFilteredEntries.dailyHabits.map(habit => {
         const habitType = Object.values(HABIT_TYPES).find(({ id }) => id === habit.categoryId);
+        const isActivityHabit = habit.actionType === 'activity' || habit.categoryId === 'activity';
 
         return {
           id: habit.id,
@@ -501,12 +502,21 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
           collection: 'dailyCare',
           timestamp: habit.timestamp?.toDate ? habit.timestamp.toDate() : new Date(habit.timestamp),
           categoryId: habit.categoryId,
-          categoryLabel: habit.categoryLabel || habitType?.label || 'Daily Habit',
-          categoryColor: habitType?.color || '#64748B',
-          categoryIcon: HABIT_CATEGORY_ICON_MAP[habit.categoryId] || '📝',
+          categoryLabel: isActivityHabit
+            ? 'Activity'
+            : (habit.categoryLabel || habitType?.label || 'Daily Habit'),
+          categoryColor: isActivityHabit
+            ? LOG_TYPES.activity.palette.dot
+            : (habitType?.color || '#64748B'),
+          categoryIcon: isActivityHabit
+            ? LOG_TYPES.activity.icon
+            : (HABIT_CATEGORY_ICON_MAP[habit.categoryId] || '📝'),
           level: habit.level,
           notes: habit.notes,
           mediaUrls: habit.mediaUrls,
+          actionType: habit.actionType || null,
+          activityThemeLabel: habit.activityThemeLabel || habit.data?.activityThemeLabel || null,
+          activityThemeColor: habit.activityThemeColor || habit.data?.activityThemeColor || null,
           ...getEntryUser(habit),
         };
       }),

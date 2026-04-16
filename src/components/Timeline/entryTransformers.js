@@ -8,6 +8,7 @@ import {
   getActivityTheme,
   getPrimaryActivityTheme,
 } from '../../constants/activityThemes';
+import { coerceCalendarDate } from '../../utils/calendarDateKey';
 
 const normalizeText = (value) => String(value || '').trim();
 
@@ -230,22 +231,40 @@ const getMedicationDetails = (entry = {}) => {
 const getSleepDetails = (entry = {}) => {
   const sleepDetails = entry.sleepDetails || entry.data?.sleepDetails || {};
   const rows = [];
+  const anchorDate = coerceCalendarDate(
+    sleepDetails.anchorDate
+    || sleepDetails.localDate
+    || entry.anchorDate
+    || entry.localDate
+    || entry.entryDate
+  );
+
+  if (anchorDate) {
+    rows.push({
+      label: 'Night of',
+      value: anchorDate.toLocaleDateString('en-US', {
+        month: '2-digit',
+        day: '2-digit',
+        year: 'numeric',
+      }),
+    });
+  }
+
+  if (sleepDetails.bedtime || entry.bedtime) {
+    rows.push({ label: 'Bedtime', value: String(sleepDetails.bedtime || entry.bedtime) });
+  }
+
+  if (sleepDetails.wakeTime || entry.wakeTime) {
+    rows.push({ label: 'Wake time', value: String(sleepDetails.wakeTime || entry.wakeTime) });
+  }
+
+  if (sleepDetails.durationHours != null || entry.sleepDuration != null) {
+    const durationValue = sleepDetails.durationHours != null ? sleepDetails.durationHours : entry.sleepDuration;
+    rows.push({ label: 'Duration', value: `${durationValue} hours` });
+  }
 
   if (sleepDetails.quality || entry.sleepQuality) {
     rows.push({ label: 'Quality', value: String(sleepDetails.quality || entry.sleepQuality) });
-  }
-
-  if (sleepDetails.durationHours || entry.sleepDuration) {
-    rows.push({ label: 'Duration', value: `${sleepDetails.durationHours || entry.sleepDuration} hours` });
-  }
-
-  if (sleepDetails.bedtime || sleepDetails.wakeTime) {
-    rows.push({
-      label: 'Window',
-      value: [sleepDetails.bedtime ? `bed ${sleepDetails.bedtime}` : '', sleepDetails.wakeTime ? `wake ${sleepDetails.wakeTime}` : '']
-        .filter(Boolean)
-        .join(' · '),
-    });
   }
 
   return rows;
@@ -378,6 +397,7 @@ export const transformTimelineEntry = (entry = {}, presentation = {}, timeString
   );
   const triggerSummary = normalizeText(entry.triggerSummary || entry.incidentData?.triggerSummary || '');
   const notesText = normalizeText(entry.notes || entry.incidentData?.notes || '');
+  const dedupedNotesText = notesText && notesText !== primaryText ? notesText : '';
 
   const initials = getInitials(entry.loggedByUser || entry.authorName || entry.authorEmail || entry.author || '');
 
@@ -416,10 +436,7 @@ export const transformTimelineEntry = (entry = {}, presentation = {}, timeString
   const detailRows = isBehaviorIncident
     ? []
     : kind === 'activity'
-      ? [
-          ...(activityMeta?.label ? [{ label: 'Activity', value: activityMeta.label }] : []),
-          ...(metaBadge?.label ? [{ label: 'Engagement', value: metaBadge.label }] : []),
-        ]
+      ? []
       : kind === 'food'
         ? getFoodDetails(entry)
         : kind === 'meds'
@@ -442,7 +459,7 @@ export const transformTimelineEntry = (entry = {}, presentation = {}, timeString
     primaryText,
     insight,
     triggerSummary,
-    notesText,
+    notesText: dedupedNotesText,
     contextFlags,
     initials,
     accentColor,

@@ -3,15 +3,13 @@ import LogFormShell from '../../UI/LogFormShell';
 import OtherIncidentCapture from './OtherIncidentCapture';
 
 const IncidentLoggingModal = ({ open, onClose, childId, childName }) => {
-  const title = `Log Behavior Incident${childName ? ` ${childName}` : ''}`;
-  const subtitle = 'Create a detailed report for a significant event.';
-
   return (
     <LogFormShell
       open={open}
       onClose={onClose}
-      title={title}
-      subtitle={subtitle}
+      title="Behavior Incident"
+      titleBadge={childName}
+      compactTitle
       mobileBreakpoint="sm"
       maxWidth="sm"
       forceDrawer
@@ -20,7 +18,6 @@ const IncidentLoggingModal = ({ open, onClose, childId, childName }) => {
         childId={childId}
         childName={childName}
         onSaved={onClose}
-        onClose={onClose}
         incidentTypeOverride="behavioral"
       />
     </LogFormShell>

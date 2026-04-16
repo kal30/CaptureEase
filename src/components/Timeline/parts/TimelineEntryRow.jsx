@@ -91,6 +91,56 @@ const TimelineEntryRow = ({
     );
   };
 
+  const renderSubtype = () => {
+    if (!subtype || subtype.trim().toLowerCase() === String(label).trim().toLowerCase()) {
+      return null;
+    }
+
+    if (kind === 'activity') {
+      return (
+        <Box
+          component="span"
+          sx={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            px: 0.75,
+            py: 0.2,
+            borderRadius: 999,
+            bgcolor: alpha(accentColor, 0.10),
+            color: accentColor,
+            border: `1px solid ${alpha(accentColor, 0.18)}`,
+            textTransform: 'uppercase',
+            letterSpacing: '0.12em',
+            fontSize: '0.625rem',
+            fontWeight: 800,
+            lineHeight: 1,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {subtype}
+        </Box>
+      );
+    }
+
+    return (
+      <Typography
+        component="span"
+        sx={{
+          fontWeight: 800,
+          fontSize: '0.68rem',
+          lineHeight: 1.15,
+          color: 'text.secondary',
+          minWidth: 0,
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+        }}
+      >
+        {subtype}
+      </Typography>
+    );
+  };
+
   const renderDetailRows = () => {
     if (kind === 'behavior' || !detailRows.length) {
       return null;
@@ -295,6 +345,7 @@ const TimelineEntryRow = ({
                 sx={{
                   color: 'text.secondary',
                   fontSize: '0.65rem',
+                  fontFamily: 'monospace',
                   fontWeight: 700,
                   lineHeight: 1,
                   whiteSpace: 'nowrap',
@@ -317,31 +368,15 @@ const TimelineEntryRow = ({
               <Typography
                 component="span"
                 sx={{
-                  fontSize: '0.68rem',
-                  fontWeight: 900,
-                  color: accentColor,
+                  fontSize: '0.88rem',
+                  fontWeight: 800,
+                  color: '#1F2937',
                   lineHeight: 1.2,
                 }}
               >
                 {label}
               </Typography>
-              {subtype && kind !== 'behavior' && subtype.trim().toLowerCase() !== String(label).trim().toLowerCase() ? (
-                <Typography
-                  component="span"
-                  sx={{
-                    fontWeight: 800,
-                    fontSize: '0.78rem',
-                    lineHeight: 1.15,
-                    color: 'text.secondary',
-                    minWidth: 0,
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                  }}
-                >
-                  {subtype}
-                </Typography>
-              ) : null}
+              {renderSubtype()}
               {hasInitials ? (
                 <Chip
                   label={initials}
@@ -439,8 +474,8 @@ const TimelineEntryRow = ({
               <Typography
                 variant="body2"
                 sx={{
-                  color: '#0F172A',
-                  fontSize: '0.9rem',
+                  color: '#475569',
+                  fontSize: '0.88rem',
                   lineHeight: 1.35,
                   fontWeight: 600,
                   whiteSpace: 'normal',
@@ -472,10 +507,10 @@ const TimelineEntryRow = ({
                 <Typography
                   variant="caption"
                   sx={{
-                    fontSize: '0.64rem',
+                    fontSize: '0.7rem',
                     lineHeight: 1.2,
                     fontStyle: 'italic',
-                    color: '#7C5C00',
+                    color: '#94A3B8',
                     display: '-webkit-box',
                     WebkitLineClamp: 2,
                     WebkitBoxOrient: 'vertical',
@@ -491,10 +526,10 @@ const TimelineEntryRow = ({
               <Typography
                 variant="caption"
                 sx={{
-                  fontSize: '0.68rem',
+                  fontSize: '0.7rem',
                   lineHeight: 1.2,
                   fontWeight: 800,
-                  color: '#7C5C00',
+                  color: '#94A3B8',
                 }}
               >
                 Trigger: {triggerSummary}
@@ -506,10 +541,10 @@ const TimelineEntryRow = ({
               <Typography
                 variant="caption"
                 sx={{
-                  fontSize: '0.68rem',
+                  fontSize: '0.7rem',
                   lineHeight: 1.2,
                   fontWeight: 700,
-                  color: '#374151',
+                  color: '#94A3B8',
                 }}
               >
                 {kind === 'behavior' ? 'Notes: ' : ''}{notesText}

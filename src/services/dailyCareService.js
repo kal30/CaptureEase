@@ -1,5 +1,5 @@
 import { db } from "./firebase";
-import { 
+import {
   collection, 
   addDoc, 
   serverTimestamp, 
@@ -12,6 +12,39 @@ import {
   limit
 } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
+
+const parseTime = (timeValue) => {
+  if (!timeValue) return null;
+  const [hours, minutes] = String(timeValue).split(':').map(Number);
+  if (Number.isNaN(hours) || Number.isNaN(minutes)) return null;
+  return { hours, minutes };
+};
+
+const formatLocalDateKey = (date) => {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+    return '';
+  }
+
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, '0'),
+    String(date.getDate()).padStart(2, '0'),
+  ].join('-');
+};
+
+const buildSleepTimestamp = (anchorDate, bedtime) => {
+  const baseDate = anchorDate instanceof Date && !Number.isNaN(anchorDate.getTime())
+    ? new Date(anchorDate)
+    : new Date();
+  const bed = parseTime(bedtime);
+  if (!bed) {
+    return baseDate;
+  }
+
+  const timestamp = new Date(baseDate);
+  timestamp.setHours(bed.hours, bed.minutes, 0, 0);
+  return timestamp;
+};
 
 const formatSleepIssue = (value) => {
   const issueLabels = {
@@ -100,7 +133,17 @@ export const saveDailyCareEntry = async (entryData) => {
         ? sleepIssues.map(formatSleepIssue).filter(Boolean).join(', ')
         : 'No disturbances';
       const sleepText = `Slept ${data?.sleepDuration || 0} hours — ${disturbanceText}`.trim();
-      const sleepTimestamp = entryData.timestamp ? new Date(entryData.timestamp) : new Date();
+      const anchorDate = data?.anchorDate || data?.localDate || data?.nightOf || data?.date;
+      const resolvedAnchorDate = anchorDate instanceof Date
+        ? anchorDate
+        : typeof anchorDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(anchorDate)
+          ? new Date(`${anchorDate}T00:00:00`)
+          : (entryData.timestamp ? new Date(entryData.timestamp) : new Date());
+      const sleepTimestamp = buildSleepTimestamp(resolvedAnchorDate, data?.bedtime);
+      const localDate = formatLocalDateKey(resolvedAnchorDate);
+      const localTime = data?.bedtime || null;
+      const timeZoneOffsetMinutes = -sleepTimestamp.getTimezoneOffset();
+      const timeZoneName = Intl.DateTimeFormat().resolvedOptions().timeZone || null;
 
       await addDoc(collection(db, "dailyLogs"), {
         childId,
@@ -111,18 +154,32 @@ export const saveDailyCareEntry = async (entryData) => {
         category: 'sleep',
         tags: ['sleep'],
         timestamp: sleepTimestamp,
+        timestampUtc: sleepTimestamp.toISOString(),
+        timestampSource: 'sleep-anchor',
         entryDate: sleepTimestamp.toDateString(),
+        anchorDate: localDate,
+        localDate,
+        localTime,
+        timeZoneOffsetMinutes,
+        timeZoneName,
         authorId: currentUser.uid,
         authorName: currentUser.displayName || currentUser.email?.split('@')[0] || 'User',
         authorEmail: currentUser.email,
         source: 'sleep_log',
         sleepDetails: {
+          anchorDate: localDate,
+          localDate,
+          localTime,
           bedtime: data?.bedtime || null,
           wakeTime: data?.wakeTime || null,
           durationHours: data?.sleepDuration || null,
           disturbances: Array.isArray(data?.sleepIssues) ? data.sleepIssues : (data?.sleepIssues ? [data.sleepIssues] : []),
           quality: data?.sleepQuality || null,
           notes: data?.notes || null,
+          timeZoneOffsetMinutes,
+          timeZoneName,
+          timestampSource: 'sleep-anchor',
+          startUtc: sleepTimestamp.toISOString(),
         }
       });
     }

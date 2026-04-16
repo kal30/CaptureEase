@@ -5,12 +5,16 @@ import {
   Button,
   Chip,
   CircularProgress,
+  Popover,
   Stack,
   TextField,
   Typography,
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import { useTheme } from '@mui/material/styles';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '../../../services/firebase';
 import {
@@ -22,6 +26,9 @@ import { getTimelineEntries } from '../../../services/timelineService';
 import { useAsyncForm } from '../../../hooks/useAsyncForm';
 import CategoryCreationModal from '../CategoryCreationModal';
 import { incidentTheme } from './incidentTheme';
+import colors from '../../../assets/theme/colors';
+import LogDateField from '../../UI/LogDateField';
+import LogTimeField from '../../UI/LogTimeField';
 
 const TRIGGER_GROUPS = [
   {
@@ -257,7 +264,6 @@ const OtherIncidentCapture = ({
   childId,
   childName,
   onSaved,
-  onClose,
   onCategoryCreated,
   isCustomCategory = false,
   customCategoryType = null,
@@ -269,6 +275,7 @@ const OtherIncidentCapture = ({
   const [severity, setSeverity] = useState(5);
   const [notes, setNotes] = useState('');
   const [incidentDateTime, setIncidentDateTime] = useState(new Date());
+  const [datePickerAnchor, setDatePickerAnchor] = useState(null);
   const [selectedTriggers, setSelectedTriggers] = useState([]);
   const [timelineEntries, setTimelineEntries] = useState([]);
   const [showMoreContext, setShowMoreContext] = useState(false);
@@ -432,12 +439,6 @@ const OtherIncidentCapture = ({
     );
   };
 
-  const updateIncidentDate = (nextDateValue) => {
-    const nextDate = nextDateValue ? new Date(nextDateValue) : new Date();
-    nextDate.setHours(incidentTime.getHours(), incidentTime.getMinutes(), 0, 0);
-    setIncidentDateTime(nextDate);
-  };
-
   const updateIncidentTime = (nextTimeValue) => {
     const nextDate = new Date(incidentTime);
     const [hours, minutes] = String(nextTimeValue || '00:00')
@@ -448,10 +449,41 @@ const OtherIncidentCapture = ({
     setIncidentDateTime(nextDate);
   };
 
-  const dateFieldValue = `${incidentTime.getFullYear()}-${String(incidentTime.getMonth() + 1).padStart(2, '0')}-${String(incidentTime.getDate()).padStart(2, '0')}`;
+  const formatDisplayDate = (date) => {
+    if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+      return '';
+    }
+
+    return date.toLocaleDateString('en-US', {
+      month: '2-digit',
+      day: '2-digit',
+      year: 'numeric',
+    });
+  };
+
+  const dateFieldValue = formatDisplayDate(incidentTime);
   const timeFieldValue = `${String(incidentTime.getHours()).padStart(2, '0')}:${String(incidentTime.getMinutes()).padStart(2, '0')}`;
   const visibleContextItems = showMoreContext ? contextItems : contextItems.slice(0, 3);
   const saveLabel = incidentForm.loading ? 'Saving...' : 'Save incident';
+
+  const handleDatePickerOpen = (event) => {
+    setDatePickerAnchor(event.currentTarget);
+  };
+
+  const handleDatePickerClose = () => {
+    setDatePickerAnchor(null);
+  };
+
+  const handleDateChange = (nextDate) => {
+    if (!nextDate || Number.isNaN(nextDate.getTime())) {
+      return;
+    }
+
+    const nextDateTime = new Date(incidentTime);
+    nextDateTime.setFullYear(nextDate.getFullYear(), nextDate.getMonth(), nextDate.getDate());
+    setIncidentDateTime(nextDateTime);
+    setDatePickerAnchor(null);
+  };
 
   return (
     <Box
@@ -469,47 +501,82 @@ const OtherIncidentCapture = ({
       )}
 
       <Stack spacing={2.5}>
+        <Box
+          sx={{
+            p: { xs: 1.1, sm: 1.25 },
+            borderRadius: '24px',
+            bgcolor: colors.brand.ice,
+            border: `1px solid ${colors.brand.tint}`,
+          }}
+        >
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{
+              width: '100%',
+              alignItems: 'stretch',
+            }}
+          >
+            <Box sx={{ flex: 1.05, minWidth: 0 }}>
+              <LogDateField
+                label="Date"
+                value={dateFieldValue}
+                onClick={handleDatePickerOpen}
+              />
+            </Box>
+            <Box sx={{ flex: 0.95, minWidth: 0 }}>
+              <LogTimeField
+                label="Time"
+                value={timeFieldValue}
+                onChange={(event) => updateIncidentTime(event.target.value)}
+              />
+            </Box>
+          </Stack>
+
+          <Popover
+            open={Boolean(datePickerAnchor)}
+            anchorEl={datePickerAnchor}
+            onClose={handleDatePickerClose}
+            anchorOrigin={{
+              vertical: 'bottom',
+              horizontal: 'left',
+            }}
+            transformOrigin={{
+              vertical: 'top',
+              horizontal: 'left',
+            }}
+            PaperProps={{
+              sx: {
+                mt: 1,
+                borderRadius: '16px',
+                boxShadow: '0 18px 40px rgba(15, 23, 42, 0.18)',
+                overflow: 'hidden',
+              },
+            }}
+          >
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+              <DateCalendar
+                value={incidentTime}
+                onChange={handleDateChange}
+              />
+            </LocalizationProvider>
+          </Popover>
+        </Box>
+
         <Box sx={{ px: 0 }}>
           <TextField
-          fullWidth
-          multiline
-          minRows={3}
-          maxRows={8}
-          value={incidentName}
-          onChange={(event) => setIncidentName(event.target.value)}
+            fullWidth
+            multiline
+            minRows={3}
+            maxRows={8}
+            value={incidentName}
+            onChange={(event) => setIncidentName(event.target.value)}
             placeholder="What happened?"
             sx={{
               mt: 0,
             }}
           />
         </Box>
-
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="caption" sx={{ mb: 0.5, display: 'block', fontWeight: 700, letterSpacing: '0.02em' }}>
-              Date
-            </Typography>
-            <TextField
-              fullWidth
-              type="date"
-              value={dateFieldValue}
-              onChange={(event) => updateIncidentDate(event.target.value)}
-              InputLabelProps={{ shrink: true }}
-            />
-          </Box>
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="caption" sx={{ mb: 0.5, display: 'block', fontWeight: 700, letterSpacing: '0.02em' }}>
-              Time
-            </Typography>
-            <TextField
-              fullWidth
-              type="time"
-              value={timeFieldValue}
-              onChange={(event) => updateIncidentTime(event.target.value)}
-              InputLabelProps={{ shrink: true }}
-            />
-          </Box>
-        </Stack>
 
         <Box>
           <Typography variant="caption" sx={{ mb: 0.5, display: 'block', fontWeight: 700, letterSpacing: '0.02em' }}>
@@ -650,32 +717,18 @@ const OtherIncidentCapture = ({
         <Box
           sx={{
             display: 'flex',
-            flexDirection: { xs: 'column', sm: 'row' },
-            gap: 1.5,
+            justifyContent: 'flex-end',
             mt: 0.25,
             pb: 0.5,
           }}
         >
-          <Button
-            variant="outlined"
-            onClick={onClose}
-            sx={{
-              flex: 1,
-              minHeight: 52,
-              borderRadius: 3,
-              color: theme.palette.text.primary,
-              borderColor: incidentTheme.border,
-            }}
-          >
-            Cancel
-          </Button>
           <Button
             variant="contained"
             onClick={handleSave}
             disabled={!canSave || incidentForm.loading}
             startIcon={incidentForm.loading ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
             sx={{
-              flex: 2,
+              width: { xs: '100%', sm: 'auto' },
               minHeight: 52,
               borderRadius: 3,
               bgcolor: incidentTheme.save,

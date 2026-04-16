@@ -24,8 +24,7 @@ const IncidentQuickCapture = ({
   childId, 
   childName, 
   onBack, 
-  onSaved, 
-  onClose 
+  onSaved
 }) => {
   const [user] = useAuthState(auth);
   
@@ -183,11 +182,9 @@ const IncidentQuickCapture = ({
       />
 
       <ActionButtons 
-        onCancel={onClose}
         onSave={handleSave}
         canSave={canSave && incidentForm.canSubmit}
         loading={incidentForm.loading}
-        incidentConfig={incidentConfig}
       />
     </Box>
   );

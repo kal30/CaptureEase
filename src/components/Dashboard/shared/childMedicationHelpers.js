@@ -78,28 +78,49 @@ export const getMedicationRouteOptions = (form) => {
   return MEDICATION_ROUTE_OPTIONS.map((option) => option.value);
 };
 
+const getCurrentLocalTime = () => {
+  const now = new Date();
+  const hours = String(now.getHours()).padStart(2, "0");
+  const minutes = String(now.getMinutes()).padStart(2, "0");
+  return `${hours}:${minutes}`;
+};
+
+export const createMedicationSchedule = (overrides = {}) => ({
+  id: overrides.id || `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+  dose: String(overrides.dose || "").trim(),
+  unit: String(overrides.unit || "mg").trim() || "mg",
+  time: String(overrides.time || getCurrentLocalTime()).trim(),
+});
+
+export const normalizeMedicationSchedule = (entry = {}) => ({
+  id: entry.id || `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+  dose: String(entry.dose || "").trim(),
+  unit: String(entry.unit || "mg").trim() || "mg",
+  time: String(entry.time || getCurrentLocalTime()).trim(),
+});
+
 export const createMedicationDetail = (overrides = {}) => {
   const today = new Date().toISOString().slice(0, 10);
   const form = overrides.form || "pill";
+  const schedules = Array.isArray(overrides.schedules) && overrides.schedules.length
+    ? overrides.schedules.map(normalizeMedicationSchedule)
+    : [createMedicationSchedule({ dose: overrides.dose || "", unit: overrides.unit || "mg", time: overrides.time || "" })];
+  const firstSchedule = schedules[0] || createMedicationSchedule();
 
   return {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     name: "",
-    dose: "",
-    unit: "",
-    frequency: "",
+    dose: firstSchedule.dose || "",
+    unit: firstSchedule.unit || "mg",
     category: "prescription",
-    foodRelation: "anytime",
-    notes: "",
     sourceDocuments: [],
     ...overrides,
     form,
-    customFrequency: String(overrides.customFrequency || "").trim(),
-    route: overrides.route || getMedicationDefaultRoute(form),
-    timing: Array.isArray(overrides.timing) ? overrides.timing : [],
-    days: Array.isArray(overrides.days) ? overrides.days : [],
+    schedules,
     startDate: overrides.startDate || today,
-    maxDailyDoses: String(overrides.maxDailyDoses || "").trim(),
+    isArchived: Boolean(overrides.isArchived),
+    archivedAt: overrides.archivedAt || "",
+    archivedBy: overrides.archivedBy || "",
     syncStatus: overrides.syncStatus || "draft",
     savedAt: overrides.savedAt || "",
   };
@@ -108,23 +129,28 @@ export const createMedicationDetail = (overrides = {}) => {
 export const normalizeMedicationDetail = (entry = {}) => {
   const name = String(entry.name || "").trim();
   const form = entry.form || "pill";
+  const schedules = Array.isArray(entry.schedules) && entry.schedules.length
+    ? entry.schedules.map(normalizeMedicationSchedule)
+    : [createMedicationSchedule({
+        dose: entry.dose || "",
+        unit: entry.unit || "mg",
+        time: entry.time || "",
+      })];
+  const firstSchedule = schedules[0] || createMedicationSchedule();
 
   return {
     id: entry.id || `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     name,
-    dose: String(entry.dose || "").trim(),
-    unit: String(entry.unit || "").trim(),
-    frequency: String(entry.frequency || "").trim(),
+    dose: firstSchedule.dose || String(entry.dose || "").trim(),
+    unit: firstSchedule.unit || String(entry.unit || "mg").trim() || "mg",
+    time: firstSchedule.time || String(entry.time || "").trim(),
     form,
-    route: String(entry.route || getMedicationDefaultRoute(form)).trim() || getMedicationDefaultRoute(form),
     category: entry.category || "prescription",
-    foodRelation: entry.foodRelation || "anytime",
-    customFrequency: String(entry.customFrequency || "").trim(),
-    timing: Array.isArray(entry.timing) ? entry.timing : [],
-    days: Array.isArray(entry.days) ? entry.days : [],
+    schedules,
     startDate: String(entry.startDate || "").trim(),
-    maxDailyDoses: String(entry.maxDailyDoses || "").trim(),
-    notes: String(entry.notes || "").trim(),
+    isArchived: Boolean(entry.isArchived),
+    archivedAt: String(entry.archivedAt || "").trim(),
+    archivedBy: String(entry.archivedBy || "").trim(),
     sourceDocuments: Array.isArray(entry.sourceDocuments) ? entry.sourceDocuments : [],
     syncStatus: entry.syncStatus || "draft",
     savedAt: String(entry.savedAt || "").trim(),
@@ -137,31 +163,24 @@ export const summarizeMedicationDetail = (entry = {}) => {
     return "";
   }
 
-  const parts = [normalized.name];
+  const scheduleCount = Array.isArray(normalized.schedules) ? normalized.schedules.length : 0;
+  const primarySchedule = normalized.schedules?.[0];
+  const doseText = primarySchedule?.dose || normalized.dose;
+  const unitText = primarySchedule?.unit || normalized.unit;
+  const timeText = primarySchedule?.time || normalized.time;
+  const parts = [];
 
-  if (normalized.dose) {
-    parts.push(normalized.unit ? `${normalized.dose} ${normalized.unit}` : normalized.dose);
+  parts.push(normalized.name);
+  if (doseText) {
+    parts.push(unitText ? `${doseText} ${unitText}` : doseText);
   }
 
-  if (normalized.form) {
-    const formLabel = MEDICATION_FORM_OPTIONS.find((option) => option.value === normalized.form)?.label;
-    if (formLabel) {
-      parts.push(formLabel.toLowerCase());
-    }
+  if (timeText) {
+    parts.push(timeText);
   }
 
-  if (normalized.frequency) {
-    parts.push(normalized.frequency);
-    if (normalized.frequency === "custom" && normalized.customFrequency) {
-      parts.push(normalized.customFrequency);
-    }
-  }
-
-  if (normalized.foodRelation && normalized.foodRelation !== "anytime") {
-    const foodLabel = MEDICATION_FOOD_OPTIONS.find((option) => option.value === normalized.foodRelation)?.label;
-    if (foodLabel) {
-      parts.push(foodLabel.toLowerCase());
-    }
+  if (scheduleCount > 1) {
+    parts.push(`${scheduleCount} doses`);
   }
 
   const categoryLabel = MEDICATION_CATEGORY_OPTIONS.find((option) => option.value === normalized.category)?.label || "Other";

@@ -1,68 +1,63 @@
 import React from 'react';
-import { Box, ButtonBase, Paper, Stack, Typography } from '@mui/material';
+import { Box, ButtonBase, Paper, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
-import { CORE_ENTRY_ACTIONS } from '../../constants/logTypeRegistry';
+import { LOG_TYPES } from '../../constants/logTypeRegistry';
 import colors from '../../assets/theme/colors';
-
-const coreActionMap = CORE_ENTRY_ACTIONS.reduce((acc, action) => {
-  acc[action.key] = action;
-  return acc;
-}, {});
 
 const actionCards = [
   {
     key: 'meds',
-    title: coreActionMap.meds?.label || 'Meds',
+    title: LOG_TYPES.medication?.displayLabel || 'Meds',
     subtitle: 'Time, dose',
-    emoji: coreActionMap.meds?.icon || '💊',
-    bg: '#F5FAF1',
-    border: coreActionMap.meds?.color || '#D97706',
-    lightBorder: '#F3E8FF',
+    emoji: LOG_TYPES.medication?.icon || '💊',
+    bg: '#DBEEED',
+    border: '#D7E2D6',
+    text: '#355534',
   },
   {
     key: 'sleep',
-    title: coreActionMap.sleep?.label || 'Sleep',
+    title: LOG_TYPES.sleep?.displayLabel || 'Sleep',
     subtitle: 'Time, duration',
-    emoji: coreActionMap.sleep?.icon || '😴',
-    bg: '#EFF2FF',
-    border: coreActionMap.sleep?.color || '#4C1D95',
-    lightBorder: '#F3E8FF',
+    emoji: LOG_TYPES.sleep?.icon || '😴',
+    bg: '#CCDBE9',
+    border: '#D7DAEE',
+    text: '#3949AB',
   },
   {
     key: 'food',
-    title: coreActionMap.food?.label || 'Food',
+    title: LOG_TYPES.food?.displayLabel || 'Food',
     subtitle: 'What, amount',
-    emoji: coreActionMap.food?.icon || '🍽️',
-    bg: '#FFF8F1',
-    border: coreActionMap.food?.color || '#2563EB',
-    lightBorder: '#F3E8FF',
+    emoji: LOG_TYPES.food?.icon || '🍽️',
+    bg: '#faf1e8',
+    border: '#E5DFD8',
+    text: '#7C5A3A',
   },
   {
     key: 'toilet',
-    title: coreActionMap.toilet?.label || 'Toilet',
+    title: LOG_TYPES.bathroom?.displayLabel || 'Toilet',
     subtitle: 'Time, type',
-    emoji: coreActionMap.toilet?.icon || '🚽',
-    bg: '#F0FFFB',
-    border: coreActionMap.toilet?.color || '#64748B',
-    lightBorder: '#F3E8FF',
+    emoji: LOG_TYPES.bathroom?.icon || '🚽',
+    bg: '#ECEBE8',
+    border: '#D4E5E2',
+    text: '#267F6E',
   },
   {
     key: 'activity',
-    title: coreActionMap.activity?.label || 'Activity',
+    title: LOG_TYPES.activity?.displayLabel || 'Activity',
     subtitle: 'Therapy, outings',
-    emoji: coreActionMap.activity?.icon || '🕐',
-    bg: '#F0FAFE',
-    border: coreActionMap.activity?.color || '#F43F5E',
-    lightBorder: '#F3E8FF',
+    emoji: LOG_TYPES.activity?.icon || '🕐',
+    bg: '#F8E7F8',
+    border: '#FAE5FA',
+    text: LOG_TYPES.activity?.palette?.text || '#345B6C',
   },
   {
     key: 'behavior',
-    title: coreActionMap.behavior?.label || 'Behavior',
+    title: LOG_TYPES.behavior?.displayLabel || 'Behavior',
     subtitle: 'Incidents, mood',
-    emoji: coreActionMap.behavior?.icon || '🌪️',
-    bg: '#F5F3FF',
-    border: coreActionMap.behavior?.color || '#B45309',
-    lightBorder: '#F3E8FF',
+    emoji: LOG_TYPES.behavior?.icon || '🌪️',
+    bg: '#F0D2DA',
+    border: '#E4DEE0',
+    text: LOG_TYPES.behavior?.palette?.text || '#4C3D78',
   },
 ];
 
@@ -71,12 +66,12 @@ const observationCards = actionCards.slice(4, 6);
 
 const quickNoteCard = {
   key: 'quick_note',
-  title: 'Quick Note (auto-classified)',
-  subtitle: 'Free-form entry with optional tags',
+  title: 'Quick Note',
+  subtitle: 'Auto-classified by AI',
   emoji: '🤖',
-  bg: '#F8FAFC',
-  border: '#059669',
-  lightBorder: '#F3E8FF',
+  bg: '#F7FFDD',
+  border: '#F0F1EB',
+  text: '#6B5B95',
 };
 
 const cardByKey = Object.fromEntries([...actionCards, quickNoteCard].map((card) => [card.key, card]));
@@ -84,7 +79,10 @@ const cardByKey = Object.fromEntries([...actionCards, quickNoteCard].map((card) 
 const ActionCard = ({ card, onClick, isCompact = false, colSpan = 1 }) => (
   <Box
     sx={{
-      gridColumn: `span ${colSpan}`,
+      gridColumn: {
+        span: `span ${typeof colSpan === 'object' ? colSpan.md || colSpan.xs || 1 : colSpan}`,
+      },
+      minWidth: 0,
     }}
   >
     <ButtonBase
@@ -92,16 +90,17 @@ const ActionCard = ({ card, onClick, isCompact = false, colSpan = 1 }) => (
       data-cy={`dashboard-action-${card.key}`}
       sx={{
         width: '100%',
-        height: isCompact ? '60px' : 'auto',
-        aspectRatio: isCompact ? 'auto' : '1',
-        borderRadius: '0.75rem',
+        minWidth: 0,
+        height: { xs: isCompact ? 42 : 'auto', md: isCompact ? 60 : 'auto' },
+        aspectRatio: { xs: isCompact ? 'auto' : '1', md: isCompact ? 'auto' : '1' },
+        borderRadius: '1.1rem',
         textAlign: 'center',
         alignItems: 'center',
         justifyContent: 'center',
         transition: 'transform 140ms ease, box-shadow 140ms ease',
         display: 'flex',
         '&:hover .action-paper': {
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.12)',
+          boxShadow: '0 18px 36px rgba(15, 23, 42, 0.08)',
         },
         '&:active': {
           transform: 'scale(0.95)',
@@ -119,138 +118,121 @@ const ActionCard = ({ card, onClick, isCompact = false, colSpan = 1 }) => (
         sx={{
           width: '100%',
           height: '100%',
-          border: `2px solid ${card.border}`,
-          borderRadius: '1.25rem',
-          bgcolor: '#FFFFFF',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
-          px: 0.75,
-          py: isCompact ? 0.5 : 0.75,
+          position: 'relative',
+          border: `1px solid ${alpha(card.border, 0.95)}`,
+          borderRadius: { xs: isCompact ? '999px' : '1.35rem', md: '1.75rem' },
+          bgcolor: alpha(card.bg || '#FFFFFF', 0.9),
+          backgroundImage: 'linear-gradient(145deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.2))',
+          backdropFilter: 'blur(12px) saturate(140%)',
+          boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.72), 0 12px 24px rgba(15, 23, 42, 0.05)',
+          px: { xs: isCompact ? 0.7 : 0.5, md: 1.2 },
+          py: { xs: isCompact ? 0.1 : 0.55, md: 0.95 },
           display: 'flex',
-          flexDirection: 'column',
+          flexDirection: isCompact ? 'row' : 'column',
           alignItems: 'center',
-          justifyContent: 'center',
-          gap: isCompact ? 0.2 : 0.4,
+          justifyContent: isCompact ? 'space-between' : 'center',
+          gap: { xs: 0.08, md: 0.45 },
           textTransform: 'uppercase',
           transition: 'inherit',
+          overflow: 'hidden',
         }}
       >
-        <Box
-          sx={{
-            fontSize: isCompact ? '1.2rem' : '1.6rem',
-            lineHeight: 1,
-          }}
-        >
-          {card.emoji}
-        </Box>
-        <Typography
-          component="span"
-          sx={{
-            fontFamily: "'Outfit', sans-serif",
-            fontSize: isCompact ? '0.55rem' : '0.625rem',
-            fontWeight: 800,
-            lineHeight: 1,
-            letterSpacing: '0.05em',
-            color: '#1F2937',
-          }}
-        >
-          {card.title}
-        </Typography>
-        {!isCompact && (
-          <Typography
-            component="span"
-            sx={{
-              fontFamily: "'Outfit', sans-serif",
-              fontSize: '0.625rem',
-              fontWeight: 500,
-              lineHeight: 1.05,
-              letterSpacing: '0.02em',
-              color: '#94A3B8',
-              textTransform: 'capitalize',
-            }}
-          >
-            {card.subtitle}
-          </Typography>
+        {isCompact ? (
+          <>
+            <Box
+              sx={{
+                width: { xs: isCompact ? 22 : 24, md: 36 },
+                height: { xs: isCompact ? 22 : 24, md: 36 },
+                borderRadius: '999px',
+                display: 'grid',
+                placeItems: 'center',
+                color: card.text || '#1F2937',
+                fontSize: { xs: isCompact ? '0.85rem' : '0.9rem', md: '1.1rem' },
+                lineHeight: 1,
+                bgcolor: alpha('#FFFFFF', 0.52),
+                border: `1px solid ${alpha(card.border, 0.32)}`,
+                boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.75), inset 0 -1px 3px rgba(15, 23, 42, 0.04)',
+                flexShrink: 0,
+              }}
+            >
+              {card.emoji}
+            </Box>
+            <Typography
+              component="span"
+              sx={{
+                fontFamily: "'Outfit', sans-serif",
+                fontSize: { xs: isCompact ? '0.66rem' : '0.56rem', md: '0.9rem' },
+                fontWeight: 700,
+                lineHeight: 1,
+                letterSpacing: '-0.01em',
+                color: '#1F2937',
+                textTransform: 'none',
+                flex: 1,
+                textAlign: 'center',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
+              {card.title}
+            </Typography>
+          </>
+        ) : (
+          <>
+            <Box
+              sx={{
+                width: { xs: 32, md: 56 },
+                height: { xs: 32, md: 56 },
+                borderRadius: '999px',
+                display: 'grid',
+                placeItems: 'center',
+                color: card.text || '#1F2937',
+                fontSize: { xs: '1rem', md: '1.85rem' },
+                lineHeight: 1,
+                bgcolor: alpha('#FFFFFF', 0.45),
+                border: `1px solid ${alpha(card.border, 0.4)}`,
+                boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.75), inset 0 -1px 3px rgba(15, 23, 42, 0.04)',
+              }}
+            >
+              {card.emoji}
+            </Box>
+            <Typography
+              component="span"
+              sx={{
+                fontFamily: "'Outfit', sans-serif",
+                fontSize: { xs: '0.42rem', md: '0.52rem' },
+                fontWeight: 700,
+                lineHeight: 1,
+                letterSpacing: '0.05em',
+                color: '#1F2937',
+                maxWidth: '100%',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
+              {card.title}
+            </Typography>
+            <Typography
+              component="span"
+              sx={{
+                fontFamily: "'Outfit', sans-serif",
+                fontSize: { xs: '0.48rem', md: '0.64rem' },
+                fontWeight: 500,
+                lineHeight: 1.05,
+                letterSpacing: '0.02em',
+                color: '#64748B',
+                textTransform: 'capitalize',
+                maxWidth: '100%',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
+              {card.subtitle}
+            </Typography>
+          </>
         )}
-      </Paper>
-    </ButtonBase>
-  </Box>
-);
-
-const QuickNoteCard = ({ card, onClick }) => (
-  <Box
-    sx={{
-      gridColumn: 'span 4',
-    }}
-  >
-    <ButtonBase
-      onClick={onClick}
-      data-cy={`dashboard-action-${card.key}`}
-      sx={{
-        width: '100%',
-        borderRadius: '1.5rem',
-        textAlign: 'left',
-        alignItems: 'center',
-        justifyContent: 'flex-start',
-        transition: 'all 140ms ease',
-        height: '48px',
-        display: 'flex',
-        '&:hover .quick-note-paper': {
-          bgcolor: '#E8EEF5',
-          boxShadow: '0 2px 6px rgba(0, 0, 0, 0.1)',
-        },
-        '&:active': {
-          transform: 'scale(0.98)',
-          transition: 'transform 80ms ease',
-        },
-        '&:focus-visible': {
-          outline: `2px solid ${colors.brand.ink}`,
-          outlineOffset: 2,
-        },
-      }}
-    >
-      <Paper
-        className="quick-note-paper"
-        elevation={0}
-        sx={{
-          width: '100%',
-          height: '100%',
-          borderRadius: '1.25rem',
-          border: `2px solid ${card.border}`,
-          bgcolor: '#FFFFFF',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
-          px: 1.2,
-          py: 0,
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'flex-start',
-          gap: 0.8,
-          textTransform: 'uppercase',
-          transition: 'inherit',
-        }}
-      >
-        <Box
-          sx={{
-            fontSize: '1.2rem',
-            lineHeight: 1,
-            flexShrink: 0,
-          }}
-        >
-          {card.emoji}
-        </Box>
-        <Typography
-          component="span"
-          sx={{
-            fontFamily: "'Outfit', sans-serif",
-            fontSize: '0.625rem',
-            fontWeight: 800,
-            lineHeight: 1,
-            letterSpacing: '0.05em',
-            color: '#475569',
-          }}
-        >
-          Quick Note
-        </Typography>
       </Paper>
     </ButtonBase>
   </Box>
@@ -311,25 +293,12 @@ const DashboardActionBoard = ({
       }}
     >
       <Box sx={{ px: { xs: 1, md: 1.25 }, py: { xs: 0.6, md: 0.75 }, pb: { xs: 1, md: 1.2 } }}>
-        <Typography
-          sx={{
-            fontSize: { xs: '0.7rem', md: '0.74rem' },
-            fontWeight: 800,
-            letterSpacing: '0.14em',
-            textTransform: 'uppercase',
-            color: colors.landing.textMuted,
-            mb: 0.4,
-          }}
-        >
-          Daily Logging
-        </Typography>
-
         <Box
           sx={{
             display: 'grid',
             gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
-            gap: { xs: 2.5, md: 3.5 },
-            rowGap: { xs: 3, md: 4 },
+            gap: { xs: 1.1, md: 3.1 },
+            rowGap: { xs: 1.6, md: 3.25 },
           }}
         >
           {dailyActionCards.map((card) => (
@@ -340,20 +309,32 @@ const DashboardActionBoard = ({
               colSpan={1}
             />
           ))}
+        </Box>
 
+        <Box
+          sx={{
+            mt: { xs: 2.2, md: 2.5 },
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: 'repeat(3, minmax(0, 1fr))',
+              md: 'repeat(12, minmax(0, 1fr))',
+            },
+            columnGap: { xs: 1, md: 2.4 },
+            rowGap: { xs: 1, md: 2.4 },
+          }}
+        >
           {observationCards.map((card) => (
             <ActionCard
               key={card.key}
               card={card}
               onClick={() => handleCardClick(card.key)}
-              isCompact
-              colSpan={2}
+              colSpan={{ xs: 1, md: 4 }}
             />
           ))}
-
-          <QuickNoteCard
+          <ActionCard
             card={cardByKey.quick_note}
             onClick={() => handleCardClick('quick_note')}
+            colSpan={{ xs: 1, md: 4 }}
           />
         </Box>
       </Box>

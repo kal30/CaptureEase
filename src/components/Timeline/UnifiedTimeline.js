@@ -87,7 +87,9 @@ const UnifiedTimeline = ({
     }
 
     if (entry.collection === 'dailyCare') {
-      const habitColor = entry.categoryColor || entry.activityThemeColor || colors.app.timeline.dailyHabit;
+      const habitColor = (entry.actionType === 'activity')
+        ? (entry.categoryColor || entry.activityThemeColor || LOG_TYPES.activity.palette.dot)
+        : (entry.categoryColor || entry.activityThemeColor || colors.app.timeline.dailyHabit);
       return {
         bg: colors.app.cards.background,
         text: habitColor,
@@ -291,7 +293,9 @@ const UnifiedTimeline = ({
       : entry.collection === 'incidents'
       ? (entry.incidentCategoryIcon || meta.icon)
       : entry.collection === 'dailyCare'
-        ? (entry.categoryIcon || meta.icon)
+        ? (entry.actionType === 'activity'
+          ? (entry.categoryIcon || LOG_TYPES.activity.icon)
+          : (entry.categoryIcon || meta.icon))
         : (entry.categoryIcon || meta.icon);
 
     const labelTextColor = getContrastText(entryColor);
@@ -407,9 +411,6 @@ const UnifiedTimeline = ({
                   whiteSpace: 'nowrap',
                 }}
               >
-                <Typography sx={{ fontSize: '0.82rem', lineHeight: 1 }}>
-                  🔥
-                </Typography>
                 <Typography sx={{ fontSize: '0.76rem', fontWeight: 800, letterSpacing: '-0.01em', lineHeight: 1 }}>
                   {streakLabel}
                 </Typography>
