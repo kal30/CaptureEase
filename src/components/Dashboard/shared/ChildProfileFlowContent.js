@@ -92,28 +92,30 @@ const ChildProfileFlowContent = ({
         display: "flex",
         alignItems: "center",
         flexWrap: "nowrap",
-        gap: { xs: 0.4, sm: 0.75 },
+        gap: { xs: 0.75, sm: 0.9 },
         width: "100%",
         overflowX: "auto",
         overflowY: "hidden",
-        pb: 0.35,
-        pr: { xs: 0.5, sm: 0 },
+        px: { xs: 0.5, sm: 0.75 },
+        py: { xs: 0.75, sm: 0.9 },
+        pb: { xs: 0.85, sm: 0.9 },
         WebkitOverflowScrolling: "touch",
         touchAction: "pan-x",
         scrollSnapType: "x proximity",
         scrollbarWidth: "none",
         position: "sticky",
         top: 0,
-        zIndex: 2,
-        backgroundColor: "background.paper",
-        pt: 0.5,
+        zIndex: 3,
+        backgroundColor: "rgba(255, 255, 255, 0.92)",
+        backdropFilter: "blur(10px)",
+        borderBottom: `1px solid ${colors.landing.borderSoft}`,
+        boxShadow: "0 8px 20px rgba(15, 23, 42, 0.04)",
         "&::-webkit-scrollbar": { display: "none" },
       }}
     >
       {stepLabels.map((label, index) => {
         const stepNumber = index + 1;
         const isActive = stepNumber === activeStep;
-        const isDone = stepNumber < activeStep;
         const navigable = canNavigate(stepNumber);
 
         return (
@@ -121,34 +123,51 @@ const ChildProfileFlowContent = ({
             key={label}
             label={`${stepNumber}. ${label}`}
             size="small"
+            component="button"
+            type="button"
             clickable={navigable}
             onClick={navigable ? () => onStepChange?.(stepNumber) : undefined}
             variant={isActive ? "filled" : "outlined"}
+            aria-current={isActive ? "step" : undefined}
             sx={{
               borderRadius: 999,
               flex: "0 0 auto",
-              minHeight: 30,
-              px: { xs: 0.25, sm: 0.5 },
-              fontSize: { xs: "0.72rem", sm: "0.78rem" },
+              minHeight: { xs: 42, sm: 40 },
+              px: { xs: 1.2, sm: 1.35 },
+              fontSize: { xs: "0.82rem", sm: "0.84rem" },
               whiteSpace: "nowrap",
               scrollSnapAlign: "start",
-              fontWeight: 800,
+              fontWeight: isActive ? 800 : 700,
               cursor: navigable ? "pointer" : "default",
+              letterSpacing: "-0.01em",
               bgcolor: isActive
-                ? colors.landing.sageLight
-                : isDone
-                  ? colors.landing.borderLight
-                  : "transparent",
-              color: colors.brand.navy,
-              borderColor: isActive ? colors.brand.ink : colors.landing.borderLight,
-              opacity: navigable ? 1 : 0.6,
+                ? colors.brand.lightBlue
+                : "rgba(255, 255, 255, 0.96)",
+              color: isActive ? colors.brand.navy : colors.landing.midNavy,
+              borderColor: isActive ? colors.brand.navy : colors.landing.borderMedium,
+              boxShadow: isActive
+                ? "0 6px 14px rgba(91, 175, 167, 0.16)"
+                : "0 1px 2px rgba(15, 23, 42, 0.04)",
+              opacity: navigable ? 1 : 0.88,
+              textDecoration: isActive ? "none" : "none",
+              "& .MuiChip-label": {
+                px: 0,
+              },
               "&:hover": {
                 bgcolor: isActive
-                  ? colors.landing.sageLight
-                  : isDone
-                    ? colors.landing.borderLight
-                    : "rgba(244, 241, 248, 0.84)",
-                borderColor: colors.brand.ink,
+                  ? colors.brand.lightBlue
+                  : "rgba(247, 251, 249, 0.98)",
+                borderColor: isActive ? colors.brand.navy : colors.brand.ink,
+                boxShadow: isActive
+                  ? "0 8px 16px rgba(91, 175, 167, 0.18)"
+                  : "0 4px 10px rgba(15, 23, 42, 0.06)",
+              },
+              "&.MuiButtonBase-root": {
+                minHeight: { xs: 42, sm: 40 },
+              },
+              "&:focus-visible": {
+                outline: `2px solid ${colors.brand.ink}`,
+                outlineOffset: 2,
               },
             }}
           />
