@@ -3,8 +3,9 @@ import { Box, Container, Paper, Typography } from "@mui/material";
 import { landingColors } from "../../assets/theme/landingTheme";
 
 const founderStoryParagraphs = [
-  "It takes a village to raise a child, but usually, one parent is stuck holding all the notes. Whether it’s a grandparent helping out for the afternoon or a therapist at school, everyone can jot down a quick update in real-time.",
-  "You’ll walk into your next appointment with the full story in your pocket—not buried in your memory.",
+  "It takes a village to raise a child, but usually, one parent is stuck holding all the notes. Whether it's a grandparent helping out for the afternoon or a therapist at school, everyone can jot down a quick update in real-time.",
+  "You'll walk into your next appointment with the full story in your pocket-not buried in your memory.",
+  "Built on a foundation of AI and real-time architecture. Designed by caregivers who understand the chaos. Engineered by someone who lives it.",
 ];
 
 const SocialProofSection = () => {
@@ -71,7 +72,7 @@ const SocialProofSection = () => {
                   color: "#7C6AAE",
                 }}
               >
-                — Kalyani, Founder & Fellow Caregiver
+                — Ganesh & Kalyani, Founders.
               </Typography>
             </Box>
           </Box>

@@ -3,20 +3,28 @@ import { Box, Typography } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
 import { getSeverityMeta } from '../../../services/incidentService';
 import { getSeverityColor } from '../utils/colors';
+import { isBehaviorIncidentEntry } from '../../../constants/logTypeRegistry';
 
 const IncidentDetails = ({ entry }) => {
   const theme = useTheme();
   
   // Check if this is a follow-up entry
   const isFollowUp = entry.type === 'followUp';
+  const isBehaviorIncident = !isFollowUp && isBehaviorIncidentEntry(entry);
   const primaryText = isFollowUp
     ? (entry.notes || entry.resolution || 'Follow-up logged')
-    : (entry.description || entry.notes || entry.summary || entry.customIncidentName || 'Incident logged');
-  const secondaryText = !isFollowUp && entry.description && entry.notes && entry.description !== entry.notes
-    ? entry.notes
-    : !isFollowUp && entry.summary && ![entry.description, entry.notes].includes(entry.summary)
-      ? entry.summary
-      : null;
+    : (isBehaviorIncident
+      ? (entry.text || entry.description || entry.summary || entry.incidentData?.description || 'Behavior logged')
+      : (entry.customIncidentName || entry.incidentType || entry.type || 'Incident logged'));
+  const secondaryText = !isFollowUp && !isBehaviorIncident
+    ? (entry.content || entry.description || entry.summary || entry.notes || null)
+    : null;
+  const behaviorNotesText = isBehaviorIncident
+    ? (entry.notes || entry.incidentData?.notes || null)
+    : null;
+  const behaviorRemedyText = isBehaviorIncident
+    ? (entry.remedy || entry.incidentData?.remedy || null)
+    : null;
 
   return (
     <Box>
@@ -32,10 +40,62 @@ const IncidentDetails = ({ entry }) => {
         </Typography>
       )}
 
+      {isBehaviorIncident && behaviorNotesText && behaviorNotesText !== primaryText && (
+        <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1, lineHeight: 1.4 }}>
+          <strong>Notes:</strong> {behaviorNotesText}
+        </Typography>
+      )}
+
+      {!isFollowUp && entry.severity && (
+        <Typography variant="body2" sx={{ color: 'text.primary', mb: 1, lineHeight: 1.4 }}>
+          <strong>Severity:</strong> {entry.severityLabel || entry.severity}{entry.severity ? ` (${entry.severity}/10)` : ''}
+        </Typography>
+      )}
+
+      {!isFollowUp && !isBehaviorIncident && entry.notes && (
+        <Typography variant="body2" sx={{ color: 'text.primary', mb: 1, lineHeight: 1.4 }}>
+          <strong>Notes:</strong> {entry.notes}
+        </Typography>
+      )}
+
+      {!isFollowUp && entry.contextSnapshot?.patternInsight && (
+        <Typography variant="body2" sx={{ color: 'text.primary', mb: 1, lineHeight: 1.4 }}>
+          <strong>Pattern insight:</strong> {entry.contextSnapshot.patternInsight}
+        </Typography>
+      )}
+
+      {!isFollowUp && entry.contextSnapshot && (
+        <Box sx={{ mt: 1, p: 1.25, borderRadius: 2, bgcolor: 'rgba(230, 241, 251, 0.65)', border: '1px solid', borderColor: 'rgba(29, 94, 166, 0.12)' }}>
+          <Typography variant="caption" sx={{ display: 'block', fontWeight: 700, mb: 0.5, color: '#184D83' }}>
+            Context from today
+          </Typography>
+          {Array.isArray(entry.contextSnapshot.medicationsTaken) && entry.contextSnapshot.medicationsTaken.length > 0 && (
+            <Typography variant="body2" sx={{ color: 'text.primary' }}>
+              <strong>Meds:</strong> {entry.contextSnapshot.medicationsTaken.join(', ')}
+            </Typography>
+          )}
+          {entry.contextSnapshot.foodLogged && (
+            <Typography variant="body2" sx={{ color: 'text.primary' }}>
+              <strong>Food:</strong> {entry.contextSnapshot.foodLogged}
+            </Typography>
+          )}
+          {Array.isArray(entry.contextSnapshot.activities) && entry.contextSnapshot.activities.length > 0 && (
+            <Typography variant="body2" sx={{ color: 'text.primary' }}>
+              <strong>Activities:</strong> {entry.contextSnapshot.activities.join(', ')}
+            </Typography>
+          )}
+          {entry.contextSnapshot.sleepQuality && (
+            <Typography variant="body2" sx={{ color: 'text.primary' }}>
+              <strong>Sleep:</strong> {entry.contextSnapshot.sleepQuality}
+            </Typography>
+          )}
+        </Box>
+      )}
+
       {/* Show remedy if present */}
-      {!isFollowUp && entry.remedy && (
+      {!isFollowUp && behaviorRemedyText && (
         <Typography variant="body2" sx={{ color: 'text.primary', mb: 1, lineHeight: 1.4, fontStyle: 'italic' }}>
-          <strong>Remedy:</strong> {entry.remedy}
+          <strong>Remedy:</strong> {behaviorRemedyText}
         </Typography>
       )}
 

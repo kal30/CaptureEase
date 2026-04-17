@@ -10,7 +10,7 @@ export const LOG_TYPES = {
     filterLabel: 'Sleep',
     trackLabel: 'Sleep',
     icon: '😴',
-    palette: createPalette('#F0EEFA', '#5B2D9E', '#7C4DCC'),
+    palette: createPalette('#F5F6FC', '#3949AB', '#D7DAEE', '#3949AB'),
     trackChip: true,
     trackOrder: 2,
     filterGroup: 'entryType',
@@ -24,7 +24,7 @@ export const LOG_TYPES = {
     filterLabel: 'Food',
     trackLabel: 'Food',
     icon: '🍽️',
-    palette: createPalette('#FFF8E6', '#A05C00', '#F4A400'),
+    palette: createPalette('#FAF9F8', '#7C5A3A', '#E5DFD8', '#7C5A3A'),
     trackChip: true,
     trackOrder: 3,
     filterGroup: 'entryType',
@@ -38,7 +38,7 @@ export const LOG_TYPES = {
     filterLabel: 'Meds',
     trackLabel: 'Meds',
     icon: '💊',
-    palette: createPalette('#EEF9F1', '#0A6640', '#1E9E6B'),
+    palette: createPalette('#F5FAF6', '#355534', '#D7E2D6', '#355534'),
     trackChip: true,
     trackOrder: 1,
     filterGroup: 'entryType',
@@ -52,9 +52,23 @@ export const LOG_TYPES = {
     filterLabel: 'Toilet',
     trackLabel: 'Toilet',
     icon: '🚽',
-    palette: createPalette('#F5E8DB', '#7A4B22', '#B8773A'),
+    palette: createPalette('#F4FAF9', '#267F6E', '#D4E5E2', '#267F6E'),
     trackChip: true,
     trackOrder: 4,
+    filterGroup: 'entryType',
+  },
+  activity: {
+    id: 'activity',
+    category: 'activity',
+    type: 'activity',
+    timelineType: 'activity',
+    displayLabel: 'Activity',
+    filterLabel: 'Activity',
+    trackLabel: 'Activity',
+    icon: '🕐',
+    palette: createPalette('rgba(255, 77, 109, 0.05)', '#FF4D6D', '#FFB3C1', '#FF4D6D'),
+    trackChip: true,
+    trackOrder: 5,
     filterGroup: 'entryType',
   },
   health: {
@@ -76,11 +90,12 @@ export const LOG_TYPES = {
     type: 'behavior',
     timelineType: 'behavior',
     displayLabel: 'Behavior',
-    filterLabel: 'Behavior / Meltdown',
+    filterLabel: 'Behavior',
     trackLabel: 'Behavior',
-    icon: '🌋',
-    palette: createPalette('#FFF0E6', '#C4420A', '#E8683A'),
-    trackChip: false,
+    icon: '🌪️',
+    palette: createPalette('rgba(199, 125, 17, 0.05)', '#C77D11', '#E5C9A0', '#C77D11'),
+    trackChip: true,
+    trackOrder: 6,
     filterGroup: 'flagged',
   },
   mood: {
@@ -89,7 +104,7 @@ export const LOG_TYPES = {
     type: 'mood',
     timelineType: 'mood',
     displayLabel: 'Mood',
-    filterLabel: 'Anxiety',
+    filterLabel: 'Mood',
     trackLabel: 'Mood',
     icon: '😰',
     palette: createPalette('#FFF0F5', '#9E1A4A', '#D44D7A'),
@@ -228,6 +243,20 @@ export const CORE_ENTRY_ACTIONS = [
     icon: LOG_TYPES.bathroom.icon,
     color: LOG_TYPES.bathroom.palette.dot,
   },
+  {
+    key: 'activity',
+    type: 'activity',
+    label: LOG_TYPES.activity.displayLabel,
+    icon: LOG_TYPES.activity.icon,
+    color: LOG_TYPES.activity.palette.dot,
+  },
+  {
+    key: 'behavior',
+    type: 'behavior',
+    label: LOG_TYPES.behavior.displayLabel,
+    icon: LOG_TYPES.behavior.icon,
+    color: LOG_TYPES.behavior.palette.dot,
+  },
 ];
 
 export const TIMELINE_FILTER_SECTIONS = {
@@ -311,15 +340,41 @@ const inferBathroomCategory = (entry = {}) => {
   return BATHROOM_KEYWORDS.some((keyword) => haystack.includes(keyword));
 };
 
+const BEHAVIOR_IDENTIFIERS = new Set(['behavior', 'behavioral']);
+
+export const isBehaviorIncidentEntry = (entry = {}) => Boolean(
+  (
+    entry?.logCategory && String(entry.logCategory).toLowerCase() !== 'behavior'
+      ? false
+      : (
+        entry?.incidentStyle ||
+        entry?.entryType === 'incident' ||
+        entry?.incidentData ||
+        BEHAVIOR_IDENTIFIERS.has(String(entry?.category || '').toLowerCase()) ||
+        BEHAVIOR_IDENTIFIERS.has(String(entry?.timelineType || '').toLowerCase()) ||
+        BEHAVIOR_IDENTIFIERS.has(String(entry?.type || '').toLowerCase()) ||
+        BEHAVIOR_IDENTIFIERS.has(String(entry?.categoryLabel || '').toLowerCase()) ||
+        BEHAVIOR_IDENTIFIERS.has(String(entry?.titlePrefix || '').toLowerCase()) ||
+        BEHAVIOR_IDENTIFIERS.has(String(entry?.incidentCategoryId || '').toLowerCase()) ||
+        BEHAVIOR_IDENTIFIERS.has(String(entry?.label || '').toLowerCase())
+      )
+  )
+);
+
 export const getLogTypeByEntry = (entry = {}) => {
   if (!entry || typeof entry !== 'object') {
     return LOG_TYPES.log;
   }
 
-  const directCategory = entry.category || entry.timelineType || entry.type;
+  const directCategory = entry.logCategory || entry.category || entry.timelineType || entry.type;
   const directType = getLogTypeByCategory(directCategory);
-  if (directType !== LOG_TYPES.log || directCategory === 'log') {
+
+  if (directCategory && (directType !== LOG_TYPES.log || directCategory === 'log')) {
     return directType;
+  }
+
+  if (isBehaviorIncidentEntry(entry)) {
+    return LOG_TYPES.behavior;
   }
 
   if (inferBathroomCategory(entry)) {
@@ -367,12 +422,21 @@ export const getTimelineMetaForCategory = (category, { importantMoment = false }
 export const getCanonicalEntryDisplayInfo = (entry = {}) => {
   const categoryType = getLogTypeByEntry(entry);
   const categoryMeta = getLogTypeByCategory(categoryType.category || entry.category || entry.type);
+  const isBehaviorIncident = isBehaviorIncidentEntry(entry);
 
   return {
     category: categoryType.category || entry.category || entry.type || 'log',
-    label: categoryMeta.trackLabel || categoryMeta.displayLabel || categoryMeta.filterLabel || 'Log',
-    icon: categoryMeta.icon || '•',
-    palette: categoryMeta.palette || null,
-    titlePrefix: categoryMeta.trackLabel || categoryMeta.displayLabel || 'Log',
+    label: isBehaviorIncident
+      ? LOG_TYPES.behavior.displayLabel
+      : (categoryMeta.trackLabel || categoryMeta.displayLabel || categoryMeta.filterLabel || 'Log'),
+    icon: isBehaviorIncident
+      ? LOG_TYPES.behavior.icon
+      : (categoryMeta.icon || '•'),
+    palette: isBehaviorIncident
+      ? LOG_TYPES.behavior.palette
+      : (categoryMeta.palette || null),
+    titlePrefix: isBehaviorIncident
+      ? LOG_TYPES.behavior.displayLabel
+      : (categoryMeta.trackLabel || categoryMeta.displayLabel || 'Log'),
   };
 };

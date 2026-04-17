@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "react-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["start"],
+      "port": 3000
+    },
+    {
+      "name": "react-dev-3001",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "PORT=3001 npm start"],
+      "port": 3001
+    }
+  ]
+}

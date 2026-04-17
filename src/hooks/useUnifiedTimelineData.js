@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { collection, onSnapshot, query, where, orderBy } from 'firebase/firestore';
+import { collection, query, where, orderBy } from 'firebase/firestore';
 import { 
   withTimelinePermissions,
   getCareOwnerTimelineView 
@@ -9,7 +9,7 @@ import { USER_ROLES } from '../constants/roles';
 import { CATEGORY_COLORS } from '../constants/categoryColors';
 import { getCustomCategories, getIncidentTypeConfig } from '../services/incidentService';
 import { HABIT_TYPES } from '../constants/habitTypes';
-import { LOG_TYPES, getLogTypeByEntry, getTimelineMetaForCategory, SPECIAL_FILTER_TYPES } from '../constants/logTypeRegistry';
+import { LOG_TYPES, getLogTypeByEntry, getTimelineMetaForCategory, SPECIAL_FILTER_TYPES, isBehaviorIncidentEntry } from '../constants/logTypeRegistry';
 import { dedupeTimelineEntries } from '../services/timeline/timelineDeduping';
 import { db } from '../services/firebase';
 
@@ -58,7 +58,41 @@ const getQuickNoteMeta = (entry) => {
   return getTimelineMetaForCategory(entry.category, { importantMoment: !!entry.importantMoment });
 };
 
+const normalizeIncidentCategory = (incidentConfig, incidentType) => {
+  const normalizedType = incidentConfig?.id === 'behavioral'
+    ? 'behavior'
+    : (incidentConfig?.id || incidentType || 'other');
+
+  if (incidentConfig?.id === 'behavioral') {
+    return {
+      categoryId: 'behavior',
+      label: LOG_TYPES.behavior.displayLabel,
+      color: LOG_TYPES.behavior.palette.dot,
+      icon: LOG_TYPES.behavior.icon,
+    };
+  }
+
+  return {
+    categoryId: normalizedType,
+    label: incidentConfig?.label || incidentType || 'Other',
+    color: incidentConfig?.color || '#6B7280',
+    icon: incidentConfig?.emoji || '📝',
+  };
+};
+
 const buildDailyLogTitle = (data, categoryMeta) => {
+  if ((data.category === 'medication' || data.logCategory === 'medication') && (
+    data.medicationName
+    || data.medicationDetails?.medicationName
+    || data.medicationDetails?.name
+  )) {
+    return String(
+      data.medicationName
+      || data.medicationDetails?.medicationName
+      || data.medicationDetails?.name
+    ).trim();
+  }
+
   if (data.titlePrefix?.trim()) {
     return data.titlePrefix.trim();
   }
@@ -97,6 +131,7 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
   const { getUserRoleForChild } = useRole();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [refreshToken, setRefreshToken] = useState(0);
   const [customCategories, setCustomCategories] = useState({});
   const [rawEntries, setRawEntries] = useState({
     incidents: [],
@@ -140,7 +175,7 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
     };
 
     fetchAllData();
-  }, [childId, selectedDate]);
+  }, [childId, selectedDate, refreshToken]);
 
   useEffect(() => {
     if (!childId) {
@@ -184,7 +219,7 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
 
     const handleQuickEntryCreated = (event) => {
       const entry = event.detail;
-      if (!entry || entry.collection !== 'dailyLogs' || entry.childId !== childId) {
+      if (!entry || entry.childId !== childId) {
         return;
       }
 
@@ -193,16 +228,123 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
         return;
       }
 
-      const categoryMeta = getQuickNoteMeta(entry);
+      if (entry.collection === 'incidents') {
+        const incidentMeta = getIncidentTypeConfig(entry.type) || getIncidentTypeConfig('OTHER');
+        const normalizedIncident = normalizeIncidentCategory(incidentMeta, entry.type);
+        const optimisticIncident = {
+          ...entry,
+          timestamp: entryTimestamp,
+          type: entry.type || 'behavioral',
+          timelineType: 'incident',
+          title: entry.title || entry.content || incidentMeta.label,
+          titlePrefix: incidentMeta.label,
+          content: entry.content || entry.notes || entry.triggerSummary || '',
+          triggerSummary: entry.triggerSummary || entry.remedy || '',
+          incidentCategoryId: normalizedIncident.categoryId,
+          incidentCategoryLabel: normalizedIncident.label,
+          color: entry.color || normalizedIncident.color,
+          icon: entry.icon || normalizedIncident.icon,
+          entryType: 'incident',
+          incidentData: entry.incidentData || {},
+          originalData: entry.originalData || entry,
+          ...getEntryUser(entry),
+        };
+
+        setRawEntries((prev) => ({
+          ...prev,
+          incidents: [
+            optimisticIncident,
+            ...prev.incidents.filter((incident) => incident.id !== optimisticIncident.id),
+          ],
+        }));
+        return;
+      }
+
+      if (entry.collection !== 'dailyLogs' && entry.collection !== 'dailyCare') {
+        return;
+      }
+
+      const isBehaviorStyleEntry = isBehaviorIncidentEntry(entry);
+      const isDailyCareActivity = entry.collection === 'dailyCare' && entry.actionType === 'activity';
+      const isMoodEntry = entry.collection === 'dailyCare' && entry.actionType === 'mood';
+      const categoryMeta = isMoodEntry
+        ? getTimelineMetaForCategory('mood')
+        : (entry.collection === 'dailyCare'
+          ? getQuickNoteMeta({
+              ...entry,
+              category: 'activity',
+              actionType: entry.actionType || 'activity',
+            })
+          : getQuickNoteMeta(entry));
+      const incidentSnapshot = entry.contextSnapshot || entry.incidentData?.contextSnapshot || null;
+      const notesText = entry.notes || entry.incidentData?.notes || null;
+      const severityLabel = entry.severityLabel || entry.incidentData?.severityLabel || null;
+      const triggerSummary = entry.triggerSummary || entry.incidentData?.triggerSummary || null;
+      const moodValue = entry.value || entry.data?.level || entry.mood || entry.moodLevel || entry.title || 'Calm';
       const optimisticDailyLog = {
         ...entry,
+        logCategory: categoryMeta.category || entry.logCategory || categoryMeta.type,
         timestamp: entryTimestamp,
-        type: categoryMeta.type,
-        timelineType: categoryMeta.timelineType,
-        title: getQuickDailyLogTitle(entry, categoryMeta),
+        type: isBehaviorStyleEntry
+          ? 'behavior'
+          : isMoodEntry
+            ? 'mood'
+          : isDailyCareActivity
+            ? 'dailyHabit'
+            : categoryMeta.type,
+        timelineType: isBehaviorStyleEntry
+          ? 'incident'
+          : isMoodEntry
+            ? 'mood'
+          : isDailyCareActivity
+            ? 'dailyHabit'
+            : categoryMeta.timelineType,
+        title: isDailyCareActivity
+          ? 'Activity'
+          : isMoodEntry
+            ? String(moodValue)
+          : getQuickDailyLogTitle(entry, categoryMeta),
         titlePrefix: categoryMeta.titlePrefix,
-        color: categoryMeta.color,
-        categoryIcon: categoryMeta.icon,
+        color: isBehaviorStyleEntry
+          ? LOG_TYPES.behavior.palette.dot
+          : isMoodEntry
+            ? LOG_TYPES.mood.palette.dot
+          : isDailyCareActivity
+            ? (entry.activityThemeColor || entry.categoryColor || categoryMeta.color)
+            : categoryMeta.color,
+        categoryIcon: isBehaviorStyleEntry
+          ? LOG_TYPES.behavior.icon
+          : isMoodEntry
+            ? LOG_TYPES.mood.icon
+          : isDailyCareActivity
+            ? (entry.activityThemeIcon || entry.categoryIcon || categoryMeta.icon)
+            : categoryMeta.icon,
+        incidentStyle: isBehaviorStyleEntry,
+        entryType: isBehaviorStyleEntry ? 'incident' : (isMoodEntry ? 'mood' : (isDailyCareActivity ? 'dailyHabit' : entry.entryType)),
+        contextSnapshot: incidentSnapshot,
+        incidentData: entry.incidentData || {},
+        severity: entry.severity,
+        severityLabel,
+        triggerSummary,
+        remedy: entry.remedy || entry.incidentData?.remedy || null,
+        incidentCategoryId: isBehaviorStyleEntry ? 'behavior' : (isMoodEntry ? 'mood' : entry.incidentCategoryId),
+        incidentCategoryLabel: isBehaviorStyleEntry
+          ? 'Behavior'
+          : isMoodEntry
+            ? 'Mood'
+          : (isDailyCareActivity ? 'Activity' : entry.incidentCategoryLabel),
+        incidentCategoryColor: isBehaviorStyleEntry
+          ? LOG_TYPES.behavior.palette.dot
+          : isMoodEntry
+            ? LOG_TYPES.mood.palette.dot
+          : (isDailyCareActivity ? (entry.activityThemeColor || entry.categoryColor || categoryMeta.color) : entry.incidentCategoryColor),
+        incidentCategoryIcon: isBehaviorStyleEntry
+          ? LOG_TYPES.behavior.icon
+          : isMoodEntry
+            ? LOG_TYPES.mood.icon
+          : (isDailyCareActivity ? (entry.activityThemeIcon || entry.categoryIcon || categoryMeta.icon) : entry.incidentCategoryIcon),
+        moodValue: isMoodEntry ? String(moodValue) : entry.moodValue,
+        moodEmoji: isMoodEntry ? LOG_TYPES.mood.icon : entry.moodEmoji,
         isImportantMoment: !!entry.importantMoment,
         ...getEntryUser(entry),
       };
@@ -221,79 +363,25 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
   }, [childId, selectedDate]);
 
   useEffect(() => {
-    if (!childId || !selectedDate) {
+    if (!childId) {
       return undefined;
     }
 
-    const { start, end } = (() => {
-      const startDate = new Date(selectedDate);
-      startDate.setHours(0, 0, 0, 0);
-      const endDate = new Date(selectedDate);
-      endDate.setHours(23, 59, 59, 999);
-      return { start: startDate, end: endDate };
-    })();
-
-    const dailyLogsQuery = query(
-      collection(db, 'dailyLogs'),
-      where('childId', '==', childId),
-      where('status', '==', 'active'),
-      where('timestamp', '>=', start),
-      where('timestamp', '<=', end),
-      orderBy('timestamp', 'desc')
-    );
-
-    let didCancel = false;
-
-    const unsubscribe = onSnapshot(
-      dailyLogsQuery,
-      (snapshot) => {
-        if (didCancel) {
-          return;
-        }
-
-        const nextDailyLogs = dedupeTimelineEntries(
-          snapshot.docs
-            .map((doc) => {
-              const data = doc.data();
-              const categoryType = getLogTypeByEntry(data);
-              const categoryMeta = getTimelineMetaForCategory(categoryType.category, { importantMoment: !!data.importantMoment });
-              const notesText = data.notes || data.sleepDetails?.notes || data.bathroomDetails?.notes || data.content || null;
-
-              return {
-                id: doc.id,
-                ...data,
-                timestamp: data.timestamp?.toDate ? data.timestamp.toDate() : new Date(data.createdAt),
-                category: categoryType.category,
-                type: categoryMeta.type,
-                timelineType: categoryMeta.timelineType,
-                collection: 'dailyLogs',
-                title: buildDailyLogTitle(data, categoryMeta),
-                titlePrefix: categoryMeta.titlePrefix,
-                label: categoryMeta.label,
-                icon: categoryMeta.icon,
-                color: categoryMeta.color,
-                content: notesText,
-                notes: notesText,
-              };
-            })
-            .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-        );
-
-        setRawEntries((current) => ({
-          ...current,
-          dailyLogs: nextDailyLogs,
-        }));
-      },
-      (snapshotError) => {
-        console.error('Error listening for live timeline updates:', snapshotError);
+    const handleTimelineRefresh = (event) => {
+      const entry = event?.detail;
+      if (!entry || entry.childId !== childId) {
+        return;
       }
-    );
+
+      setRefreshToken((current) => current + 1);
+    };
+
+    window.addEventListener('captureez:timeline-refresh', handleTimelineRefresh);
 
     return () => {
-      didCancel = true;
-      unsubscribe();
+      window.removeEventListener('captureez:timeline-refresh', handleTimelineRefresh);
     };
-  }, [childId, selectedDate]);
+  }, [childId]);
 
   // Process and filter entries
   const processedData = useMemo(() => {
@@ -325,16 +413,22 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
       // Transform incidents (from incidents collection) - includes grouped incidents with follow-ups
       ...childFilteredEntries.incidents.map(incident => {
         const incidentConfig = getIncidentTypeConfig(incident.type, customCategories);
+        const normalizedIncident = normalizeIncidentCategory(incidentConfig, incident.type);
 
         return {
           id: incident.id,
           type: 'incident',
           collection: 'incidents',
           timestamp: incident.timestamp,
-          incidentCategoryId: incidentConfig?.id || incident.type || 'other',
-          incidentCategoryLabel: incidentConfig?.label || incident.customIncidentName || incident.type || 'Other',
-          incidentCategoryColor: incidentConfig?.color || '#6B7280',
-          incidentCategoryIcon: incidentConfig?.emoji || '📝',
+          incidentCategoryId: normalizedIncident.categoryId,
+          incidentCategoryLabel: incident.customIncidentName || normalizedIncident.label || incident.type || 'Other',
+          incidentCategoryColor: normalizedIncident.color,
+          incidentCategoryIcon: normalizedIncident.icon,
+          content: incident.content || [
+            incident.severity ? `Severity: ${incident.severity}/10` : null,
+            incident.notes ? `Notes: ${incident.notes}` : null,
+            incident.triggerSummary ? `Triggers: ${incident.triggerSummary}` : null,
+          ].filter(Boolean).join(' • '),
           // Follow-up related fields (for grouped incidents)
           isGroupedIncident: incident.isGroupedIncident,
           followUps: incident.followUps,
@@ -351,6 +445,7 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
           severity: incident.severity,
           remedy: incident.remedy,
           notes: incident.notes,
+          triggerSummary: incident.triggerSummary,
           description: incident.description,
           summary: incident.summary,
           triggers: incident.triggers,
@@ -366,30 +461,81 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
       ...childFilteredEntries.dailyLogs.map((dailyLog) => {
         const categoryType = getLogTypeByEntry(dailyLog);
         const categoryMeta = getTimelineMetaForCategory(categoryType.category, { importantMoment: !!dailyLog.importantMoment });
-        const notesText = dailyLog.notes || dailyLog.sleepDetails?.notes || dailyLog.bathroomDetails?.notes || null;
+        const isBehaviorIncident = isBehaviorIncidentEntry(dailyLog);
+        const incidentSnapshot = dailyLog.contextSnapshot || dailyLog.incidentData?.contextSnapshot || null;
+        const notesText = dailyLog.notes
+          || dailyLog.sleepDetails?.notes
+          || dailyLog.bathroomDetails?.notes
+          || dailyLog.incidentData?.notes
+          || null;
+        const severityLabel = dailyLog.severityLabel
+          || dailyLog.incidentData?.severityLabel
+          || (dailyLog.severity ? `Severity ${dailyLog.severity}` : null);
+        const triggerSummary = dailyLog.triggerSummary
+          || dailyLog.incidentData?.triggerSummary
+          || null;
+        const behaviorContentParts = isBehaviorIncident
+          ? [
+              severityLabel ? `Severity: ${severityLabel}${dailyLog.severity ? ` (${dailyLog.severity})` : ''}` : null,
+              notesText ? `Notes: ${notesText}` : null,
+              incidentSnapshot?.patternInsight ? incidentSnapshot.patternInsight : null,
+            ].filter(Boolean)
+          : [];
+        const content = isBehaviorIncident
+          ? behaviorContentParts.join(' • ')
+          : notesText;
 
         return {
           id: dailyLog.id,
-          type: categoryMeta.type,
-          timelineType: categoryMeta.timelineType,
+          logCategory: categoryType.category,
+          type: isBehaviorIncident ? 'behavior' : categoryMeta.type,
+          timelineType: isBehaviorIncident ? 'incident' : categoryMeta.timelineType,
           collection: 'dailyLogs',
           childId: dailyLog.childId,
           timestamp: dailyLog.timestamp?.toDate ? dailyLog.timestamp.toDate() : new Date(dailyLog.timestamp),
           category: categoryType.category,
           title: dailyLog.importantMoment
             ? 'Important Moment'
-            : (dailyLog.titlePrefix || dailyLog.title || categoryMeta.titlePrefix || LOG_TYPES.log.displayLabel),
+            : (isBehaviorIncident
+              ? 'Behavior'
+              : (
+                categoryType.category === 'medication'
+                  ? dailyLog.medicationName
+                    || dailyLog.title
+                    || dailyLog.titlePrefix
+                    || categoryMeta.titlePrefix
+                    || LOG_TYPES.log.displayLabel
+                  : (dailyLog.titlePrefix || dailyLog.title || categoryMeta.titlePrefix || LOG_TYPES.log.displayLabel)
+              )),
           titlePrefix: dailyLog.titlePrefix || categoryMeta.titlePrefix || null,
-          color: categoryMeta.color,
-          categoryIcon: categoryMeta.icon,
+          medicationName: dailyLog.medicationName || dailyLog.medicationDetails?.medicationName || dailyLog.medicationDetails?.name || null,
+          medicationScheduleDose: dailyLog.medicationScheduleDose || dailyLog.medicationDetails?.dosage || dailyLog.medicationDetails?.dose || dailyLog.dosage || dailyLog.dose || null,
+          medicationScheduleUnit: dailyLog.medicationScheduleUnit || dailyLog.medicationDetails?.unit || dailyLog.unit || null,
+          medicationScheduleTime: dailyLog.medicationScheduleTime || dailyLog.time || null,
+          medicationCategory: dailyLog.medicationCategory || dailyLog.medicationFrequency || null,
+          color: isBehaviorIncident ? LOG_TYPES.behavior.palette.dot : categoryMeta.color,
+          categoryIcon: isBehaviorIncident ? LOG_TYPES.behavior.icon : categoryMeta.icon,
           text: dailyLog.text,
-          content: notesText,
+          content,
           tags: dailyLog.tags,
           mediaURL: dailyLog.mediaURL,
           mediaType: dailyLog.mediaType,
           mediaUrls: dailyLog.mediaUrls,
           voiceMemoURL: dailyLog.voiceMemoURL,
           notes: notesText,
+          severity: dailyLog.severity,
+          severityLabel,
+          triggerSummary,
+          remedy: dailyLog.remedy || dailyLog.incidentData?.remedy || null,
+          suspectedTriggers: dailyLog.suspectedTriggers || dailyLog.incidentData?.suspectedTriggers || [],
+          contextSnapshot: incidentSnapshot,
+          incidentData: dailyLog.incidentData || {},
+          entryType: isBehaviorIncident ? 'incident' : dailyLog.entryType,
+          incidentStyle: isBehaviorIncident,
+          incidentCategoryId: isBehaviorIncident ? 'behavior' : dailyLog.incidentCategoryId,
+          incidentCategoryLabel: isBehaviorIncident ? 'Behavior' : dailyLog.incidentCategoryLabel,
+          incidentCategoryColor: isBehaviorIncident ? LOG_TYPES.behavior.palette.dot : dailyLog.incidentCategoryColor,
+          incidentCategoryIcon: isBehaviorIncident ? LOG_TYPES.behavior.icon : dailyLog.incidentCategoryIcon,
           importantMoment: !!dailyLog.importantMoment,
           isImportantMoment: !!dailyLog.importantMoment,
           ...getEntryUser(dailyLog),
@@ -399,19 +545,42 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
       // Transform daily habits (from dailyCare collection)
       ...childFilteredEntries.dailyHabits.map(habit => {
         const habitType = Object.values(HABIT_TYPES).find(({ id }) => id === habit.categoryId);
+        const isActivityHabit = habit.actionType === 'activity' || habit.categoryId === 'activity';
+        const isMoodHabit = habit.actionType === 'mood' || habit.categoryId === 'mood';
+        const moodValue = habit.value || habit.data?.level || habit.mood || habit.moodLevel || habit.title || 'Calm';
+        const categoryLabel = isMoodHabit
+          ? String(moodValue)
+          : (isActivityHabit
+            ? 'Activity'
+            : (habit.categoryLabel || habitType?.label || 'Daily Habit'));
+        const categoryColor = isMoodHabit
+          ? LOG_TYPES.mood.palette.dot
+          : (isActivityHabit
+            ? LOG_TYPES.activity.palette.dot
+            : (habitType?.color || '#64748B'));
+        const categoryIcon = isMoodHabit
+          ? LOG_TYPES.mood.icon
+          : (isActivityHabit
+            ? LOG_TYPES.activity.icon
+            : (HABIT_CATEGORY_ICON_MAP[habit.categoryId] || '📝'));
 
         return {
           id: habit.id,
-          type: 'dailyHabit',
+          type: isMoodHabit ? 'mood' : 'dailyHabit',
           collection: 'dailyCare',
           timestamp: habit.timestamp?.toDate ? habit.timestamp.toDate() : new Date(habit.timestamp),
-          categoryId: habit.categoryId,
-          categoryLabel: habit.categoryLabel || habitType?.label || 'Daily Habit',
-          categoryColor: habitType?.color || '#64748B',
-          categoryIcon: HABIT_CATEGORY_ICON_MAP[habit.categoryId] || '📝',
-          level: habit.level,
+          categoryId: isMoodHabit ? 'mood' : habit.categoryId,
+          categoryLabel,
+          categoryColor,
+          categoryIcon,
+          level: isMoodHabit ? moodValue : habit.level,
           notes: habit.notes,
           mediaUrls: habit.mediaUrls,
+          actionType: habit.actionType || null,
+          activityThemeLabel: habit.activityThemeLabel || habit.data?.activityThemeLabel || null,
+          activityThemeColor: habit.activityThemeColor || habit.data?.activityThemeColor || null,
+          moodValue: isMoodHabit ? String(moodValue) : habit.moodValue,
+          moodEmoji: isMoodHabit ? LOG_TYPES.mood.icon : habit.moodEmoji,
           ...getEntryUser(habit),
         };
       }),
@@ -449,7 +618,10 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
     // Filter by entry types
     if (filters.entryTypes?.length > 0) {
       filteredEntries = filteredEntries.filter(entry => (
-        entry && filters.entryTypes.includes(entry.type)
+        entry && (
+          filters.entryTypes.includes(entry.type) ||
+          (entry.type === 'incident' && filters.entryTypes.includes(entry.incidentCategoryId))
+        )
       ));
     }
 
@@ -520,7 +692,7 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
     // Generate summary statistics
     const summary = {
       totalEntries: filteredEntries.length,
-      incidentCount: filteredEntries.filter(e => e?.type === 'incident').length,
+      incidentCount: filteredEntries.filter(e => e?.type === 'incident' || e?.incidentStyle).length,
       dailyLogCount: filteredEntries.filter(e => e?.collection === 'dailyLogs').length,
       dailyHabitCount: filteredEntries.filter(e => e?.type === 'dailyHabit').length,
       therapyNoteCount: filteredEntries.filter(e => e?.type === 'therapyNote').length,
@@ -532,15 +704,15 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
         : null,
       byTimePeriod: {
         morning: {
-          hasIncidents: filteredEntries.some(e => e?.type === 'incident' && getTimePeriod(e.timestamp) === 'morning'),
+          hasIncidents: filteredEntries.some(e => (e?.type === 'incident' || e?.incidentStyle) && getTimePeriod(e.timestamp) === 'morning'),
           hasDailyLogEntries: filteredEntries.some(e => e?.collection === 'dailyLogs' && getTimePeriod(e.timestamp) === 'morning')
         },
         afternoon: {
-          hasIncidents: filteredEntries.some(e => e?.type === 'incident' && getTimePeriod(e.timestamp) === 'afternoon'),
+          hasIncidents: filteredEntries.some(e => (e?.type === 'incident' || e?.incidentStyle) && getTimePeriod(e.timestamp) === 'afternoon'),
           hasDailyLogEntries: filteredEntries.some(e => e?.collection === 'dailyLogs' && getTimePeriod(e.timestamp) === 'afternoon')
         },
         evening: {
-          hasIncidents: filteredEntries.some(e => e?.type === 'incident' && getTimePeriod(e.timestamp) === 'evening'),
+          hasIncidents: filteredEntries.some(e => (e?.type === 'incident' || e?.incidentStyle) && getTimePeriod(e.timestamp) === 'evening'),
           hasDailyLogEntries: filteredEntries.some(e => e?.collection === 'dailyLogs' && getTimePeriod(e.timestamp) === 'evening')
         }
       }

@@ -19,7 +19,9 @@ export const getDailyHabits = async (childId, selectedDate) => {
     return habitEntries.map(entry => ({
       ...entry,
       childId: childId, // Ensure childId is explicitly set
+      collection: 'dailyCare',
       type: 'dailyHabit',
+      actionType: entry.actionType || entry.data?.actionType || null,
       timestamp: entry.timestamp?.toDate ? entry.timestamp.toDate() : new Date(entry.timestamp)
     }));
     

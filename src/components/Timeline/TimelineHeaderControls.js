@@ -219,6 +219,8 @@ const TimelineHeaderControls = ({
               direction="row"
               spacing={0.75}
               sx={{
+                width: '100%',
+                minWidth: 0,
                 flexWrap: 'nowrap',
                 overflowX: 'auto',
                 overflowY: 'hidden',

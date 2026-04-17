@@ -1,5 +1,5 @@
 import { db } from "./firebase";
-import { 
+import {
   collection, 
   addDoc, 
   serverTimestamp, 
@@ -12,6 +12,39 @@ import {
   limit
 } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
+
+const parseTime = (timeValue) => {
+  if (!timeValue) return null;
+  const [hours, minutes] = String(timeValue).split(':').map(Number);
+  if (Number.isNaN(hours) || Number.isNaN(minutes)) return null;
+  return { hours, minutes };
+};
+
+const formatLocalDateKey = (date) => {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+    return '';
+  }
+
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, '0'),
+    String(date.getDate()).padStart(2, '0'),
+  ].join('-');
+};
+
+const buildSleepTimestamp = (anchorDate, bedtime) => {
+  const baseDate = anchorDate instanceof Date && !Number.isNaN(anchorDate.getTime())
+    ? new Date(anchorDate)
+    : new Date();
+  const bed = parseTime(bedtime);
+  if (!bed) {
+    return baseDate;
+  }
+
+  const timestamp = new Date(baseDate);
+  timestamp.setHours(bed.hours, bed.minutes, 0, 0);
+  return timestamp;
+};
 
 const formatSleepIssue = (value) => {
   const issueLabels = {
@@ -27,6 +60,36 @@ const formatSleepIssue = (value) => {
   return issueLabels[value] || String(value).replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
+const resolveTimestamp = (value) => {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return value;
+  }
+
+  if (value?.toDate && typeof value.toDate === 'function') {
+    const date = value.toDate();
+    if (date instanceof Date && !Number.isNaN(date.getTime())) {
+      return date;
+    }
+  }
+
+  if (typeof value === 'string' || typeof value === 'number') {
+    const parsed = new Date(value);
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed;
+    }
+  }
+
+  return new Date();
+};
+
+const formatTimeLabel = (date) => {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+    return '';
+  }
+
+  return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+};
+
 // Save a daily care entry
 export const saveDailyCareEntry = async (entryData) => {
   try {
@@ -38,6 +101,7 @@ export const saveDailyCareEntry = async (entryData) => {
     }
 
     const { childId, actionType, data, completedBy } = entryData;
+    const resolvedTimestamp = resolveTimestamp(entryData.timestamp);
     
     // Create the entry document with required immutable metadata
     const entry = {
@@ -50,8 +114,8 @@ export const saveDailyCareEntry = async (entryData) => {
       actionType,
       data,
       completedBy: completedBy || currentUser.uid,
-      timestamp: serverTimestamp(),
-      date: new Date().toDateString(), // For daily tracking
+      timestamp: resolvedTimestamp,
+      date: resolvedTimestamp.toDateString(), // For daily tracking
       
       // Status for soft delete system
       status: 'active',
@@ -59,6 +123,47 @@ export const saveDailyCareEntry = async (entryData) => {
 
     // Save to daily care collection
     const docRef = await addDoc(collection(db, "dailyCare"), entry);
+
+    if (typeof window !== 'undefined') {
+      const eventDetail = {
+        id: docRef.id,
+        ...entry,
+        actionType,
+        childId,
+        timestamp: entry.timestamp,
+        recordedAt: resolvedTimestamp,
+        collection: 'dailyCare',
+        category: 'daily_care',
+        title: getActionTitle(actionType),
+        activityThemeKey: data?.activityThemeKey || null,
+        activityThemeColor: data?.activityThemeColor || null,
+        activityThemeLabel: data?.activityThemeLabel || null,
+        categoryLabel: data?.categoryLabel || null,
+        categoryColor: data?.categoryColor || null,
+      };
+
+      window.dispatchEvent(new CustomEvent('captureez:timeline-entry-created', {
+        detail: eventDetail,
+      }));
+
+      window.dispatchEvent(new CustomEvent('captureez:daily-care-saved', {
+        detail: {
+          childId,
+          actionType,
+          timestamp: resolvedTimestamp,
+          title: getActionTitle(actionType),
+          message: `${getActionTitle(actionType)} logged at ${formatTimeLabel(resolvedTimestamp)}`,
+        },
+      }));
+
+      window.dispatchEvent(new CustomEvent('captureez:timeline-refresh', {
+        detail: {
+          childId,
+          collection: 'dailyCare',
+          entryId: docRef.id,
+        },
+      }));
+    }
 
     if (actionType === 'sleep') {
       const sleepIssues = Array.isArray(data?.sleepIssues)
@@ -70,7 +175,17 @@ export const saveDailyCareEntry = async (entryData) => {
         ? sleepIssues.map(formatSleepIssue).filter(Boolean).join(', ')
         : 'No disturbances';
       const sleepText = `Slept ${data?.sleepDuration || 0} hours — ${disturbanceText}`.trim();
-      const sleepTimestamp = entryData.timestamp ? new Date(entryData.timestamp) : new Date();
+      const anchorDate = data?.anchorDate || data?.localDate || data?.nightOf || data?.date;
+      const resolvedAnchorDate = anchorDate instanceof Date
+        ? anchorDate
+        : typeof anchorDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(anchorDate)
+          ? new Date(`${anchorDate}T00:00:00`)
+          : (entryData.timestamp ? new Date(entryData.timestamp) : new Date());
+      const sleepTimestamp = buildSleepTimestamp(resolvedAnchorDate, data?.bedtime);
+      const localDate = formatLocalDateKey(resolvedAnchorDate);
+      const localTime = data?.bedtime || null;
+      const timeZoneOffsetMinutes = -sleepTimestamp.getTimezoneOffset();
+      const timeZoneName = Intl.DateTimeFormat().resolvedOptions().timeZone || null;
 
       await addDoc(collection(db, "dailyLogs"), {
         childId,
@@ -81,18 +196,33 @@ export const saveDailyCareEntry = async (entryData) => {
         category: 'sleep',
         tags: ['sleep'],
         timestamp: sleepTimestamp,
+        recordedAt: sleepTimestamp,
+        timestampUtc: sleepTimestamp.toISOString(),
+        timestampSource: 'sleep-anchor',
         entryDate: sleepTimestamp.toDateString(),
+        anchorDate: localDate,
+        localDate,
+        localTime,
+        timeZoneOffsetMinutes,
+        timeZoneName,
         authorId: currentUser.uid,
         authorName: currentUser.displayName || currentUser.email?.split('@')[0] || 'User',
         authorEmail: currentUser.email,
         source: 'sleep_log',
         sleepDetails: {
+          anchorDate: localDate,
+          localDate,
+          localTime,
           bedtime: data?.bedtime || null,
           wakeTime: data?.wakeTime || null,
           durationHours: data?.sleepDuration || null,
           disturbances: Array.isArray(data?.sleepIssues) ? data.sleepIssues : (data?.sleepIssues ? [data.sleepIssues] : []),
           quality: data?.sleepQuality || null,
           notes: data?.notes || null,
+          timeZoneOffsetMinutes,
+          timeZoneName,
+          timestampSource: 'sleep-anchor',
+          startUtc: sleepTimestamp.toISOString(),
         }
       });
     }
@@ -103,7 +233,7 @@ export const saveDailyCareEntry = async (entryData) => {
         type: `daily_${actionType}`,
         title: getActionTitle(actionType),
         data: data,
-        timestamp: serverTimestamp(),
+        timestamp: resolvedTimestamp,
         category: 'daily_care',
         importance: 'normal',
       });
@@ -184,6 +314,7 @@ export const getCompletionStats = async (childId, startDate, endDate) => {
       mood: 0,
       sleep: 0,
       energy: 0,
+      activity: 0,
       food_health: 0,
       safety: 0,
       totalDays: Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)),
@@ -217,6 +348,7 @@ const getActionTitle = (actionType) => {
     mood: 'Mood Check',
     sleep: 'Sleep Quality',
     energy: 'Energy Level',
+    activity: 'Activity Check',
     food_health: 'Food & Medicine',
     safety: 'Safety Check',
   };

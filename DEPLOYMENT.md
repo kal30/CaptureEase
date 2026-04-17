@@ -10,6 +10,9 @@
 - Production Firebase project ID: `lifelog-tracker`
 - Firebase alias used by this repo for production: `prod`
 - Current default Firebase project in this repo: `lifelog-tracker`
+- Branch rule:
+  - `main` deploys to production
+  - every other branch deploys to test
 - Deploy command:
 
 ```bash
@@ -41,6 +44,16 @@ npm run deploy:test
 - The app should not choose a database based on hostname anymore.
 - Production should be selected explicitly by environment config.
 - Test should be a separate Firebase project and separate domain.
+
+## Branch-Based Automation
+
+- GitHub Actions deploys on every push.
+- `main` deploys to Firebase alias `prod`.
+- Non-`main` branches deploy to Firebase alias `test`.
+- Required GitHub secrets:
+  - `FIREBASE_SERVICE_ACCOUNT_PROD`
+  - `FIREBASE_SERVICE_ACCOUNT_TEST`
+- The deploy workflow uses the same branch rule as the local build/start scripts, so an unconfigured branch falls back to test rather than prod.
 
 ## Files To Check
 

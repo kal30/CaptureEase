@@ -36,6 +36,275 @@ const escapeHtml = (value = "") =>
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 
+const BEHAVIOR_CONTEXT_CATEGORIES = ["medication", "food", "activity", "sleep"];
+
+const toDateValue = (value) => {
+  if (!value) return null;
+  if (value instanceof Date) return value;
+  if (typeof value?.toDate === "function") return value.toDate();
+  if (typeof value === "string" || typeof value === "number") {
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+  return null;
+};
+
+const isValidDate = (value) => value instanceof Date && !Number.isNaN(value.getTime());
+
+const formatDayKey = (date) => {
+  if (!isValidDate(date)) return null;
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const shiftDayKey = (dayKey, offsetDays) => {
+  if (!dayKey) return null;
+  const parsed = new Date(`${dayKey}T00:00:00.000Z`);
+  if (Number.isNaN(parsed.getTime())) return null;
+  parsed.setUTCDate(parsed.getUTCDate() + offsetDays);
+  return parsed.toISOString().slice(0, 10);
+};
+
+const formatClockTime = (value) => {
+  const date = toDateValue(value);
+  if (!isValidDate(date)) return null;
+  return date.toLocaleTimeString([], {
+    hour: "numeric",
+    minute: "2-digit",
+  });
+};
+
+const getEntryDayKey = (entry) =>
+  entry?.entryDayKey || entry?.dayKey || entry?.entryDateKey || entry?.entryDate || null;
+
+const formatMedicationEntry = (entry) => {
+  const metadata = entry?.metadata || entry?.medicationDetails || {};
+  const name = metadata.medicationName || entry?.medicationName || entry?.title || entry?.text || "Medication";
+  const dose = metadata.dose ?? entry?.dose ?? "";
+  const unit = metadata.unit || entry?.unit || "";
+  const timeTaken = metadata.timeTaken || entry?.timeTaken || formatClockTime(entry?.timestamp);
+  const doseLabel = [dose, unit].filter(Boolean).join("");
+  const primary = [name, doseLabel].filter(Boolean).join(" ").trim();
+  return timeTaken ? `${primary} @ ${timeTaken}` : primary;
+};
+
+const formatFoodEntry = (entry) => {
+  const metadata = entry?.metadata || entry?.foodDetails || {};
+  const foodDescription = metadata.foodDescription || entry?.foodDescription || entry?.title || entry?.text || "Food";
+  const time = metadata.time || metadata.timeTaken || entry?.timeTaken || formatClockTime(entry?.timestamp);
+  return time ? `${foodDescription} @ ${time}` : foodDescription;
+};
+
+const formatActivityEntry = (entry) => {
+  const metadata = entry?.metadata || entry?.activityDetails || {};
+  const description = metadata.activityType || metadata.activityDescription || entry?.activityType || entry?.title || entry?.text || "Activity";
+  const time = metadata.time || metadata.timeTaken || entry?.timeTaken || formatClockTime(entry?.timestamp);
+  return time ? `${description} @ ${time}` : description;
+};
+
+const formatSleepEntry = (entry) => {
+  const metadata = entry?.metadata || entry?.sleepDetails || {};
+  const quality = metadata.quality || entry?.quality || entry?.sleepQuality || "Not logged yet";
+  const duration = metadata.duration ?? entry?.duration ?? null;
+  const parts = [quality];
+  if (duration) {
+    parts.push(`${duration} hours`);
+  }
+  return parts.join(", ");
+};
+
+const fetchDailyLogDocs = async ({
+  childId,
+  dayKey,
+  categories,
+  useTimestampFallback = true,
+}) => {
+  const db = admin.firestore();
+
+  const runEntryDayKeyQuery = async () => {
+    const snapshot = await db
+      .collection("dailyLogs")
+      .where("childId", "==", childId)
+      .where("status", "==", "active")
+      .where("entryDayKey", "==", dayKey)
+      .where("category", "in", categories)
+      .get();
+    return snapshot.docs;
+  };
+
+  const runTimestampFallbackQuery = async () => {
+    if (!useTimestampFallback) {
+      return [];
+    }
+
+    const rangeDate = toDateValue(`${dayKey}T00:00:00.000`);
+    if (!isValidDate(rangeDate)) {
+      return [];
+    }
+
+    const start = new Date(rangeDate);
+    start.setHours(0, 0, 0, 0);
+
+    const end = new Date(rangeDate);
+    end.setHours(23, 59, 59, 999);
+
+    const snapshot = await db
+      .collection("dailyLogs")
+      .where("childId", "==", childId)
+      .where("status", "==", "active")
+      .where("timestamp", ">=", start)
+      .where("timestamp", "<=", end)
+      .where("category", "in", categories)
+      .get();
+
+    return snapshot.docs;
+  };
+
+  try {
+    const docs = await runEntryDayKeyQuery();
+    if (docs.length > 0) {
+      return docs;
+    }
+  } catch (error) {
+    logger.warn("dailyLogs entryDayKey query failed; falling back to timestamp range", {
+      error: error.message,
+      childId,
+      dayKey,
+      categories,
+    });
+  }
+
+  try {
+    return await runTimestampFallbackQuery();
+  } catch (error) {
+    logger.error("dailyLogs fallback query failed", {
+      error: error.message,
+      childId,
+      dayKey,
+      categories,
+    });
+    return [];
+  }
+};
+
+const buildContextSnapshot = async (childId, incidentDateTime, incidentDayKey = null) => {
+  const incidentDate = toDateValue(incidentDateTime) || new Date();
+  const dayKey = incidentDayKey || formatDayKey(incidentDate);
+  const yesterdayKey = shiftDayKey(dayKey, -1);
+
+  const snapshot = {
+    medicationsTaken: ["Not logged yet"],
+    foodLogged: "Not logged yet",
+    activities: ["Not logged yet"],
+    sleepQuality: "Not logged yet",
+    dataCompleteness: {
+      hasMedicationData: false,
+      hasFoodData: false,
+      hasActivityData: false,
+      hasSleepData: false,
+    },
+    patternInsight: "Timing signal: No clear same-day pattern yet",
+  };
+
+  if (!childId || !dayKey) {
+    return snapshot;
+  }
+
+  const [sameDayDocs, yesterdaySleepDocs] = await Promise.all([
+    fetchDailyLogDocs({
+      childId,
+      dayKey,
+      categories: BEHAVIOR_CONTEXT_CATEGORIES,
+    }),
+    yesterdayKey
+      ? fetchDailyLogDocs({
+          childId,
+          dayKey: yesterdayKey,
+          categories: ["sleep"],
+          useTimestampFallback: true,
+        })
+      : Promise.resolve([]),
+  ]);
+
+  const docsByCategory = sameDayDocs.reduce((acc, docSnap) => {
+    const data = docSnap.data();
+    const category = data.category || "log";
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    acc[category].push({
+      id: docSnap.id,
+      ...data,
+    });
+    return acc;
+  }, {});
+
+  const medications = docsByCategory.medication || [];
+  const food = docsByCategory.food || [];
+  const activities = docsByCategory.activity || [];
+  const sleepToday = docsByCategory.sleep || [];
+  const sleepYesterday = yesterdaySleepDocs.map((docSnap) => ({
+    id: docSnap.id,
+    ...docSnap.data(),
+  }));
+
+  if (medications.length > 0) {
+    snapshot.medicationsTaken = medications.map(formatMedicationEntry).filter(Boolean);
+    snapshot.dataCompleteness.hasMedicationData = true;
+  }
+
+  if (food.length > 0) {
+    snapshot.foodLogged = food.map(formatFoodEntry).filter(Boolean).join("; ");
+    snapshot.dataCompleteness.hasFoodData = true;
+  }
+
+  if (activities.length > 0) {
+    snapshot.activities = activities.map(formatActivityEntry).filter(Boolean);
+    snapshot.dataCompleteness.hasActivityData = true;
+  }
+
+  if (sleepToday.length > 0) {
+    snapshot.sleepQuality = formatSleepEntry(sleepToday[0]);
+    snapshot.dataCompleteness.hasSleepData = true;
+  } else if (sleepYesterday.length > 0) {
+    snapshot.sleepQuality = `${formatSleepEntry(sleepYesterday[0])} (from last night)`;
+    snapshot.dataCompleteness.hasSleepData = true;
+  }
+
+  const timingSignalEntry = medications[0] || food[0] || activities[0];
+  if (timingSignalEntry) {
+    const timingLabel = medications[0]
+      ? "Medication"
+      : food[0]
+        ? "Food"
+        : "Activity";
+    const timingValue = formatClockTime(timingSignalEntry.timestamp) || "earlier today";
+    snapshot.patternInsight = `Timing signal: ${timingLabel} logged around ${timingValue}`;
+  } else if (snapshot.dataCompleteness.hasSleepData) {
+    snapshot.patternInsight = "Timing signal: Sleep context available from last night";
+  }
+
+  return snapshot;
+};
+
+const getSeverityLabel = (severity) => {
+  if (typeof severity === "number") {
+    if (severity <= 3) return "Low";
+    if (severity <= 5) return "Moderate";
+    if (severity <= 8) return "High";
+    return "Critical";
+  }
+
+  const normalized = String(severity || "").trim().toLowerCase();
+  if (normalized === "low") return "Low";
+  if (normalized === "medium" || normalized === "moderate") return "Moderate";
+  if (normalized === "high") return "High";
+  if (normalized === "critical") return "Critical";
+  return "Moderate";
+};
+
 // Helper function to generate email templates
 const generateInvitationEmailTemplate = (
   childName,
@@ -361,6 +630,127 @@ exports.parseImportedLogs = onCall(
     }
   }
 );
+
+exports.saveBehaviorIncident = onCall(async (request) => {
+  try {
+    if (!request.auth?.uid) {
+      throw new Error("Authentication required to save behavior incidents");
+    }
+
+    const { childId, incidentData = {}, userId = null } = request.data || {};
+
+    if (!childId) {
+      throw new Error("childId is required");
+    }
+
+    const incidentDate = toDateValue(incidentData.incidentDateTime) || new Date();
+    const incidentDayKey = incidentData.entryDayKey || incidentData.incidentDayKey || formatDayKey(incidentDate);
+    const entryDate = incidentData.entryDate || incidentData.entryDateLabel || incidentDate.toDateString();
+    const contextSnapshot = await buildContextSnapshot(childId, incidentDate, incidentDayKey);
+    const severityLabel = getSeverityLabel(incidentData.severity);
+    const triggerSummary = incidentData.triggerSummary
+      || (Array.isArray(incidentData.suspectedTriggers) ? incidentData.suspectedTriggers.join(", ") : "")
+      || "";
+    const notes = String(incidentData.notes || incidentData.description || "").trim();
+    const remedy = String(incidentData.remedy || "").trim();
+
+    const contentParts = [
+      `Severity: ${severityLabel}${incidentData.severity != null ? ` (${incidentData.severity})` : ""}`,
+      notes ? `Notes: ${notes}` : null,
+      triggerSummary ? `Triggers: ${triggerSummary}` : null,
+      remedy ? `Remedy: ${remedy}` : null,
+    ].filter(Boolean);
+
+    const db = admin.firestore();
+    const docRef = db.collection("dailyLogs").doc();
+    const savedDoc = {
+      childId,
+      collection: "dailyLogs",
+      status: "active",
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      timestamp: admin.firestore.Timestamp.fromDate(incidentDate),
+      entryDate,
+      entryDayKey: incidentDayKey,
+      category: "behavior",
+      type: "behavior",
+      timelineType: "incident",
+      entryType: "incident",
+      incidentStyle: true,
+      incidentCategoryId: "behavior",
+      incidentCategoryLabel: "Behavior",
+      incidentCategoryColor: "#E099B6",
+      incidentCategoryIcon: "🌋",
+      title: "Behavior",
+      titlePrefix: "Behavior",
+      text: incidentData.description || notes || "Behavior incident",
+      content: contentParts.join(" • "),
+      severity: incidentData.severity,
+      severityLabel,
+      notes,
+      triggerSummary,
+      remedy,
+      suspectedTriggers: Array.isArray(incidentData.suspectedTriggers)
+        ? incidentData.suspectedTriggers
+        : [],
+      contextSnapshot,
+      incidentData: {
+        severity: incidentData.severity,
+        severityLabel,
+        notes,
+        triggerSummary,
+        suspectedTriggers: Array.isArray(incidentData.suspectedTriggers)
+          ? incidentData.suspectedTriggers
+          : [],
+        remedy,
+        description: incidentData.description || notes || "",
+        incidentDateTime: incidentDate,
+        contextSnapshot,
+        followUpScheduled: false,
+        followUpDate: null,
+        followUpNotes: null,
+      },
+      authorId: request.auth.uid,
+      authorName: incidentData.authorName || request.auth.token?.name || request.auth.token?.email || "Caregiver",
+      authorEmail: incidentData.authorEmail || request.auth.token?.email || null,
+      userId: userId || request.auth.uid,
+    };
+
+    await docRef.set(savedDoc);
+
+    logger.info("Behavior incident saved to dailyLogs", {
+      childId,
+      entryId: docRef.id,
+      authorId: request.auth.uid,
+      entryDayKey: incidentDayKey,
+    });
+
+    return {
+      success: true,
+      id: docRef.id,
+      entry: {
+        id: docRef.id,
+        ...savedDoc,
+        createdAt: null,
+        updatedAt: null,
+        timestamp: incidentDate.toISOString(),
+        incidentData: {
+          ...savedDoc.incidentData,
+          incidentDateTime: incidentDate.toISOString(),
+        },
+      },
+    };
+  } catch (error) {
+    logger.error("Behavior incident save failed", {
+      error: error.message,
+      stack: error.stack,
+      userId: request.auth?.uid || null,
+      data: request.data,
+    });
+
+    throw new Error(error.message);
+  }
+});
 
 exports.sendInvitationEmail = onCall(
   {

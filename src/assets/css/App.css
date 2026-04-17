@@ -1,4 +1,12 @@
 /* Global Reset and Basic Styles */
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -19,6 +27,9 @@ code {
 /* App Specific Styles */
 .App {
   text-align: left;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .App-logo {

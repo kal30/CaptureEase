@@ -159,7 +159,7 @@ const HeaderSection = () => {
                 mb: 2,
               }}
             >
-              I have two nephews with autism. I built the app I always needed.
+              Two caregivers. One mission. Built from lived experience.
             </Typography>
 
             <Typography
@@ -175,8 +175,8 @@ const HeaderSection = () => {
                 fontWeight: 400,
               }}
             >
-              For years I scrambled to remember what happened before every therapy appointment.
-              Behaviors, triggers, good days, hard days - all buried in phone notes. I built{" "}
+              For years, managing a child's care meant scrambling to remember what happened before every therapy appointment.
+              Behaviors, triggers, good days, hard days - all buried in phone notes. We built{" "}
                     <BrandWordmark
                       variant="heroInline"
                       color={landingColors.deepNavy}
@@ -202,9 +202,9 @@ const HeaderSection = () => {
                 fontWeight: 400,
               }}
             >
-              Everyone caring for your child sees the same timeline in real time. A caregiver logs
-              a meltdown at 1 PM. You see it before the 2 PM appointment. The therapist walks in
-              already knowing.
+              Everyone caring for your child sees the same timeline in real time. A parent logs a
+              meltdown at 1 PM. Another caregiver sees it before the 2 PM appointment. The therapist
+              walks in already knowing the full story.
             </Typography>
 
             <Box

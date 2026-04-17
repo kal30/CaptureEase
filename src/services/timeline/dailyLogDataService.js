@@ -6,11 +6,37 @@ import {
   getDocs,
 } from 'firebase/firestore';
 import { db } from '../firebase';
-import { getDayDateRange, isWithinDateRange } from './dateUtils';
-import { getLogTypeByEntry, getTimelineMetaForCategory } from '../../constants/logTypeRegistry';
+import { getDayDateRange, isWithinDateRange, isTimelineEntryOnDate } from './dateUtils';
+import { getLogTypeByEntry, getTimelineMetaForCategory, isBehaviorIncidentEntry, LOG_TYPES } from '../../constants/logTypeRegistry';
 import { dedupeTimelineEntries } from './timelineDeduping';
 
 const buildDailyLogTitle = (data, categoryMeta) => {
+  if ((data.category === 'mood' || data.logCategory === 'mood' || data.actionType === 'mood') && (
+    data.moodValue
+    || data.value
+    || data.data?.level
+    || data.title
+  )) {
+    return String(
+      data.moodValue
+      || data.value
+      || data.data?.level
+      || data.title
+    ).trim();
+  }
+
+  if ((data.category === 'medication' || data.logCategory === 'medication') && (
+    data.medicationName
+    || data.medicationDetails?.medicationName
+    || data.medicationDetails?.name
+  )) {
+    return String(
+      data.medicationName
+      || data.medicationDetails?.medicationName
+      || data.medicationDetails?.name
+    ).trim();
+  }
+
   if (data.titlePrefix?.trim()) {
     return data.titlePrefix.trim();
   }
@@ -40,23 +66,60 @@ const mapDailyLogEntry = (doc) => {
   const data = doc.data();
   const categoryType = getLogTypeByEntry(data);
   const categoryMeta = getTimelineMetaForCategory(categoryType.category);
-  const notesText = data.notes || data.sleepDetails?.notes || data.bathroomDetails?.notes || data.content || null;
+  const isBehaviorIncident = isBehaviorIncidentEntry(data);
+  const isMoodEntry = categoryType.category === 'mood' || data.actionType === 'mood';
+  const sleepDetails = data.sleepDetails || {};
+  const notesText = data.notes || data.sleepDetails?.notes || data.bathroomDetails?.notes || data.incidentData?.notes || data.content || null;
+  const severityLabel = data.severityLabel || data.incidentData?.severityLabel || (data.severity ? `Severity ${data.severity}` : null);
+  const triggerSummary = data.triggerSummary || data.incidentData?.triggerSummary || null;
+  const contextSnapshot = data.contextSnapshot || data.incidentData?.contextSnapshot || null;
+  const sleepAnchorDate = sleepDetails.anchorDate || data.anchorDate || sleepDetails.localDate || data.localDate || data.entryDate || null;
 
   return {
     id: doc.id,
     ...data,
     timestamp: data.timestamp?.toDate() || new Date(data.createdAt),
-    category: categoryType.category,
-    type: categoryMeta.type,
-    timelineType: categoryMeta.timelineType,
+    anchorDate: sleepAnchorDate,
+    localDate: data.localDate || sleepDetails.localDate || null,
+    localTime: data.localTime || sleepDetails.localTime || null,
+    sleepAnchorDate,
+    logCategory: categoryType.category,
+    category: isMoodEntry ? 'mood' : categoryType.category,
+    type: isBehaviorIncident ? 'behavior' : (isMoodEntry ? 'mood' : categoryMeta.type),
+    timelineType: isBehaviorIncident ? 'incident' : (isMoodEntry ? 'mood' : categoryMeta.timelineType),
     collection: 'dailyLogs',
-    title: buildDailyLogTitle(data, categoryMeta),
-    titlePrefix: categoryMeta.titlePrefix,
-    label: categoryMeta.label,
-    icon: categoryMeta.icon,
-    color: categoryMeta.color,
-    content: notesText,
+    title: isBehaviorIncident ? 'Behavior' : buildDailyLogTitle(data, categoryMeta),
+    titlePrefix: isBehaviorIncident ? 'Behavior' : (isMoodEntry ? 'Mood' : categoryMeta.titlePrefix),
+    medicationName: data.medicationName || data.medicationDetails?.medicationName || data.medicationDetails?.name || null,
+    medicationScheduleDose: data.medicationScheduleDose || data.medicationDetails?.dosage || data.medicationDetails?.dose || data.dosage || data.dose || null,
+    medicationScheduleUnit: data.medicationScheduleUnit || data.medicationDetails?.unit || data.unit || null,
+    medicationScheduleTime: data.medicationScheduleTime || data.time || null,
+    medicationCategory: data.medicationCategory || data.medicationFrequency || null,
+    label: isBehaviorIncident ? LOG_TYPES.behavior.displayLabel : (isMoodEntry ? LOG_TYPES.mood.displayLabel : categoryMeta.label),
+    icon: isBehaviorIncident ? LOG_TYPES.behavior.icon : (isMoodEntry ? LOG_TYPES.mood.icon : categoryMeta.icon),
+    color: isBehaviorIncident ? LOG_TYPES.behavior.palette.dot : (isMoodEntry ? LOG_TYPES.mood.palette.dot : categoryMeta.color),
+    content: isBehaviorIncident
+      ? [
+          severityLabel ? `Severity: ${severityLabel}${data.severity != null ? ` (${data.severity})` : ''}` : null,
+          notesText ? `Notes: ${notesText}` : null,
+          contextSnapshot?.patternInsight ? contextSnapshot.patternInsight : null,
+        ].filter(Boolean).join(' • ')
+      : (isMoodEntry ? (data.moodValue || data.value || data.data?.level || data.title || notesText || '') : notesText),
     notes: notesText,
+    severity: data.severity,
+    severityLabel,
+    triggerSummary,
+    remedy: data.remedy || data.incidentData?.remedy || null,
+    suspectedTriggers: data.suspectedTriggers || data.incidentData?.suspectedTriggers || [],
+    contextSnapshot,
+    incidentData: data.incidentData || {},
+    entryType: isBehaviorIncident ? 'incident' : (isMoodEntry ? 'mood' : data.entryType),
+    incidentStyle: isBehaviorIncident,
+    incidentCategoryId: isBehaviorIncident ? 'behavior' : (isMoodEntry ? 'mood' : data.incidentCategoryId),
+    incidentCategoryLabel: isBehaviorIncident ? 'Behavior' : (isMoodEntry ? 'Mood' : data.incidentCategoryLabel),
+    incidentCategoryColor: isBehaviorIncident ? categoryMeta.color : (isMoodEntry ? LOG_TYPES.mood.palette.dot : data.incidentCategoryColor),
+    incidentCategoryIcon: isBehaviorIncident ? categoryMeta.icon : (isMoodEntry ? LOG_TYPES.mood.icon : data.incidentCategoryIcon),
+    moodValue: isMoodEntry ? buildDailyLogTitle(data, categoryMeta) : data.moodValue || null,
   };
 };
 
@@ -75,14 +138,14 @@ export const getDailyLogEntries = async (childId, selectedDate) => {
         collection(db, 'dailyLogs'),
         where('childId', '==', childId),
         where('status', '==', 'active'),
-        where('timestamp', '>=', start),
-        where('timestamp', '<=', end)
+        orderBy('timestamp', 'desc')
       );
 
       const snapshot = await getDocs(dailyLogQuery);
       return dedupeTimelineEntries(
         snapshot.docs
           .map(mapDailyLogEntry)
+          .filter((entry) => isTimelineEntryOnDate(entry, selectedDate) || isWithinDateRange(entry.timestamp, start, end))
           .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
       );
     } catch (indexError) {
@@ -99,7 +162,7 @@ export const getDailyLogEntries = async (childId, selectedDate) => {
         return dedupeTimelineEntries(
           snapshot.docs
             .map(mapDailyLogEntry)
-            .filter((entry) => isWithinDateRange(entry.timestamp, start, end))
+            .filter((entry) => isTimelineEntryOnDate(entry, selectedDate) || isWithinDateRange(entry.timestamp, start, end))
             .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
         );
       }

@@ -38,12 +38,12 @@
     "xlsx": "^0.18.5"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "start:emulators": "REACT_APP_USE_FIREBASE_EMULATORS=true react-scripts start",
-    "start:test": "REACT_APP_APP_ENV=test react-scripts start",
-    "build": "react-scripts build",
+    "start": "node scripts/run-with-firebase-env.js start",
+    "start:emulators": "REACT_APP_USE_FIREBASE_EMULATORS=true node scripts/run-with-firebase-env.js start",
+    "start:test": "REACT_APP_APP_ENV=test node scripts/run-with-firebase-env.js start",
+    "build": "node scripts/run-with-firebase-env.js build",
     "build:prod": "REACT_APP_APP_ENV=prod react-scripts build",
-    "build:test": "REACT_APP_APP_ENV=test react-scripts build",
+    "build:test": "REACT_APP_APP_ENV=test node scripts/run-with-firebase-env.js build",
     "deploy:prod": "npm run build:prod && npx firebase-tools deploy --project prod --only hosting",
     "deploy:test": "npm run build:test && npx firebase-tools deploy --project test --only hosting",
     "test": "react-scripts test",

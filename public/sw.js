@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lifelog-app-v8';
+const CACHE_NAME = 'lifelog-app-v9';
 const APP_SHELL_URLS = [
   '/',
   '/index.html',

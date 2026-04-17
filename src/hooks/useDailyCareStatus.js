@@ -45,9 +45,9 @@ export const useDailyCareStatus = (children = []) => {
         const statusMap = {};
         
         results.forEach(({ childId, status, habitStatus }) => {
-          // Calculate daily care completion (mood, sleep, energy, food_health, safety)
+          // Calculate daily care completion (mood, sleep, energy, activity, food_health, safety)
           const dailyCareCount = Object.keys(status).filter(key => key !== 'dailyLog').length;
-          const totalItems = 5; // mood, sleep, energy, food_health, safety
+          const totalItems = 6; // mood, sleep, energy, activity, food_health, safety
           const completionRate = Math.round((dailyCareCount / totalItems) * 100);
 
           // Create date string for ActionGroup daily tracking compatibility
@@ -55,20 +55,22 @@ export const useDailyCareStatus = (children = []) => {
 
           statusMap[childId] = {
             // Simple keys for QuickEntry component
-            mood: !!status.mood,
-            sleep: !!status.sleep,
-            energy: !!status.energy,
-            food_health: !!status.food_health,
-            safety: !!status.safety,
-            dailyLog: !!status.dailyLog, // Add daily log status
-            dataCompleteness: completionRate,
+          mood: !!status.mood,
+          sleep: !!status.sleep,
+          energy: !!status.energy,
+          activity: !!status.activity,
+          food_health: !!status.food_health,
+          safety: !!status.safety,
+          dailyLog: !!status.dailyLog, // Add daily log status
+          dataCompleteness: completionRate,
             
             // Date-suffixed keys for ActionGroup daily tracking
-            [`mood_${todayDateString}`]: !!status.mood,
-            [`sleep_${todayDateString}`]: !!status.sleep,
-            [`energy_${todayDateString}`]: !!status.energy,
-            [`food_health_${todayDateString}`]: !!status.food_health,
-            // safety uses 'task' tracking, so just the simple key
+          [`mood_${todayDateString}`]: !!status.mood,
+          [`sleep_${todayDateString}`]: !!status.sleep,
+          [`energy_${todayDateString}`]: !!status.energy,
+          [`activity_${todayDateString}`]: !!status.activity,
+          [`food_health_${todayDateString}`]: !!status.food_health,
+          // safety uses 'task' tracking, so just the simple key
             
             // Store habit status for detailed tracking
             habitStatus
@@ -98,6 +100,7 @@ export const useDailyCareStatus = (children = []) => {
       mood: false,
       sleep: false,
       energy: false,
+      activity: false,
       food_health: false,
       safety: false,
       dailyLog: false,
@@ -107,6 +110,7 @@ export const useDailyCareStatus = (children = []) => {
       [`mood_${todayDateString}`]: false,
       [`sleep_${todayDateString}`]: false,
       [`energy_${todayDateString}`]: false,
+      [`activity_${todayDateString}`]: false,
       [`food_health_${todayDateString}`]: false,
       // safety uses 'task' tracking, so just the simple key
     };
@@ -126,7 +130,7 @@ export const useDailyCareStatus = (children = []) => {
       };
       
       const dailyCareCount = Object.keys(combinedStatus).filter(key => key !== 'dailyLog').length;
-      const totalItems = 5; // mood, sleep, energy, food_health, safety
+      const totalItems = 6; // mood, sleep, energy, activity, food_health, safety
       const completionRate = Math.round((dailyCareCount / totalItems) * 100);
       
       // Create date string for ActionGroup daily tracking compatibility
@@ -139,6 +143,7 @@ export const useDailyCareStatus = (children = []) => {
           mood: !!combinedStatus.mood,
           sleep: !!combinedStatus.sleep,
           energy: !!combinedStatus.energy,
+          activity: !!combinedStatus.activity,
           food_health: !!combinedStatus.food_health,
           safety: !!combinedStatus.safety,
           dailyLog: !!combinedStatus.dailyLog,
@@ -148,6 +153,7 @@ export const useDailyCareStatus = (children = []) => {
           [`mood_${todayDateString}`]: !!combinedStatus.mood,
           [`sleep_${todayDateString}`]: !!combinedStatus.sleep,
           [`energy_${todayDateString}`]: !!combinedStatus.energy,
+          [`activity_${todayDateString}`]: !!combinedStatus.activity,
           [`food_health_${todayDateString}`]: !!combinedStatus.food_health,
           // safety uses 'task' tracking, so just the simple key
           

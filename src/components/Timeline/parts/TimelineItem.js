@@ -108,8 +108,9 @@ const TimelineItem = ({
         ml: timeLabel
           ? { xs: 1.15, md: 1.45 }
           : { xs: 4.7, md: 5.7 },
-        mr: { xs: 0.1, md: 0 },
+        mr: { xs: 0.75, md: 1 },
         px: { xs: 1.35, md: 1.65 },
+        pr: { xs: 1.75, md: 2.1 },
         py: { xs: 1.15, md: 1.5 },
         bgcolor: cardBackground,
         borderRadius: 0.7,

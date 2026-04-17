@@ -1,3 +1,5 @@
+import { ACTIVITY_TYPE_OPTIONS } from '../../constants/activityThemes';
+
 // Configuration for Daily Care actions
 export const getDailyCareConfig = (actionType, child) => {
   const configs = {
@@ -93,6 +95,41 @@ export const getDailyCareConfig = (actionType, child) => {
           required: false,
         }
       ]
+    },
+
+    activity: {
+      title: 'Activity Check',
+      icon: '📍',
+      description: `Capture therapy sessions, outings, and routines for ${child?.name}`,
+      fields: [
+        {
+          key: 'activityTypes',
+          label: 'What did they do?',
+          type: 'chips',
+          multiple: false,
+          options: ACTIVITY_TYPE_OPTIONS,
+          required: true,
+        },
+        {
+          key: 'engagement',
+          label: 'How engaged were they?',
+          type: 'scale',
+          min: 1,
+          max: 5,
+          labels: ['Low', 'Okay', 'Good', 'Great', 'Fully engaged'],
+          required: true,
+        },
+        {
+          key: 'notes',
+          label: 'Activity Notes',
+          description: 'Any useful context about the activity?',
+          type: 'text',
+          multiline: true,
+          rows: 3,
+          placeholder: 'e.g., Went to the park after speech therapy, calm and focused...',
+          required: false,
+        },
+      ],
     },
 
     food_health: {

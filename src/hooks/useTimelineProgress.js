@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { TIMELINE_TYPES } from '../services/timelineService';
 import { getLogTypeByCategory, getLogTypeByEntry } from '../constants/logTypeRegistry';
+import { getTimelineEntryDate } from '../services/timeline/dateUtils';
 
 /**
  * Custom hook for processing timeline data and calculating progress metrics
@@ -37,12 +38,12 @@ export const useTimelineProgress = (entries = [], dailyCareStatus = {}) => {
 
     // Filter entries by time periods
     const todayEntries = entries.filter(entry => {
-      const entryDate = entry.timestamp?.toDate?.() || new Date(entry.timestamp);
+      const entryDate = getTimelineEntryDate(entry) || entry.timestamp?.toDate?.() || new Date(entry.timestamp);
       return entryDate >= todayStart;
     });
 
     const weekEntries = entries.filter(entry => {
-      const entryDate = entry.timestamp?.toDate?.() || new Date(entry.timestamp);
+      const entryDate = getTimelineEntryDate(entry) || entry.timestamp?.toDate?.() || new Date(entry.timestamp);
       return entryDate >= weekAgo;
     });
 
@@ -161,7 +162,7 @@ export const useTimelineProgress = (entries = [], dailyCareStatus = {}) => {
       const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
       
       const hasEntryForDay = entries.some(entry => {
-        const entryDate = entry.timestamp?.toDate?.() || new Date(entry.timestamp);
+        const entryDate = getTimelineEntryDate(entry) || entry.timestamp?.toDate?.() || new Date(entry.timestamp);
         return entryDate >= dayStart && entryDate < dayEnd;
       });
       

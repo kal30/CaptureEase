@@ -4,13 +4,19 @@ import {
   Button,
   Chip,
   Divider,
+  Popover,
   Stack,
   TextField,
   Typography,
 } from '@mui/material';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { addDoc, collection, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import LogFormShell from '../UI/LogFormShell';
+import LogDateField from '../UI/LogDateField';
+import LogTimeField from '../UI/LogTimeField';
 import RichTextInput from '../UI/RichTextInput';
 import useChildName from '../../hooks/useChildName';
 import { auth, db } from '../../services/firebase';
@@ -50,6 +56,7 @@ const FoodLogSheet = ({ open, onClose, child }) => {
   const [reaction, setReaction] = useState('None');
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
+  const [datePickerAnchor, setDatePickerAnchor] = useState(null);
 
   useEffect(() => {
     if (!open) return;
@@ -69,6 +76,44 @@ const FoodLogSheet = ({ open, onClose, child }) => {
     return Number.isNaN(timestamp.getTime()) ? new Date() : timestamp;
   }, [foodDate, foodTime]);
 
+  const foodDateObject = useMemo(() => {
+    const parsed = new Date(`${foodDate}T00:00:00`);
+    return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
+  }, [foodDate]);
+
+  const formatDisplayDate = (date) => {
+    if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+      return '';
+    }
+
+    return date.toLocaleDateString('en-US', {
+      month: '2-digit',
+      day: '2-digit',
+      year: 'numeric',
+    });
+  };
+
+  const handleDatePickerOpen = (event) => {
+    setDatePickerAnchor(event.currentTarget);
+  };
+
+  const handleDatePickerClose = () => {
+    setDatePickerAnchor(null);
+  };
+
+  const handleDateChange = (nextDate) => {
+    if (!nextDate || Number.isNaN(nextDate.getTime())) {
+      return;
+    }
+
+    setFoodDate([
+      nextDate.getFullYear(),
+      String(nextDate.getMonth() + 1).padStart(2, '0'),
+      String(nextDate.getDate()).padStart(2, '0'),
+    ].join('-'));
+    handleDatePickerClose();
+  };
+
   const handleSave = async () => {
     if (!child?.id || !user?.uid) return;
 
@@ -81,6 +126,8 @@ const FoodLogSheet = ({ open, onClose, child }) => {
 
     setSaving(true);
     try {
+      const timeZoneOffsetMinutes = -foodTimestamp.getTimezoneOffset();
+      const timeZoneName = Intl.DateTimeFormat().resolvedOptions().timeZone || null;
       const docData = {
         childId: child.id,
         createdBy: user.uid,
@@ -90,7 +137,13 @@ const FoodLogSheet = ({ open, onClose, child }) => {
         category: 'food',
         tags: ['food', mealType?.toLowerCase()].filter(Boolean),
         timestamp: foodTimestamp,
+        timestampUtc: foodTimestamp.toISOString(),
+        timestampSource: 'local-input',
         entryDate: new Date(foodDate).toDateString(),
+        localDate: foodDate,
+        localTime: foodTime,
+        timeZoneOffsetMinutes,
+        timeZoneName,
         authorId: user.uid,
         authorName: user.displayName || user.email?.split('@')[0] || 'User',
         authorEmail: user.email,
@@ -101,6 +154,11 @@ const FoodLogSheet = ({ open, onClose, child }) => {
           reaction,
           whatWasEaten: whatWasEatenData?.text || '',
           notes,
+          localDate: foodDate,
+          localTime: foodTime,
+          timeZoneOffsetMinutes,
+          timeZoneName,
+          timestampSource: 'local-input',
         },
       };
 
@@ -164,74 +222,114 @@ const FoodLogSheet = ({ open, onClose, child }) => {
   );
 
   const formBody = (
-    <Stack spacing={2.5}>
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+    <LocalizationProvider dateAdapter={AdapterDateFns}>
+      <Stack spacing={2.5}>
+        <Box
+          sx={{
+            p: { xs: 1.1, sm: 1.25 },
+            borderRadius: '24px',
+            bgcolor: '#F4F1F8',
+            border: '1px solid #D9D1EE',
+          }}
+        >
+          <Stack
+            direction="row"
+            spacing={1.25}
+            sx={{ width: '100%' }}
+          >
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <LogDateField
+                label="Date"
+                value={formatDisplayDate(foodDateObject)}
+                onClick={handleDatePickerOpen}
+              />
+
+              <Popover
+                open={Boolean(datePickerAnchor)}
+                anchorEl={datePickerAnchor}
+                onClose={handleDatePickerClose}
+                anchorOrigin={{
+                  vertical: 'bottom',
+                  horizontal: 'left',
+                }}
+                transformOrigin={{
+                  vertical: 'top',
+                  horizontal: 'left',
+                }}
+                PaperProps={{
+                  sx: {
+                    mt: 1,
+                    borderRadius: '16px',
+                    boxShadow: '0 18px 40px rgba(15, 23, 42, 0.18)',
+                    overflow: 'hidden',
+                  },
+                }}
+              >
+                <DateCalendar
+                  value={foodDateObject}
+                  onChange={handleDateChange}
+                  maxDate={new Date()}
+                />
+              </Popover>
+            </Box>
+
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <LogTimeField
+                label="Time"
+                value={foodTime}
+                onChange={(e) => setFoodTime(e.target.value)}
+              />
+            </Box>
+          </Stack>
+        </Box>
+
+        <Box>
+          <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 700 }}>
+            Meal type
+          </Typography>
+          {renderChipGroup(mealTypes, mealType, setMealType)}
+        </Box>
+
+        <Box>
+          <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 700 }}>
+            What was eaten?
+          </Typography>
+          <RichTextInput
+            value={whatWasEatenData}
+            onDataChange={setWhatWasEatenData}
+            clearData={whatWasEatenClearToken}
+            placeholder="Describe the food, portions, and context"
+          />
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1.25 }}>
+            Add text notes, photos, voice recordings, or videos to provide context
+          </Typography>
+        </Box>
+
+        <Box>
+          <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 700 }}>
+            How much?
+          </Typography>
+          {renderChipGroup(portionOptions, portion, setPortion)}
+        </Box>
+
+        <Box>
+          <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 700 }}>
+            Any reactions?
+          </Typography>
+          {renderChipGroup(reactionOptions, reaction, setReaction)}
+        </Box>
+
         <TextField
           fullWidth
-          type="date"
-          label="Date"
-          value={foodDate}
-          onChange={(e) => setFoodDate(e.target.value)}
-          InputLabelProps={{ shrink: true }}
-          sx={{ minWidth: 0 }}
-        />
-        <TextField
-          fullWidth
-          type="time"
-          label="Time"
-          value={foodTime}
-          onChange={(e) => setFoodTime(e.target.value)}
-          InputLabelProps={{ shrink: true }}
-          sx={{ minWidth: 0 }}
+          multiline
+          rows={2}
+          label="Notes"
+          placeholder="Any additional context"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
         />
       </Stack>
-
-      <Box>
-        <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 700 }}>
-          Meal type
-        </Typography>
-        {renderChipGroup(mealTypes, mealType, setMealType)}
-      </Box>
-
-      <Box>
-        <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 700 }}>
-          What was eaten?
-        </Typography>
-        <RichTextInput
-          value={whatWasEatenData}
-          onDataChange={setWhatWasEatenData}
-          clearData={whatWasEatenClearToken}
-          placeholder="Describe the food, portions, and context"
-        />
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 1.25 }}>
-          Add text notes, photos, voice recordings, or videos to provide context
-        </Typography>
-      </Box>
-
-      <Box>
-        <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 700 }}>
-          How much?
-        </Typography>
-        {renderChipGroup(portionOptions, portion, setPortion)}
-      </Box>
-
-      <Box>
-        <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 700 }}>
-          Any reactions?
-        </Typography>
-        {renderChipGroup(reactionOptions, reaction, setReaction)}
-      </Box>
-
-      <TextField
-        fullWidth
-        multiline
-        rows={2}
-        label="Notes"
-        placeholder="Any additional context"
-        value={notes}
-        onChange={(e) => setNotes(e.target.value)}
-      />
-    </Stack>
+    </LocalizationProvider>
   );
 
   const footerActions = (
@@ -240,18 +338,14 @@ const FoodLogSheet = ({ open, onClose, child }) => {
       <Box
         sx={{
           display: 'flex',
-          gap: 1.5,
-          flexDirection: { xs: 'column', sm: 'row' },
+          justifyContent: 'flex-end',
         }}
       >
-        <Button fullWidth variant="outlined" onClick={onClose} disabled={saving}>
-          Cancel
-        </Button>
         <Button
-          fullWidth
           variant="contained"
           onClick={handleSave}
           disabled={saving || !child?.id || !user?.uid}
+          sx={{ width: { xs: '100%', sm: 'auto' } }}
         >
           {saving ? 'Saving...' : 'Save food log'}
         </Button>
@@ -263,8 +357,9 @@ const FoodLogSheet = ({ open, onClose, child }) => {
     <LogFormShell
       open={open}
       onClose={onClose}
-      title={`Log Food for ${resolvedChildName}`}
-      subtitle="Child-specific food and meal tracking"
+      title="Food"
+      titleBadge={resolvedChildName}
+      compactTitle
       footer={footerActions}
       mobileBreakpoint="md"
       maxWidth="sm"

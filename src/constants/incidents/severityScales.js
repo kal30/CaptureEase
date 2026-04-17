@@ -78,11 +78,10 @@ export const SEVERITY_SCALES = {
     3: { label: "Mild-Moderate", color: "#8BC34A", description: "Noticeable but manageable" },
     4: { label: "Moderate", color: "#CDDC39", description: "Some impact on activities" },
     5: { label: "Moderate-High", color: "#8B5CF6", description: "Moderate disruption" },
-    6: { label: "High", color: "#FFB300", description: "Significant impact" },
+    6: { label: "High", color: "#FED7AA", description: "Significant impact" },
     7: { label: "High-Severe", color: "#FF9800", description: "Major disruption" },
     8: { label: "Severe", color: "#FF7043", description: "Serious concern" },
     9: { label: "Very Severe", color: "#F44336", description: "Urgent attention needed" },
     10: { label: "Critical", color: "#D32F2F", description: "Immediate action required" },
   },
 };
-
