@@ -72,7 +72,7 @@ const SocialProofSection = () => {
                   color: "#7C6AAE",
                 }}
               >
-                — GANESH & KALYANI, CAREGIVERS + ENGINEERS
+                — Ganesh & Kalyani, Founders.
               </Typography>
             </Box>
           </Box>
