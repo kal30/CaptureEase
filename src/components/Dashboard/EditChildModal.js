@@ -3,7 +3,6 @@ import {
   Box,
   Typography,
   Button,
-  LinearProgress,
   Stack,
 } from "@mui/material";
 import { useTranslation } from 'react-i18next';
@@ -15,11 +14,11 @@ import {
   getDownloadURL,
 } from "firebase/storage";
 import { doc, updateDoc } from "firebase/firestore";
+import { useNavigate } from "react-router-dom";
 import { db } from "../../services/firebase";
 import { USER_ROLES } from "../../constants/roles";
 import ChildProfileFlowContent from "./shared/ChildProfileFlowContent";
 import ChildMedicationManager from "./shared/ChildMedicationManager";
-import { LogFormShell } from "../UI";
 import { useAsyncForm } from "../../hooks/useAsyncForm";
 import { getChildProfileCompletion } from "../../utils/profileCompletion";
 import {
@@ -28,9 +27,11 @@ import {
   summarizeMedicationDetail,
 } from "./shared/childMedicationHelpers";
 import { archiveMedicationRecord, saveMedicationRecord } from "./shared/medicationPersistence";
+import ChildProfileFlowPageShell from "./shared/ChildProfileFlowPageShell";
 
 const EditChildModal = ({ open, onClose, child, onSuccess, userRole, initialStep = 1, onViewTodayMedications }) => {
   const { t } = useTranslation(['terms', 'common']);
+  const navigate = useNavigate();
   const storage = getStorage();
   const documentInputRefs = useRef({});
   const documentSectionsRef = useRef({
@@ -38,6 +39,7 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole, initialStep
     medications: [],
     behavioral: [],
   });
+  const initialSnapshotRef = useRef("");
   const [stage, setStage] = useState("intake");
   const [currentStep, setCurrentStep] = useState(1);
   const [submitError, setSubmitError] = useState("");
@@ -67,6 +69,45 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole, initialStep
     behavioral: false,
   });
 
+  const serializeProfileSnapshot = ({
+    snapshotName = "",
+    snapshotAge = "",
+    snapshotPhotoURL = "",
+    snapshotPhotoName = "",
+    snapshotConditions = [],
+    snapshotFoodAllergies = [],
+    snapshotDietaryRestrictions = [],
+    snapshotSensoryIssues = [],
+    snapshotBehavioralTriggers = [],
+    snapshotCommunicationNeeds = [],
+    snapshotMedicationDetails = [],
+    snapshotDocuments = { medical: [], medications: [], behavioral: [] },
+  } = {}) => JSON.stringify({
+    name: snapshotName,
+    age: snapshotAge,
+    photoURL: snapshotPhotoURL,
+    photoName: snapshotPhotoName,
+    conditions: snapshotConditions.map((item) => item?.code || item?.label || String(item)),
+    foodAllergies: snapshotFoodAllergies,
+    dietaryRestrictions: snapshotDietaryRestrictions,
+    sensoryIssues: snapshotSensoryIssues,
+    behavioralTriggers: snapshotBehavioralTriggers,
+    communicationNeeds: snapshotCommunicationNeeds,
+    medicationDetails: snapshotMedicationDetails.map((item) => ({
+      id: item?.id || "",
+      name: item?.name || "",
+      category: item?.category || "",
+      dosage: item?.dosage || "",
+      scheduleType: item?.scheduleType || "",
+      isArchived: Boolean(item?.isArchived),
+    })),
+    documents: {
+      medical: (snapshotDocuments.medical || []).map((item) => item?.name || item?.url || ""),
+      medications: (snapshotDocuments.medications || []).map((item) => item?.name || item?.url || ""),
+      behavioral: (snapshotDocuments.behavioral || []).map((item) => item?.name || item?.url || ""),
+    },
+  });
+
   // Permission checks - updated for new role system
   const canEdit = userRole === USER_ROLES.CARE_OWNER || userRole === USER_ROLES.CARE_PARTNER || userRole === 'parent'; // Legacy support
   // Use async form hook for child editing
@@ -83,7 +124,7 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole, initialStep
   });
 
   useEffect(() => {
-    if (open && child?.id) {
+    if (child?.id) {
       setName(child.name || "");
       setAge(child.age || "");
       setPhotoURL(child.photoURL || null);
@@ -118,11 +159,24 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole, initialStep
         medications: false,
         behavioral: false,
       });
+      initialSnapshotRef.current = serializeProfileSnapshot({
+        snapshotName: child.name || "",
+        snapshotAge: child.age || "",
+        snapshotPhotoURL: child.photoURL || "",
+        snapshotConditions: child.concerns || child.conditions || [],
+        snapshotFoodAllergies: medicalProfile.foodAllergies || [],
+        snapshotDietaryRestrictions: medicalProfile.dietaryRestrictions || [],
+        snapshotSensoryIssues: medicalProfile.sensoryIssues || [],
+        snapshotBehavioralTriggers: medicalProfile.behavioralTriggers || [],
+        snapshotCommunicationNeeds: medicalProfile.communicationNeeds || [],
+        snapshotMedicationDetails: existingMedicationDetails.length ? existingMedicationDetails.map(normalizeMedicationDetail).filter((entry) => entry.name) : [],
+        snapshotDocuments: child.profileDocuments || { medical: [], medications: [], behavioral: [] },
+      });
       
       // Reset form hook state when child data loads
       childForm.reset();
     }
-  }, [open, child?.id, initialStep, childForm.reset]);
+  }, [child?.id, initialStep]);
 
   const resetForm = () => {
     setStage("intake");
@@ -146,12 +200,20 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole, initialStep
     setUploadedDocuments({ medical: [], medications: [], behavioral: [] });
     setOpenSections({ medical: true, medications: false, behavioral: false });
     documentSectionsRef.current = { medical: [], medications: [], behavioral: [] };
+    initialSnapshotRef.current = "";
     childForm.reset();
   };
 
   const handleClose = () => {
-    resetForm();
-    onClose();
+    if (hasUnsavedChanges && !window.confirm("You have unsaved changes. Leave this page?")) {
+      return;
+    }
+
+    if (onClose) {
+      onClose();
+    } else {
+      navigate("/dashboard", { replace: true });
+    }
   };
 
   const normalizeCondition = (item) => {
@@ -267,7 +329,7 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole, initialStep
     }
 
     setSubmitError("");
-    childForm.submitForm(
+    return childForm.submitForm(
       async () => {
         let photoDownloadURL = child.photoURL;
 
@@ -291,6 +353,20 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole, initialStep
 
         const childRef = doc(db, "children", child.id);
         await updateDoc(childRef, updatedChild);
+        initialSnapshotRef.current = serializeProfileSnapshot({
+          snapshotName: name,
+          snapshotAge: age,
+          snapshotPhotoURL: photoDownloadURL || "",
+          snapshotPhotoName: photo?.name || "",
+          snapshotConditions: selectedConditions,
+          snapshotFoodAllergies: foodAllergies,
+          snapshotDietaryRestrictions: dietaryRestrictions,
+          snapshotSensoryIssues: sensoryIssues,
+          snapshotBehavioralTriggers: behavioralTriggers,
+          snapshotCommunicationNeeds: communicationNeeds,
+          snapshotMedicationDetails: medicationDetails.map(normalizeMedicationDetail).filter((entry) => entry.name || entry.id),
+          snapshotDocuments: uploadedDocuments,
+        });
 
         setStage("setup");
         setCurrentStep(2);
@@ -312,7 +388,7 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole, initialStep
       throw new Error('Child data is not available');
     }
 
-    childForm.submitForm(
+    return childForm.submitForm(
       async () => {
         let photoDownloadURL = child.photoURL;
 
@@ -339,17 +415,68 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole, initialStep
         // Update child in Firestore
         const childRef = doc(db, "children", child.id);
         await updateDoc(childRef, updatedChild);
+        initialSnapshotRef.current = serializeProfileSnapshot({
+          snapshotName: name,
+          snapshotAge: age,
+          snapshotPhotoURL: photoURL || "",
+          snapshotPhotoName: photo?.name || "",
+          snapshotConditions: selectedConditions,
+          snapshotFoodAllergies: foodAllergies,
+          snapshotDietaryRestrictions: dietaryRestrictions,
+          snapshotSensoryIssues: sensoryIssues,
+          snapshotBehavioralTriggers: behavioralTriggers,
+          snapshotCommunicationNeeds: communicationNeeds,
+          snapshotMedicationDetails: medicationDetails.map(normalizeMedicationDetail).filter((entry) => entry.name || entry.id),
+          snapshotDocuments: uploadedDocuments,
+        });
 
         if (onSuccess) {
           onSuccess(updatedChild);
+        } else {
+          resetForm();
+          if (onClose) {
+            onClose();
+          } else {
+            navigate("/dashboard", { replace: true });
+          }
         }
-        onClose();
 
         return updatedChild;
       },
       { name, age }
     );
   };
+
+  const hasUnsavedChanges = serializeProfileSnapshot({
+    snapshotName: name,
+    snapshotAge: age,
+    snapshotPhotoURL: photoURL || "",
+    snapshotPhotoName: photo?.name || "",
+    snapshotConditions: selectedConditions,
+    snapshotFoodAllergies: foodAllergies,
+    snapshotDietaryRestrictions: dietaryRestrictions,
+    snapshotSensoryIssues: sensoryIssues,
+    snapshotBehavioralTriggers: behavioralTriggers,
+    snapshotCommunicationNeeds: communicationNeeds,
+    snapshotMedicationDetails: medicationDetails.map(normalizeMedicationDetail).filter((entry) => entry.name || entry.id),
+    snapshotDocuments: uploadedDocuments,
+  }) !== initialSnapshotRef.current;
+  useEffect(() => {
+    const handleBeforeUnload = (event) => {
+      if (!hasUnsavedChanges) {
+        return;
+      }
+
+      event.preventDefault();
+      event.returnValue = "";
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [hasUnsavedChanges]);
 
   // Security check - only parents can edit
   if (!canEdit) {
@@ -358,25 +485,6 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole, initialStep
     }
     return null;
   }
-
-  const profileProgress = getChildProfileCompletion({
-    name,
-    age,
-    photoURL,
-    concerns: selectedConditions,
-    medicalProfile: {
-      foodAllergies,
-      dietaryRestrictions,
-      sensoryIssues,
-      behavioralTriggers,
-      currentMedications: medicationDetails.map(summarizeMedicationDetail).filter(Boolean),
-      medicationDetails: medicationDetails.map(normalizeMedicationDetail).filter((entry) => entry.name),
-      supplements: medicationDetails
-        .map(normalizeMedicationDetail)
-        .filter((entry) => ["supplement", "vitamin"].includes(entry.category)),
-      communicationNeeds,
-    },
-  });
 
   const buildMedicalProfileUpdate = (detailList = medicationDetails) => {
     const normalizedMedicationDetails = detailList
@@ -521,6 +629,20 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole, initialStep
           sleepIssues: child?.medicalProfile?.sleepIssues || [],
         },
       });
+      initialSnapshotRef.current = serializeProfileSnapshot({
+        snapshotName: name,
+        snapshotAge: age,
+        snapshotPhotoURL: photoURL || "",
+        snapshotPhotoName: photo?.name || "",
+        snapshotConditions: selectedConditions,
+        snapshotFoodAllergies: foodAllergies,
+        snapshotDietaryRestrictions: dietaryRestrictions,
+        snapshotSensoryIssues: sensoryIssues,
+        snapshotBehavioralTriggers: behavioralTriggers,
+        snapshotCommunicationNeeds: communicationNeeds,
+        snapshotMedicationDetails: nextMedicationDetails.map(normalizeMedicationDetail).filter((entry) => entry.name || entry.id),
+        snapshotDocuments: uploadedDocuments,
+      });
 
       clearMedicationDraft();
     } catch (error) {
@@ -582,6 +704,20 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole, initialStep
           sleepIssues: child?.medicalProfile?.sleepIssues || [],
         },
       });
+      initialSnapshotRef.current = serializeProfileSnapshot({
+        snapshotName: name,
+        snapshotAge: age,
+        snapshotPhotoURL: photoURL || "",
+        snapshotPhotoName: photo?.name || "",
+        snapshotConditions: selectedConditions,
+        snapshotFoodAllergies: foodAllergies,
+        snapshotDietaryRestrictions: dietaryRestrictions,
+        snapshotSensoryIssues: sensoryIssues,
+        snapshotBehavioralTriggers: behavioralTriggers,
+        snapshotCommunicationNeeds: communicationNeeds,
+        snapshotMedicationDetails: nextMedicationDetails.map(normalizeMedicationDetail).filter((entry) => entry.name || entry.id),
+        snapshotDocuments: uploadedDocuments,
+      });
       if (editingMedicationId === entry.id) {
         clearMedicationDraft();
       }
@@ -633,13 +769,9 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole, initialStep
     </Button>
   );
 
-  const handleWizardBack = () => {
-    setCurrentStep((current) => Math.max(1, current - 1));
-  };
-
-  const handleWizardContinue = async () => {
+  const handlePrimaryAction = async () => {
     if (currentStep === 1) {
-      handleAdvanceBasicInfo();
+      void handleAdvanceBasicInfo();
       return;
     }
 
@@ -651,60 +783,46 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole, initialStep
     await handleSubmit();
   };
 
+  const primaryActionLabel = currentStep >= 5 ? "Complete Profile" : "Continue";
+
   const wizardFooter = (
-    <Stack direction="row" spacing={1} sx={{ width: "100%" }}>
-      <Button
-        variant="outlined"
-        onClick={handleWizardBack}
-        disabled={currentStep === 1}
-        fullWidth
-        sx={{ py: { xs: 0.9, sm: 1.15 }, textTransform: "none", borderRadius: 2, minHeight: 40 }}
-      >
-        Back
-      </Button>
-      <Button
-        variant="contained"
-        onClick={handleWizardContinue}
-        fullWidth
-        sx={{
-          py: { xs: 0.9, sm: 1.15 },
-          textTransform: "none",
-          borderRadius: 2,
-          bgcolor: colors.brand.ink,
-          "&:hover": { bgcolor: colors.brand.deep },
-          minHeight: 40,
-        }}
-      >
-        Continue
-      </Button>
-    </Stack>
+    <Button
+      variant="contained"
+      onClick={handlePrimaryAction}
+      fullWidth
+      disabled={childForm.loading}
+      size="large"
+      sx={{
+        py: { xs: 1.05, sm: 1.15 },
+        textTransform: "none",
+        borderRadius: 2,
+        bgcolor: colors.brand.ink,
+        "&:hover": { bgcolor: colors.brand.deep },
+        minHeight: 48,
+      }}
+    >
+      {primaryActionLabel}
+    </Button>
   );
 
+  const currentStepLabel = `${["Basics", "Health", "Medication Management", "Behavior", "Review"][Math.min(currentStep, 5) - 1] || "Basics"} (${Math.min(currentStep, 5)}/5)`;
+  const pageProgress = (Math.min(currentStep, 5) / 5) * 100;
+
   return (
-    <LogFormShell
-      open={open}
-      onClose={handleClose}
+    <ChildProfileFlowPageShell
       title="Edit Child"
-      titleBadge={child?.name || null}
-      subtitle={t('terms:update_profile_description')}
-      compactTitle
-      mobileBreakpoint={1023.95}
-      maxWidth="sm"
-      surfaceSx={{ height: "80vh", maxHeight: "80vh" }}
-      bodySx={{ px: { xs: 1, sm: 3 }, pt: { xs: 0.5, sm: 2.25 }, pb: { xs: 1.5, sm: 2.5 } }}
-      headerContent={
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flexWrap: "wrap" }}>
-          <Typography sx={{ fontWeight: 800, flexShrink: 0 }}>
-            {child?.name || name || "Child"}
-          </Typography>
-          <Box sx={{ flex: 1, minWidth: 160 }}>
-            <LinearProgress variant="determinate" value={profileProgress} />
-          </Box>
-          <Typography variant="body2" color="text.secondary" sx={{ flexShrink: 0 }}>
-            editing
-          </Typography>
-        </Box>
-      }
+      stepLabel={currentStepLabel}
+      progress={pageProgress}
+      activeStep={currentStep}
+      onStepChange={setCurrentStep}
+      stepItems={[
+        { step: 1, label: "Basics", disabled: false },
+        { step: 2, label: "Health", disabled: false },
+        { step: 3, label: "Meds", disabled: false },
+        { step: 4, label: "Behavior", disabled: false },
+        { step: 5, label: "Review", disabled: false },
+      ]}
+      onBack={handleClose}
       footer={wizardFooter}
     >
       <ChildProfileFlowContent
@@ -744,14 +862,13 @@ const EditChildModal = ({ open, onClose, child, onSuccess, userRole, initialStep
         openSections={openSections}
         setOpenSections={setOpenSections}
         createdChildName={child?.name || name}
-        profileProgress={profileProgress}
         isSubmitting={childForm.loading}
         onCreate={handleAdvanceBasicInfo}
         onFinish={handleSubmit}
         onClose={handleClose}
         t={t}
       />
-    </LogFormShell>
+    </ChildProfileFlowPageShell>
   );
 };
 

@@ -151,7 +151,7 @@ const DesktopDashboardWorkspace = ({
     const child = activeChild;
     switch (action) {
       case 'add-child':
-        hook.setShowAddChildModal?.(true);
+        hook.handleAddChild?.();
         break;
       case 'invite-caregiver':
         if (child) {
@@ -323,13 +323,13 @@ const DesktopDashboardWorkspace = ({
           <ChildSwitcherPanel
             children={hook.children}
             activeChildId={activeChildId}
-            getUserRoleForChild={hook.getUserRoleForChild}
-            onSelectChild={handleDesktopChildSelect}
-            showCareTeamSummary={false}
-            onAddChild={() => hook.setShowAddChildModal?.(true)}
-            showAddChild={Boolean(hook.setShowAddChildModal)}
-            activeChild={activeChild}
-          />
+          getUserRoleForChild={hook.getUserRoleForChild}
+          onSelectChild={handleDesktopChildSelect}
+          showCareTeamSummary={false}
+            onAddChild={() => hook.handleAddChild?.()}
+            showAddChild={Boolean(hook.handleAddChild)}
+          activeChild={activeChild}
+        />
         </Box>
       </Menu>
 

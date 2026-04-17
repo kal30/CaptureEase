@@ -71,10 +71,19 @@ const ChildProfileFlowContent = ({
     medications: Array.isArray(uploadedDocuments?.medications) ? uploadedDocuments.medications : [],
     behavioral: Array.isArray(uploadedDocuments?.behavioral) ? uploadedDocuments.behavioral : [],
   };
-  const stepLabels = ["Basics", "Health", "Medication Management", "Behavioral", "Finish"];
   const activeStep = currentStep || 1;
+  const getLabel = (item) => {
+    if (typeof item === "string") {
+      return item;
+    }
 
-  const canNavigate = () => true;
+    return item?.label || item?.name || item?.title || String(item || "");
+  };
+
+  const listSummary = (items, emptyLabel = "None") => {
+    const values = Array.isArray(items) ? items.map(getLabel).filter(Boolean) : [];
+    return values.length ? values.join(" • ") : emptyLabel;
+  };
 
   const stepFrameSx = {
     px: 0,
@@ -85,96 +94,6 @@ const ChildProfileFlowContent = ({
     boxShadow: "none",
     outline: "none",
   };
-
-  const renderStepTabs = () => (
-    <Box
-      sx={{
-        display: "flex",
-        alignItems: "center",
-        flexWrap: "nowrap",
-        gap: { xs: 0.75, sm: 0.9 },
-        width: "100%",
-        overflowX: "auto",
-        overflowY: "hidden",
-        px: { xs: 0.5, sm: 0.75 },
-        py: { xs: 0.75, sm: 0.9 },
-        pb: { xs: 0.85, sm: 0.9 },
-        WebkitOverflowScrolling: "touch",
-        touchAction: "pan-x",
-        scrollSnapType: "x proximity",
-        scrollbarWidth: "none",
-        position: "sticky",
-        top: 0,
-        zIndex: 3,
-        backgroundColor: "rgba(255, 255, 255, 0.92)",
-        backdropFilter: "blur(10px)",
-        borderBottom: `1px solid ${colors.landing.borderSoft}`,
-        boxShadow: "0 8px 20px rgba(15, 23, 42, 0.04)",
-        "&::-webkit-scrollbar": { display: "none" },
-      }}
-    >
-      {stepLabels.map((label, index) => {
-        const stepNumber = index + 1;
-        const isActive = stepNumber === activeStep;
-        const navigable = canNavigate(stepNumber);
-
-        return (
-          <Chip
-            key={label}
-            label={`${stepNumber}. ${label}`}
-            size="small"
-            component="button"
-            type="button"
-            clickable={navigable}
-            onClick={navigable ? () => onStepChange?.(stepNumber) : undefined}
-            variant={isActive ? "filled" : "outlined"}
-            aria-current={isActive ? "step" : undefined}
-            sx={{
-              borderRadius: 999,
-              flex: "0 0 auto",
-              minHeight: { xs: 42, sm: 40 },
-              px: { xs: 1.2, sm: 1.35 },
-              fontSize: { xs: "0.82rem", sm: "0.84rem" },
-              whiteSpace: "nowrap",
-              scrollSnapAlign: "start",
-              fontWeight: isActive ? 800 : 700,
-              cursor: navigable ? "pointer" : "default",
-              letterSpacing: "-0.01em",
-              bgcolor: isActive
-                ? colors.brand.lightBlue
-                : "rgba(255, 255, 255, 0.96)",
-              color: isActive ? colors.brand.navy : colors.landing.midNavy,
-              borderColor: isActive ? colors.brand.navy : colors.landing.borderMedium,
-              boxShadow: isActive
-                ? "0 6px 14px rgba(91, 175, 167, 0.16)"
-                : "0 1px 2px rgba(15, 23, 42, 0.04)",
-              opacity: navigable ? 1 : 0.88,
-              textDecoration: isActive ? "none" : "none",
-              "& .MuiChip-label": {
-                px: 0,
-              },
-              "&:hover": {
-                bgcolor: isActive
-                  ? colors.brand.lightBlue
-                  : "rgba(247, 251, 249, 0.98)",
-                borderColor: isActive ? colors.brand.navy : colors.brand.ink,
-                boxShadow: isActive
-                  ? "0 8px 16px rgba(91, 175, 167, 0.18)"
-                  : "0 4px 10px rgba(15, 23, 42, 0.06)",
-              },
-              "&.MuiButtonBase-root": {
-                minHeight: { xs: 42, sm: 40 },
-              },
-              "&:focus-visible": {
-                outline: `2px solid ${colors.brand.ink}`,
-                outlineOffset: 2,
-              },
-            }}
-          />
-        );
-      })}
-    </Box>
-  );
 
   const renderShell = (title, subtitle, content, options = {}) => {
     const { flat = false, headerAction = null } = options;
@@ -457,67 +376,110 @@ const ChildProfileFlowContent = ({
       </Box>
     );
 
-  const renderReviewCard = (title, summary, stepNumber) => (
+  const renderReviewRow = (label, value) => (
+    <Box
+      sx={{
+        display: "grid",
+        gridTemplateColumns: { xs: "1fr", sm: "minmax(0, 160px) minmax(0, 1fr)" },
+        gap: 0.5,
+      }}
+    >
+      <Typography sx={{ fontSize: "0.83rem", fontWeight: 800, color: colors.brand.navy }}>
+        {label}
+      </Typography>
+      <Typography
+        variant="body2"
+        color="text.secondary"
+        sx={{ lineHeight: 1.35, wordBreak: "break-word" }}
+      >
+        {value}
+      </Typography>
+    </Box>
+  );
+
+  const renderReviewCard = (title, stepNumber, content) => (
     <Box
       sx={{
         p: { xs: 1.25, sm: 1.5 },
         borderRadius: 3,
         border: "1px solid rgba(217, 209, 238, 0.82)",
         bgcolor: "rgba(255,255,255,0.92)",
-        display: "flex",
-        alignItems: "flex-start",
-        justifyContent: "space-between",
-        gap: 1.5,
       }}
     >
-      <Box sx={{ minWidth: 0 }}>
-        <Typography sx={{ fontWeight: 800, lineHeight: 1.15 }}>{title}</Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.35, lineHeight: 1.35 }}>
-          {summary}
-        </Typography>
-      </Box>
-      <Button
-        size="small"
-        variant="text"
-        onClick={() => onStepChange?.(stepNumber)}
-        sx={{ textTransform: "none", fontWeight: 700, flexShrink: 0, minHeight: 32, px: 0.75 }}
-      >
-        Edit
-      </Button>
+      <Stack spacing={1.15}>
+        <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1.5}>
+          <Typography sx={{ fontWeight: 800, lineHeight: 1.15 }}>{title}</Typography>
+          <Button
+            size="small"
+            variant="text"
+            onClick={() => onStepChange?.(stepNumber)}
+            sx={{ textTransform: "none", fontWeight: 700, flexShrink: 0, minHeight: 32, px: 0.75 }}
+          >
+            Edit
+          </Button>
+        </Stack>
+        <Stack spacing={0.9}>
+          {content}
+        </Stack>
+      </Stack>
     </Box>
   );
 
-  const renderFinishStep = () => {
-    const activeMedicationCount = Array.isArray(medicationDetails)
-      ? medicationDetails.filter((entry) => entry?.name && !entry.isArchived).length
-      : 0;
-    const healthSummary = [
-      foodAllergies.length ? `${foodAllergies.length} allergy${foodAllergies.length === 1 ? "" : "ies"}` : "No allergies",
-      dietaryRestrictions.length ? `${dietaryRestrictions.length} diet restriction${dietaryRestrictions.length === 1 ? "" : "s"}` : "No diet restrictions",
-    ].join(" • ");
-    const behavioralSummary = [
-      sensoryIssues.length ? `${sensoryIssues.length} sensory need${sensoryIssues.length === 1 ? "" : "s"}` : "No sensory notes",
-      behavioralTriggers.length ? `${behavioralTriggers.length} trigger${behavioralTriggers.length === 1 ? "" : "s"}` : "No triggers",
-      communicationNeeds.length ? `${communicationNeeds.length} communication note${communicationNeeds.length === 1 ? "" : "s"}` : "No communication notes",
-    ].join(" • ");
+  const renderReviewStep = () => {
+    const activeMedicationDetails = Array.isArray(medicationDetails)
+      ? medicationDetails.filter((entry) => entry?.name && !entry.isArchived)
+      : [];
+    const activeMedicationNames = activeMedicationDetails.map((entry) => entry.name).filter(Boolean);
+    const medicalDocuments = safeUploadedDocuments.medical.map((docItem) => docItem.name).filter(Boolean);
+    const medicationDocuments = safeUploadedDocuments.medications.map((docItem) => docItem.name).filter(Boolean);
+    const behavioralDocuments = safeUploadedDocuments.behavioral.map((docItem) => docItem.name).filter(Boolean);
 
     return renderShell(
-      "Finish",
-      "Review the sections below before you continue.",
+      "Review Profile",
+      "Review everything below before completing.",
       <Stack spacing={1}>
         {renderStepAlerts()}
+
         {renderReviewCard(
           "Basics",
-          [name || "No name yet", age || "No age yet", selectedConditions.length ? `${selectedConditions.length} concern${selectedConditions.length === 1 ? "" : "s"}` : "No concerns"].join(" • "),
-          1
+          1,
+          <>
+            {renderReviewRow("Name", name || "Not set")}
+            {renderReviewRow("Age / DOB", age || "Not set")}
+            {renderReviewRow("Concerns", listSummary(selectedConditions, "None"))}
+            {renderReviewRow("Photo", photoURL ? "Added" : "Not added")}
+          </>
         )}
-        {renderReviewCard("Health", healthSummary, 2)}
+
+        {renderReviewCard(
+          "Health",
+          2,
+          <>
+            {renderReviewRow("Food allergies", listSummary(foodAllergies, "None"))}
+            {renderReviewRow("Dietary restrictions", listSummary(dietaryRestrictions, "None"))}
+            {renderReviewRow("Health documents", listSummary(medicalDocuments, "None"))}
+          </>
+        )}
+
         {renderReviewCard(
           "Medication Management",
-          `${activeMedicationCount} active medication${activeMedicationCount === 1 ? "" : "s"}`,
-          3
+          3,
+          <>
+            {renderReviewRow("Active medications", activeMedicationNames.length ? listSummary(activeMedicationNames) : "None")}
+            {renderReviewRow("Medication documents", listSummary(medicationDocuments, "None"))}
+          </>
         )}
-        {renderReviewCard("Behavioral", behavioralSummary, 4)}
+
+        {renderReviewCard(
+          "Behavior",
+          4,
+          <>
+            {renderReviewRow("Sensory needs", listSummary(sensoryIssues, "None"))}
+            {renderReviewRow("Known triggers", listSummary(behavioralTriggers, "None"))}
+            {renderReviewRow("Communication needs", listSummary(communicationNeeds, "None"))}
+            {renderReviewRow("Behavior documents", listSummary(behavioralDocuments, "None"))}
+          </>
+        )}
       </Stack>
     );
   };
@@ -531,7 +493,7 @@ const ChildProfileFlowContent = ({
       case 4:
         return renderBehavioralStep();
       case 5:
-        return renderFinishStep();
+        return renderReviewStep();
       default:
         return renderBasicsStep();
     }
@@ -539,7 +501,6 @@ const ChildProfileFlowContent = ({
 
   return (
     <Stack spacing={1.5}>
-      {renderStepTabs()}
       {renderActiveStep()}
     </Stack>
   );

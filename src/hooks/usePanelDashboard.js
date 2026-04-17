@@ -120,9 +120,6 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
   const [expandedCards, setExpandedCards] = useState({});
   const [expandedCategories, setExpandedCategories] = useState({});
   const [highlightedActions] = useState({});
-  const [showAddChildModal, setShowAddChildModal] = useState(false);
-  const [showEditChildModal, setShowEditChildModal] = useState(false);
-  const [selectedChildForEdit, setSelectedChildForEdit] = useState(null);
   const [showDailyCareModal, setShowDailyCareModal] = useState(false);
   const [dailyCareAction, setDailyCareAction] = useState(null);
   const [dailyCareChild, setDailyCareChild] = useState(null);
@@ -662,9 +659,21 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
     navigate('/invite', { state: { childId } });
   };
 
-  const handleEditChild = (child) => {
-    setSelectedChildForEdit(child);
-    setShowEditChildModal(true);
+  const handleAddChild = () => {
+    navigate('/children/new');
+  };
+
+  const handleEditChild = (child, options = {}) => {
+    if (!child?.id) {
+      return;
+    }
+
+    setCurrentChildId(child.id);
+    navigate(`/children/${child.id}/edit`, {
+      state: {
+        initialStep: options.initialStep || 1,
+      },
+    });
   };
 
   const handleDeleteChild = async (child) => {
@@ -688,13 +697,10 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
 
 
   const handleAddChildSuccess = () => {
-    setShowAddChildModal(false);
     refreshRoles();
   };
 
   const handleEditChildSuccess = () => {
-    setShowEditChildModal(false);
-    setSelectedChildForEdit(null);
     refreshRoles();
   };
 
@@ -1005,9 +1011,6 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
     expandedCards,
     expandedCategories,
     highlightedActions,
-    showAddChildModal,
-    showEditChildModal,
-    selectedChildForEdit,
     showDailyCareModal,
     dailyCareAction,
     dailyCareChild,
@@ -1040,7 +1043,7 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
     getUserRoleForChild,
     setCurrentChildId,
     setExpandedCategories,
-    setShowAddChildModal,
+    handleAddChild,
     handleInviteTeamMember,
     isCardExpanded,
     toggleCard,
@@ -1053,8 +1056,6 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
     getTypeConfig,
     formatTimeAgo,
     handleAddChildSuccess,
-    setShowEditChildModal,
-    setSelectedChildForEdit,
     handleEditChildSuccess,
     handleCloseDailyCareModal,
     handleCloseSleepLogSheet,

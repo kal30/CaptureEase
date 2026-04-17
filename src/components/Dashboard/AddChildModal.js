@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   Box,
   Button,
-  LinearProgress,
   Stack,
   Typography,
 } from "@mui/material";
@@ -11,11 +10,11 @@ import { useTranslation } from "react-i18next";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { addDoc, collection, doc, updateDoc } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
 import { auth, db } from "../../services/firebase";
 import ChildProfileFlowContent from "./shared/ChildProfileFlowContent";
 import ChildMedicationManager from "./shared/ChildMedicationManager";
 import colors from "../../assets/theme/colors";
-import { LogFormShell } from "../UI";
 import { useAsyncForm } from "../../hooks/useAsyncForm";
 import { getChildProfileCompletion } from "../../utils/profileCompletion";
 import {
@@ -24,11 +23,11 @@ import {
   summarizeMedicationDetail,
 } from "./shared/childMedicationHelpers";
 import { archiveMedicationRecord, saveMedicationRecord } from "./shared/medicationPersistence";
+import ChildProfileFlowPageShell from "./shared/ChildProfileFlowPageShell";
 
-const PROFILE_SETUP_PROGRESS = 20;
-
-const AddChildModal = ({ open, onClose, onSuccess, onViewTodayMedications }) => {
+const AddChildModal = ({ open: _open, onClose, onSuccess, onViewTodayMedications }) => {
   const { t } = useTranslation(["terms", "common"]);
+  const navigate = useNavigate();
   const storage = getStorage();
   const documentInputRefs = useRef({});
   const documentSectionsRef = useRef({
@@ -69,6 +68,40 @@ const AddChildModal = ({ open, onClose, onSuccess, onViewTodayMedications }) => 
     medications: false,
     behavioral: false,
   });
+  const hasUnsavedChanges = Boolean(
+    createdChildId
+    || name
+    || age
+    || photo
+    || photoURL
+    || selectedConditions.length
+    || foodAllergies.length
+    || dietaryRestrictions.length
+    || sensoryIssues.length
+    || behavioralTriggers.length
+    || communicationNeeds.length
+    || medicationDetails.some((entry) => entry?.name)
+    || uploadedDocuments.medical.length
+    || uploadedDocuments.medications.length
+    || uploadedDocuments.behavioral.length
+  );
+
+  useEffect(() => {
+    const handleBeforeUnload = (event) => {
+      if (!hasUnsavedChanges) {
+        return;
+      }
+
+      event.preventDefault();
+      event.returnValue = "";
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [hasUnsavedChanges]);
 
   useEffect(() => {
     documentSectionsRef.current = uploadedDocuments;
@@ -151,7 +184,7 @@ const AddChildModal = ({ open, onClose, onSuccess, onViewTodayMedications }) => 
 
   const handleSubmit = () => {
     setSubmitError("");
-    childForm.submitForm(
+    return childForm.submitForm(
       async () => {
         let photoDownloadURL = "";
 
@@ -465,13 +498,9 @@ const AddChildModal = ({ open, onClose, onSuccess, onViewTodayMedications }) => 
     }
   };
 
-  const handleWizardBack = () => {
-    setCurrentStep((current) => Math.max(1, current - 1));
-  };
-
-  const handleWizardContinue = async () => {
+  const handlePrimaryAction = async () => {
     if (currentStep === 1) {
-      handleSubmit();
+      void handleSubmit();
       return;
     }
 
@@ -483,34 +512,26 @@ const AddChildModal = ({ open, onClose, onSuccess, onViewTodayMedications }) => 
     await handleFinish();
   };
 
+  const primaryActionLabel = currentStep >= 5 ? "Complete Profile" : "Continue";
+
   const wizardFooter = (
-    <Stack direction="row" spacing={1} sx={{ width: "100%" }}>
-      <Button
-        variant="outlined"
-        onClick={handleWizardBack}
-        disabled={currentStep === 1}
-        fullWidth
-        sx={{ py: { xs: 0.9, sm: 1.15 }, textTransform: "none", borderRadius: 2, minHeight: 40 }}
-      >
-        Back
-      </Button>
-      <Button
-        variant="contained"
-        onClick={handleWizardContinue}
-        disabled={childForm.loading}
-        fullWidth
-        sx={{
-          py: { xs: 0.9, sm: 1.15 },
-          textTransform: "none",
-          borderRadius: 2,
-          bgcolor: colors.brand.ink,
-          "&:hover": { bgcolor: colors.brand.deep },
-          minHeight: 40,
-        }}
-      >
-        Continue
-      </Button>
-    </Stack>
+    <Button
+      variant="contained"
+      onClick={handlePrimaryAction}
+      disabled={childForm.loading}
+      fullWidth
+      size="large"
+      sx={{
+        py: { xs: 1.05, sm: 1.15 },
+        textTransform: "none",
+        borderRadius: 2,
+        bgcolor: colors.brand.ink,
+        "&:hover": { bgcolor: colors.brand.deep },
+        minHeight: 48,
+      }}
+    >
+      {primaryActionLabel}
+    </Button>
   );
 
   const handleFinish = async () => {
@@ -525,11 +546,15 @@ const AddChildModal = ({ open, onClose, onSuccess, onViewTodayMedications }) => 
           id: createdChildId,
           name: createdChildName || name.trim(),
         });
+        resetForm();
       } else {
-        onClose();
+        resetForm();
+        if (onClose) {
+          onClose();
+        } else {
+          navigate("/dashboard", { replace: true });
+        }
       }
-
-      resetForm();
     } catch (error) {
       console.error("Failed to save profile details:", error);
       setSubmitError(error?.message || "Could not save the profile details right now.");
@@ -537,13 +562,15 @@ const AddChildModal = ({ open, onClose, onSuccess, onViewTodayMedications }) => 
   };
 
   const handleClose = async () => {
-    if (createdChildId) {
-      await handleFinish();
+    if (hasUnsavedChanges && !window.confirm("You have unsaved changes. Leave this page?")) {
       return;
     }
 
-    resetForm();
-    onClose();
+    if (onClose) {
+      onClose();
+    } else {
+      navigate("/dashboard", { replace: true });
+    }
   };
 
   const renderDocumentDropZone = (category, title, helperText) => {
@@ -648,29 +675,25 @@ const AddChildModal = ({ open, onClose, onSuccess, onViewTodayMedications }) => 
   );
 
 
+  const currentStepLabel = `${["Basics", "Health", "Medication Management", "Behavior", "Review"][Math.min(currentStep, 5) - 1] || "Basics"} (${Math.min(currentStep, 5)}/5)`;
+  const pageProgress = (Math.min(currentStep, 5) / 5) * 100;
+  const stepItems = [
+    { step: 1, label: "Basics", disabled: false },
+    { step: 2, label: "Health", disabled: !createdChildId },
+    { step: 3, label: "Meds", disabled: !createdChildId },
+    { step: 4, label: "Behavior", disabled: !createdChildId },
+    { step: 5, label: "Review", disabled: !createdChildId },
+  ];
+
   return (
-    <LogFormShell
-      open={open}
-      onClose={handleClose}
-      title={stage === "setup" ? "Profile Created!" : t("common:modal.add_new", { item: t("terms:profile_one") })}
-      subtitle={stage === "setup" ? "Add more details at your leisure." : "Start with the basics. Add the rest later if you want."}
-      mobileBreakpoint={1023.95}
-      maxWidth="md"
-      surfaceSx={{ height: "80vh", maxHeight: "80vh" }}
-      bodySx={{ px: { xs: 1, sm: 3 }, pt: { xs: 0.5, sm: 2.25 }, pb: { xs: 1.5, sm: 2.5 } }}
-      headerContent={
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flexWrap: "wrap" }}>
-          <Typography sx={{ fontWeight: 800, flexShrink: 0 }}>
-            {createdChildName || name || "New child"}
-          </Typography>
-          <Box sx={{ flex: 1, minWidth: 160 }}>
-            <LinearProgress variant="determinate" value={PROFILE_SETUP_PROGRESS} />
-          </Box>
-          <Typography variant="body2" color="text.secondary" sx={{ flexShrink: 0 }}>
-            {`${PROFILE_SETUP_PROGRESS}% complete`}
-          </Typography>
-        </Box>
-      }
+    <ChildProfileFlowPageShell
+      title="Add Child"
+      stepLabel={currentStepLabel}
+      progress={pageProgress}
+      activeStep={currentStep}
+      onStepChange={setCurrentStep}
+      stepItems={stepItems}
+      onBack={handleClose}
       footer={wizardFooter}
     >
       <ChildProfileFlowContent
@@ -710,14 +733,13 @@ const AddChildModal = ({ open, onClose, onSuccess, onViewTodayMedications }) => 
         openSections={openSections}
         setOpenSections={setOpenSections}
         createdChildName={createdChildName}
-        profileProgress={PROFILE_SETUP_PROGRESS}
         isSubmitting={childForm.loading}
         onCreate={handleSubmit}
         onFinish={handleFinish}
         onClose={handleClose}
         t={t}
       />
-    </LogFormShell>
+    </ChildProfileFlowPageShell>
   );
 };
 

@@ -22,8 +22,6 @@ import { usePanelDashboard } from "../hooks/usePanelDashboard";
 import MobileDashboardFlow from "../components/Dashboard/MobileDashboardFlow";
 import DesktopDashboardWorkspace from "../components/Dashboard/DesktopDashboardWorkspace";
 import QuickCheckIn from "../components/Mobile/QuickCheckIn";
-import AddChildModal from "../components/Dashboard/AddChildModal";
-import EditChildModal from "../components/Dashboard/EditChildModal";
 import DailyCareModal from "../components/DailyCare/DailyCareModal";
 import DailyReportModal from "../components/DailyCare/DailyReportModal";
 import SleepLogSheet from "../components/Sleep/SleepLogSheet";
@@ -61,7 +59,6 @@ const PanelDashboard = () => {
   const dashboardHandleInviteTeamMember = hook.handleInviteTeamMember;
   const dashboardHandleMessages = hook.handleMessages;
   const dashboardHandleShowCareReport = hook.handleShowCareReport;
-  const dashboardSetShowAddChildModal = hook.setShowAddChildModal;
   const importFileInputRef = useRef(null);
   const [showImportStartModal, setShowImportStartModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
@@ -71,7 +68,6 @@ const PanelDashboard = () => {
   const [importError, setImportError] = useState('');
   const [showMedicalLogPanel, setShowMedicalLogPanel] = useState(false);
   const [medicalLogChild, setMedicalLogChild] = useState(null);
-  const [editChildInitialStep, setEditChildInitialStep] = useState(1);
   const [careToastOpen, setCareToastOpen] = useState(false);
   const [careToastMessage, setCareToastMessage] = useState('');
   useMountDebug('PanelDashboard');
@@ -138,8 +134,7 @@ const PanelDashboard = () => {
     }
 
     dashboardSetCurrentChildId(requestedChild.id);
-    setEditChildInitialStep(3);
-    dashboardHandleEditChild(requestedChild);
+    dashboardHandleEditChild(requestedChild, { initialStep: 3 });
 
     navigate(location.pathname, { replace: true, state: null });
   }, [
@@ -163,7 +158,7 @@ const PanelDashboard = () => {
 
       switch (action) {
         case "add-child":
-          dashboardSetShowAddChildModal(true);
+          hook.handleAddChild();
           break;
         case "view-care-team":
           navigate('/care-team');
@@ -214,7 +209,7 @@ const PanelDashboard = () => {
     dashboardHandleMessages,
     dashboardHandleShowCareReport,
     dashboardSelectedChild,
-    dashboardSetShowAddChildModal,
+    hook.handleAddChild,
     navigate,
     handleImportLogsClick,
   ]);
@@ -414,7 +409,7 @@ const PanelDashboard = () => {
             <Button
               variant="contained"
               size="large"
-              onClick={() => hook.setShowAddChildModal(true)}
+              onClick={() => hook.handleAddChild()}
               sx={{
                 px: 3.5,
                 py: 1.4,
@@ -458,7 +453,7 @@ const PanelDashboard = () => {
               onOpenMedicalLog={handleOpenMedicalLog}
               onMessages={hook.handleMessages}
               onImportLogs={handleImportLogsClick}
-              onAddChildClick={() => hook.setShowAddChildModal(true)}
+              onAddChildClick={() => hook.handleAddChild()}
               onRefreshRoles={hook.refreshRoles}
               showSleepLogSheet={
                 hook.showSleepLogSheet
@@ -489,7 +484,7 @@ const PanelDashboard = () => {
               onOpenMedicalLog={handleOpenMedicalLog}
               onImportLogs={handleImportLogsClick}
               onGoToCareTeam={() => navigate('/care-team')}
-              onAddChildClick={() => hook.setShowAddChildModal(true)}
+              onAddChildClick={() => hook.handleAddChild()}
             />
           )}
         </DashboardViewProvider>
@@ -572,41 +567,6 @@ const PanelDashboard = () => {
         </Modal>
       )}
 
-
-      <AddChildModal
-        open={hook.showAddChildModal}
-        onClose={() => hook.setShowAddChildModal(false)}
-        onViewTodayMedications={(childId) => {
-          hook.setShowAddChildModal(false);
-          if (childId) {
-            handleOpenMedicalLog({ id: childId });
-          }
-        }}
-        onSuccess={hook.handleAddChildSuccess}
-      />
-
-      <EditChildModal
-        open={hook.showEditChildModal}
-        child={hook.selectedChildForEdit}
-        userRole={hook.selectedChildForEdit ? hook.getUserRoleForChild?.(hook.selectedChildForEdit.id) : null}
-        initialStep={editChildInitialStep}
-        onViewTodayMedications={(child) => {
-          hook.setShowEditChildModal(false);
-          hook.setSelectedChildForEdit(null);
-          if (child) {
-            handleOpenMedicalLog(child);
-          }
-        }}
-        onClose={() => {
-          setEditChildInitialStep(1);
-          hook.setShowEditChildModal(false);
-          hook.setSelectedChildForEdit(null);
-        }}
-        onSuccess={() => {
-          setEditChildInitialStep(1);
-          hook.handleEditChildSuccess();
-        }}
-      />
 
       <DailyCareModal
         open={hook.showDailyCareModal}
