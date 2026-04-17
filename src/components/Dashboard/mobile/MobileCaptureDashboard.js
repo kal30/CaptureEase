@@ -321,6 +321,13 @@ const MobileCaptureDashboard = ({
   const profileProgress = Math.max(0, Math.min(100, activeChildProfileCompletion || 0));
   const todayLabel = 'Today';
   const searchPlaceholder = `Search ${activeChild?.name || 'today'}...`;
+  const handleEditActiveChild = () => {
+    if (!activeChild || !onEditChild) {
+      return;
+    }
+
+    onEditChild(activeChild);
+  };
 
   useEffect(() => {
     setSearchText('');
@@ -837,18 +844,36 @@ const MobileCaptureDashboard = ({
           </ButtonBase>
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexShrink: 0 }}>
-            <Box sx={{ position: 'relative', width: 46, height: 46, display: 'grid', placeItems: 'center' }}>
-              <CircularProgress
-                variant="determinate"
-                value={profileProgress}
-                size={46}
-                thickness={4.2}
-                sx={{ color: colors.brand.ink, position: 'absolute', left: 0, top: 0 }}
-              />
-              <Typography sx={{ fontSize: '0.66rem', fontWeight: 900, color: TEXT_PRIMARY }}>
-                {profileProgress}%
-              </Typography>
-            </Box>
+            <ButtonBase
+              onClick={handleEditActiveChild}
+              disabled={!activeChild || !onEditChild}
+              aria-label={`Edit ${activeChild?.name || 'child profile'}`}
+              sx={{
+                flexShrink: 0,
+                width: 48,
+                height: 48,
+                borderRadius: '50%',
+                display: 'grid',
+                placeItems: 'center',
+                touchAction: 'manipulation',
+                '&.Mui-disabled': {
+                  opacity: 1,
+                },
+              }}
+            >
+              <Box sx={{ position: 'relative', width: 46, height: 46, display: 'grid', placeItems: 'center' }}>
+                <CircularProgress
+                  variant="determinate"
+                  value={profileProgress}
+                  size={46}
+                  thickness={4.2}
+                  sx={{ color: colors.brand.ink, position: 'absolute', left: 0, top: 0 }}
+                />
+                <Typography sx={{ fontSize: '0.66rem', fontWeight: 900, color: TEXT_PRIMARY }}>
+                  {profileProgress}%
+                </Typography>
+              </Box>
+            </ButtonBase>
 
             {hasChatAvailable && onMessages ? (
               <IconButton

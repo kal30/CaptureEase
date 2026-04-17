@@ -484,13 +484,13 @@ const AddChildModal = ({ open, onClose, onSuccess, onViewTodayMedications }) => 
   };
 
   const wizardFooter = (
-    <Stack direction="row" spacing={1.25} sx={{ width: "100%" }}>
+    <Stack direction="row" spacing={1} sx={{ width: "100%" }}>
       <Button
         variant="outlined"
         onClick={handleWizardBack}
         disabled={currentStep === 1}
         fullWidth
-        sx={{ py: 1.15, textTransform: "none", borderRadius: 2 }}
+        sx={{ py: { xs: 0.9, sm: 1.15 }, textTransform: "none", borderRadius: 2, minHeight: 40 }}
       >
         Back
       </Button>
@@ -500,11 +500,12 @@ const AddChildModal = ({ open, onClose, onSuccess, onViewTodayMedications }) => 
         disabled={childForm.loading}
         fullWidth
         sx={{
-          py: 1.15,
+          py: { xs: 0.9, sm: 1.15 },
           textTransform: "none",
           borderRadius: 2,
           bgcolor: colors.brand.ink,
           "&:hover": { bgcolor: colors.brand.deep },
+          minHeight: 40,
         }}
       >
         Continue
@@ -656,7 +657,7 @@ const AddChildModal = ({ open, onClose, onSuccess, onViewTodayMedications }) => 
       mobileBreakpoint={1023.95}
       maxWidth="md"
       surfaceSx={{ height: "80vh", maxHeight: "80vh" }}
-      bodySx={{ px: { xs: 0, sm: 3 }, pt: { xs: 0.75, sm: 2.25 }, pb: { xs: 2, sm: 2.5 } }}
+      bodySx={{ px: { xs: 1, sm: 3 }, pt: { xs: 0.5, sm: 2.25 }, pb: { xs: 1.5, sm: 2.5 } }}
       headerContent={
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flexWrap: "wrap" }}>
           <Typography sx={{ fontWeight: 800, flexShrink: 0 }}>

@@ -92,11 +92,11 @@ const ChildProfileFlowContent = ({
         display: "flex",
         alignItems: "center",
         flexWrap: "nowrap",
-        gap: { xs: 0.5, sm: 0.75 },
+        gap: { xs: 0.4, sm: 0.75 },
         width: "100%",
         overflowX: "auto",
         overflowY: "hidden",
-        pb: 0.5,
+        pb: 0.35,
         pr: { xs: 0.5, sm: 0 },
         WebkitOverflowScrolling: "touch",
         touchAction: "pan-x",
@@ -127,10 +127,12 @@ const ChildProfileFlowContent = ({
             sx={{
               borderRadius: 999,
               flex: "0 0 auto",
-              minHeight: 32,
+              minHeight: 30,
+              px: { xs: 0.25, sm: 0.5 },
+              fontSize: { xs: "0.72rem", sm: "0.78rem" },
               whiteSpace: "nowrap",
               scrollSnapAlign: "start",
-              fontWeight: 700,
+              fontWeight: 800,
               cursor: navigable ? "pointer" : "default",
               bgcolor: isActive
                 ? colors.landing.sageLight
@@ -160,27 +162,27 @@ const ChildProfileFlowContent = ({
 
     return (
       <Stack
-        spacing={flat ? 1.35 : 1.55}
+        spacing={flat ? 1.1 : 1.25}
         sx={
           flat
             ? {
                 px: 0,
-                py: 0.15,
+                py: { xs: 0, sm: 0.15 },
               }
             : stepFrameSx
         }
       >
         <Box>
-          <Typography sx={{ fontWeight: 800, color: colors.brand.navy, lineHeight: 1.1 }}>
+          <Typography sx={{ fontWeight: 800, color: colors.brand.navy, lineHeight: 1.08 }}>
             {title}
           </Typography>
           {subtitle ? (
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.35, lineHeight: 1.35 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25, lineHeight: 1.3 }}>
               {subtitle}
             </Typography>
           ) : null}
           {headerAction ? (
-            <Box sx={{ mt: 0.5 }}>
+            <Box sx={{ mt: 0.35 }}>
               {headerAction}
             </Box>
           ) : null}
@@ -212,7 +214,7 @@ const ChildProfileFlowContent = ({
       isEditMode
         ? "Update the basics first, then continue into medical and behavioral details."
         : "Start with the basics. You can add the rest later if you want.",
-      <Stack spacing={2}>
+      <Stack spacing={1.6}>
         {renderStepAlerts()}
 
         <Box
@@ -309,7 +311,7 @@ const ChildProfileFlowContent = ({
     renderShell(
       "Health",
       "Food allergies and dietary restrictions live here.",
-      <Stack spacing={2}>
+      <Stack spacing={1.6}>
         {renderStepAlerts()}
 
         <CustomizableAutocomplete
@@ -347,7 +349,7 @@ const ChildProfileFlowContent = ({
     renderShell(
       "Medication Management",
       "Add or edit medications here. Daily logging lives in the log screen.",
-      <Stack spacing={1.55}>
+      <Stack spacing={1.2}>
         {renderStepAlerts()}
         {renderMedicationDetails?.()}
       </Stack>
@@ -360,8 +362,8 @@ const ChildProfileFlowContent = ({
     renderShell(
       "Behavioral",
       "Sensory needs, triggers, and communication live together.",
-      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "minmax(0, 1.2fr) minmax(240px, 0.8fr)" }, gap: 2, alignItems: "start" }}>
-        <Stack spacing={2}>
+      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "minmax(0, 1.2fr) minmax(240px, 0.8fr)" }, gap: 1.5, alignItems: "start" }}>
+        <Stack spacing={1.6}>
           {renderStepAlerts()}
 
           <CustomizableAutocomplete
@@ -394,25 +396,44 @@ const ChildProfileFlowContent = ({
 
         <Box
           sx={{
-            p: 2,
+            p: 1.75,
             borderRadius: 3,
             bgcolor: "rgba(243, 232, 255, 0.34)",
             border: "1px solid rgba(217, 209, 238, 0.66)",
             color: colors.brand.navy,
-            minHeight: 180,
+            minHeight: 164,
           }}
         >
           <Typography sx={{ fontWeight: 800, mb: 0.75 }}>Documents</Typography>
-          <Typography variant="body2" color="text.secondary">
-            Optional behavioral documents can stay attached here.
-          </Typography>
           {safeUploadedDocuments.behavioral.length > 0 ? (
+            <>
+              <Typography variant="body2" color="text.secondary">
+                Optional behavioral documents can stay attached here.
+              </Typography>
             <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" sx={{ mt: 1.25 }}>
               {safeUploadedDocuments.behavioral.map((docItem) => (
                 <Chip key={`${docItem.name}-${docItem.uploadedAt}`} label={docItem.name} />
               ))}
             </Stack>
-          ) : null}
+            </>
+          ) : (
+            <Box
+              sx={{
+                mt: 0.5,
+                p: 1.5,
+                borderRadius: 2.5,
+                bgcolor: "rgba(255,255,255,0.72)",
+                border: "1px dashed rgba(217, 209, 238, 0.9)",
+              }}
+            >
+              <Typography sx={{ fontWeight: 800, color: colors.brand.navy, lineHeight: 1.15 }}>
+                No behavioral docs yet
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.35, lineHeight: 1.3 }}>
+                Add an evaluation, plan, or note when you need it.
+              </Typography>
+            </Box>
+          )}
         </Box>
       </Box>
     );
@@ -420,7 +441,7 @@ const ChildProfileFlowContent = ({
   const renderReviewCard = (title, summary, stepNumber) => (
     <Box
       sx={{
-        p: 1.5,
+        p: { xs: 1.25, sm: 1.5 },
         borderRadius: 3,
         border: "1px solid rgba(217, 209, 238, 0.82)",
         bgcolor: "rgba(255,255,255,0.92)",
@@ -440,7 +461,7 @@ const ChildProfileFlowContent = ({
         size="small"
         variant="text"
         onClick={() => onStepChange?.(stepNumber)}
-        sx={{ textTransform: "none", fontWeight: 700, flexShrink: 0 }}
+        sx={{ textTransform: "none", fontWeight: 700, flexShrink: 0, minHeight: 32, px: 0.75 }}
       >
         Edit
       </Button>
@@ -464,7 +485,7 @@ const ChildProfileFlowContent = ({
     return renderShell(
       "Finish",
       "Review the sections below before you continue.",
-      <Stack spacing={1.25}>
+      <Stack spacing={1}>
         {renderStepAlerts()}
         {renderReviewCard(
           "Basics",

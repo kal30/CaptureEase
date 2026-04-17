@@ -87,6 +87,7 @@ const ChildMedicationManager = ({
   const archivedMedications = medications.filter((entry) => entry?.isArchived);
   const isEditing = Boolean(editingMedicationId);
   const showEditor = Boolean(isEditorOpen || isEditing);
+  const hasActiveMedications = activeMedications.length > 0;
 
   const renderMedicationRow = (entry, index, archived = false) => {
     const accentColor = archived ? "rgba(115, 130, 153, 0.52)" : getAccentColor(entry);
@@ -166,7 +167,25 @@ const ChildMedicationManager = ({
   return (
     <Stack spacing={1.15} sx={{ width: "100%" }}>
       <Stack spacing={0.25}>
-        {activeMedications.map((entry, index) => renderMedicationRow(entry, index, false))}
+        {hasActiveMedications ? (
+          activeMedications.map((entry, index) => renderMedicationRow(entry, index, false))
+        ) : (
+          <Box
+            sx={{
+              p: { xs: 1.4, sm: 1.75 },
+              borderRadius: 2.5,
+              border: "1px dashed rgba(217, 209, 238, 0.82)",
+              bgcolor: "rgba(244, 241, 248, 0.34)",
+            }}
+          >
+            <Typography sx={{ fontWeight: 800, color: colors.brand.navy, lineHeight: 1.15 }}>
+              No medications added yet
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.35, lineHeight: 1.3 }}>
+              Add the current medications first. You can log doses from the medication screen later.
+            </Typography>
+          </Box>
+        )}
       </Stack>
 
       <Button
