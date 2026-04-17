@@ -30,7 +30,7 @@ import AddToHomeScreenIcon from "@mui/icons-material/AddToHomeScreen";
 import PhoneIphoneIcon from "@mui/icons-material/PhoneIphone";
 import usePWAInstallPrompt from "../../hooks/usePWAInstallPrompt";
 import colors from "../../assets/theme/colors";
-import { ACTIVE_CHILD_STORAGE_KEY } from "../../features/dashboard/shared/DashboardViewContext";
+import { ACTIVE_CHILD_STORAGE_KEY } from "../Dashboard/shared/DashboardViewContext";
 import ChildActionsMenuContent from "../Dashboard/shared/ChildActionsMenuContent";
 import { getRoleDisplay } from "../../constants/roles";
 import { PRODUCT_NAME_TITLE } from "../../constants/config";
