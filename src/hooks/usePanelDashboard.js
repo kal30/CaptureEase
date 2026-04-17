@@ -352,38 +352,54 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
       const meta = getTimelineMetaForCategory(entry.category || (entry.collection === 'dailyCare' ? 'activity' : null), { importantMoment: !!entry.importantMoment });
       const isBehaviorStyleEntry = isBehaviorIncidentEntry(entry);
       const isDailyCareActivity = entry.collection === 'dailyCare' && entry.actionType === 'activity';
+      const isMoodEntry = entry.collection === 'dailyCare' && entry.actionType === 'mood';
       const notesText = entry.notes || entry.incidentData?.notes || null;
       const severityLabel = entry.severityLabel || entry.incidentData?.severityLabel || null;
       const triggerSummary = entry.triggerSummary || entry.incidentData?.triggerSummary || null;
+      const moodValue = entry.value || entry.data?.level || entry.mood || entry.moodLevel || entry.title || 'Calm';
       const optimisticEntry = {
         id: entry.id || `local-${Date.now()}`,
         childId: entry.childId,
         logCategory: isDailyCareActivity ? 'activity' : (entry.logCategory || entry.category || meta.category || meta.type),
         type: isBehaviorStyleEntry
           ? 'behavior'
+          : isMoodEntry
+            ? 'mood'
           : isDailyCareActivity
             ? 'dailyHabit'
             : meta.type,
         timelineType: isBehaviorStyleEntry
           ? 'incident'
+          : isMoodEntry
+            ? 'mood'
           : isDailyCareActivity
             ? 'dailyHabit'
             : meta.type,
         collection: entry.collection || 'dailyLogs',
-        category: isDailyCareActivity ? 'activity' : (entry.category || 'log'),
+        category: isMoodEntry ? 'mood' : (isDailyCareActivity ? 'activity' : (entry.category || 'log')),
         actionType: entry.actionType || null,
-        title: isDailyCareActivity ? 'Activity' : (entry.title || entry.titlePrefix || entry.text || meta.label),
-        content: entry.content || entry.text || entry.incidentData?.notes || '',
+        title: isMoodEntry
+          ? String(moodValue)
+          : (isDailyCareActivity ? 'Activity' : (entry.title || entry.titlePrefix || entry.text || meta.label)),
+        titlePrefix: isMoodEntry ? 'Mood' : entry.titlePrefix,
+        content: isMoodEntry
+          ? String(moodValue)
+          : (entry.content || entry.text || entry.incidentData?.notes || ''),
+        moodValue: isMoodEntry ? String(moodValue) : entry.moodValue,
         text: entry.text || entry.content || '',
         notes: notesText,
         timestamp: entryTimestamp,
         icon: isBehaviorStyleEntry
           ? LOG_TYPES.behavior.icon
+          : isMoodEntry
+            ? LOG_TYPES.mood.icon
           : isDailyCareActivity
             ? (entry.activityThemeIcon || entry.categoryIcon || meta.icon)
             : meta.icon,
         color: isBehaviorStyleEntry
           ? LOG_TYPES.behavior.palette.dot
+          : isMoodEntry
+            ? LOG_TYPES.mood.palette.dot
           : isDailyCareActivity
             ? (entry.activityThemeColor || entry.categoryColor || meta.color)
             : meta.color,
@@ -394,22 +410,28 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
         userRole: entry.authorRole || null,
         userId: entry.authorId || entry.createdBy || null,
         incidentStyle: isBehaviorStyleEntry,
-        entryType: isBehaviorStyleEntry ? 'incident' : (isDailyCareActivity ? 'dailyHabit' : entry.entryType),
+        entryType: isBehaviorStyleEntry ? 'incident' : (isMoodEntry ? 'mood' : (isDailyCareActivity ? 'dailyHabit' : entry.entryType)),
         contextSnapshot: entry.contextSnapshot || entry.incidentData?.contextSnapshot || null,
         incidentData: entry.incidentData || {},
         severity: entry.severity,
         severityLabel,
         triggerSummary,
         remedy: entry.remedy || entry.incidentData?.remedy || null,
-        incidentCategoryId: isBehaviorStyleEntry ? 'behavior' : entry.incidentCategoryId,
+        incidentCategoryId: isBehaviorStyleEntry ? 'behavior' : (isMoodEntry ? 'mood' : entry.incidentCategoryId),
         incidentCategoryLabel: isBehaviorStyleEntry
           ? 'Behavior'
+          : isMoodEntry
+            ? 'Mood'
           : (isDailyCareActivity ? 'Activity' : entry.incidentCategoryLabel),
         incidentCategoryColor: isBehaviorStyleEntry
           ? LOG_TYPES.behavior.palette.dot
+          : isMoodEntry
+            ? LOG_TYPES.mood.palette.dot
           : (isDailyCareActivity ? (entry.activityThemeColor || entry.categoryColor || meta.color) : entry.incidentCategoryColor),
         incidentCategoryIcon: isBehaviorStyleEntry
           ? LOG_TYPES.behavior.icon
+          : isMoodEntry
+            ? LOG_TYPES.mood.icon
           : (isDailyCareActivity ? (entry.activityThemeIcon || entry.categoryIcon || meta.icon) : entry.incidentCategoryIcon),
       };
 

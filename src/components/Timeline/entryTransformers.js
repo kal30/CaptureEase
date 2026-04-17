@@ -85,11 +85,11 @@ const getSemanticSeverityMeta = (severity) => {
 
 const getEngagementMeta = (value) => {
   const metaMap = {
-    1: { label: '😴 Refused', color: '#64748B', bg: '#FFFFFF', textColor: '#334155' },
-    2: { label: '😐 Passive', color: '#64748B', bg: '#FFFFFF', textColor: '#334155' },
-    3: { label: '🙂 Participated', color: '#6366F1', bg: '#EEF2FF', textColor: '#312E81' },
-    4: { label: '😊 Engaged', color: '#4F46E5', bg: '#EEF2FF', textColor: '#312E81' },
-    5: { label: '🤩 Focused', color: '#4338CA', bg: '#E0E7FF', textColor: '#1E1B4B' },
+    1: { label: 'Low', color: '#64748B', bg: '#FFFFFF', textColor: '#334155' },
+    2: { label: 'Okay', color: '#64748B', bg: '#FFFFFF', textColor: '#334155' },
+    3: { label: 'Good', color: '#6366F1', bg: '#EEF2FF', textColor: '#312E81' },
+    4: { label: 'Great', color: '#4F46E5', bg: '#EEF2FF', textColor: '#312E81' },
+    5: { label: 'Fully engaged', color: '#4338CA', bg: '#E0E7FF', textColor: '#1E1B4B' },
   };
 
   return metaMap[Number(value)] || null;
@@ -211,44 +211,6 @@ const getFoodDetails = (entry = {}) => {
   return rows;
 };
 
-const getMedicationDetails = (entry = {}) => {
-  const medicationDetails = entry.medicationDetails || entry.data?.medicationDetails || {};
-  const medicationName = normalizeText(
-    medicationDetails.medicationName
-    || medicationDetails.name
-    || entry.categoryLabel
-    || entry.titlePrefix
-    || entry.title
-    || entry.text
-    || entry.content
-  );
-  const dosage = normalizeText(
-    medicationDetails.dosage
-    || medicationDetails.dose
-    || entry.dosage
-    || entry.dose
-  );
-  const unit = normalizeText(
-    medicationDetails.unit
-    || entry.unit
-  );
-  const givenLabel = normalizeText(
-    medicationDetails.statusLabel
-    || entry.statusLabel
-    || entry.status
-    || 'given'
-  ).toLowerCase();
-
-  const dosageText = [dosage, unit].filter(Boolean).join(' ').trim();
-  const headline = [medicationName, dosageText ? `• ${dosageText}` : '', givenLabel ? `${givenLabel}` : '']
-    .filter(Boolean)
-    .join(' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-
-  return headline ? [{ label: 'Summary', value: headline }] : [];
-};
-
 const getSleepDetails = (entry = {}) => {
   const sleepDetails = entry.sleepDetails || entry.data?.sleepDetails || {};
   const rows = [];
@@ -336,6 +298,19 @@ export const transformTimelineEntry = (entry = {}, presentation = {}, timeString
   const categoryDisplay = getCanonicalEntryDisplayInfo(entry);
   const isBehaviorIncident = isBehaviorIncidentEntry(entry);
   const isDailyCareActivity = entry.collection === 'dailyCare' && entry.actionType === 'activity';
+  const isMoodEntry = entry.type === 'mood'
+    || entry.timelineType === 'mood'
+    || entry.category === 'mood'
+    || entry.actionType === 'mood'
+    || entry.logCategory === 'mood';
+  const moodValue = normalizeText(
+    entry.moodValue
+    || entry.value
+    || entry.data?.level
+    || entry.title
+    || entry.content
+    || 'Calm'
+  );
   const contextSnapshot = entry.contextSnapshot || entry.incidentData?.contextSnapshot || null;
   const activityMeta = isDailyCareActivity ? resolveActivityMeta(entry) : null;
   const severityMeta = getSemanticSeverityMeta(entry.severity ?? entry.incidentData?.severity);
@@ -345,6 +320,8 @@ export const transformTimelineEntry = (entry = {}, presentation = {}, timeString
 
   const kind = isBehaviorIncident
     ? 'behavior'
+    : isMoodEntry
+      ? 'mood'
     : isDailyCareActivity
       ? 'activity'
       : entry.category === 'food'
@@ -359,12 +336,28 @@ export const transformTimelineEntry = (entry = {}, presentation = {}, timeString
 
   const label = isBehaviorIncident
     ? LOG_TYPES.behavior.displayLabel
+    : isMoodEntry
+      ? moodValue
     : isDailyCareActivity
       ? 'Activity'
-      : presentation.entryLabel || categoryDisplay.label || 'Log';
+      : kind === 'meds'
+        ? normalizeText(
+            entry.medicationDetails?.medicationName
+            || entry.medicationDetails?.name
+            || entry.medicationName
+            || entry.title
+            || entry.categoryLabel
+            || entry.titlePrefix
+            || presentation.entryLabel
+            || categoryDisplay.label
+            || 'Medication'
+          ) || 'Medication'
+        : presentation.entryLabel || categoryDisplay.label || 'Log';
 
   const icon = isBehaviorIncident
     ? (entry.incidentCategoryIcon || LOG_TYPES.behavior.icon)
+    : isMoodEntry
+      ? (entry.moodEmoji || entry.categoryIcon || LOG_TYPES.mood.icon)
     : isDailyCareActivity
       ? (activityMeta?.icon || LOG_TYPES.activity.icon)
       : (presentation.entryIcon || categoryDisplay.icon || '•');
@@ -385,31 +378,26 @@ export const transformTimelineEntry = (entry = {}, presentation = {}, timeString
         || entry.content
         || 'Behavior logged'
       )
+    : isMoodEntry
+      ? ''
     : isDailyCareActivity
       ? normalizeText(entry.data?.notes || entry.notes || entry.description || entry.content || entry.text || 'Activity logged')
       : kind === 'food'
         ? normalizeText(getFoodHeadline(entry))
         : kind === 'meds'
-          ? normalizeText(
-              [
-                entry.medicationDetails?.medicationName
-                || entry.medicationDetails?.name
-                || entry.categoryLabel
-                || entry.titlePrefix
-                || entry.title
-                || entry.text
-                || entry.content
-                || 'Medication',
-                [
-                  entry.medicationDetails?.dosage
-                  || entry.medicationDetails?.dose
-                  || entry.dosage
-                  || entry.dose,
-                  entry.medicationDetails?.unit || entry.unit,
-                ].filter(Boolean).join(' ').trim(),
-                'given',
-              ].filter(Boolean).join(' • ')
-            )
+          ? normalizeText([
+              entry.medicationScheduleDose
+              || entry.medicationDetails?.dosage
+              || entry.medicationDetails?.dose
+              || entry.dosage
+              || entry.dose,
+              entry.medicationScheduleUnit
+              || entry.medicationDetails?.unit
+              || entry.unit,
+              (entry.status === 'missed' || entry.backfillStatus === 'missed')
+                ? 'missed'
+                : 'given',
+            ].filter(Boolean).join(' '))
           : kind === 'sleep'
             ? normalizeText(entry.notes || entry.description || entry.summary || entry.content || entry.text || 'Sleep logged')
             : kind === 'toilet'
@@ -418,6 +406,8 @@ export const transformTimelineEntry = (entry = {}, presentation = {}, timeString
 
   const subtype = isBehaviorIncident
     ? ''
+    : isMoodEntry
+      ? ''
     : isDailyCareActivity
       ? normalizeText(activityMeta?.label || entry.activityThemeLabel || entry.data?.activityThemeLabel || '')
       : kind === 'food'

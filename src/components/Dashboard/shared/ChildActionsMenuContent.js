@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Divider,
@@ -8,43 +9,15 @@ import {
 } from '@mui/material';
 import {
   EditOutlined as EditOutlinedIcon,
-  DeleteOutline as DeleteOutlineIcon,
-  WarningAmberOutlined as WarningAmberOutlinedIcon,
-  AutoAwesomeOutlined as AutoAwesomeOutlinedIcon,
+  SettingsOutlined as SettingsOutlinedIcon,
   FileUploadOutlined as FileUploadOutlinedIcon,
   GroupsOutlined as GroupsOutlinedIcon,
+  WcOutlined as WcOutlinedIcon,
+  ShareOutlined as ShareOutlinedIcon,
   PersonAddAlt1Outlined as PersonAddIcon,
 } from '@mui/icons-material';
-import { alpha } from '@mui/material/styles';
 import { USER_ROLES } from '../../../constants/roles';
 import colors from '../../../assets/theme/colors';
-
-const getWarningLabel = (child) => {
-  const medicalProfile = child?.medicalProfile || {};
-  const childWarning =
-    medicalProfile.foodAllergies?.find(Boolean) ||
-    medicalProfile.medicationDetails?.find(Boolean) ||
-    medicalProfile.currentMedications?.find(Boolean);
-
-  if (!childWarning) {
-    return null;
-  }
-
-  if (typeof childWarning === 'string') {
-    return String(childWarning).toLowerCase().includes('nut')
-      ? 'Nut Allergy'
-      : `${childWarning} Allergy`;
-  }
-
-  const name = childWarning?.name || childWarning?.medication || childWarning?.title;
-  if (name) {
-    return childWarning?.category
-      ? `Medication: ${name}`
-      : name;
-  }
-
-  return null;
-};
 
 const SectionLabel = ({ children }) => (
   <Box sx={{ px: 1.5, pb: 0.75, pt: 1 }}>
@@ -57,7 +30,14 @@ const SectionLabel = ({ children }) => (
 const ActionItem = ({ icon, children, onClick, color = colors.landing.heroText, iconColor, ...props }) => (
   <MenuItem
     onClick={onClick}
-    sx={{ gap: 1.25, py: 1.25, px: 1.5, minHeight: 48, color }}
+    sx={{
+      gap: 1.1,
+      py: 1.15,
+      px: 1.5,
+      minHeight: 48,
+      color,
+      borderRadius: 0,
+    }}
     {...props}
   >
     <ListItemIcon sx={{ minWidth: 34 }}>
@@ -73,50 +53,37 @@ const ChildActionsMenuContent = ({
   onEditChild,
   onInviteTeamMember,
   onGoToCareTeam,
-  onDeleteChild,
   onPrepForTherapy,
   onImportLogs,
-  showWarning = true,
+  onOpenBathroomLog,
 }) => {
-  const warningLabel = showWarning ? getWarningLabel(child) : null;
   const canInvite = userRole === USER_ROLES.CARE_OWNER && typeof onInviteTeamMember === 'function';
   const canGoToCareTeam = typeof onGoToCareTeam === 'function';
   const canEdit = typeof onEditChild === 'function';
-  const canDelete = typeof onDeleteChild === 'function';
-  const childName = child?.name || 'This child';
-  const teamLabel = `${childName}’s Team`;
-  const infoLabel = `Edit ${childName}’s Info`;
-  const recordLabel = `Delete ${childName}’s Record`;
+  const canOpenBathroomLog = typeof onOpenBathroomLog === 'function';
+  const navigate = useNavigate();
 
   return (
     <>
-      {warningLabel ? (
-        <>
-          <Box sx={{ px: 1.5, pt: 1.5, pb: 1 }}>
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1,
-                px: 1.25,
-                py: 1.1,
-                borderRadius: '12px',
-                bgcolor: alpha(colors.semantic.error, 0.09),
-                color: colors.semantic.error,
-                border: `1px solid ${alpha(colors.semantic.error, 0.18)}`,
-              }}
-            >
-              <WarningAmberOutlinedIcon sx={{ fontSize: 18, color: colors.semantic.error }} />
-              <Typography sx={{ fontWeight: 700, color: colors.landing.heroText }}>
-                {warningLabel}
-              </Typography>
-            </Box>
-          </Box>
-          <Divider sx={{ my: 0.5 }} />
-        </>
-      ) : null}
+      <SectionLabel>Navigation</SectionLabel>
 
-      <SectionLabel>{teamLabel}</SectionLabel>
+      <ActionItem
+        icon={<WcOutlinedIcon />}
+        onClick={() => {
+          if (canOpenBathroomLog) {
+            onOpenBathroomLog?.(child);
+            return;
+          }
+          alert('Toilet logging coming soon');
+        }}
+        iconColor={colors.brand.ink}
+      >
+        Toilet
+      </ActionItem>
+
+      <Divider sx={{ my: 0.5 }} />
+
+      <SectionLabel>Team</SectionLabel>
 
       {canInvite ? (
         <ActionItem
@@ -140,22 +107,14 @@ const ChildActionsMenuContent = ({
 
       <Divider sx={{ my: 0.5 }} />
 
-      <SectionLabel>Tools</SectionLabel>
+      <SectionLabel>Sharing</SectionLabel>
 
       <ActionItem
-        icon={<AutoAwesomeOutlinedIcon />}
+        icon={<ShareOutlinedIcon />}
         onClick={() => onPrepForTherapy?.(child)}
         iconColor={colors.brand.ink}
       >
-        Prep for therapy
-      </ActionItem>
-
-      <ActionItem
-        icon={<FileUploadOutlinedIcon />}
-        onClick={() => onImportLogs?.(child)}
-        iconColor={colors.brand.deep}
-      >
-        Import .xlsx or .docx
+        Share with Therapist
       </ActionItem>
 
       <Divider sx={{ my: 0.5 }} />
@@ -168,20 +127,27 @@ const ChildActionsMenuContent = ({
           onClick={() => onEditChild?.(child)}
           iconColor={colors.brand.ink}
         >
-          {infoLabel}
+          Edit Child Info
         </ActionItem>
       ) : null}
 
-      {canDelete ? (
-        <ActionItem
-          icon={<DeleteOutlineIcon />}
-          onClick={() => onDeleteChild?.(child)}
-          color="error.main"
-          iconColor="error.main"
-        >
-          {recordLabel}
-        </ActionItem>
-      ) : null}
+      <ActionItem
+        icon={<FileUploadOutlinedIcon />}
+        onClick={() => onImportLogs?.(child)}
+        iconColor={colors.brand.deep}
+      >
+        Import Past Data
+      </ActionItem>
+
+      <ActionItem
+        icon={<SettingsOutlinedIcon />}
+        onClick={() => {
+          navigate('/profile');
+        }}
+        iconColor={colors.brand.ink}
+      >
+        Settings
+      </ActionItem>
     </>
   );
 };

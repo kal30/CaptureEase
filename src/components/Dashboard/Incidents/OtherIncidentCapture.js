@@ -465,6 +465,16 @@ const OtherIncidentCapture = ({
   const timeFieldValue = `${String(incidentTime.getHours()).padStart(2, '0')}:${String(incidentTime.getMinutes()).padStart(2, '0')}`;
   const visibleContextItems = showMoreContext ? contextItems : contextItems.slice(0, 3);
   const saveLabel = incidentForm.loading ? 'Saving...' : 'Save incident';
+  const fullBleedSectionSx = {
+    width: '100%',
+    maxWidth: '100%',
+    boxSizing: 'border-box',
+    alignSelf: 'stretch',
+    px: { xs: 1.5, sm: 4 },
+    py: { xs: 2, sm: 2.25 },
+    borderRadius: 2,
+    overflow: 'hidden',
+  };
 
   const handleDatePickerOpen = (event) => {
     setDatePickerAnchor(event.currentTarget);
@@ -489,7 +499,7 @@ const OtherIncidentCapture = ({
     <Box
       sx={{
         minHeight: '100%',
-        bgcolor: incidentTheme.header,
+        bgcolor: incidentTheme.white,
         px: { xs: 1.5, sm: 2 },
         py: { xs: 1.5, sm: 2 },
       }}
@@ -616,10 +626,8 @@ const OtherIncidentCapture = ({
 
         <Box
           sx={{
-            px: 0,
-            py: { xs: 2, sm: 2.25 },
+            ...fullBleedSectionSx,
             bgcolor: incidentTheme.context,
-            borderRadius: 2,
           }}
         >
           <Typography variant="h6" sx={{ fontWeight: 800, mb: 1.25, color: '#184D83' }}>
@@ -664,10 +672,8 @@ const OtherIncidentCapture = ({
 
         <Box
           sx={{
-            px: 0,
-            py: { xs: 2, sm: 2.25 },
+            ...fullBleedSectionSx,
             bgcolor: incidentTheme.triggers,
-            borderRadius: 2,
           }}
         >
           <Typography variant="h6" sx={{ fontWeight: 800, mb: 1.25, color: '#8A264B' }}>

@@ -11,6 +11,32 @@ import { getLogTypeByEntry, getTimelineMetaForCategory, isBehaviorIncidentEntry,
 import { dedupeTimelineEntries } from './timelineDeduping';
 
 const buildDailyLogTitle = (data, categoryMeta) => {
+  if ((data.category === 'mood' || data.logCategory === 'mood' || data.actionType === 'mood') && (
+    data.moodValue
+    || data.value
+    || data.data?.level
+    || data.title
+  )) {
+    return String(
+      data.moodValue
+      || data.value
+      || data.data?.level
+      || data.title
+    ).trim();
+  }
+
+  if ((data.category === 'medication' || data.logCategory === 'medication') && (
+    data.medicationName
+    || data.medicationDetails?.medicationName
+    || data.medicationDetails?.name
+  )) {
+    return String(
+      data.medicationName
+      || data.medicationDetails?.medicationName
+      || data.medicationDetails?.name
+    ).trim();
+  }
+
   if (data.titlePrefix?.trim()) {
     return data.titlePrefix.trim();
   }
@@ -41,6 +67,7 @@ const mapDailyLogEntry = (doc) => {
   const categoryType = getLogTypeByEntry(data);
   const categoryMeta = getTimelineMetaForCategory(categoryType.category);
   const isBehaviorIncident = isBehaviorIncidentEntry(data);
+  const isMoodEntry = categoryType.category === 'mood' || data.actionType === 'mood';
   const sleepDetails = data.sleepDetails || {};
   const notesText = data.notes || data.sleepDetails?.notes || data.bathroomDetails?.notes || data.incidentData?.notes || data.content || null;
   const severityLabel = data.severityLabel || data.incidentData?.severityLabel || (data.severity ? `Severity ${data.severity}` : null);
@@ -57,22 +84,27 @@ const mapDailyLogEntry = (doc) => {
     localTime: data.localTime || sleepDetails.localTime || null,
     sleepAnchorDate,
     logCategory: categoryType.category,
-    category: categoryType.category,
-    type: isBehaviorIncident ? 'behavior' : categoryMeta.type,
-    timelineType: isBehaviorIncident ? 'incident' : categoryMeta.timelineType,
+    category: isMoodEntry ? 'mood' : categoryType.category,
+    type: isBehaviorIncident ? 'behavior' : (isMoodEntry ? 'mood' : categoryMeta.type),
+    timelineType: isBehaviorIncident ? 'incident' : (isMoodEntry ? 'mood' : categoryMeta.timelineType),
     collection: 'dailyLogs',
     title: isBehaviorIncident ? 'Behavior' : buildDailyLogTitle(data, categoryMeta),
-    titlePrefix: isBehaviorIncident ? 'Behavior' : categoryMeta.titlePrefix,
-    label: isBehaviorIncident ? LOG_TYPES.behavior.displayLabel : categoryMeta.label,
-    icon: isBehaviorIncident ? LOG_TYPES.behavior.icon : categoryMeta.icon,
-    color: isBehaviorIncident ? LOG_TYPES.behavior.palette.dot : categoryMeta.color,
+    titlePrefix: isBehaviorIncident ? 'Behavior' : (isMoodEntry ? 'Mood' : categoryMeta.titlePrefix),
+    medicationName: data.medicationName || data.medicationDetails?.medicationName || data.medicationDetails?.name || null,
+    medicationScheduleDose: data.medicationScheduleDose || data.medicationDetails?.dosage || data.medicationDetails?.dose || data.dosage || data.dose || null,
+    medicationScheduleUnit: data.medicationScheduleUnit || data.medicationDetails?.unit || data.unit || null,
+    medicationScheduleTime: data.medicationScheduleTime || data.time || null,
+    medicationCategory: data.medicationCategory || data.medicationFrequency || null,
+    label: isBehaviorIncident ? LOG_TYPES.behavior.displayLabel : (isMoodEntry ? LOG_TYPES.mood.displayLabel : categoryMeta.label),
+    icon: isBehaviorIncident ? LOG_TYPES.behavior.icon : (isMoodEntry ? LOG_TYPES.mood.icon : categoryMeta.icon),
+    color: isBehaviorIncident ? LOG_TYPES.behavior.palette.dot : (isMoodEntry ? LOG_TYPES.mood.palette.dot : categoryMeta.color),
     content: isBehaviorIncident
       ? [
           severityLabel ? `Severity: ${severityLabel}${data.severity != null ? ` (${data.severity})` : ''}` : null,
           notesText ? `Notes: ${notesText}` : null,
           contextSnapshot?.patternInsight ? contextSnapshot.patternInsight : null,
         ].filter(Boolean).join(' • ')
-      : notesText,
+      : (isMoodEntry ? (data.moodValue || data.value || data.data?.level || data.title || notesText || '') : notesText),
     notes: notesText,
     severity: data.severity,
     severityLabel,
@@ -81,12 +113,13 @@ const mapDailyLogEntry = (doc) => {
     suspectedTriggers: data.suspectedTriggers || data.incidentData?.suspectedTriggers || [],
     contextSnapshot,
     incidentData: data.incidentData || {},
-    entryType: isBehaviorIncident ? 'incident' : data.entryType,
+    entryType: isBehaviorIncident ? 'incident' : (isMoodEntry ? 'mood' : data.entryType),
     incidentStyle: isBehaviorIncident,
-    incidentCategoryId: isBehaviorIncident ? 'behavior' : data.incidentCategoryId,
-    incidentCategoryLabel: isBehaviorIncident ? 'Behavior' : data.incidentCategoryLabel,
-    incidentCategoryColor: isBehaviorIncident ? categoryMeta.color : data.incidentCategoryColor,
-    incidentCategoryIcon: isBehaviorIncident ? categoryMeta.icon : data.incidentCategoryIcon,
+    incidentCategoryId: isBehaviorIncident ? 'behavior' : (isMoodEntry ? 'mood' : data.incidentCategoryId),
+    incidentCategoryLabel: isBehaviorIncident ? 'Behavior' : (isMoodEntry ? 'Mood' : data.incidentCategoryLabel),
+    incidentCategoryColor: isBehaviorIncident ? categoryMeta.color : (isMoodEntry ? LOG_TYPES.mood.palette.dot : data.incidentCategoryColor),
+    incidentCategoryIcon: isBehaviorIncident ? categoryMeta.icon : (isMoodEntry ? LOG_TYPES.mood.icon : data.incidentCategoryIcon),
+    moodValue: isMoodEntry ? buildDailyLogTitle(data, categoryMeta) : data.moodValue || null,
   };
 };
 

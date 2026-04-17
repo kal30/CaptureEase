@@ -60,6 +60,36 @@ const formatSleepIssue = (value) => {
   return issueLabels[value] || String(value).replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
+const resolveTimestamp = (value) => {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return value;
+  }
+
+  if (value?.toDate && typeof value.toDate === 'function') {
+    const date = value.toDate();
+    if (date instanceof Date && !Number.isNaN(date.getTime())) {
+      return date;
+    }
+  }
+
+  if (typeof value === 'string' || typeof value === 'number') {
+    const parsed = new Date(value);
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed;
+    }
+  }
+
+  return new Date();
+};
+
+const formatTimeLabel = (date) => {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+    return '';
+  }
+
+  return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+};
+
 // Save a daily care entry
 export const saveDailyCareEntry = async (entryData) => {
   try {
@@ -71,6 +101,7 @@ export const saveDailyCareEntry = async (entryData) => {
     }
 
     const { childId, actionType, data, completedBy } = entryData;
+    const resolvedTimestamp = resolveTimestamp(entryData.timestamp);
     
     // Create the entry document with required immutable metadata
     const entry = {
@@ -83,8 +114,8 @@ export const saveDailyCareEntry = async (entryData) => {
       actionType,
       data,
       completedBy: completedBy || currentUser.uid,
-      timestamp: serverTimestamp(),
-      date: new Date().toDateString(), // For daily tracking
+      timestamp: resolvedTimestamp,
+      date: resolvedTimestamp.toDateString(), // For daily tracking
       
       // Status for soft delete system
       status: 'active',
@@ -100,6 +131,7 @@ export const saveDailyCareEntry = async (entryData) => {
         actionType,
         childId,
         timestamp: entry.timestamp,
+        recordedAt: resolvedTimestamp,
         collection: 'dailyCare',
         category: 'daily_care',
         title: getActionTitle(actionType),
@@ -112,6 +144,16 @@ export const saveDailyCareEntry = async (entryData) => {
 
       window.dispatchEvent(new CustomEvent('captureez:timeline-entry-created', {
         detail: eventDetail,
+      }));
+
+      window.dispatchEvent(new CustomEvent('captureez:daily-care-saved', {
+        detail: {
+          childId,
+          actionType,
+          timestamp: resolvedTimestamp,
+          title: getActionTitle(actionType),
+          message: `${getActionTitle(actionType)} logged at ${formatTimeLabel(resolvedTimestamp)}`,
+        },
       }));
 
       window.dispatchEvent(new CustomEvent('captureez:timeline-refresh', {
@@ -154,6 +196,7 @@ export const saveDailyCareEntry = async (entryData) => {
         category: 'sleep',
         tags: ['sleep'],
         timestamp: sleepTimestamp,
+        recordedAt: sleepTimestamp,
         timestampUtc: sleepTimestamp.toISOString(),
         timestampSource: 'sleep-anchor',
         entryDate: sleepTimestamp.toDateString(),
@@ -190,7 +233,7 @@ export const saveDailyCareEntry = async (entryData) => {
         type: `daily_${actionType}`,
         title: getActionTitle(actionType),
         data: data,
-        timestamp: serverTimestamp(),
+        timestamp: resolvedTimestamp,
         category: 'daily_care',
         importance: 'normal',
       });

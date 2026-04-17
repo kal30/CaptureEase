@@ -16,6 +16,10 @@ import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import { alpha } from '@mui/material/styles';
 
+const TEXT_PRIMARY = '#1F2937';
+const TEXT_SECONDARY = '#4B5563';
+const TEXT_MUTED = '#9CA3AF';
+
 const formatDetailValue = (value) => {
   if (value == null) {
     return '';
@@ -41,6 +45,7 @@ const TimelineEntryRow = ({
   onEditValueChange = null,
   onSaveEdit = null,
   onCancelEdit = null,
+  nested = false,
 }) => {
   const {
     label = 'Log',
@@ -72,7 +77,7 @@ const TimelineEntryRow = ({
 
     const badgeColor = metaBadge.color || accentColor;
     const badgeBg = metaBadge.bg || alpha(badgeColor, 0.12);
-    const badgeText = metaBadge.textColor || badgeColor;
+    const badgeText = metaBadge.textColor || TEXT_MUTED;
     const badgeBorder = metaBadge.border || alpha(badgeColor, 0.24);
 
     return (
@@ -108,7 +113,7 @@ const TimelineEntryRow = ({
             py: 0.2,
             borderRadius: 999,
             bgcolor: alpha(accentColor, 0.10),
-            color: accentColor,
+            color: TEXT_MUTED,
             border: `1px solid ${alpha(accentColor, 0.18)}`,
             textTransform: 'uppercase',
             letterSpacing: '0.12em',
@@ -130,7 +135,7 @@ const TimelineEntryRow = ({
           fontWeight: 800,
           fontSize: '0.68rem',
           lineHeight: 1.15,
-          color: 'text.secondary',
+          color: TEXT_MUTED,
           minWidth: 0,
           whiteSpace: 'nowrap',
           overflow: 'hidden',
@@ -173,7 +178,7 @@ const TimelineEntryRow = ({
                 fontWeight: 900,
                 textTransform: 'uppercase',
                 letterSpacing: '0.08em',
-                color: 'text.secondary',
+                color: TEXT_MUTED,
               }}
             >
               {detail.label}
@@ -184,7 +189,7 @@ const TimelineEntryRow = ({
                 fontSize: '0.76rem',
                 lineHeight: 1.25,
                 fontWeight: 700,
-                color: '#0F172A',
+                color: TEXT_PRIMARY,
               }}
             >
               {formatDetailValue(detail.value)}
@@ -220,7 +225,7 @@ const TimelineEntryRow = ({
               py: 0.2,
               borderRadius: 999,
               bgcolor: alpha(accentColor, 0.08),
-              color: '#1F2937',
+              color: TEXT_MUTED,
               border: `1px solid ${alpha(accentColor, 0.16)}`,
             }}
           >
@@ -232,7 +237,7 @@ const TimelineEntryRow = ({
                 lineHeight: 1,
                 fontStyle: 'italic',
                 fontWeight: 800,
-                color: '#374151',
+                color: TEXT_MUTED,
                 whiteSpace: 'nowrap',
               }}
             >
@@ -273,29 +278,31 @@ const TimelineEntryRow = ({
         display: 'flex',
         alignItems: 'center',
         gap: { xs: 0.9, sm: 1.05 },
-        pl: { xs: 1.5, sm: 1.75 },
-        pr: { xs: 2, sm: 2.25 },
-        py: { xs: 0.6, sm: 0.78 },
+        pl: nested ? { xs: 1.1, sm: 1.3 } : { xs: 1.5, sm: 1.75 },
+        pr: nested ? { xs: 1.5, sm: 1.75 } : { xs: 2, sm: 2.25 },
+        py: nested ? { xs: 0.5, sm: 0.62 } : { xs: 0.6, sm: 0.78 },
         mb: 0,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: nested ? 'rgba(248, 250, 252, 0.72)' : '#FFFFFF',
         borderBottom: isLast ? 'none' : '1px solid rgba(226, 232, 240, 0.95)',
-        borderLeft: `2px solid ${accentColor}`,
+        borderLeft: nested ? `1px solid ${alpha(accentColor, 0.32)}` : `2px solid ${accentColor}`,
         overflow: 'visible',
+        ml: nested ? 0.25 : 0,
+        borderRadius: nested ? 1.2 : 0,
       }}
     >
       <Box
         sx={{
           flex: '0 0 auto',
-          width: 28,
-          height: 28,
+          width: nested ? 24 : 28,
+          height: nested ? 24 : 28,
           borderRadius: '50%',
           border: `2px solid ${accentColor}`,
-          color: accentColor,
+            color: TEXT_MUTED,
           bgcolor: '#FFFFFF',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontSize: '0.84rem',
+          fontSize: nested ? '0.76rem' : '0.84rem',
           lineHeight: 1,
           flexShrink: 0,
           boxSizing: 'border-box',
@@ -318,7 +325,7 @@ const TimelineEntryRow = ({
           <Typography
             variant="caption"
             sx={{
-              color: 'text.secondary',
+              color: TEXT_SECONDARY,
               fontSize: '0.62rem',
               fontFamily: 'monospace',
               fontWeight: 700,
@@ -343,9 +350,9 @@ const TimelineEntryRow = ({
           <Typography
             component="span"
             sx={{
-              fontSize: isMedicationRow ? '0.84rem' : '0.88rem',
+              fontSize: nested ? '0.8rem' : (isMedicationRow ? '0.84rem' : '0.88rem'),
               fontWeight: 800,
-              color: '#1F2937',
+              color: TEXT_PRIMARY,
               lineHeight: 1.15,
             }}
           >
@@ -361,7 +368,7 @@ const TimelineEntryRow = ({
                 fontSize: '0.62rem',
                 fontWeight: 800,
                 bgcolor: '#FFFFFF',
-                color: 'text.secondary',
+                color: TEXT_MUTED,
                 border: '1px solid',
                 borderColor: 'rgba(203, 213, 225, 0.95)',
               }}
@@ -390,21 +397,21 @@ const TimelineEntryRow = ({
         ) : (
           <>
             {primaryText ? (
-              <Typography
-                variant="body2"
-                sx={{
-                  color: '#475569',
-                  fontSize: isMedicationRow ? '0.84rem' : '0.88rem',
-                  lineHeight: 1.3,
-                  fontWeight: isMedicationRow ? 700 : 600,
-                  whiteSpace: 'normal',
-                  wordBreak: 'break-word',
-                  display: '-webkit-box',
-                  WebkitLineClamp: isMedicationRow ? 1 : 2,
-                  WebkitBoxOrient: 'vertical',
-                  overflow: 'hidden',
-                }}
-              >
+          <Typography
+            variant="body2"
+            sx={{
+              color: TEXT_PRIMARY,
+              fontSize: nested ? '0.78rem' : (isMedicationRow ? '0.84rem' : '0.88rem'),
+              lineHeight: 1.3,
+              fontWeight: nested ? 600 : (isMedicationRow ? 700 : 600),
+              whiteSpace: 'normal',
+              wordBreak: 'break-word',
+              display: '-webkit-box',
+              WebkitLineClamp: nested ? 1 : (isMedicationRow ? 1 : 2),
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+            }}
+          >
                 {primaryText}
               </Typography>
             ) : null}
@@ -419,7 +426,7 @@ const TimelineEntryRow = ({
                   py: 0.2,
                   borderRadius: 0.5,
                   bgcolor: alpha('#FACC15', 0.18),
-                  color: '#7C5C00',
+                  color: TEXT_MUTED,
                   maxWidth: '100%',
                 }}
               >
@@ -429,7 +436,7 @@ const TimelineEntryRow = ({
                     fontSize: '0.7rem',
                     lineHeight: 1.2,
                     fontStyle: 'italic',
-                    color: '#94A3B8',
+                    color: TEXT_MUTED,
                     display: '-webkit-box',
                     WebkitLineClamp: 2,
                     WebkitBoxOrient: 'vertical',
@@ -448,7 +455,7 @@ const TimelineEntryRow = ({
                   fontSize: '0.7rem',
                   lineHeight: 1.2,
                   fontWeight: 800,
-                  color: '#94A3B8',
+                  color: TEXT_MUTED,
                 }}
               >
                 Trigger: {triggerSummary}
@@ -463,7 +470,7 @@ const TimelineEntryRow = ({
                   fontSize: '0.7rem',
                   lineHeight: 1.2,
                   fontWeight: 700,
-                  color: '#94A3B8',
+                  color: TEXT_MUTED,
                 }}
               >
                 {kind === 'behavior' ? 'Notes: ' : ''}{notesText}
@@ -491,13 +498,13 @@ const TimelineEntryRow = ({
       <Stack
         direction="row"
         spacing={0.5}
-          sx={{
-            flex: '0 0 auto',
-            alignItems: 'center',
-            justifyContent: 'flex-end',
-            minWidth: 0,
-            ml: 0.75,
-          }}
+        sx={{
+          flex: '0 0 auto',
+          alignItems: 'center',
+          justifyContent: 'flex-end',
+          minWidth: 0,
+          ml: 0.75,
+        }}
       >
         {renderMetaBadge()}
         {showActions ? (
@@ -511,7 +518,7 @@ const TimelineEntryRow = ({
                 height: 40,
                 borderRadius: 1.2,
                 bgcolor: 'transparent',
-                color: 'text.secondary',
+                color: TEXT_MUTED,
                 border: '1px solid',
                 borderColor: 'transparent',
                 flexShrink: 0,
@@ -535,7 +542,7 @@ const TimelineEntryRow = ({
               onClick={handleMenuClose}
             >
               <MenuItem onClick={handleEditClick} disabled={!onEditEntry || actionMenuDisabled}>
-                <EditIcon sx={{ fontSize: 16, mr: 1, color: 'text.secondary' }} />
+                <EditIcon sx={{ fontSize: 16, mr: 1, color: TEXT_MUTED }} />
                 Edit
               </MenuItem>
               <MenuItem
@@ -577,7 +584,7 @@ const TimelineEntryRow = ({
               height: 28,
               borderRadius: 0.75,
               bgcolor: '#FFFFFF',
-              color: 'text.secondary',
+                color: TEXT_MUTED,
               border: '1px solid',
               borderColor: 'divider',
             }}

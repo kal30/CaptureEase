@@ -104,8 +104,7 @@ export const getDailyCareConfig = (actionType, child) => {
       fields: [
         {
           key: 'activityTypes',
-          label: 'What kind of activity was it?',
-          description: 'Select one that best fits',
+          label: 'What did they do?',
           type: 'chips',
           multiple: false,
           options: ACTIVITY_TYPE_OPTIONS,
@@ -114,11 +113,10 @@ export const getDailyCareConfig = (actionType, child) => {
         {
           key: 'engagement',
           label: 'How engaged were they?',
-          description: 'Rate how involved they seemed during the activity',
           type: 'scale',
           min: 1,
           max: 5,
-          labels: ['😴 Refused', '😐 Passive', '🙂 Participated', '😊 Engaged', '🤩 Focused'],
+          labels: ['Low', 'Okay', 'Good', 'Great', 'Fully engaged'],
           required: true,
         },
         {

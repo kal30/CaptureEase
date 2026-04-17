@@ -20,7 +20,12 @@ import UnifiedTimelineEntry from "./UnifiedTimelineEntry";
 import { CATEGORY_COLORS } from "../../constants/categoryColors";
 import { trackRenderDebug, useMountDebug } from "../../utils/renderDebug";
 import { auth, db } from "../../services/firebase";
+import { getTimelineEntryDate } from "../../services/timeline/dateUtils";
 import colors from "../../assets/theme/colors";
+
+const TEXT_PRIMARY = '#1F2937';
+const TEXT_SECONDARY = '#4B5563';
+const TEXT_MUTED = '#9CA3AF';
 
 /**
  * UnifiedTimeline - Main unified timeline component
@@ -42,7 +47,6 @@ const UnifiedTimeline = ({
   showFilters = true,
   showDaySummary = true,
   mobileTimeLayout = false,
-  streakLabel = '',
   focusEntryId = null,
   calendarEntries = [],
 }) => {
@@ -147,6 +151,33 @@ const UnifiedTimeline = ({
   const [actionLoadingId, setActionLoadingId] = React.useState(null);
   const [localEntryUpdates, setLocalEntryUpdates] = React.useState({});
   const [deletedEntryIds, setDeletedEntryIds] = React.useState({});
+  const summarizeMoodLabel = React.useCallback((moodValue, moodEmoji = null) => {
+    const normalizedMood = String(moodValue || '').trim().toLowerCase();
+    if (!normalizedMood) {
+      return null;
+    }
+
+    const moodPatterns = [
+      { terms: ['frustrated', 'angry', 'mad', 'annoyed', 'stressed'], emoji: '😡', label: 'Frustrated' },
+      { terms: ['sad', 'down', 'upset', 'cry', 'tired'], emoji: '😢', label: 'Down' },
+      { terms: ['neutral', 'okay', 'ok', 'fine', 'meh'], emoji: '😐', label: 'Mostly neutral' },
+      { terms: ['calm', 'relaxed', 'peaceful', 'content'], emoji: '🙂', label: 'Mostly calm' },
+      { terms: ['happy', 'great', 'joyful', 'smiling', 'good'], emoji: '😄', label: 'Happy' },
+    ];
+
+    const matchedMood = moodPatterns.find((pattern) => pattern.terms.some((term) => normalizedMood.includes(term)));
+    if (matchedMood) {
+      return {
+        emoji: moodEmoji || matchedMood.emoji,
+        label: matchedMood.label,
+      };
+    }
+
+    return {
+      emoji: moodEmoji || LOG_TYPES.mood.icon,
+      label: moodValue,
+    };
+  }, []);
 
   const extractTags = React.useCallback((inputText = '') => {
     const tagRegex = /#(\w+)/g;
@@ -230,6 +261,36 @@ const UnifiedTimeline = ({
       });
   }, [deletedEntryIds, entries, localEntryUpdates]);
 
+  const getEntryDate = React.useCallback((entry) => (
+    getTimelineEntryDate(entry)
+      || (typeof entry?.timestamp?.toDate === 'function' ? entry.timestamp.toDate() : null)
+      || new Date(entry?.timestamp)
+  ), []);
+
+  const formatTimelineTime = React.useCallback((date) => {
+    if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+      return '';
+    }
+
+    return date.toLocaleTimeString([], {
+      hour: 'numeric',
+      minute: '2-digit',
+    });
+  }, []);
+
+  const getMinuteKey = React.useCallback((date) => {
+    if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+      return '';
+    }
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hour = String(date.getHours()).padStart(2, '0');
+    const minute = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}-${hour}-${minute}`;
+  }, []);
+
   React.useEffect(() => {
     if (!focusEntryId) {
       return undefined;
@@ -269,22 +330,39 @@ const UnifiedTimeline = ({
     const categoryMeta = entry.category ? getLogTypeByCategory(entry.category) : null;
     const isBehaviorIncident = entry.collection === 'dailyLogs'
       && isBehaviorIncidentEntry(entry);
+    const isMoodEntry = entry.type === 'mood'
+      || entry.timelineType === 'mood'
+      || entry.category === 'mood'
+      || entry.actionType === 'mood'
+      || entry.logCategory === 'mood';
+    const moodValue = String(
+      entry.moodValue
+      || entry.value
+      || entry.data?.level
+      || entry.title
+      || entry.content
+      || 'Calm'
+    ).trim();
     const entryLabel = entry.collection === 'incidents'
       ? (entry.incidentCategoryLabel || defaultEntryLabel)
       : entry.collection === 'dailyCare'
-        ? (entry.actionType === 'activity'
-          ? 'Activity'
-          : (entry.categoryLabel || entry.activityThemeLabel || defaultEntryLabel))
+        ? (isMoodEntry
+          ? moodValue
+          : (entry.actionType === 'activity'
+            ? 'Activity'
+            : (entry.categoryLabel || entry.activityThemeLabel || defaultEntryLabel)))
         : entry.collection === 'dailyLogs'
           ? (isBehaviorIncident
             ? (entry.incidentCategoryLabel || 'Behavior')
-            : (entry.titlePrefix
-            || entry.title
-            || entry.label
-            || entry.categoryLabel
-            || categoryMeta?.trackLabel
-            || categoryMeta?.displayLabel
-            || defaultEntryLabel))
+            : (isMoodEntry
+              ? moodValue
+              : (entry.titlePrefix
+                || entry.title
+                || entry.label
+                || entry.categoryLabel
+                || categoryMeta?.trackLabel
+                || categoryMeta?.displayLabel
+                || defaultEntryLabel)))
           : (entry.title || defaultEntryLabel);
     const timelineColors = resolveCategoryColor(entry);
     const entryColor = timelineColors.dot;
@@ -293,15 +371,129 @@ const UnifiedTimeline = ({
       : entry.collection === 'incidents'
       ? (entry.incidentCategoryIcon || meta.icon)
       : entry.collection === 'dailyCare'
-        ? (entry.actionType === 'activity'
+        ? (isMoodEntry
+          ? (entry.moodEmoji || entry.categoryIcon || LOG_TYPES.mood.icon)
+          : (entry.actionType === 'activity'
           ? (entry.categoryIcon || LOG_TYPES.activity.icon)
-          : (entry.categoryIcon || meta.icon))
+            : (entry.categoryIcon || meta.icon)))
         : (entry.categoryIcon || meta.icon);
 
     const labelTextColor = getContrastText(entryColor);
 
     return { entryType, meta, entryLabel, timelineColors, entryColor, entryIcon, labelTextColor };
   }, [getContrastText, resolveCategoryColor]);
+
+  const timelineBlocks = React.useMemo(() => {
+    const sortedEntries = [...visibleEntries].sort((a, b) => {
+      const aDate = getEntryDate(a) || new Date(a.timestamp);
+      const bDate = getEntryDate(b) || new Date(b.timestamp);
+      return bDate - aDate;
+    });
+    const blocks = [];
+    let activeBlock = null;
+
+    sortedEntries.forEach((entry, index) => {
+      const timestamp = getEntryDate(entry) || new Date(entry.timestamp);
+      const presentation = getEntryPresentation(entry);
+      const minuteKey = getMinuteKey(timestamp);
+
+      const item = {
+        entry,
+        presentation,
+        timestamp,
+        key: `${entry.type}-${entry.id}-${index}`,
+      };
+
+      if (activeBlock && activeBlock.minuteKey === minuteKey) {
+        activeBlock.items.push(item);
+        return;
+      }
+
+      activeBlock = {
+        key: `time-block-${minuteKey || index}`,
+        minuteKey,
+        timeLabel: formatTimelineTime(timestamp),
+        items: [item],
+      };
+
+      blocks.push(activeBlock);
+    });
+
+    return blocks;
+  }, [formatTimelineTime, getEntryDate, getEntryPresentation, getMinuteKey, visibleEntries]);
+
+  const todaySummary = React.useMemo(() => {
+    if (!visibleEntries.length) {
+      return null;
+    }
+
+    const sortedEntries = [...visibleEntries].sort((a, b) => {
+      const aDate = getEntryDate(a) || new Date(a.timestamp);
+      const bDate = getEntryDate(b) || new Date(b.timestamp);
+      return bDate - aDate;
+    });
+
+    let latestMood = null;
+    let medsCount = 0;
+    let activityCount = 0;
+    let incidentCount = 0;
+
+    sortedEntries.forEach((entry) => {
+      const presentation = getEntryPresentation(entry);
+
+      if (presentation.kind === 'mood' && !latestMood) {
+        latestMood = {
+          moodValue: presentation.entryLabel || entry.moodValue || entry.value || entry.title || '',
+          moodEmoji: entry.moodEmoji || presentation.entryIcon || LOG_TYPES.mood.icon,
+        };
+      }
+
+      if (presentation.kind === 'meds') {
+        medsCount += 1;
+      } else if (presentation.kind === 'activity') {
+        activityCount += 1;
+      } else if (
+        presentation.kind === 'behavior'
+        || entry.collection === 'incidents'
+        || entry.entryType === 'incident'
+        || entry.incidentStyle
+      ) {
+        incidentCount += 1;
+      }
+    });
+
+    const moodSummary = latestMood
+      ? summarizeMoodLabel(latestMood.moodValue, latestMood.moodEmoji)
+      : null;
+
+    const summaryItems = [];
+    if (moodSummary) {
+      summaryItems.push({
+        icon: moodSummary.emoji,
+        label: moodSummary.label,
+      });
+    }
+    if (medsCount > 0) {
+      summaryItems.push({
+        icon: LOG_TYPES.medication.icon,
+        label: `${medsCount} med${medsCount === 1 ? '' : 's'}`,
+      });
+    }
+    if (activityCount > 0) {
+      summaryItems.push({
+        icon: '🎯',
+        label: `${activityCount} activit${activityCount === 1 ? 'y' : 'ies'}`,
+      });
+    }
+    if (incidentCount > 0) {
+      summaryItems.push({
+        icon: LOG_TYPES.behavior.icon,
+        label: `${incidentCount} incident${incidentCount === 1 ? '' : 's'}`,
+      });
+    }
+
+    return summaryItems.length > 0 ? summaryItems : null;
+  }, [getEntryDate, getEntryPresentation, summarizeMoodLabel, visibleEntries]);
 
   // Note: entries are already pre-filtered; grouping by period is optional and not used here.
 
@@ -396,30 +588,10 @@ const UnifiedTimeline = ({
             >
               Timeline
             </Typography>
-            {streakLabel ? (
-              <Box
-                sx={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 0.6,
-                  px: 1.15,
-                  py: 0.7,
-                  borderRadius: '9999px',
-                  bgcolor: colors.landing.sageLight,
-                  border: `1px solid ${colors.landing.borderLight}`,
-                  color: colors.landing.heroText,
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                <Typography sx={{ fontSize: '0.76rem', fontWeight: 800, letterSpacing: '-0.01em', lineHeight: 1 }}>
-                  {streakLabel}
-                </Typography>
-              </Box>
-            ) : null}
           </Box>
           
           {/* Basic Summary */}
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{ color: TEXT_SECONDARY }}>
             {summary.totalEntries} entries
             {summary.lastActivityTime && ` • Last activity at ${summary.lastActivityTime}`}
           </Typography>
@@ -427,10 +599,10 @@ const UnifiedTimeline = ({
           {/* Care Owner Enhanced Summary */}
           {userRole === USER_ROLES.CARE_OWNER && summary.roleBreakdown && (
             <Box sx={{ mt: 1.5, pt: 1.5, borderTop: "1px solid", borderColor: "divider" }}>
-              <Typography variant="body2" sx={{ fontWeight: 500, mb: 0.5 }} color="primary">
+              <Typography variant="body2" sx={{ fontWeight: 500, mb: 0.5, color: TEXT_PRIMARY }}>
                 👑 Team Contributions Today
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{ color: TEXT_SECONDARY }}>
                 {summary.roleBreakdown.totalContributors} contributor{summary.roleBreakdown.totalContributors !== 1 ? 's' : ''}
                 {summary.roleBreakdown.byRole[USER_ROLES.CARE_PARTNER] && 
                   ` • ${summary.roleBreakdown.byRole[USER_ROLES.CARE_PARTNER]} from Care Partners`}
@@ -444,267 +616,225 @@ const UnifiedTimeline = ({
         </Box>
       )}
 
+      {showDaySummary && todaySummary && visibleEntries.length > 0 ? (
+        <Box
+          sx={{
+            mt: 1.25,
+            mb: 1.1,
+            px: { xs: 0.25, md: 0.5 },
+          }}
+        >
+          <Typography
+            variant="caption"
+            sx={{
+              display: 'block',
+              mb: 0.55,
+              fontSize: '0.66rem',
+              fontWeight: 900,
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              color: TEXT_MUTED,
+            }}
+          >
+            Today Summary
+          </Typography>
+
+          <Box
+            sx={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              gap: 0.85,
+              fontSize: '0.84rem',
+              lineHeight: 1.4,
+              color: TEXT_PRIMARY,
+            }}
+          >
+            {todaySummary.map((item, index) => (
+              <Box
+                key={`${item.label}-${index}`}
+                component="span"
+                sx={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 0.45,
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                }}
+              >
+                <Typography component="span" sx={{ fontSize: '0.92rem', lineHeight: 1 }}>
+                  {item.icon}
+                </Typography>
+                <Typography
+                  component="span"
+                  sx={{
+                    fontSize: '0.84rem',
+                    fontWeight: 700,
+                    lineHeight: 1.15,
+                    color: TEXT_SECONDARY,
+                  }}
+                >
+                  {item.label}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        </Box>
+      ) : null}
+
       {/* Timeline Content */}
       {visibleEntries.length === 0 ? (
-        // Empty state
-        mobileTimeLayout ? (
+        <Box
+          onClick={onEmptyStateClick}
+          onKeyDown={(event) => {
+            if ((event.key === "Enter" || event.key === " ") && onEmptyStateClick) {
+              event.preventDefault();
+              onEmptyStateClick();
+            }
+          }}
+          role={onEmptyStateClick ? "button" : undefined}
+          tabIndex={onEmptyStateClick ? 0 : undefined}
+          sx={{
+            minHeight: mobileTimelineMinHeight,
+            textAlign: "center",
+            py: { xs: 1.75, md: 2.25 },
+            px: { xs: 1.5, md: 2 },
+            borderRadius: '14px',
+            cursor: onEmptyStateClick ? "pointer" : "default",
+            transition: "background-color 0.2s ease, box-shadow 0.2s ease",
+            "&:hover": onEmptyStateClick
+              ? {
+                  backgroundColor: "action.hover",
+                  boxShadow: `0 2px 8px ${colors.app.cards.shadowPanel}`,
+                }
+              : undefined,
+            "&:focus-visible": onEmptyStateClick
+              ? {
+                  outline: "2px solid",
+                  outlineColor: "primary.main",
+                  outlineOffset: 2,
+                }
+              : undefined,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 1,
+            maxWidth: 520,
+            mx: 'auto',
+          }}
+        >
           <Box
-            onClick={onEmptyStateClick}
-            onKeyDown={(event) => {
-              if ((event.key === "Enter" || event.key === " ") && onEmptyStateClick) {
-                event.preventDefault();
-                onEmptyStateClick();
-              }
-            }}
-            role={onEmptyStateClick ? "button" : undefined}
-            tabIndex={onEmptyStateClick ? 0 : undefined}
             sx={{
-              minHeight: mobileTimelineMinHeight,
-              textAlign: "center",
-              py: { xs: 1.75, md: 2.25 },
-              px: { xs: 1.5, md: 2 },
-              borderRadius: '14px',
-              cursor: onEmptyStateClick ? "pointer" : "default",
-              transition: "background-color 0.2s ease, box-shadow 0.2s ease",
-              "&:hover": onEmptyStateClick
-                ? {
-                    backgroundColor: "action.hover",
-                    boxShadow: `0 2px 8px ${colors.app.cards.shadowPanel}`,
-                  }
-                : undefined,
-              "&:focus-visible": onEmptyStateClick
-                ? {
-                    outline: "2px solid",
-                    outlineColor: "primary.main",
-                    outlineOffset: 2,
-                  }
-                : undefined,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 1,
-              maxWidth: 520,
-              mx: 'auto',
+              width: 46,
+              height: 46,
+              borderRadius: '9999px',
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: colors.landing.sageLight,
+              color: colors.brand.ink,
+              border: `1px solid ${colors.landing.borderLight}`,
+              boxShadow: `0 8px 18px ${colors.landing.shadowSoft}`,
             }}
           >
-            <Box
-              sx={{
-                width: 46,
-                height: 46,
-                borderRadius: '9999px',
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                backgroundColor: colors.landing.sageLight,
-                color: colors.brand.ink,
-                border: `1px solid ${colors.landing.borderLight}`,
-                boxShadow: `0 8px 18px ${colors.landing.shadowSoft}`,
-              }}
-            >
-              <FavoriteBorderOutlinedIcon sx={{ fontSize: 24 }} />
-            </Box>
-            <Typography variant="body1" sx={{ fontWeight: 700, mb: 0.25, color: colors.landing.heroText, textAlign: 'center' }}>
-              {childDisplayName}&apos;s day is a blank canvas!
-            </Typography>
-            <Typography
-              variant="caption"
-              sx={{
-                fontSize: "0.76rem",
-                lineHeight: 1.45,
-                color: colors.landing.textMuted,
-                maxWidth: 250,
-                mx: "auto",
-                textAlign: 'center',
-              }}
-            >
-              Whenever you're ready, use the buttons above to record a moment.
-            </Typography>
+            <FavoriteBorderOutlinedIcon sx={{ fontSize: 24 }} />
           </Box>
-        ) : (
-          <Box
-            onClick={onEmptyStateClick}
-            onKeyDown={(event) => {
-              if ((event.key === "Enter" || event.key === " ") && onEmptyStateClick) {
-                event.preventDefault();
-                onEmptyStateClick();
-              }
-            }}
-            role={onEmptyStateClick ? "button" : undefined}
-            tabIndex={onEmptyStateClick ? 0 : undefined}
+            <Typography variant="body1" sx={{ fontWeight: 700, mb: 0.25, color: TEXT_PRIMARY, textAlign: 'center' }}>
+            {childDisplayName}&apos;s day is a blank canvas!
+          </Typography>
+          <Typography
+            variant="caption"
             sx={{
-              minHeight: mobileTimelineMinHeight,
-              textAlign: "center",
-              py: { xs: 1.75, md: 2.25 },
-              px: { xs: 1.5, md: 2 },
-              borderRadius: '14px',
-              cursor: onEmptyStateClick ? "pointer" : "default",
-              transition: "background-color 0.2s ease, box-shadow 0.2s ease",
-              "&:hover": onEmptyStateClick
-                ? {
-                    backgroundColor: "action.hover",
-                    boxShadow: `0 2px 8px ${colors.app.cards.shadowPanel}`,
-                  }
-                : undefined,
-              "&:focus-visible": onEmptyStateClick
-                ? {
-                    outline: "2px solid",
-                    outlineColor: "primary.main",
-                    outlineOffset: 2,
-                  }
-                : undefined,
+              fontSize: "0.76rem",
+              lineHeight: 1.45,
+              color: TEXT_SECONDARY,
+              maxWidth: 250,
+              mx: "auto",
+              textAlign: 'center',
             }}
           >
-            <Box
-              sx={{
-                width: 48,
-                height: 48,
-                borderRadius: '9999px',
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                backgroundColor: colors.landing.sageLight,
-                color: colors.brand.ink,
-                border: `1px solid ${colors.landing.borderLight}`,
-                boxShadow: `0 8px 18px ${colors.landing.shadowSoft}`,
-                mb: 0.75,
-              }}
-            >
-              <FavoriteBorderOutlinedIcon sx={{ fontSize: 24 }} />
-            </Box>
-            <Typography
-              variant="body1"
-              sx={{
-                fontWeight: 700,
-                mb: 0.5,
-                color: colors.landing.heroText,
-                fontSize: '1.05rem',
-                lineHeight: 1.25,
-                textAlign: 'center',
-              }}
-            >
-              {childDisplayName}&apos;s day is a blank canvas!
-            </Typography>
-            <Typography
-              variant="caption"
-              sx={{
-                fontSize: "0.76rem",
-                lineHeight: 1.45,
-                color: colors.landing.textMuted,
-                maxWidth: 250,
-                mx: "auto",
-                textAlign: 'center',
-              }}
-            >
-              Whenever you're ready, use the buttons above to record a moment.
-            </Typography>
-          </Box>
-        )
+            Whenever you're ready, use the buttons above to record a moment.
+          </Typography>
+        </Box>
       ) : (
-        // Vertical Timeline with color-coded dots
-        mobileTimeLayout ? (
+        <Box
+          sx={{
+            mt: 1.25,
+            minHeight: mobileTimelineMinHeight,
+            px: { xs: 0, md: 0.5 },
+            backgroundColor: '#FFFFFF',
+            borderRadius: '16px',
+            overflow: 'visible',
+          }}
+        >
           <Box
             sx={{
-              mt: 2,
-              minHeight: mobileTimelineMinHeight,
-              px: { xs: 0, md: 0.5 },
-              backgroundColor: colors.app.cards.background,
-              borderRadius: '14px',
-              overflow: 'visible',
+              maxHeight: mobileTimeLayout ? 'none' : { xs: 360, md: 520 },
+              overflowY: mobileTimeLayout ? 'visible' : 'auto',
+              pr: mobileTimeLayout ? 0 : 0.5,
+              '&::-webkit-scrollbar': mobileTimeLayout
+                ? undefined
+                : {
+                    width: 8,
+                  },
+              '&::-webkit-scrollbar-thumb': mobileTimeLayout
+                ? undefined
+                : {
+                    backgroundColor: colors.app.cards.shadowHover,
+                    borderRadius: 999,
+                  },
             }}
           >
-              <Stack spacing={0} role="list">
-                {visibleEntries.map((entry, entryIndex) => {
-                  if (!entry) {
-                    return null;
-                  }
+            <Stack spacing={0.65} role="list">
+              {timelineBlocks.map((block, blockIndex) => (
+                <Box key={block.key} role="listitem" sx={{ width: '100%' }}>
+                  {block.timeLabel ? (
+                    <Typography
+                    sx={{
+                      fontSize: '0.66rem',
+                      fontWeight: 900,
+                      letterSpacing: '0.10em',
+                      textTransform: 'uppercase',
+                      color: TEXT_SECONDARY,
+                      px: 0.25,
+                      pb: 0.45,
+                    }}
+                    >
+                      {block.timeLabel}
+                    </Typography>
+                  ) : null}
 
-                const timestamp = new Date(entry.timestamp);
-                  const timeString = timestamp.toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  });
-                  const presentation = getEntryPresentation(entry);
-
-                return (
-                  <UnifiedTimelineEntry
-                    key={`${entry.type}-${entry.id}-${entryIndex}`}
-                    entry={entry}
-                    presentation={presentation}
-                    timeString={timeString}
-                    isLast={entryIndex === visibleEntries.length - 1}
-                    showActions={true}
-                    onEditEntry={() => handleStartEdit(entry)}
-                    onDeleteEntry={() => handleDeleteEntry(entry)}
-                    actionMenuDisabled={Boolean(actionLoadingId)}
-                    isEditing={editingEntryId === entry.id}
-                    editText={editText}
-                    onEditTextChange={setEditText}
-                    onSaveEdit={() => handleSaveEdit(entry)}
-                    onCancelEdit={handleCancelEdit}
-                  />
-                );
-              })}
+                  <Stack spacing={0.45} role="list">
+                    {block.items.map((item, itemIndex) => {
+                      const { entry, presentation, key } = item;
+                      const isLastBlock = blockIndex === timelineBlocks.length - 1;
+                      const isLastItem = itemIndex === block.items.length - 1;
+                      return (
+                        <UnifiedTimelineEntry
+                          key={key}
+                          isLast={isLastBlock && isLastItem}
+                          entry={entry}
+                          presentation={presentation}
+                          timeString={null}
+                          showActions={true}
+                          onEditEntry={() => handleStartEdit(entry)}
+                          onDeleteEntry={() => handleDeleteEntry(entry)}
+                          actionMenuDisabled={Boolean(actionLoadingId)}
+                          isEditing={editingEntryId === entry.id}
+                          editText={editText}
+                          onEditTextChange={setEditText}
+                          onSaveEdit={() => handleSaveEdit(entry)}
+                          onCancelEdit={handleCancelEdit}
+                        />
+                      );
+                    })}
+                  </Stack>
+                </Box>
+              ))}
             </Stack>
           </Box>
-        ) : (
-          <Box
-            sx={{
-              position: "relative",
-              mt: 2,
-              minHeight: mobileTimelineMinHeight,
-            }}
-          >
-            <Box
-              sx={{
-                maxHeight: { xs: 360, md: 520 },
-                overflowY: 'auto',
-                pr: 0.5,
-                '&::-webkit-scrollbar': {
-                  width: 8,
-                },
-                '&::-webkit-scrollbar-thumb': {
-                  backgroundColor: colors.app.cards.shadowHover,
-                  borderRadius: 999,
-                },
-              }}
-            >
-              <Stack spacing={0} role="list">
-                {visibleEntries.map((entry, entryIndex) => {
-                  if (!entry) {
-                    return null;
-                  }
-
-                  const timestamp = new Date(entry.timestamp);
-                  const timeString = timestamp.toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  });
-                  const presentation = getEntryPresentation(entry);
-
-                  return (
-                    <UnifiedTimelineEntry
-                      key={`${entry.type}-${entry.id}-${entryIndex}`}
-                      isLast={entryIndex === visibleEntries.length - 1}
-                      entry={entry}
-                      presentation={presentation}
-                      timeString={timeString}
-                      showActions={true}
-                      onEditEntry={() => handleStartEdit(entry)}
-                      onDeleteEntry={() => handleDeleteEntry(entry)}
-                      actionMenuDisabled={Boolean(actionLoadingId)}
-                      isEditing={editingEntryId === entry.id}
-                      editText={editText}
-                      onEditTextChange={setEditText}
-                      onSaveEdit={() => handleSaveEdit(entry)}
-                      onCancelEdit={handleCancelEdit}
-                    />
-                  );
-                })}
-              </Stack>
-            </Box>
-          </Box>
-        )
+        </Box>
       )}
 
     </Box>

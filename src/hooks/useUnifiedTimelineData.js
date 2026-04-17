@@ -81,6 +81,18 @@ const normalizeIncidentCategory = (incidentConfig, incidentType) => {
 };
 
 const buildDailyLogTitle = (data, categoryMeta) => {
+  if ((data.category === 'medication' || data.logCategory === 'medication') && (
+    data.medicationName
+    || data.medicationDetails?.medicationName
+    || data.medicationDetails?.name
+  )) {
+    return String(
+      data.medicationName
+      || data.medicationDetails?.medicationName
+      || data.medicationDetails?.name
+    ).trim();
+  }
+
   if (data.titlePrefix?.trim()) {
     return data.titlePrefix.trim();
   }
@@ -252,65 +264,87 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
         return;
       }
 
-      const categoryMeta = entry.collection === 'dailyCare'
-        ? getQuickNoteMeta({
-            ...entry,
-            category: 'activity',
-            actionType: entry.actionType || 'activity',
-          })
-        : getQuickNoteMeta(entry);
       const isBehaviorStyleEntry = isBehaviorIncidentEntry(entry);
       const isDailyCareActivity = entry.collection === 'dailyCare' && entry.actionType === 'activity';
+      const isMoodEntry = entry.collection === 'dailyCare' && entry.actionType === 'mood';
+      const categoryMeta = isMoodEntry
+        ? getTimelineMetaForCategory('mood')
+        : (entry.collection === 'dailyCare'
+          ? getQuickNoteMeta({
+              ...entry,
+              category: 'activity',
+              actionType: entry.actionType || 'activity',
+            })
+          : getQuickNoteMeta(entry));
       const incidentSnapshot = entry.contextSnapshot || entry.incidentData?.contextSnapshot || null;
       const notesText = entry.notes || entry.incidentData?.notes || null;
       const severityLabel = entry.severityLabel || entry.incidentData?.severityLabel || null;
       const triggerSummary = entry.triggerSummary || entry.incidentData?.triggerSummary || null;
+      const moodValue = entry.value || entry.data?.level || entry.mood || entry.moodLevel || entry.title || 'Calm';
       const optimisticDailyLog = {
         ...entry,
         logCategory: categoryMeta.category || entry.logCategory || categoryMeta.type,
         timestamp: entryTimestamp,
         type: isBehaviorStyleEntry
           ? 'behavior'
+          : isMoodEntry
+            ? 'mood'
           : isDailyCareActivity
             ? 'dailyHabit'
             : categoryMeta.type,
         timelineType: isBehaviorStyleEntry
           ? 'incident'
+          : isMoodEntry
+            ? 'mood'
           : isDailyCareActivity
             ? 'dailyHabit'
             : categoryMeta.timelineType,
         title: isDailyCareActivity
           ? 'Activity'
+          : isMoodEntry
+            ? String(moodValue)
           : getQuickDailyLogTitle(entry, categoryMeta),
         titlePrefix: categoryMeta.titlePrefix,
         color: isBehaviorStyleEntry
           ? LOG_TYPES.behavior.palette.dot
+          : isMoodEntry
+            ? LOG_TYPES.mood.palette.dot
           : isDailyCareActivity
             ? (entry.activityThemeColor || entry.categoryColor || categoryMeta.color)
             : categoryMeta.color,
         categoryIcon: isBehaviorStyleEntry
           ? LOG_TYPES.behavior.icon
+          : isMoodEntry
+            ? LOG_TYPES.mood.icon
           : isDailyCareActivity
             ? (entry.activityThemeIcon || entry.categoryIcon || categoryMeta.icon)
             : categoryMeta.icon,
         incidentStyle: isBehaviorStyleEntry,
-        entryType: isBehaviorStyleEntry ? 'incident' : (isDailyCareActivity ? 'dailyHabit' : entry.entryType),
+        entryType: isBehaviorStyleEntry ? 'incident' : (isMoodEntry ? 'mood' : (isDailyCareActivity ? 'dailyHabit' : entry.entryType)),
         contextSnapshot: incidentSnapshot,
         incidentData: entry.incidentData || {},
         severity: entry.severity,
         severityLabel,
         triggerSummary,
         remedy: entry.remedy || entry.incidentData?.remedy || null,
-        incidentCategoryId: isBehaviorStyleEntry ? 'behavior' : entry.incidentCategoryId,
+        incidentCategoryId: isBehaviorStyleEntry ? 'behavior' : (isMoodEntry ? 'mood' : entry.incidentCategoryId),
         incidentCategoryLabel: isBehaviorStyleEntry
           ? 'Behavior'
+          : isMoodEntry
+            ? 'Mood'
           : (isDailyCareActivity ? 'Activity' : entry.incidentCategoryLabel),
         incidentCategoryColor: isBehaviorStyleEntry
           ? LOG_TYPES.behavior.palette.dot
+          : isMoodEntry
+            ? LOG_TYPES.mood.palette.dot
           : (isDailyCareActivity ? (entry.activityThemeColor || entry.categoryColor || categoryMeta.color) : entry.incidentCategoryColor),
         incidentCategoryIcon: isBehaviorStyleEntry
           ? LOG_TYPES.behavior.icon
+          : isMoodEntry
+            ? LOG_TYPES.mood.icon
           : (isDailyCareActivity ? (entry.activityThemeIcon || entry.categoryIcon || categoryMeta.icon) : entry.incidentCategoryIcon),
+        moodValue: isMoodEntry ? String(moodValue) : entry.moodValue,
+        moodEmoji: isMoodEntry ? LOG_TYPES.mood.icon : entry.moodEmoji,
         isImportantMoment: !!entry.importantMoment,
         ...getEntryUser(entry),
       };
@@ -462,8 +496,23 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
           category: categoryType.category,
           title: dailyLog.importantMoment
             ? 'Important Moment'
-            : (isBehaviorIncident ? 'Behavior' : (dailyLog.titlePrefix || dailyLog.title || categoryMeta.titlePrefix || LOG_TYPES.log.displayLabel)),
+            : (isBehaviorIncident
+              ? 'Behavior'
+              : (
+                categoryType.category === 'medication'
+                  ? dailyLog.medicationName
+                    || dailyLog.title
+                    || dailyLog.titlePrefix
+                    || categoryMeta.titlePrefix
+                    || LOG_TYPES.log.displayLabel
+                  : (dailyLog.titlePrefix || dailyLog.title || categoryMeta.titlePrefix || LOG_TYPES.log.displayLabel)
+              )),
           titlePrefix: dailyLog.titlePrefix || categoryMeta.titlePrefix || null,
+          medicationName: dailyLog.medicationName || dailyLog.medicationDetails?.medicationName || dailyLog.medicationDetails?.name || null,
+          medicationScheduleDose: dailyLog.medicationScheduleDose || dailyLog.medicationDetails?.dosage || dailyLog.medicationDetails?.dose || dailyLog.dosage || dailyLog.dose || null,
+          medicationScheduleUnit: dailyLog.medicationScheduleUnit || dailyLog.medicationDetails?.unit || dailyLog.unit || null,
+          medicationScheduleTime: dailyLog.medicationScheduleTime || dailyLog.time || null,
+          medicationCategory: dailyLog.medicationCategory || dailyLog.medicationFrequency || null,
           color: isBehaviorIncident ? LOG_TYPES.behavior.palette.dot : categoryMeta.color,
           categoryIcon: isBehaviorIncident ? LOG_TYPES.behavior.icon : categoryMeta.icon,
           text: dailyLog.text,
@@ -497,28 +546,41 @@ export const useUnifiedTimelineData = (childId, selectedDate, filters = {}) => {
       ...childFilteredEntries.dailyHabits.map(habit => {
         const habitType = Object.values(HABIT_TYPES).find(({ id }) => id === habit.categoryId);
         const isActivityHabit = habit.actionType === 'activity' || habit.categoryId === 'activity';
+        const isMoodHabit = habit.actionType === 'mood' || habit.categoryId === 'mood';
+        const moodValue = habit.value || habit.data?.level || habit.mood || habit.moodLevel || habit.title || 'Calm';
+        const categoryLabel = isMoodHabit
+          ? String(moodValue)
+          : (isActivityHabit
+            ? 'Activity'
+            : (habit.categoryLabel || habitType?.label || 'Daily Habit'));
+        const categoryColor = isMoodHabit
+          ? LOG_TYPES.mood.palette.dot
+          : (isActivityHabit
+            ? LOG_TYPES.activity.palette.dot
+            : (habitType?.color || '#64748B'));
+        const categoryIcon = isMoodHabit
+          ? LOG_TYPES.mood.icon
+          : (isActivityHabit
+            ? LOG_TYPES.activity.icon
+            : (HABIT_CATEGORY_ICON_MAP[habit.categoryId] || '📝'));
 
         return {
           id: habit.id,
-          type: 'dailyHabit',
+          type: isMoodHabit ? 'mood' : 'dailyHabit',
           collection: 'dailyCare',
           timestamp: habit.timestamp?.toDate ? habit.timestamp.toDate() : new Date(habit.timestamp),
-          categoryId: habit.categoryId,
-          categoryLabel: isActivityHabit
-            ? 'Activity'
-            : (habit.categoryLabel || habitType?.label || 'Daily Habit'),
-          categoryColor: isActivityHabit
-            ? LOG_TYPES.activity.palette.dot
-            : (habitType?.color || '#64748B'),
-          categoryIcon: isActivityHabit
-            ? LOG_TYPES.activity.icon
-            : (HABIT_CATEGORY_ICON_MAP[habit.categoryId] || '📝'),
-          level: habit.level,
+          categoryId: isMoodHabit ? 'mood' : habit.categoryId,
+          categoryLabel,
+          categoryColor,
+          categoryIcon,
+          level: isMoodHabit ? moodValue : habit.level,
           notes: habit.notes,
           mediaUrls: habit.mediaUrls,
           actionType: habit.actionType || null,
           activityThemeLabel: habit.activityThemeLabel || habit.data?.activityThemeLabel || null,
           activityThemeColor: habit.activityThemeColor || habit.data?.activityThemeColor || null,
+          moodValue: isMoodHabit ? String(moodValue) : habit.moodValue,
+          moodEmoji: isMoodHabit ? LOG_TYPES.mood.icon : habit.moodEmoji,
           ...getEntryUser(habit),
         };
       }),

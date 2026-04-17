@@ -19,6 +19,12 @@ import StyledButton from '../../../components/UI/StyledButton';
 import { auth, db } from '../../../services/firebase';
 import { fetchMedications } from '../../../services/medicationService';
 import colors from '../../../assets/theme/colors';
+import MedicationDuplicateWarningDialog from './MedicationDuplicateWarningDialog';
+import {
+  detectPossibleMedicationDuplicate,
+  fetchMedicationLogsForChildDate,
+  normalizeMedicationLogRecord,
+} from '../../../services/medicationLogDuplicateService';
 
 const getDefaultBackfillDate = () => {
   const nextDate = new Date();
@@ -109,6 +115,7 @@ const MedicationBackfillDialog = ({
   const [status, setStatus] = useState('taken');
   const [datePickerAnchor, setDatePickerAnchor] = useState(null);
   const [showDateField, setShowDateField] = useState(false);
+  const [duplicatePrompt, setDuplicatePrompt] = useState(null);
 
   useEffect(() => {
     let active = true;
@@ -145,6 +152,7 @@ const MedicationBackfillDialog = ({
 
   useEffect(() => {
     if (!open) {
+      setDuplicatePrompt(null);
       return;
     }
 
@@ -258,6 +266,8 @@ const MedicationBackfillDialog = ({
       medicationScheduleTime: scheduleTime,
       medicationScheduleDose: selectedSchedule?.dose || selectedMedication?.dose || '',
       medicationScheduleUnit: selectedSchedule?.unit || selectedMedication?.unit || 'mg',
+      medicationCategory: selectedMedication?.category || '',
+      medicationFrequency: selectedMedication?.frequency || '',
       scheduledFor: scheduledTimestamp.toISOString(),
       takenAt: status === 'taken' ? takenTimestamp.toISOString() : null,
       backfill: true,
@@ -270,7 +280,7 @@ const MedicationBackfillDialog = ({
     };
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async ({ allowDuplicate = false } = {}) => {
     if (!childId || !authUser?.uid || !selectedMedication) {
       return;
     }
@@ -278,6 +288,39 @@ const MedicationBackfillDialog = ({
     setLoading(true);
     try {
       const docData = buildBackfillDoc();
+      if (!allowDuplicate) {
+        const existingLogs = await fetchMedicationLogsForChildDate(childId, selectedDate);
+        const duplicateInfo = detectPossibleMedicationDuplicate(
+          normalizeMedicationLogRecord({
+            ...docData,
+            childId,
+            medicationId: selectedMedication?.id || '',
+            medicationName: selectedMedication?.name || '',
+            medicationScheduleId: selectedSchedule?.id || '',
+            medicationScheduleIndex: 0,
+            medicationScheduleTime: selectedSchedule?.time || selectedTime || '',
+            medicationScheduleDose: selectedSchedule?.dose || selectedMedication?.dose || '',
+            medicationScheduleUnit: selectedSchedule?.unit || selectedMedication?.unit || 'mg',
+            medicationCategory: selectedMedication?.category || '',
+            medicationFrequency: selectedMedication?.frequency || '',
+          }),
+          existingLogs
+        );
+
+        if (duplicateInfo.matched) {
+          setDuplicatePrompt({
+            reason: duplicateInfo.reason,
+            medicationName: selectedMedication?.name || '',
+            existingTimeLabel: duplicateInfo.existingLog?.timeLabel || '',
+            onConfirm: () => {
+              setDuplicatePrompt(null);
+              handleSubmit({ allowDuplicate: true });
+            },
+          });
+          return;
+        }
+      }
+
       const docRef = await addDoc(collection(db, 'dailyLogs'), docData);
       await updateDoc(docRef, {
         status: status === 'taken' ? 'taken' : 'missed',
@@ -452,10 +495,19 @@ const MedicationBackfillDialog = ({
             width: '100%',
             '&:hover': { bgcolor: colors.brand.deep },
           }}
-        >
-          {loading ? 'Saving...' : 'Save entry'}
+      >
+        {loading ? 'Saving...' : 'Save entry'}
         </StyledButton>
       </Stack>
+
+      <MedicationDuplicateWarningDialog
+        open={Boolean(duplicatePrompt)}
+        reason={duplicatePrompt?.reason || ''}
+        medicationName={duplicatePrompt?.medicationName || ''}
+        existingTimeLabel={duplicatePrompt?.existingTimeLabel || ''}
+        onKeepExisting={() => setDuplicatePrompt(null)}
+        onLogAgainAnyway={() => duplicatePrompt?.onConfirm?.()}
+      />
 
       <Popover
         open={Boolean(datePickerAnchor)}

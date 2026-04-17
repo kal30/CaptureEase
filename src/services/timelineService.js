@@ -104,6 +104,7 @@ const normalizeTimelineEntry = (doc, type) => {
     : null;
   const careData = type === 'daily_care' ? (data.data || {}) : {};
   const isActivity = type === 'daily_care' && data.actionType === 'activity';
+  const isMood = type === 'daily_care' && data.actionType === 'mood';
   
   // Extract common fields with fallbacks for different data structures
   let title = '';
@@ -163,6 +164,10 @@ const normalizeTimelineEntry = (doc, type) => {
       if (isActivity) {
         title = 'Activity';
         content = activityContent;
+      } else if (isMood) {
+        const moodValue = careData.level || careData.value || data.value || data.mood || data.moodLevel || data.title || 'Calm';
+        title = String(moodValue).trim() || 'Mood';
+        content = String(moodValue).trim() || 'Mood';
       } else {
         const valueLabel = activityTypeLabel || careData.value || careData.mood || careData.rating || careData.engagement || 'Update';
         title = `${actionType.charAt(0).toUpperCase() + actionType.slice(1)}: ${valueLabel}`;
@@ -194,16 +199,19 @@ const normalizeTimelineEntry = (doc, type) => {
     timestamp,
     author: data.author || data.createdBy || data.userId || 'Unknown',
     ...(noteMeta || typeConfig),
-    category: data.category || (isActivity ? 'activity' : 'log'),
-    categoryLabel: isActivity ? 'Activity' : (data.categoryLabel || noteMeta?.label || typeConfig.label || null),
+    category: data.category || (isMood ? 'mood' : (isActivity ? 'activity' : 'log')),
+    categoryLabel: isMood
+      ? title
+      : (isActivity ? 'Activity' : (data.categoryLabel || noteMeta?.label || typeConfig.label || null)),
     categoryColor: isActivity
       ? (careData.activityThemeColor || careData.categoryColor || LOG_TYPES.activity.palette.dot)
-      : (data.categoryColor || noteMeta?.color || typeConfig.color || null),
-    categoryIcon: isActivity ? LOG_TYPES.activity.icon : (data.categoryIcon || noteMeta?.icon || typeConfig.icon || null),
+      : (isMood ? LOG_TYPES.mood.palette.dot : (data.categoryColor || noteMeta?.color || typeConfig.color || null)),
+    categoryIcon: isActivity ? LOG_TYPES.activity.icon : (isMood ? LOG_TYPES.mood.icon : (data.categoryIcon || noteMeta?.icon || typeConfig.icon || null)),
     timelineType: noteMeta?.type || type,
     activityThemeKey: careData.activityThemeKey || data.activityThemeKey || null,
     activityThemeColor: careData.activityThemeColor || data.activityThemeColor || null,
     activityThemeLabel: careData.activityThemeLabel || data.activityThemeLabel || null,
+    moodValue: isMood ? title : data.moodValue || null,
     originalData: data // Keep original data for detailed views
   };
 };

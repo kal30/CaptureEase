@@ -357,17 +357,12 @@ const DesktopDashboardWorkspace = ({
             child={activeChild}
             userRole={hook.getUserRoleForChild?.(activeChild?.id)}
             careTeamCount={(activeChild?.users?.members || []).length}
-            onAddChild={() => handleDesktopAction('add-child')}
             onGoToCareTeam={(child) => onGoToCareTeam?.(child)}
             onEditChild={() => handleDesktopAction('edit-child')}
             onInviteTeamMember={() => handleDesktopAction('invite-caregiver')}
-            onDeleteChild={() => handleDesktopAction('delete-child')}
             onPrepForTherapy={() => handleDesktopAction('prep-for-therapy')}
             onImportLogs={() => handleDesktopAction('import-logs')}
-            onStartChat={() => handleDesktopAction('start-chat')}
-            showWarning
-            showSwitchChild={false}
-            showAddChild
+            onOpenBathroomLog={onOpenBathroomLog}
           />
         </Box>
       </Menu>

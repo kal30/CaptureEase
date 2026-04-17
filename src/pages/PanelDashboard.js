@@ -58,6 +58,7 @@ const PanelDashboard = () => {
   const dashboardHandleShowCareReport = hook.handleShowCareReport;
   const dashboardSetShowAddChildModal = hook.setShowAddChildModal;
   const importFileInputRef = useRef(null);
+  const [showImportStartModal, setShowImportStartModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [importRows, setImportRows] = useState([]);
   const [importInitialChildId, setImportInitialChildId] = useState('');
@@ -66,6 +67,8 @@ const PanelDashboard = () => {
   const [showMedicalLogPanel, setShowMedicalLogPanel] = useState(false);
   const [medicalLogChild, setMedicalLogChild] = useState(null);
   const [editChildInitialStep, setEditChildInitialStep] = useState(1);
+  const [careToastOpen, setCareToastOpen] = useState(false);
+  const [careToastMessage, setCareToastMessage] = useState('');
   useMountDebug('PanelDashboard');
   trackRenderDebug('PanelDashboard', {
     isMobile,
@@ -77,11 +80,15 @@ const PanelDashboard = () => {
 
   const handleImportLogsClick = useCallback((child) => {
     setImportInitialChildId(child?.id || hook.currentChildId || hook.children[0]?.id || '');
+    setShowImportStartModal(true);
+  }, [hook.children, hook.currentChildId]);
+
+  const handleLaunchImportPicker = useCallback(() => {
     if (importFileInputRef.current) {
       importFileInputRef.current.value = '';
       importFileInputRef.current.click();
     }
-  }, [hook.children, hook.currentChildId]);
+  }, []);
 
   const handleViewImportedCalendar = (child) => {
     const childId = child?.id || importInitialChildId;
@@ -207,6 +214,24 @@ const PanelDashboard = () => {
     handleImportLogsClick,
   ]);
 
+  useEffect(() => {
+    const handleDailyCareSaved = (event) => {
+      const message = event?.detail?.message;
+      if (!message) {
+        return;
+      }
+
+      setCareToastMessage(message);
+      setCareToastOpen(true);
+    };
+
+    window.addEventListener('captureez:daily-care-saved', handleDailyCareSaved);
+
+    return () => {
+      window.removeEventListener('captureez:daily-care-saved', handleDailyCareSaved);
+    };
+  }, []);
+
   const handleImportFileChange = async (event) => {
     const file = event.target.files?.[0];
     event.target.value = '';
@@ -214,6 +239,8 @@ const PanelDashboard = () => {
     if (!file) {
       return;
     }
+
+    setShowImportStartModal(false);
 
     try {
       setImportLoading(true);
@@ -653,6 +680,50 @@ const PanelDashboard = () => {
         }}
       />
 
+      <Modal
+        open={showImportStartModal}
+        onClose={() => setShowImportStartModal(false)}
+        sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', p: 2 }}
+      >
+        <Box
+          sx={{
+            width: '100%',
+            maxWidth: 420,
+            bgcolor: 'background.paper',
+            border: '1px solid',
+            borderColor: 'divider',
+            borderRadius: 3,
+            px: 3,
+            py: 3,
+            boxShadow: '0 24px 60px rgba(15, 23, 42, 0.14)',
+            textAlign: 'left',
+          }}
+        >
+          <Typography sx={{ fontSize: '1.15rem', fontWeight: 800, color: colors.landing.heroText, mb: 0.75 }}>
+            Import Past Data
+          </Typography>
+          <Typography sx={{ fontSize: '0.92rem', lineHeight: 1.6, color: colors.landing.textMuted, mb: 2.5 }}>
+            Upload logs from Excel or documents to get started.
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 1.25, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+            <Button
+              variant="text"
+              onClick={() => setShowImportStartModal(false)}
+              sx={{ px: 1.5 }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              onClick={handleLaunchImportPicker}
+              sx={{ px: 2.2 }}
+            >
+              Upload File
+            </Button>
+          </Box>
+        </Box>
+      </Modal>
+
       <BulkMedicationLogDialog
         open={showMedicalLogPanel}
         childId={medicalLogChild?.id || hook.currentChildId}
@@ -694,6 +765,22 @@ const PanelDashboard = () => {
       >
         <Alert onClose={() => setImportError('')} severity="error" variant="filled" sx={{ width: '100%' }}>
           {importError}
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={careToastOpen}
+        autoHideDuration={1800}
+        onClose={() => setCareToastOpen(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={() => setCareToastOpen(false)}
+          severity="success"
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {careToastMessage}
         </Alert>
       </Snackbar>
     </Container>

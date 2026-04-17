@@ -6,8 +6,11 @@ import {
   IconButton,
   ButtonBase,
   Button,
-  Slider,
   Chip,
+  Menu,
+  MenuItem,
+  Popover,
+  Slider,
   TextField,
   FormControl,
   FormLabel,
@@ -26,7 +29,6 @@ import LogFormShell from '../UI/LogFormShell';
 import { getDailyCareConfig } from './dailyCareConfig';
 import {
   ACTIVITY_TYPE_OPTIONS,
-  ACTIVITY_TYPE_SECTIONS,
   getActivityTheme,
   getPrimaryActivityTheme,
 } from '../../constants/activityThemes';
@@ -66,12 +68,47 @@ const calculateSleepDuration = (bedtime, wakeTime) => {
   return Number.isFinite(hours) ? Number(hours.toFixed(1)) : null;
 };
 
+const formatTimeLabel = (date) => {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+    return '';
+  }
+
+  return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+};
+
+const formatTimeInputValue = (date = new Date()) => {
+  const safeDate = date instanceof Date ? date : new Date(date);
+  if (Number.isNaN(safeDate.getTime())) {
+    return '12:00';
+  }
+
+  return [
+    String(safeDate.getHours()).padStart(2, '0'),
+    String(safeDate.getMinutes()).padStart(2, '0'),
+  ].join(':');
+};
+
+const buildTimestampFromTimeInput = (timeValue, baseDate = new Date()) => {
+  if (!timeValue) {
+    return baseDate instanceof Date && !Number.isNaN(baseDate.getTime()) ? new Date(baseDate) : new Date();
+  }
+
+  const [hours, minutes] = String(timeValue).split(':').map(Number);
+  if (Number.isNaN(hours) || Number.isNaN(minutes)) {
+    return baseDate instanceof Date && !Number.isNaN(baseDate.getTime()) ? new Date(baseDate) : new Date();
+  }
+
+  const next = baseDate instanceof Date && !Number.isNaN(baseDate.getTime()) ? new Date(baseDate) : new Date();
+  next.setHours(hours, minutes, 0, 0);
+  return next;
+};
+
 const ACTIVITY_ENGAGEMENT_OPTIONS = [
-  { value: 1, label: 'Refused', emoji: '😴', hint: 'Very low engagement' },
-  { value: 2, label: 'Passive', emoji: '😐', hint: 'Needed lots of prompting' },
-  { value: 3, label: 'Participated', emoji: '🙂', hint: 'Joined in some of the time' },
-  { value: 4, label: 'Engaged', emoji: '😊', hint: 'Good engagement' },
-  { value: 5, label: 'Focused', emoji: '🤩', hint: 'Great engagement!' },
+  { value: 1, label: 'Low', emoji: '◔' },
+  { value: 2, label: 'Okay', emoji: '◑' },
+  { value: 3, label: 'Good', emoji: '◕' },
+  { value: 4, label: 'Great', emoji: '◉' },
+  { value: 5, label: 'Fully engaged', emoji: '★' },
 ];
 
 const DailyCareModal = ({ open, onClose, child, actionType, onComplete }) => {
@@ -80,6 +117,12 @@ const DailyCareModal = ({ open, onClose, child, actionType, onComplete }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({});
   const [engagementValue, setEngagementValue] = useState(null);
+  const [activityTimestamp, setActivityTimestamp] = useState(() => new Date());
+  const [activityTimingMode, setActivityTimingMode] = useState('now');
+  const [activityTimingMenuAnchor, setActivityTimingMenuAnchor] = useState(null);
+  const [activityTimingPopoverAnchor, setActivityTimingPopoverAnchor] = useState(null);
+  const [activityCustomTimeOpen, setActivityCustomTimeOpen] = useState(false);
+  const [activityCustomTime, setActivityCustomTime] = useState(() => formatTimeInputValue(new Date()));
   const isSinglePageFlow = actionType === 'activity';
 
   // Get configuration for the specific action type
@@ -110,6 +153,12 @@ const DailyCareModal = ({ open, onClose, child, actionType, onComplete }) => {
     const defaultFormData = getDefaultFormData(config?.fields || []);
     setFormData(defaultFormData);
     setEngagementValue(defaultFormData.engagement ?? null);
+    setActivityTimestamp(new Date());
+    setActivityTimingMode('now');
+    setActivityTimingMenuAnchor(null);
+    setActivityTimingPopoverAnchor(null);
+    setActivityCustomTimeOpen(false);
+    setActivityCustomTime(formatTimeInputValue(new Date()));
     careForm.reset();
   }, [actionType, open]); // Remove careForm from dependencies to prevent infinite loop
 
@@ -117,6 +166,12 @@ const DailyCareModal = ({ open, onClose, child, actionType, onComplete }) => {
   const handleClose = () => {
     setCurrentStep(0);
     setFormData(getDefaultFormData(config?.fields || []));
+    setActivityTimestamp(new Date());
+    setActivityTimingMode('now');
+    setActivityTimingMenuAnchor(null);
+    setActivityTimingPopoverAnchor(null);
+    setActivityCustomTimeOpen(false);
+    setActivityCustomTime(formatTimeInputValue(new Date()));
     careForm.reset();
     onClose();
   };
@@ -165,6 +220,7 @@ const DailyCareModal = ({ open, onClose, child, actionType, onComplete }) => {
           ? calculateSleepDuration(formData.bedtime, formData.wakeTime)
           : null;
         const primaryActivityTheme = getPrimaryActivityTheme(formData.activityTypes || []);
+        const resolvedTimestamp = actionType === 'activity' ? activityTimestamp : new Date();
         const entryData = {
           childId: child.id,
           actionType,
@@ -182,9 +238,14 @@ const DailyCareModal = ({ open, onClose, child, actionType, onComplete }) => {
                   activityThemeKey: primaryActivityTheme.key,
                   activityThemeColor: primaryActivityTheme.color,
                   activityThemeLabel: primaryActivityTheme.label,
+                  activityTiming: {
+                    mode: activityTimingMode,
+                    recordedAt: resolvedTimestamp.toISOString(),
+                    durationMinutes: null,
+                  },
                 }
               : formData,
-          timestamp: new Date(),
+          timestamp: resolvedTimestamp,
           completedBy: 'current_user', // TODO: Get from auth context
         };
 
@@ -210,13 +271,56 @@ const DailyCareModal = ({ open, onClose, child, actionType, onComplete }) => {
     }
   };
 
+  const handleActivityTimingSelect = (mode) => {
+    const now = new Date();
+
+    if (mode === 'now') {
+      setActivityTimestamp(now);
+      setActivityTimingMode('now');
+      setActivityTimingMenuAnchor(null);
+      return;
+    }
+
+    if (mode === 'minus_5') {
+      setActivityTimestamp(new Date(now.getTime() - 5 * 60 * 1000));
+      setActivityTimingMode('minus_5');
+      setActivityTimingMenuAnchor(null);
+      return;
+    }
+
+    if (mode === 'minus_15') {
+      setActivityTimestamp(new Date(now.getTime() - 15 * 60 * 1000));
+      setActivityTimingMode('minus_15');
+      setActivityTimingMenuAnchor(null);
+      return;
+    }
+
+    if (mode === 'custom') {
+      setActivityCustomTime(formatTimeInputValue(activityTimestamp));
+      setActivityCustomTimeOpen(true);
+      setActivityTimingPopoverAnchor(activityTimingMenuAnchor);
+      setActivityTimingMenuAnchor(null);
+    }
+  };
+
+  const handleApplyCustomActivityTime = () => {
+    const customTimestamp = buildTimestampFromTimeInput(activityCustomTime, new Date());
+    setActivityTimestamp(customTimestamp);
+    setActivityTimingMode('custom');
+    setActivityCustomTimeOpen(false);
+    setActivityTimingPopoverAnchor(null);
+  };
+
+  const activityTimingLabel = (() => {
+    if (activityTimingMode === 'minus_5') return '5 min ago';
+    if (activityTimingMode === 'minus_15') return '15 min ago';
+    if (activityTimingMode === 'custom') return `Custom · ${formatTimeLabel(activityTimestamp)}`;
+    return 'Just now';
+  })();
+
   const renderField = (field) => {
     const value = formData[field.key];
     const primaryActivityTheme = getPrimaryActivityTheme(formData.activityTypes || []);
-    const groupedActivityOptions = ACTIVITY_TYPE_SECTIONS.map((section) => ({
-      ...section,
-      options: ACTIVITY_TYPE_OPTIONS.filter((option) => option.group === section.key),
-    }));
 
     switch (field.type) {
       case 'scale':
@@ -224,21 +328,16 @@ const DailyCareModal = ({ open, onClose, child, actionType, onComplete }) => {
           const selectedValue = engagementValue ?? (value ?? null);
           const selectedActivityTheme = primaryActivityTheme;
           return (
-            <Box sx={{ mt: 1, pb: 0.25 }}>
+            <Box sx={{ mt: 0.65, pb: 0.1 }}>
               <Box
                 sx={{
-                  display: 'flex',
-                  alignItems: 'stretch',
-                  justifyContent: 'center',
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(5, minmax(0, 1fr))',
+                  gap: 0.6,
                   width: '100%',
-                  border: '1px solid #E2E8F0',
-                  borderRadius: 999,
-                  overflow: 'hidden',
-                  bgcolor: '#FFFFFF',
-                  boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)',
                 }}
               >
-                {ACTIVITY_ENGAGEMENT_OPTIONS.map((option, index) => {
+                {ACTIVITY_ENGAGEMENT_OPTIONS.map((option) => {
                   const selected = Number(selectedValue) === option.value;
                   return (
                     <ButtonBase
@@ -248,37 +347,38 @@ const DailyCareModal = ({ open, onClose, child, actionType, onComplete }) => {
                       component="button"
                       type="button"
                       sx={{
-                        flex: '1 1 0',
                         minWidth: 0,
-                        minHeight: { xs: 54, sm: 58 },
-                        px: { xs: 0.5, sm: 0.75 },
-                        py: 0.85,
-                        borderRadius: 0,
-                        border: '0',
-                        borderRight: index === ACTIVITY_ENGAGEMENT_OPTIONS.length - 1 ? 'none' : '1px solid #E2E8F0',
+                        minHeight: 54,
+                        px: 0.6,
+                        py: 0.75,
+                        borderRadius: '18px',
+                        border: '1px solid',
+                        borderColor: selected ? selectedActivityTheme.color : '#E2E8F0',
                         bgcolor: selected ? selectedActivityTheme.softBg : '#FFFFFF',
                         color: selected ? selectedActivityTheme.dark : '#64748B',
                         textTransform: 'none',
                         appearance: 'none',
                         cursor: 'pointer',
-                        boxShadow: selected ? `inset 0 0 0 1px ${selectedActivityTheme.color}` : 'none',
-                        transition: 'background-color 200ms ease, color 200ms ease, box-shadow 200ms ease, transform 200ms ease',
+                        boxShadow: selected ? `0 0 0 1px ${selectedActivityTheme.color} inset` : 'none',
+                        transition: 'background-color 180ms ease, color 180ms ease, box-shadow 180ms ease, transform 140ms ease',
                         '&:hover': {
                           bgcolor: selected ? selectedActivityTheme.softBg : '#F8FAFC',
-                          boxShadow: selected ? `inset 0 0 0 1px ${selectedActivityTheme.color}` : 'none',
                           transform: 'translateY(-1px)',
+                        },
+                        '&:active': {
+                          transform: 'scale(0.98)',
                         },
                         '&:focus-visible': {
                           outline: `2px solid ${selectedActivityTheme.color}`,
                           outlineOffset: 2,
                         },
                       }}
-                      >
-                      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1.05 }}>
-                        <Typography component="span" sx={{ fontSize: '1rem', lineHeight: 1, mb: 0.15 }}>
+                    >
+                      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 0.25, width: '100%', minWidth: 0 }}>
+                        <Typography component="span" sx={{ fontSize: '0.82rem', lineHeight: 1, opacity: 0.8 }}>
                           {option.emoji}
                         </Typography>
-                        <Typography component="span" sx={{ fontSize: '0.78rem', fontWeight: selected ? 700 : 600, lineHeight: 1.1 }}>
+                        <Typography component="span" sx={{ fontSize: option.value === 5 ? '0.71rem' : '0.77rem', fontWeight: selected ? 700 : 600, lineHeight: 1.05, textAlign: 'center' }}>
                           {option.label}
                         </Typography>
                       </Box>
@@ -286,20 +386,6 @@ const DailyCareModal = ({ open, onClose, child, actionType, onComplete }) => {
                   );
                 })}
               </Box>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{
-                  mt: 0.85,
-                  minHeight: 20,
-                  fontSize: '0.85rem',
-                  color: selectedActivityTheme.dark,
-                  fontWeight: 600,
-                  textAlign: 'center',
-                }}
-              >
-                {ACTIVITY_ENGAGEMENT_OPTIONS.find((option) => option.value === Number(selectedValue))?.hint || 'Select an engagement level'}
-              </Typography>
             </Box>
           );
         }
@@ -340,91 +426,82 @@ const DailyCareModal = ({ open, onClose, child, actionType, onComplete }) => {
       case 'chips':
         if (isSinglePageFlow && field.key === 'activityTypes') {
           return (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1.25, pb: 0.15 }}>
-              {groupedActivityOptions.map((section) => (
-                <Box key={section.key} sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
-                  <Typography
-                    variant="caption"
+            <Box sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: 'repeat(3, minmax(0, 1fr))', sm: 'repeat(4, minmax(0, 1fr))' },
+              gap: 0.75,
+              mt: 1,
+            }}>
+              {ACTIVITY_TYPE_OPTIONS.map((option) => {
+                const isSelected = field.multiple
+                  ? value?.includes(option.value)
+                  : value === option.value;
+                const activityTheme = getActivityTheme(option.themeKey || option.value);
+
+                return (
+                  <ButtonBase
+                    key={option.value}
+                    component="button"
+                    type="button"
+                    aria-pressed={isSelected}
+                    onClick={() => {
+                      if (field.multiple) {
+                        const current = value || [];
+                        const newValue = isSelected
+                          ? current.filter((v) => v !== option.value)
+                          : [...current, option.value];
+                        handleFieldChange(field.key, newValue);
+                      } else {
+                        handleFieldChange(field.key, option.value);
+                      }
+                    }}
                     sx={{
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.08em',
-                      fontSize: '0.7rem',
-                      fontWeight: 700,
-                      color: 'text.secondary',
+                      minHeight: 40,
+                      px: 0.8,
+                      py: 0.6,
+                      borderRadius: '14px',
+                      border: '1px solid',
+                      borderColor: isSelected ? activityTheme.color : '#E2E8F0',
+                      bgcolor: isSelected ? activityTheme.softBg : '#FFFFFF',
+                      color: isSelected ? activityTheme.dark : '#64748B',
+                      textTransform: 'none',
+                      appearance: 'none',
+                      cursor: 'pointer',
+                      boxShadow: isSelected ? `inset 0 0 0 1px ${activityTheme.color}` : 'none',
+                      transition: 'background-color 180ms ease, color 180ms ease, border-color 180ms ease, transform 140ms ease, box-shadow 180ms ease',
+                      '&:hover': {
+                        bgcolor: isSelected ? activityTheme.softBg : '#F8FAFC',
+                        borderColor: isSelected ? activityTheme.color : '#CBD5E1',
+                        transform: 'translateY(-1px)',
+                      },
+                      '&:focus-visible': {
+                        outline: `2px solid ${activityTheme.color}`,
+                        outlineOffset: 2,
+                      },
                     }}
                   >
-                    {section.label}
-                  </Typography>
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
-                    {section.options.map((option) => {
-                      const isSelected = field.multiple
-                        ? value?.includes(option.value)
-                        : value === option.value;
-                      const activityTheme = getActivityTheme(option.themeKey || option.value);
-
-                      return (
-                        <ButtonBase
-                          key={option.value}
-                          component="button"
-                          type="button"
-                          aria-pressed={isSelected}
-                          onClick={() => {
-                            if (field.multiple) {
-                              const current = value || [];
-                              const newValue = isSelected
-                                ? current.filter((v) => v !== option.value)
-                                : [...current, option.value];
-                              handleFieldChange(field.key, newValue);
-                            } else {
-                              handleFieldChange(field.key, option.value);
-                            }
-                          }}
-                          sx={{
-                            flex: '0 1 auto',
-                            minHeight: 38,
-                            px: 1.15,
-                            py: 0.65,
-                            borderRadius: 999,
-                            border: '1px solid',
-                            borderColor: isSelected ? activityTheme.color : '#E2E8F0',
-                            bgcolor: isSelected ? activityTheme.softBg : '#FFFFFF',
-                            color: isSelected ? activityTheme.dark : '#64748B',
-                            textTransform: 'none',
-                            appearance: 'none',
-                            cursor: 'pointer',
-                            boxShadow: isSelected ? `inset 0 0 0 1px ${activityTheme.color}` : 'none',
-                            transition: 'background-color 200ms ease, color 200ms ease, border-color 200ms ease, transform 200ms ease, box-shadow 200ms ease',
-                            '&:hover': {
-                              bgcolor: isSelected ? activityTheme.softBg : '#F8FAFC',
-                              borderColor: isSelected ? activityTheme.color : '#CBD5E1',
-                              transform: 'translateY(-1px)',
-                            },
-                            '&:focus-visible': {
-                              outline: `2px solid ${activityTheme.color}`,
-                              outlineOffset: 2,
-                            },
-                          }}
-                        >
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.6 }}>
-                            <Typography component="span" sx={{ fontSize: '0.95rem', lineHeight: 1, flexShrink: 0 }}>
-                              {option.emoji}
-                            </Typography>
-                            <Typography component="span" sx={{ fontSize: '0.84rem', fontWeight: isSelected ? 700 : 600, lineHeight: 1 }}>
-                              {option.label}
-                            </Typography>
-                          </Box>
-                        </ButtonBase>
-                      );
-                    })}
-                  </Box>
-                </Box>
-              ))}
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.55, width: '100%', minWidth: 0 }}>
+                      <Typography component="span" sx={{ fontSize: '0.92rem', lineHeight: 1, flexShrink: 0, opacity: 0.95 }}>
+                        {option.emoji}
+                      </Typography>
+                      <Typography component="span" sx={{ fontSize: '0.84rem', fontWeight: isSelected ? 700 : 600, lineHeight: 1.05, textAlign: 'center' }}>
+                        {option.label}
+                      </Typography>
+                    </Box>
+                  </ButtonBase>
+                );
+              })}
             </Box>
           );
         }
 
         return (
-          <Box sx={{ display: 'flex', flexWrap: field.wrap === false ? 'nowrap' : 'wrap', gap: 1, mt: 2, overflowX: field.wrap === false ? 'auto' : 'visible', pb: field.wrap === false ? 0.5 : 0 }}>
+          <Box sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: 'repeat(3, minmax(0, 1fr))', sm: 'repeat(4, minmax(0, 1fr))' },
+            gap: 0.75,
+            mt: 1,
+          }}>
             {field.options?.map((option) => {
               const isSelected = field.multiple
                 ? value?.includes(option.value)
@@ -433,13 +510,34 @@ const DailyCareModal = ({ open, onClose, child, actionType, onComplete }) => {
               return (
                 <Chip
                   key={option.value}
-                  label={`${option.emoji} ${option.label}`}
+                  label={
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5, width: '100%' }}>
+                      <Typography component="span" sx={{ fontSize: '0.95rem', lineHeight: 1 }}>
+                        {option.emoji}
+                      </Typography>
+                      <Typography component="span" sx={{ fontSize: '0.84rem', fontWeight: isSelected ? 700 : 600, lineHeight: 1, textAlign: 'center' }}>
+                        {option.label}
+                      </Typography>
+                    </Box>
+                  }
                   variant={isSelected ? 'filled' : 'outlined'}
+                  clickable
                   sx={{
-                    fontSize: '0.875rem',
+                    height: 40,
+                    width: '100%',
+                    borderRadius: '14px',
+                    px: 0.75,
+                    py: 0,
                     color: isSelected ? 'white' : theme.palette.dailyCare.primary,
                     bgcolor: isSelected ? theme.palette.dailyCare.primary : 'transparent',
                     borderColor: theme.palette.dailyCare.primary,
+                    '& .MuiChip-label': {
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '100%',
+                      px: 0,
+                    },
                     '&:hover': { 
                       transform: 'scale(1.05)',
                       bgcolor: isSelected ? theme.palette.dailyCare.hover : theme.palette.dailyCare.background,
@@ -573,16 +671,100 @@ const DailyCareModal = ({ open, onClose, child, actionType, onComplete }) => {
           </Alert>
         )}
 
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {actionType === 'activity' ? (
+          <>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
+              <ButtonBase
+                onClick={(event) => setActivityTimingMenuAnchor(event.currentTarget)}
+                sx={{
+                  px: 1.05,
+                  py: 0.55,
+                  borderRadius: 999,
+                  border: '1px solid',
+                  borderColor: '#E2E8F0',
+                  bgcolor: '#FFFFFF',
+                  color: '#475569',
+                  boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)',
+                }}
+              >
+                <Typography sx={{ fontSize: '0.76rem', fontWeight: 700, lineHeight: 1 }}>
+                  {activityTimingLabel} ▾
+                </Typography>
+              </ButtonBase>
+            </Box>
+
+            <Menu
+              anchorEl={activityTimingMenuAnchor}
+              open={Boolean(activityTimingMenuAnchor)}
+              onClose={() => setActivityTimingMenuAnchor(null)}
+              PaperProps={{
+                sx: {
+                  mt: 1,
+                  borderRadius: 2,
+                  boxShadow: '0 14px 40px rgba(15, 23, 42, 0.14)',
+                  minWidth: 180,
+                },
+              }}
+            >
+              <MenuItem onClick={() => handleActivityTimingSelect('now')}>Just now</MenuItem>
+              <MenuItem onClick={() => handleActivityTimingSelect('minus_5')}>5 min ago</MenuItem>
+              <MenuItem onClick={() => handleActivityTimingSelect('minus_15')}>15 min ago</MenuItem>
+              <MenuItem onClick={() => handleActivityTimingSelect('custom')}>Custom time</MenuItem>
+            </Menu>
+
+            <Popover
+              open={activityCustomTimeOpen}
+              onClose={() => setActivityCustomTimeOpen(false)}
+              anchorEl={activityTimingPopoverAnchor}
+              anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+              transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+              PaperProps={{
+                sx: {
+                  mt: 1,
+                  p: 2,
+                  borderRadius: 2,
+                  minWidth: 240,
+                  boxShadow: '0 16px 44px rgba(15, 23, 42, 0.16)',
+                },
+              }}
+            >
+              <Typography sx={{ fontSize: '0.78rem', fontWeight: 700, color: 'text.secondary', mb: 1 }}>
+                Choose a time
+              </Typography>
+              <TextField
+                type="time"
+                fullWidth
+                size="small"
+                value={activityCustomTime}
+                onChange={(event) => setActivityCustomTime(event.target.value)}
+                sx={{ mb: 1.5 }}
+                inputProps={{ step: 60 }}
+              />
+              <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                <Button size="small" onClick={() => {
+                  setActivityCustomTimeOpen(false);
+                  setActivityTimingPopoverAnchor(null);
+                }}>
+                  Cancel
+                </Button>
+                <Button size="small" variant="contained" onClick={handleApplyCustomActivityTime}>
+                  Set time
+                </Button>
+              </Box>
+            </Popover>
+          </>
+        ) : null}
+
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.35 }}>
           {fieldsToRender.map((field, index) => (
             <Fade in={true} key={field.key || index}>
               <Box sx={{ minHeight: 'auto' }}>
                 <FormControl fullWidth>
-                  <FormLabel sx={{ mb: 0.75, fontWeight: 600, fontSize: '0.98rem', color: 'text.primary' }}>
+                  <FormLabel sx={{ mb: 0.45, fontWeight: 600, fontSize: '0.98rem', color: 'text.primary' }}>
                     {field.label}
                   </FormLabel>
                   {field.description && (
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1.25, fontSize: '0.9rem' }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 0.75, fontSize: '0.9rem' }}>
                       {field.description}
                     </Typography>
                   )}
@@ -660,16 +842,16 @@ const DailyCareModal = ({ open, onClose, child, actionType, onComplete }) => {
         )}
 
         {/* Current Field */}
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: isSinglePageFlow ? 2 : 0 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: isSinglePageFlow ? 1.35 : 0 }}>
           {fieldsToRender.map((field, index) => (
             <Fade in={true} key={field.key || index}>
               <Box sx={{ minHeight: isSinglePageFlow ? 'auto' : 200 }}>
                 <FormControl fullWidth>
-                  <FormLabel sx={{ mb: isSinglePageFlow ? 0.75 : 1, fontWeight: 600, fontSize: isSinglePageFlow ? '0.98rem' : '1.1rem', color: 'text.primary' }}>
+                  <FormLabel sx={{ mb: isSinglePageFlow ? 0.45 : 1, fontWeight: 600, fontSize: isSinglePageFlow ? '0.98rem' : '1.1rem', color: 'text.primary' }}>
                     {field.label}
                   </FormLabel>
                   {field.description && (
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: isSinglePageFlow ? 1.25 : 2, fontSize: isSinglePageFlow ? '0.9rem' : '0.875rem' }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: isSinglePageFlow ? 0.75 : 2, fontSize: isSinglePageFlow ? '0.9rem' : '0.875rem' }}>
                       {field.description}
                     </Typography>
                   )}

@@ -1,7 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import {
+  Avatar,
   Box,
+  ButtonBase,
   CircularProgress,
   Button,
   FormControl,
@@ -12,37 +14,33 @@ import {
   Paper,
   Popover,
   MenuItem,
+  InputAdornment,
   Select,
   SwipeableDrawer,
   FormControlLabel,
   Switch,
+  TextField,
+  Snackbar,
   Typography,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import {
   CalendarToday as CalendarTodayIcon,
-  DeleteOutline as DeleteIcon,
-  EditOutlined as EditIcon,
-  FileUpload as FileUploadIcon,
   ForumOutlined as ForumOutlinedIcon,
-  GroupsOutlined as GroupsIcon,
-  FilterListRounded as FilterListRoundedIcon,
   KeyboardArrowDown as KeyboardArrowDownIcon,
   MenuOutlined as MenuIcon,
   Search as SearchIcon,
-  PriorityHigh as PriorityHighIcon,
 } from '@mui/icons-material';
-import { alpha } from '@mui/material/styles';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { PickersDay } from '@mui/x-date-pickers/PickersDay';
 import { ACTIVE_TIMELINE_DATE_STORAGE_KEY, useDashboardView } from '../shared/DashboardViewContext';
-import { ChildSwitcherPanel, ChildSwitcherTrigger } from '../shared/ChildSwitcher';
+import { ChildSwitcherPanel } from '../shared/ChildSwitcher';
 import { getTimelineEntryDate } from '../../../services/timeline/dateUtils';
 import ChildActionsMenuContent from '../shared/ChildActionsMenuContent';
-import TimelineHeaderControls from '../../Timeline/TimelineHeaderControls';
-import { getActiveTimelineFilterCount } from '../../Timeline/utils/filterCounts';
 import { USER_ROLES } from '../../../constants/roles';
+import { LOG_TYPES } from '../../../constants/logTypeRegistry';
 import UnifiedTimeline from '../../Timeline/UnifiedTimeline';
 import { getChildCareTeam } from '../../../services/childAccessService';
 import { auth } from '../../../services/firebase';
@@ -52,6 +50,8 @@ import colors from '../../../assets/theme/colors';
 import DashboardActionBoard from '../DashboardActionBoard';
 import { getE2EMockData, isE2EMockEnabled } from '../../../services/e2eMock';
 import { getChildProfileCompletion } from '../../../utils/profileCompletion';
+import { buildMoodDocId, logMood } from '../../../services/moodService';
+import { isBehaviorIncidentEntry } from '../../../constants/logTypeRegistry';
 
 const timelineUserRoleOptions = [
   { value: USER_ROLES.CARE_OWNER, label: 'Care Owner' },
@@ -60,36 +60,138 @@ const timelineUserRoleOptions = [
   { value: USER_ROLES.THERAPIST, label: 'Therapist' },
 ];
 
-const isSameDay = (dateA, dateB) => (
-  Boolean(dateA && dateB)
-  && dateA.getFullYear() === dateB.getFullYear()
-  && dateA.getMonth() === dateB.getMonth()
-  && dateA.getDate() === dateB.getDate()
-);
+const MOOD_OPTIONS = [
+  { key: 'down', emoji: '😢', label: 'Down', tint: '#D6D0F3', aliases: ['down', 'sad', 'bad', 'upset', 'tired'] },
+  { key: 'neutral', emoji: '😐', label: 'Neutral', tint: '#D7E4F2', aliases: ['neutral', 'okay', 'ok', 'fine', 'meh'] },
+  { key: 'calm', emoji: '🙂', label: 'Calm', tint: '#DDEEE4', aliases: ['calm', 'relaxed', 'peaceful', 'content'] },
+  { key: 'happy', emoji: '😄', label: 'Happy', tint: '#F7E1C9', aliases: ['happy', 'good', 'great', 'joyful', 'smiling'] },
+  { key: 'frustrated', emoji: '😡', label: 'Frustrated', tint: '#F8D1D5', aliases: ['frustrated', 'mad', 'angry', 'annoyed', 'stressed'] },
+];
 
-const formatStreakLabel = (streak = 0) => {
-  if (!streak || streak < 1) {
-    return '';
+const TEXT_PRIMARY = '#1F2937';
+const TEXT_SECONDARY = '#4B5563';
+const TEXT_MUTED = '#9CA3AF';
+
+const MOOD_DEBOUNCE_MS = 2500;
+const MOOD_COOLDOWN_MS = 10000;
+
+const getMoodOption = (value) => {
+  const normalized = String(value || '').trim().toLowerCase();
+  if (!normalized) {
+    return MOOD_OPTIONS[2];
   }
 
-  return `🔥 ${streak}-Day Streak`;
+  return MOOD_OPTIONS.find((option) => (
+    option.key === normalized
+    || option.label.toLowerCase() === normalized
+    || option.aliases.some((alias) => normalized.includes(alias))
+  )) || MOOD_OPTIONS[2];
 };
 
-const getTimelineHeaderLabel = (date = new Date()) => {
-  if (isSameDay(date, new Date())) {
-    return 'Today';
+const buildOptimisticMoodEntry = ({ childId, moodValue, moodOption }) => {
+  const now = new Date();
+  const moodDocId = buildMoodDocId(childId, now);
+
+  return {
+    id: moodDocId,
+    childId,
+    collection: 'dailyCare',
+    actionType: 'mood',
+    type: 'mood',
+    timelineType: 'mood',
+    category: 'mood',
+    logCategory: 'mood',
+    timestamp: now,
+    createdAt: now,
+    value: moodValue,
+    moodValue,
+    mood: moodValue,
+    title: moodValue,
+    titlePrefix: 'Mood',
+    content: moodValue,
+    text: moodValue,
+    data: {
+      level: moodValue,
+      value: moodValue,
+      source: 'mobile-dashboard',
+    },
+    icon: moodOption.emoji,
+    color: LOG_TYPES.mood.palette.dot,
+    categoryIcon: moodOption.emoji,
+    categoryColor: LOG_TYPES.mood.palette.dot,
+    incidentStyle: false,
+    entryType: 'mood',
+    incidentCategoryId: 'mood',
+    incidentCategoryLabel: 'Mood',
+    incidentCategoryColor: LOG_TYPES.mood.palette.dot,
+    incidentCategoryIcon: moodOption.emoji,
+    authorName: 'You',
+    loggedByUser: 'You',
+  };
+};
+
+const getEntryDate = (entry) => {
+  if (!entry) {
+    return null;
   }
 
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-  });
+  const candidate = getTimelineEntryDate(entry)
+    || (typeof entry.timestamp?.toDate === 'function' ? entry.timestamp.toDate() : null)
+    || new Date(entry.timestamp);
+
+  return candidate instanceof Date && !Number.isNaN(candidate.getTime()) ? candidate : null;
+};
+
+const getMoodSnapshot = (entries = []) => {
+  const latestMoodEntry = [...entries]
+    .map((entry) => ({ entry, date: getEntryDate(entry) }))
+    .filter(({ date }) => Boolean(date))
+    .sort((a, b) => b.date - a.date)
+    .map(({ entry }) => entry)
+    .find((entry) => {
+      const category = String(entry?.category || entry?.type || entry?.timelineType || entry?.actionType || entry?.logCategory || '').toLowerCase();
+      const text = String(
+        entry?.moodValue
+        || entry?.value
+        || entry?.data?.level
+        || entry?.title
+        || entry?.content
+        || entry?.text
+        || entry?.notes
+        || ''
+      ).toLowerCase();
+      return category === 'mood'
+        || category === 'mood_log'
+        || text.includes('mood')
+        || text.includes('calm')
+        || text.includes('happy')
+        || text.includes('neutral')
+        || text.includes('frustrated');
+    });
+
+  const rawMood = String(
+    latestMoodEntry?.moodValue
+    || latestMoodEntry?.data?.level
+    || latestMoodEntry?.value
+    || latestMoodEntry?.mood
+    || latestMoodEntry?.moodLevel
+    || latestMoodEntry?.content
+    || latestMoodEntry?.title
+    || 'Calm'
+  ).trim();
+  const matchedMood = getMoodOption(rawMood);
+
+  return {
+    key: matchedMood.key,
+    emoji: matchedMood.emoji,
+    label: matchedMood.label,
+    raw: rawMood,
+  };
 };
 
 const MobileCaptureDashboard = ({
   children = [],
   allEntries = {},
-  timelineSummary = {},
   getUserRoleForChild,
   onRefreshDashboard,
   onQuickEntry,
@@ -121,8 +223,17 @@ const MobileCaptureDashboard = ({
   const [timelineTagFilters, setTimelineTagFilters] = useState([]);
   const [timelineUserRoles, setTimelineUserRoles] = useState([]);
   const [timelineDatePickerAnchor, setTimelineDatePickerAnchor] = useState(null);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [pendingMoodKey, setPendingMoodKey] = useState(null);
+  const [moodPulseKey, setMoodPulseKey] = useState(null);
+  const [moodToastOpen, setMoodToastOpen] = useState(false);
+  const [moodToastMessage, setMoodToastMessage] = useState('');
+  const moodSaveTimerRef = useRef(null);
+  const moodPulseTimerRef = useRef(null);
+  const lastMoodPersistAtRef = useRef(0);
+  const pendingMoodValueRef = useRef(null);
   const timelineRef = useRef(null);
   const pullStateRef = useRef({
     startY: 0,
@@ -140,30 +251,53 @@ const MobileCaptureDashboard = ({
     () => getChildProfileCompletion(activeChild || {}),
     [activeChild]
   );
-  const activeChildSummary = useMemo(
-    () => timelineSummary?.[activeChild?.id] || timelineSummary || {},
-    [activeChild?.id, timelineSummary]
-  );
-  const activityStreakLabel = formatStreakLabel(activeChildSummary.activityStreak || 0);
-  const mobileStreakLabel = activityStreakLabel || 'No streak yet';
-  const timelineHeaderFilters = useMemo(() => ({
-    searchText: searchText || undefined,
-    entryTypes: activeEntryTypes.length > 0 ? activeEntryTypes : undefined,
-  }), [searchText, activeEntryTypes]);
-  const datesWithEntries = useMemo(() => {
-    const dateKeys = new Set();
+  const moodSnapshot = useMemo(() => getMoodSnapshot(activeChildEntries), [activeChildEntries]);
+  const snapshotMood = useMemo(() => getMoodOption(moodSnapshot.raw), [moodSnapshot.raw]);
+  const activeMood = useMemo(() => (
+    pendingMoodKey
+      ? MOOD_OPTIONS.find((option) => option.key === pendingMoodKey) || snapshotMood
+      : snapshotMood
+  ), [pendingMoodKey, snapshotMood]);
+  const calendarIndicators = useMemo(() => {
+    const indicatorMap = new Map();
 
     activeChildEntries.forEach((entry) => {
       if (!entry) return;
       const entryDate = getTimelineEntryDate(entry) || (entry.timestamp?.toDate?.() ? entry.timestamp.toDate() : new Date(entry.timestamp));
       if (Number.isNaN(entryDate.getTime())) return;
+
       const calendarKey = getCalendarDateKey(entryDate);
-      if (calendarKey) {
-        dateKeys.add(calendarKey);
+      if (!calendarKey) {
+        return;
       }
+
+      const category = String(
+        entry.collection
+        || entry.category
+        || entry.type
+        || entry.timelineType
+        || entry.actionType
+        || entry.logCategory
+        || ''
+      ).toLowerCase();
+
+      const hasActivity = category === 'activity'
+        || (entry.collection === 'dailyCare' && entry.actionType === 'activity');
+
+      const hasIncident = category === 'incident'
+        || category === 'behavior'
+        || entry.entryType === 'incident'
+        || Boolean(entry.incidentStyle)
+        || isBehaviorIncidentEntry(entry)
+        || entry.collection === 'incidents';
+
+      const nextValue = indicatorMap.get(calendarKey) || { hasActivity: false, hasIncident: false };
+      nextValue.hasActivity = nextValue.hasActivity || hasActivity;
+      nextValue.hasIncident = nextValue.hasIncident || hasIncident;
+      indicatorMap.set(calendarKey, nextValue);
     });
 
-    return dateKeys;
+    return indicatorMap;
   }, [activeChildEntries]);
   const activeChildCareTeam = useMemo(
     () => careTeamsByChildId[activeChild?.id] || [],
@@ -174,32 +308,19 @@ const MobileCaptureDashboard = ({
     () => activeChildCareTeam.some((member) => String(member?.role || '').toLowerCase() !== USER_ROLES.CARE_OWNER),
     [activeChildCareTeam]
   );
-  const activeChildWarningLabel = useMemo(() => {
-    const medicalProfile = activeChild?.medicalProfile || {};
-    const foodAllergies = Array.isArray(medicalProfile.foodAllergies) ? medicalProfile.foodAllergies : [];
-    const medicationDetails = Array.isArray(medicalProfile.medicationDetails) ? medicalProfile.medicationDetails : [];
-    const currentMedications = Array.isArray(medicalProfile.currentMedications) ? medicalProfile.currentMedications : [];
-
-    const firstAllergy = foodAllergies.find(Boolean);
-    if (firstAllergy) {
-      const label = String(firstAllergy).toLowerCase().includes('nut')
-        ? 'Nut Allergy'
-        : `${firstAllergy} Allergy`;
-      return label;
+  const activeChildInitial = (activeChild?.name?.trim()?.[0] || 'M').toUpperCase();
+  const activeChildMoodLabel = useMemo(() => {
+    const rawName = String(activeChild?.name || '').trim();
+    if (!rawName) {
+      return 'How is this child?';
     }
 
-    const firstMedication = medicationDetails.find(Boolean) || currentMedications.find(Boolean);
-    if (firstMedication) {
-      if (typeof firstMedication === 'string') {
-        return `Medication: ${firstMedication}`;
-      }
-      const name = firstMedication.name || firstMedication.medication || firstMedication.title || 'Medication';
-      const dosage = firstMedication.dosage || firstMedication.dose;
-      return `Medication: ${dosage ? `${name} ${dosage}` : name}`;
-    }
-
-    return 'Medical Info';
-  }, [activeChild?.medicalProfile]);
+    const firstName = rawName.split(/\s+/)[0] || rawName;
+    return `How is ${firstName}?`;
+  }, [activeChild?.name]);
+  const profileProgress = Math.max(0, Math.min(100, activeChildProfileCompletion || 0));
+  const todayLabel = 'Today';
+  const searchPlaceholder = `Search ${activeChild?.name || 'today'}...`;
 
   useEffect(() => {
     setSearchText('');
@@ -209,10 +330,42 @@ const MobileCaptureDashboard = ({
     setTimelineUserRoles([]);
     setTimelineFilterSheetOpen(false);
     setTimelineDatePickerAnchor(null);
+    setIsCalendarOpen(false);
     setMobileSwitchSheetOpen(false);
     setMobileActionsSheetOpen(false);
     setSelectedDate(new Date());
+    setPendingMoodKey(null);
+    setMoodPulseKey(null);
+    pendingMoodValueRef.current = null;
+    lastMoodPersistAtRef.current = 0;
+    if (moodSaveTimerRef.current) {
+      window.clearTimeout(moodSaveTimerRef.current);
+      moodSaveTimerRef.current = null;
+    }
+    if (moodPulseTimerRef.current) {
+      window.clearTimeout(moodPulseTimerRef.current);
+      moodPulseTimerRef.current = null;
+    }
   }, [activeChild?.id]);
+
+  useEffect(() => {
+    if (!pendingMoodKey) {
+      return;
+    }
+
+    if (pendingMoodKey === snapshotMood.key) {
+      setPendingMoodKey(null);
+    }
+  }, [pendingMoodKey, snapshotMood.key]);
+
+  useEffect(() => () => {
+    if (moodSaveTimerRef.current) {
+      window.clearTimeout(moodSaveTimerRef.current);
+    }
+    if (moodPulseTimerRef.current) {
+      window.clearTimeout(moodPulseTimerRef.current);
+    }
+  }, []);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -368,15 +521,6 @@ const MobileCaptureDashboard = ({
     };
   }, [onRefreshDashboard, isRefreshing]);
 
-  const hasTimelineEntries = (allEntries[activeChild?.id] || []).length > 0;
-  const timelineFilterCount = getActiveTimelineFilterCount({
-    searchText,
-    entryTypes: activeEntryTypes,
-    userRoles: timelineUserRoles,
-    importantOnly: timelineImportantOnly,
-    tagFilters: timelineTagFilters,
-  }, selectedDate);
-
   const availableTimelineTags = useMemo(() => {
     const tagMap = new Map();
 
@@ -412,16 +556,6 @@ const MobileCaptureDashboard = ({
     return null;
   }
 
-  const toggleTimelineEntryType = (typeKey) => {
-    setActiveEntryTypes((prev) => {
-      if (prev.includes(typeKey)) {
-        return prev.filter((key) => key !== typeKey);
-      }
-
-      return [...prev, typeKey];
-    });
-  };
-
   const openSwitchMenu = (event) => {
     onRefreshRoles?.();
     event?.preventDefault?.();
@@ -443,56 +577,71 @@ const MobileCaptureDashboard = ({
   const handleTimelineDatePreset = (dateValue) => {
     setSelectedDate(dateValue);
     setTimelineDatePickerAnchor(null);
-  };
-
-  const handleTimelineDatePickerOpen = (event) => {
-    setTimelineDatePickerAnchor(event.currentTarget);
+    setIsCalendarOpen(false);
   };
 
   const handleTimelineDatePickerClose = () => {
     setTimelineDatePickerAnchor(null);
+    setIsCalendarOpen(false);
+  };
+
+  const openTimelineCalendar = (event) => {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    setTimelineDatePickerAnchor(event.currentTarget);
+    setIsCalendarOpen(true);
   };
 
   const MobileCalendarDay = (props) => {
     const { day, outsideCurrentMonth, ...other } = props;
-    const hasEntries = datesWithEntries.has(getCalendarDateKey(day));
+    const dayKey = getCalendarDateKey(day);
+    const indicators = dayKey ? calendarIndicators.get(dayKey) : null;
 
     return (
       <Box sx={{ position: 'relative' }}>
         <PickersDay {...other} day={day} outsideCurrentMonth={outsideCurrentMonth} />
-        {hasEntries ? (
+        {(indicators?.hasActivity || indicators?.hasIncident) ? (
           <Box
             sx={{
               position: 'absolute',
               bottom: 4,
               left: '50%',
               transform: 'translateX(-50%)',
-              width: 7,
-              height: 7,
-              borderRadius: '50%',
-              bgcolor: colors.brand.deep,
-              border: `1px solid ${colors.landing.surface}`,
-              boxShadow: `0 0 0 1px ${colors.landing.surface}`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 0.35,
+              pointerEvents: 'none',
             }}
-          />
+          >
+            {indicators?.hasActivity ? (
+              <Box
+                sx={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: '50%',
+                  bgcolor: '#5FB6B2',
+                  border: `1px solid ${colors.landing.surface}`,
+                  boxShadow: `0 0 0 1px ${colors.landing.surface}`,
+                }}
+              />
+            ) : null}
+            {indicators?.hasIncident ? (
+              <Box
+                sx={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: '50%',
+                  bgcolor: '#D14343',
+                  border: `1px solid ${colors.landing.surface}`,
+                  boxShadow: `0 0 0 1px ${colors.landing.surface}`,
+                }}
+              />
+            ) : null}
+          </Box>
         ) : null}
       </Box>
     );
-  };
-
-  const handleAddCaregiver = () => {
-    closeMobileChildSheet();
-    onInviteTeamMember?.(activeChild?.id);
-  };
-
-  const handleTimelineHeaderFiltersChange = (nextFilters) => {
-    if (Object.prototype.hasOwnProperty.call(nextFilters, 'searchText')) {
-      setSearchText(nextFilters.searchText || '');
-    }
-
-    if (Object.prototype.hasOwnProperty.call(nextFilters, 'entryTypes')) {
-      setActiveEntryTypes(Array.isArray(nextFilters.entryTypes) ? nextFilters.entryTypes : []);
-    }
   };
 
   const toggleTimelineTagFilter = (tagKey) => {
@@ -503,14 +652,78 @@ const MobileCaptureDashboard = ({
     ));
   };
 
+  const handleMoodSelect = async (option) => {
+    if (!activeChild?.id) {
+      return;
+    }
+
+    const moodOption = option || MOOD_OPTIONS[2];
+    const moodValue = moodOption.label;
+    const now = Date.now();
+    setPendingMoodKey(moodOption.key);
+    setMoodPulseKey(moodOption.key);
+    pendingMoodValueRef.current = moodValue;
+
+    if (moodPulseTimerRef.current) {
+      window.clearTimeout(moodPulseTimerRef.current);
+    }
+    moodPulseTimerRef.current = window.setTimeout(() => {
+      setMoodPulseKey((current) => (current === moodOption.key ? null : current));
+    }, 220);
+
+    if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+      navigator.vibrate(10);
+    }
+
+    if (moodSaveTimerRef.current) {
+      window.clearTimeout(moodSaveTimerRef.current);
+    }
+
+    const elapsedSincePersist = now - (lastMoodPersistAtRef.current || 0);
+    const delay = Math.max(
+      MOOD_DEBOUNCE_MS,
+      elapsedSincePersist < MOOD_COOLDOWN_MS ? MOOD_COOLDOWN_MS - elapsedSincePersist : 0
+    );
+
+    moodSaveTimerRef.current = window.setTimeout(async () => {
+      const resolvedMoodValue = pendingMoodValueRef.current || moodValue;
+
+      try {
+        await logMood(activeChild.id, resolvedMoodValue);
+        lastMoodPersistAtRef.current = Date.now();
+
+        const optimisticMoodEntry = buildOptimisticMoodEntry({
+          childId: activeChild.id,
+          moodValue: resolvedMoodValue,
+          moodOption: getMoodOption(resolvedMoodValue),
+        });
+
+        window.dispatchEvent(new CustomEvent('captureez:timeline-entry-created', {
+          detail: optimisticMoodEntry,
+        }));
+
+        setMoodToastMessage('Mood logged ✓');
+        setMoodToastOpen(true);
+      } catch (error) {
+        console.error('Error logging mood from dashboard:', error);
+        window.dispatchEvent(new CustomEvent('captureez:timeline-refresh', {
+          detail: { childId: activeChild.id },
+        }));
+      } finally {
+        setPendingMoodKey(null);
+      }
+    }, delay);
+  };
+
   return (
     <Box
       ref={rootRef}
       sx={{
-        px: { xs: 1.1, sm: 1.5 },
+        px: { xs: 1.05, sm: 1.5 },
         pt: { xs: 1, sm: 1.25 },
         pb: 10,
         touchAction: 'pan-y',
+        bgcolor: '#FFFFFF',
       }}
     >
       <Box
@@ -547,31 +760,95 @@ const MobileCaptureDashboard = ({
         ) : null}
       </Box>
 
-      <Box
+      <Paper
+        elevation={0}
         sx={{
-          mb: 1.5,
-          bgcolor: 'transparent',
+          p: 1.25,
+          borderRadius: '22px',
+          border: `1px solid ${colors.landing.borderLight}`,
+          bgcolor: '#FFFFFF',
+          boxShadow: `0 10px 24px ${colors.landing.shadowSoft}`,
+          mb: 1.15,
         }}
       >
-        <Box
-          sx={{
-            px: 1.1,
-            py: 0.85,
-            backgroundColor: colors.landing.surfaceSoft,
-            color: colors.landing.heroText,
-            position: 'relative',
-            minHeight: 44,
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
-            <ChildSwitcherTrigger
-              child={activeChild}
-              onClick={openSwitchMenu}
-              showRole={false}
-              avatarSize={26}
-              completionPercent={activeChildProfileCompletion < 100 ? activeChildProfileCompletion : null}
-              onCompletionClick={() => onEditChild?.(activeChild)}
-            />
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1.15 }}>
+          <ButtonBase
+            onClick={openSwitchMenu}
+            sx={{
+              flex: 1,
+              minWidth: 0,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              textAlign: 'left',
+              borderRadius: '18px',
+              p: 0,
+            }}
+          >
+            <Avatar
+              sx={{
+                width: 46,
+                height: 46,
+                bgcolor: '#D9E7D7',
+                color: '#1F2937',
+                fontWeight: 900,
+                fontSize: '1rem',
+                border: `1px solid ${alpha(colors.brand.ink, 0.16)}`,
+                boxShadow: `0 6px 14px ${colors.landing.shadowSoft}`,
+              }}
+            >
+              {activeChildInitial}
+            </Avatar>
+
+            <Box sx={{ minWidth: 0, flex: 1 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.55, flexWrap: 'wrap' }}>
+                <Typography
+                sx={{
+                  fontSize: '1rem',
+                  lineHeight: 1.1,
+                  fontWeight: 900,
+                  color: TEXT_PRIMARY,
+                  textOverflow: 'ellipsis',
+                  overflow: 'hidden',
+                  whiteSpace: 'nowrap',
+                }}
+                >
+                  {activeChild?.name || 'Madison Bear'}
+                </Typography>
+                <Box
+                  sx={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 0.35,
+                    px: 0.65,
+                    py: 0.22,
+                    borderRadius: 999,
+                    bgcolor: '#F3F4F6',
+                    color: TEXT_PRIMARY,
+                  }}
+                >
+                  <Typography sx={{ fontSize: '0.78rem', lineHeight: 1 }}>{activeMood.emoji}</Typography>
+                  <Typography sx={{ fontSize: '0.68rem', fontWeight: 700, lineHeight: 1, color: TEXT_SECONDARY }}>
+                    {activeMood.label}
+                  </Typography>
+                </Box>
+              </Box>
+            </Box>
+          </ButtonBase>
+
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexShrink: 0 }}>
+            <Box sx={{ position: 'relative', width: 46, height: 46, display: 'grid', placeItems: 'center' }}>
+              <CircularProgress
+                variant="determinate"
+                value={profileProgress}
+                size={46}
+                thickness={4.2}
+                sx={{ color: colors.brand.ink, position: 'absolute', left: 0, top: 0 }}
+              />
+              <Typography sx={{ fontSize: '0.66rem', fontWeight: 900, color: TEXT_PRIMARY }}>
+                {profileProgress}%
+              </Typography>
+            </Box>
 
             {hasChatAvailable && onMessages ? (
               <IconButton
@@ -580,8 +857,8 @@ const MobileCaptureDashboard = ({
                 data-cy="mobile-child-chat"
                 sx={{
                   flexShrink: 0,
-                  width: 44,
-                  height: 44,
+                  width: 42,
+                  height: 42,
                   p: 0,
                   borderRadius: '14px',
                   color: colors.landing.heroText,
@@ -601,8 +878,8 @@ const MobileCaptureDashboard = ({
               data-cy="mobile-child-actions"
               sx={{
                 flexShrink: 0,
-                width: 44,
-                height: 44,
+                width: 42,
+                height: 42,
                 p: 0,
                 borderRadius: '14px',
                 color: '#64748B',
@@ -616,46 +893,176 @@ const MobileCaptureDashboard = ({
             </IconButton>
           </Box>
         </Box>
+      </Paper>
 
+      <Box sx={{ mb: 1.15 }}>
+        <Typography sx={{ fontSize: '0.9rem', fontWeight: 900, letterSpacing: '-0.01em', color: TEXT_PRIMARY, mb: 0.55 }}>
+          Quick Log
+        </Typography>
         <DashboardActionBoard
           child={activeChild}
           onTrack={onTrack}
           onOpenMedicalLog={onOpenMedicalLog}
           onOpenSleepLog={onOpenSleepLog}
           onOpenFoodLog={onOpenFoodLog}
-          onOpenBathroomLog={onOpenBathroomLog}
           onQuickEntry={onQuickEntry}
-          sx={{ mt: 1.25, mb: 2 }}
+          sx={{ mb: 0.55 }}
         />
+      </Box>
+
+      <Box
+        sx={{
+          px: 0.15,
+          py: 0.05,
+          mb: 0.65,
+        }}
+      >
+        <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.06em', color: TEXT_SECONDARY, mb: 0.3 }}>
+          {activeChildMoodLabel}
+        </Typography>
+        <Box sx={{ display: 'flex', gap: 1.45, overflowX: 'auto', pb: 0.05, WebkitOverflowScrolling: 'touch', alignItems: 'flex-start' }}>
+          {MOOD_OPTIONS.map((option) => {
+            const isSelected = option.key === activeMood.key;
+            const isPulsing = option.key === moodPulseKey;
+            return (
+              <ButtonBase
+                key={option.key}
+                onClick={() => handleMoodSelect(option)}
+                aria-pressed={isSelected}
+                sx={{
+                  flexShrink: 0,
+                  minWidth: 0,
+                  width: 60,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'flex-start',
+                  gap: 0.18,
+                  px: 0,
+                  py: 0,
+                  borderRadius: 0,
+                  backgroundColor: 'transparent',
+                  transition: 'transform 140ms ease, background-color 180ms ease, box-shadow 180ms ease',
+                  '&:hover': {
+                    backgroundColor: 'transparent',
+                  },
+                  '&:focus-visible': {
+                    outline: `2px solid ${option.tint}`,
+                    outlineOffset: 3,
+                  },
+                  '&:active .moodEmojiBubble': {
+                    transform: 'scale(0.94)',
+                  },
+                }}
+              >
+                <Box
+                  className="moodEmojiBubble"
+                  sx={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: '50%',
+                    display: 'grid',
+                    placeItems: 'center',
+                    bgcolor: isSelected ? alpha(option.tint, 0.2) : 'transparent',
+                    boxShadow: isSelected ? `0 0 0 10px ${alpha(option.tint, 0.08)}, 0 4px 10px ${alpha(option.tint, 0.12)}` : 'none',
+                    transition: 'background-color 180ms ease, box-shadow 180ms ease, transform 140ms ease',
+                    transform: isSelected ? 'translateY(-1px) scale(1.1)' : 'translateY(0) scale(1)',
+                    animation: isPulsing ? 'moodPulse 220ms cubic-bezier(0.2, 0.8, 0.2, 1)' : 'none',
+                    '@keyframes moodPulse': {
+                      '0%': { transform: 'translateY(0) scale(1)' },
+                      '45%': { transform: 'translateY(-1px) scale(1.18)' },
+                      '100%': { transform: 'translateY(-1px) scale(1.1)' },
+                    },
+                  }}
+                >
+                  <Typography sx={{ fontSize: '2.05rem', lineHeight: 1 }}>{option.emoji}</Typography>
+                </Box>
+                <Typography
+                  sx={{
+                    minHeight: 14,
+                    fontSize: '0.62rem',
+                    fontWeight: 500,
+                    lineHeight: 1,
+                    color: isSelected ? TEXT_PRIMARY : TEXT_MUTED,
+                    opacity: 1,
+                    transform: isSelected ? 'translateY(0)' : 'translateY(-2px)',
+                    transition: 'opacity 160ms ease, transform 160ms ease',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {option.label}
+                </Typography>
+              </ButtonBase>
+            );
+          })}
+        </Box>
       </Box>
 
       <Paper
         ref={timelineRef}
         elevation={0}
         sx={{
-          borderRadius: '14px',
+          borderRadius: '22px',
           border: `1px solid ${colors.landing.borderLight}`,
           boxShadow: `0 14px 34px ${colors.landing.shadowSoft}`,
           overflow: 'hidden',
-          backgroundColor: colors.landing.surface,
+          backgroundColor: '#FFFFFF',
           display: 'flex',
           flexDirection: 'column',
           minHeight: 0,
           mb: 2,
         }}
       >
-        <Box sx={{ p: 1.35, borderBottom: `1px solid ${colors.landing.borderLight}` }}>
-          <TimelineHeaderControls
-            filters={timelineHeaderFilters}
-            onFiltersChange={handleTimelineHeaderFiltersChange}
-            selectedDate={selectedDate}
-            onDateChange={setSelectedDate}
-            streakLabel={mobileStreakLabel}
-            activeFiltersCount={timelineFilterCount}
-            calendarEntries={activeChildEntries}
-            mobileLayout
-            showFiltersButton
-            onOpenAdvancedFilters={() => setTimelineFilterSheetOpen(true)}
+        <Box sx={{ p: 1.25, pb: 1.1, borderBottom: `1px solid ${colors.landing.borderLight}` }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, mb: 1 }}>
+            <ButtonBase
+              onClick={openTimelineCalendar}
+              aria-label="Open calendar"
+              aria-haspopup="dialog"
+              sx={{
+                position: 'relative',
+                zIndex: 2,
+                pointerEvents: 'auto',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 0.35,
+                pl: 0,
+                pr: 0.2,
+                py: 0.1,
+                borderRadius: 1,
+                color: TEXT_PRIMARY,
+                touchAction: 'manipulation',
+              }}
+            >
+              <Typography sx={{ fontSize: '0.92rem', fontWeight: 900, color: TEXT_PRIMARY, lineHeight: 1 }}>
+                {todayLabel}
+              </Typography>
+              <KeyboardArrowDownIcon sx={{ fontSize: 18, color: TEXT_SECONDARY }} />
+            </ButtonBase>
+          </Box>
+
+          <TextField
+            fullWidth
+            value={searchText}
+            onChange={(event) => setSearchText(event.target.value)}
+            placeholder={searchPlaceholder}
+            size="small"
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon sx={{ fontSize: 18, color: colors.landing.textMuted }} />
+                </InputAdornment>
+              ),
+            }}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: '16px',
+                bgcolor: colors.landing.surface,
+                '& fieldset': {
+                  borderColor: colors.landing.borderLight,
+                },
+              },
+            }}
           />
         </Box>
 
@@ -663,11 +1070,11 @@ const MobileCaptureDashboard = ({
           sx={{
             flex: 1,
             minHeight: 0,
-            maxHeight: { xs: 'clamp(240px, calc(100dvh - 535px), 420px)' },
+            maxHeight: { xs: 'clamp(240px, calc(100dvh - 560px), 420px)' },
             overflowY: 'auto',
-            px: 1.25,
-            py: 1.2,
-            background: `linear-gradient(180deg, ${colors.landing.surface} 0%, ${colors.landing.sageLight} 100%)`,
+            px: 1.05,
+            py: 1.05,
+            background: `linear-gradient(180deg, #FFFFFF 0%, ${colors.landing.sageLight} 100%)`,
           }}
         >
           <UnifiedTimeline
@@ -681,11 +1088,28 @@ const MobileCaptureDashboard = ({
             showFilters={false}
             showDaySummary={false}
             mobileTimeLayout={true}
-            streakLabel={activityStreakLabel}
             calendarEntries={activeChildEntries}
           />
         </Box>
       </Paper>
+
+      <Snackbar
+        open={moodToastOpen}
+        onClose={() => setMoodToastOpen(false)}
+        autoHideDuration={1600}
+        message={moodToastMessage}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        ContentProps={{
+          sx: {
+            borderRadius: 999,
+            bgcolor: colors.brand.ink,
+            color: '#FFFFFF',
+            fontWeight: 800,
+            px: 1.5,
+            boxShadow: `0 10px 24px ${colors.landing.shadowSoft}`,
+          },
+        }}
+      />
 
       <SwipeableDrawer
         anchor="bottom"
@@ -717,11 +1141,17 @@ const MobileCaptureDashboard = ({
               }}
             />
           </Box>
+
+          <Box sx={{ px: 0.25, pb: 1.25 }}>
+            <Typography sx={{ fontSize: '0.82rem', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: colors.landing.textMuted, mb: 0.2 }}>
+              More
+            </Typography>
+          </Box>
+
           <ChildActionsMenuContent
             child={activeChild}
             userRole={activeChildRole}
             careTeamCount={activeChildCareTeam.length}
-            onAddChild={onAddChildClick}
             onGoToCareTeam={(child) => {
               closeMobileChildSheet();
               onGoToCareTeam?.(child);
@@ -746,13 +1176,10 @@ const MobileCaptureDashboard = ({
               closeMobileChildSheet();
               onImportLogs?.(child);
             }}
-            onStartChat={(child) => {
+            onOpenBathroomLog={(child) => {
               closeMobileChildSheet();
-              onMessages?.(child);
+              onOpenBathroomLog?.(child);
             }}
-            showWarning
-            showSwitchChild={false}
-            showAddChild={Boolean(onAddChildClick)}
           />
         </Box>
       </SwipeableDrawer>
@@ -1009,7 +1436,7 @@ const MobileCaptureDashboard = ({
       </Drawer>
 
       <Popover
-        open={Boolean(timelineDatePickerAnchor)}
+        open={isCalendarOpen}
         anchorEl={timelineDatePickerAnchor}
         onClose={handleTimelineDatePickerClose}
         disableScrollLock

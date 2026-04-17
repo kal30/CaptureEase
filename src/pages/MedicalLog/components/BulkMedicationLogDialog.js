@@ -14,8 +14,14 @@ import { auth, db } from '../../../services/firebase';
 import { fetchMedications } from '../../../services/medicationService';
 import colors from '../../../assets/theme/colors';
 import MedicationBackfillDialog from './MedicationBackfillDialog';
+import MedicationDuplicateWarningDialog from './MedicationDuplicateWarningDialog';
+import {
+  detectPossibleMedicationDuplicate,
+  getMedicationLogDateKey,
+  normalizeMedicationLogRecord,
+} from '../../../services/medicationLogDuplicateService';
 
-const todayKey = new Date().toDateString();
+const todayKey = getMedicationLogDateKey(new Date());
 const getMedicationTakenStorageKey = (childId) => `captureez:medication-log:${childId || 'unknown'}:${todayKey}`;
 const medicationTakenMemoryCache = typeof window !== 'undefined'
   ? (window.__captureezMedicationTakenCache || (window.__captureezMedicationTakenCache = {}))
@@ -285,9 +291,11 @@ const BulkMedicationLogDialog = ({
   const [resolvedMedications, setResolvedMedications] = useState([]);
   const [savingKey, setSavingKey] = useState(null);
   const [loggedEvents, setLoggedEvents] = useState({});
+  const [allMedicationLogs, setAllMedicationLogs] = useState([]);
   const [takenKeys, setTakenKeys] = useState(() => getCachedTakenEvents(childId));
   const [showBackfillDialog, setShowBackfillDialog] = useState(false);
   const [timeEntryPreset, setTimeEntryPreset] = useState(null);
+  const [duplicatePrompt, setDuplicatePrompt] = useState(null);
   const activeUser = user || authUser;
   const providedMedications = useMemo(() => (
     Array.isArray(medications) ? medications : []
@@ -325,6 +333,19 @@ const BulkMedicationLogDialog = ({
       initialTime: new Date().toTimeString().slice(0, 5),
     });
     setShowBackfillDialog(true);
+  };
+
+  const closeDuplicatePrompt = () => {
+    setDuplicatePrompt(null);
+  };
+
+  const openDuplicatePrompt = ({ reason, medicationName, existingTimeLabel, onConfirm }) => {
+    setDuplicatePrompt({
+      reason,
+      medicationName,
+      existingTimeLabel,
+      onConfirm,
+    });
   };
 
   useEffect(() => {
@@ -372,6 +393,7 @@ const BulkMedicationLogDialog = ({
     const loadLoggedEvents = async () => {
       if (!open || !childId) {
         setLoggedEvents({});
+        setAllMedicationLogs([]);
         setTakenKeys({});
         return;
       }
@@ -383,35 +405,39 @@ const BulkMedicationLogDialog = ({
         const q = query(
           collection(db, 'dailyLogs'),
           where('childId', '==', childId),
-          where('category', '==', 'medication'),
-          where('source', '==', 'medication_schedule_log')
         );
         const snapshot = await getDocs(q);
-        const nextMap = {};
+        const nextLogs = [];
+        const todayMap = {};
 
         snapshot.forEach((logDoc) => {
           const data = logDoc.data() || {};
-          if (data.entryDate !== todayKey) {
+          const normalized = normalizeMedicationLogRecord({ id: logDoc.id, ...data });
+          if (normalized.category !== 'medication') {
             return;
           }
-          if (data.status === 'deleted') {
+          if (normalized.status === 'deleted') {
             return;
           }
 
-          const key = data.medicationScheduleKey || buildEventKey(
-            data.medicationId,
-            data.medicationScheduleId,
-            data.medicationScheduleIndex,
-            data.medicationScheduleTime
-          );
-          nextMap[key] = { id: logDoc.id, ...data };
+          nextLogs.push(normalized);
+
+          if (normalized.dateKey !== todayKey) {
+            return;
+          }
+
+          const key = buildEventKey(
+            normalized.medicationId,
+            normalized.medicationScheduleId,
+            normalized.medicationScheduleIndex,
+            normalized.medicationScheduleTime
+          ) || normalized.medicationScheduleKey;
+          todayMap[key] = normalized;
         });
 
         if (active) {
-          setLoggedEvents((current) => ({
-            ...current,
-            ...nextMap,
-          }));
+          setAllMedicationLogs(nextLogs);
+          setLoggedEvents(todayMap);
         }
       } catch (error) {
         console.error('Error loading daily medication logs:', error);
@@ -431,6 +457,7 @@ const BulkMedicationLogDialog = ({
   useEffect(() => {
     if (!open) {
       setShowBackfillDialog(false);
+      closeDuplicatePrompt();
     }
   }, [open]);
 
@@ -483,6 +510,8 @@ const BulkMedicationLogDialog = ({
             medicationName: medication.name,
             dose: schedule.dose || medication.dose || '',
             unit: schedule.unit || medication.unit || 'mg',
+            medicationCategory: medication.category || medication.medicationCategory || '',
+            medicationFrequency: medication.frequency || medication.medicationFrequency || '',
             state,
             isTaken,
             takenLate,
@@ -494,6 +523,8 @@ const BulkMedicationLogDialog = ({
 
     return events;
   }, [loggedEvents, resolvedMedications, takenKeys]);
+
+  const medicationDuplicateCandidates = useMemo(() => allMedicationLogs, [allMedicationLogs]);
 
   const groupedEvents = useMemo(() => {
     const groups = [];
@@ -518,9 +549,13 @@ const BulkMedicationLogDialog = ({
       status: 'taken',
     });
 
-    const nextLoggedEvent = {
+    const savedLog = normalizeMedicationLogRecord({
       id: docRef.id,
       ...loggedDocData,
+      status: 'taken',
+    });
+    const nextLoggedEvent = {
+      ...savedLog,
       status: 'taken',
     };
 
@@ -528,6 +563,11 @@ const BulkMedicationLogDialog = ({
       ...current,
       [event.eventKey]: nextLoggedEvent,
     }));
+    setAllMedicationLogs((current) => {
+      const next = current.filter((log) => log.id !== docRef.id);
+      next.unshift(savedLog);
+      return next;
+    });
     setTakenKeys((current) => {
       const next = {
         ...current,
@@ -587,6 +627,8 @@ const BulkMedicationLogDialog = ({
       medicationScheduleDose: event.dose,
       medicationScheduleUnit: event.unit,
       medicationName: event.medicationName,
+      medicationCategory: event.medicationCategory || event.category || '',
+      medicationFrequency: event.medicationFrequency || '',
       scheduledFor: scheduledFor ? scheduledFor.toISOString() : null,
       takenAt: now.toISOString(),
     };
@@ -594,7 +636,40 @@ const BulkMedicationLogDialog = ({
     return loggedDocData;
   };
 
-  const handleMarkTaken = async (event) => {
+  const checkMedicationDuplicate = async (event, options = {}) => {
+    const candidate = normalizeMedicationLogRecord({
+      childId,
+      category: 'medication',
+      source: 'medication_schedule_log',
+      status: 'active',
+      medicationId: event.medicationId,
+      medicationName: event.medicationName,
+      medicationScheduleId: event.scheduleId,
+      medicationScheduleIndex: event.scheduleIndex,
+      medicationScheduleTime: event.time,
+      medicationScheduleDose: event.dose,
+      medicationScheduleUnit: event.unit,
+      medicationCategory: event.medicationCategory,
+      medicationFrequency: event.medicationFrequency,
+      timestamp: new Date(),
+      takenAt: new Date(),
+      scheduledFor: event.time ? new Date() : null,
+    });
+
+    const duplicateInfo = detectPossibleMedicationDuplicate(
+      candidate,
+      medicationDuplicateCandidates,
+      options
+    );
+
+    if (!duplicateInfo.matched) {
+      return { matched: false, duplicateInfo: null };
+    }
+
+    return { matched: true, duplicateInfo };
+  };
+
+  const handleMarkTaken = async (event, { allowDuplicate = false } = {}) => {
     if (
       !childId
       || !activeUser?.uid
@@ -602,6 +677,22 @@ const BulkMedicationLogDialog = ({
       || savingKey === event.eventKey
     ) {
       return;
+    }
+
+    if (!allowDuplicate) {
+      const { matched, duplicateInfo } = await checkMedicationDuplicate(event);
+      if (matched) {
+        openDuplicatePrompt({
+          reason: duplicateInfo.reason,
+          medicationName: event.medicationName,
+          existingTimeLabel: duplicateInfo.existingLog?.timeLabel,
+          onConfirm: () => {
+            closeDuplicatePrompt();
+            handleMarkTaken(event, { allowDuplicate: true });
+          },
+        });
+        return;
+      }
     }
 
     const optimisticLog = {
@@ -662,6 +753,7 @@ const BulkMedicationLogDialog = ({
       delete next[event.eventKey];
       return next;
     });
+    setAllMedicationLogs((current) => current.filter((log) => log.id !== loggedEvent.id));
     setTakenKeys((current) => {
       const next = { ...current };
       delete next[event.eventKey];
@@ -678,6 +770,11 @@ const BulkMedicationLogDialog = ({
         ...current,
         [event.eventKey]: previousLog,
       }));
+      setAllMedicationLogs((current) => {
+        const next = current.filter((log) => log.id !== loggedEvent.id);
+        next.unshift(normalizeMedicationLogRecord(previousLog));
+        return next;
+      });
       setTakenKeys((current) => {
         const next = {
           ...current,
@@ -691,7 +788,7 @@ const BulkMedicationLogDialog = ({
     }
   };
 
-  const handleMarkAllTaken = async (group) => {
+  const handleMarkAllTaken = async (group, { allowDuplicate = false } = {}) => {
     if (!childId || !activeUser?.uid) {
       return;
     }
@@ -699,6 +796,64 @@ const BulkMedicationLogDialog = ({
     const pendingEvents = group.events.filter((event) => !loggedEvents[event.eventKey] && !takenKeys[event.eventKey]);
     if (pendingEvents.length === 0) {
       return;
+    }
+
+    if (!allowDuplicate) {
+      const duplicateCandidate = pendingEvents.find((event) => {
+        const match = detectPossibleMedicationDuplicate(
+          normalizeMedicationLogRecord({
+            childId,
+            category: 'medication',
+            source: 'medication_schedule_log',
+            medicationId: event.medicationId,
+            medicationName: event.medicationName,
+            medicationScheduleId: event.scheduleId,
+            medicationScheduleIndex: event.scheduleIndex,
+            medicationScheduleTime: event.time,
+            medicationScheduleDose: event.dose,
+            medicationScheduleUnit: event.unit,
+            medicationCategory: event.medicationCategory,
+            medicationFrequency: event.medicationFrequency,
+            timestamp: new Date(),
+            takenAt: new Date(),
+          }),
+          medicationDuplicateCandidates
+        );
+        return match.matched;
+      });
+
+      if (duplicateCandidate) {
+        const duplicateInfo = detectPossibleMedicationDuplicate(
+          normalizeMedicationLogRecord({
+            childId,
+            category: 'medication',
+            source: 'medication_schedule_log',
+            medicationId: duplicateCandidate.medicationId,
+            medicationName: duplicateCandidate.medicationName,
+            medicationScheduleId: duplicateCandidate.scheduleId,
+            medicationScheduleIndex: duplicateCandidate.scheduleIndex,
+            medicationScheduleTime: duplicateCandidate.time,
+            medicationScheduleDose: duplicateCandidate.dose,
+            medicationScheduleUnit: duplicateCandidate.unit,
+            medicationCategory: duplicateCandidate.medicationCategory,
+            medicationFrequency: duplicateCandidate.medicationFrequency,
+            timestamp: new Date(),
+            takenAt: new Date(),
+          }),
+          medicationDuplicateCandidates
+        );
+
+        openDuplicatePrompt({
+          reason: duplicateInfo.reason,
+          medicationName: duplicateCandidate.medicationName,
+          existingTimeLabel: duplicateInfo.existingLog?.timeLabel,
+          onConfirm: () => {
+            closeDuplicatePrompt();
+            handleMarkAllTaken(group, { allowDuplicate: true });
+          },
+        });
+        return;
+      }
     }
 
     setLoggedEvents((current) => {
@@ -747,6 +902,16 @@ const BulkMedicationLogDialog = ({
       }
     } catch (error) {
       console.error('Error marking all medication doses as taken:', error);
+    }
+  };
+
+  const handleKeepExistingDuplicate = () => {
+    closeDuplicatePrompt();
+  };
+
+  const handleLogAgainDuplicate = () => {
+    if (duplicatePrompt?.onConfirm) {
+      duplicatePrompt.onConfirm();
     }
   };
 
@@ -918,6 +1083,15 @@ const BulkMedicationLogDialog = ({
         initialTime={timeEntryPreset?.initialTime || ''}
         onClose={handleCloseBackfillDialog}
         onSaved={onSaved}
+      />
+
+      <MedicationDuplicateWarningDialog
+        open={Boolean(duplicatePrompt)}
+        reason={duplicatePrompt?.reason || ''}
+        medicationName={duplicatePrompt?.medicationName || ''}
+        existingTimeLabel={duplicatePrompt?.existingTimeLabel || ''}
+        onKeepExisting={handleKeepExistingDuplicate}
+        onLogAgainAnyway={handleLogAgainDuplicate}
       />
     </>
   );
