@@ -1,18 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, Button, Alert } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '../../../services/firebase';
 import { 
   createIncidentWithSmartFollowUp,
-  INCIDENT_TYPES, 
   getSeverityScale,
   getCustomCategories,
   formatFollowUpSchedule,
   getIncidentTypeConfig
 } from '../../../services/incidentService';
 import { useAsyncForm } from '../../../hooks/useAsyncForm';
-import colors from '../../../assets/theme/colors';
 
 // Import refactored components
 import DateTimeSection from './QuickCapture/DateTimeSection';
@@ -27,10 +24,8 @@ const IncidentQuickCapture = ({
   childId, 
   childName, 
   onBack, 
-  onSaved, 
-  onClose 
+  onSaved
 }) => {
-  const theme = useTheme();
   const [user] = useAuthState(auth);
   
   // Form state
@@ -144,7 +139,7 @@ const IncidentQuickCapture = ({
   }
 
   return (
-    <Box sx={{ p: 4, backgroundColor: colors.app.cards.background, minHeight: '100%' }}>
+    <Box sx={{ p: 4, backgroundColor: '#F5F3F0', minHeight: '100%' }}>
       {incidentForm.error && (
         <Alert 
           severity="error" 
@@ -187,11 +182,9 @@ const IncidentQuickCapture = ({
       />
 
       <ActionButtons 
-        onCancel={onClose}
         onSave={handleSave}
         canSave={canSave && incidentForm.canSubmit}
         loading={incidentForm.loading}
-        incidentConfig={incidentConfig}
       />
     </Box>
   );

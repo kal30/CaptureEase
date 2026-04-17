@@ -3,6 +3,7 @@ import {
   Avatar,
   Box,
   Button,
+  ButtonBase,
   Stack,
   Typography,
 } from '@mui/material';
@@ -37,8 +38,9 @@ export const ChildSwitcherTrigger = ({
   child,
   roleLabel = '',
   showRole = false,
-  showBorder = false,
   avatarSize = 36,
+  completionPercent = null,
+  onCompletionClick,
   onClick,
   sx = {},
 }) => {
@@ -47,90 +49,182 @@ export const ChildSwitcherTrigger = ({
   }
 
   return (
-    <Button
-      onClick={onClick}
-      data-cy="dashboard-child-switcher"
+    <Box
       sx={{
+        display: 'flex',
+        width: '100%',
+        flex: '1 1 auto',
         minWidth: 0,
-        px: showBorder ? 1.2 : 0,
+        alignItems: 'center',
+        gap: 0.75,
+        px: 0,
         py: 0,
         minHeight: 40,
-        borderRadius: showBorder ? '12px' : 0,
-        border: showBorder ? `1px solid ${colors.landing.borderLight}` : 'none',
-        bgcolor: showBorder ? colors.landing.surface : 'transparent',
+        borderRadius: 0,
+        border: 'none',
+        bgcolor: 'transparent',
         boxShadow: 'none',
         color: colors.landing.heroText,
         textTransform: 'none',
         fontFamily: "'Outfit', sans-serif",
         fontWeight: 600,
         letterSpacing: '-0.02em',
-        '&:hover': {
-          bgcolor: showBorder ? colors.landing.surfaceSoft : 'transparent',
-          boxShadow: 'none',
-        },
+        justifyContent: 'flex-start',
         ...sx,
       }}
     >
-      <Stack direction="row" alignItems="center" spacing={0.85} sx={{ minWidth: 0 }}>
-        <Avatar
-          src={child.profilePhoto || child.photoURL || child.avatarUrl || undefined}
-          alt={child.name}
-          sx={{
-            width: avatarSize,
-            height: avatarSize,
-            border: `1px solid ${colors.landing.borderMedium}`,
-            bgcolor: colors.roles.careOwner.primary,
-            color: colors.landing.surface,
-            fontSize: avatarSize <= 28 ? '0.72rem' : '0.85rem',
-            fontWeight: 700,
-            flexShrink: 0,
-          }}
-        >
-          {child.profilePhoto || child.photoURL || child.avatarUrl ? null : child.name?.[0]?.toUpperCase()}
-        </Avatar>
-
-        <Stack direction="column" alignItems="flex-start" spacing={0.05} sx={{ minWidth: 0, textAlign: 'left' }}>
-          <Typography
-            component="span"
+      <ButtonBase
+        onClick={onClick}
+        data-cy="dashboard-child-switcher"
+        sx={{
+          minWidth: 0,
+          flex: 1,
+          display: 'flex',
+          justifyContent: 'flex-start',
+          borderRadius: 0,
+          px: 0,
+          py: 0,
+          color: colors.landing.heroText,
+          textAlign: 'left',
+          '&:hover': {
+            bgcolor: 'transparent',
+          },
+        }}
+      >
+        <Stack direction="row" alignItems="center" spacing={0.85} sx={{ minWidth: 0, width: '100%' }}>
+          <Avatar
+            src={child.profilePhoto || child.photoURL || child.avatarUrl || undefined}
+            alt={child.name}
             sx={{
-              fontFamily: "'Outfit', sans-serif",
-              fontSize: showRole ? '0.98rem' : '1rem',
+              width: avatarSize,
+              height: avatarSize,
+              border: `1px solid ${colors.landing.borderMedium}`,
+              bgcolor: colors.roles.careOwner.primary,
+              color: colors.landing.surface,
+              fontSize: avatarSize <= 28 ? '0.72rem' : '0.85rem',
               fontWeight: 700,
-              color: colors.landing.heroText,
-              letterSpacing: '-0.02em',
-              lineHeight: 1.05,
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              maxWidth: '100%',
+              flexShrink: 0,
             }}
           >
-            {child.name}
-          </Typography>
-          {showRole ? (
-            <Typography
-              component="span"
+            {child.profilePhoto || child.photoURL || child.avatarUrl ? null : child.name?.[0]?.toUpperCase()}
+          </Avatar>
+
+          <Stack direction="column" alignItems="flex-start" spacing={0.1} sx={{ minWidth: 0, flex: 1, textAlign: 'left' }}>
+            <Box
               sx={{
-                fontFamily: "'Outfit', sans-serif",
-                fontSize: '0.76rem',
-                fontWeight: 500,
-                color: colors.landing.textMuted,
-                letterSpacing: '-0.01em',
-                lineHeight: 1.05,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                maxWidth: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 0.5,
+                minWidth: 0,
+                width: '100%',
               }}
             >
-              Your role: {roleLabel || 'Care Owner'}
-            </Typography>
-          ) : null}
-        </Stack>
+              <Typography
+                component="span"
+                sx={{
+                  fontFamily: "'Outfit', sans-serif",
+                  fontSize: showRole ? '0.98rem' : '1rem',
+                  fontWeight: 700,
+                  color: colors.landing.heroText,
+                  letterSpacing: '-0.02em',
+                  lineHeight: 1.05,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  maxWidth: '100%',
+                  minWidth: 0,
+                  flexShrink: 1,
+                }}
+              >
+                {child.name}
+              </Typography>
 
-        <KeyboardArrowDownIcon sx={{ fontSize: 20, color: colors.landing.textMuted, ml: 0.1, flexShrink: 0 }} />
-      </Stack>
-    </Button>
+              <KeyboardArrowDownIcon sx={{ fontSize: 18, color: colors.landing.textMuted, flexShrink: 0 }} />
+
+              {Number.isFinite(completionPercent) && completionPercent > 0 && typeof onCompletionClick === 'function' ? (
+                <Box
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    onCompletionClick?.(child);
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Profile completion ${completionPercent}%`}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      onCompletionClick?.(child);
+                    }
+                  }}
+                  sx={{
+                    flexShrink: 0,
+                    width: 36,
+                    height: 36,
+                    borderRadius: '50%',
+                    display: 'grid',
+                    placeItems: 'center',
+                    position: 'relative',
+                    ml: 0.25,
+                    bgcolor: colors.landing.surface,
+                    border: `1px solid ${alpha(colors.dashboard?.childHeader?.finishProfileAccent || colors.brand.deep, 0.24)}`,
+                    boxShadow: `0 2px 8px ${alpha(colors.dashboard?.childHeader?.finishProfileAccent || colors.brand.deep, 0.08)}`,
+                    background: `conic-gradient(${colors.dashboard?.childHeader?.finishProfileAccent || colors.brand.deep} ${Math.max(0, Math.min(100, completionPercent))}%, ${alpha(colors.dashboard?.childHeader?.finishProfileBg || colors.landing.surface, 0.9)} 0)`,
+                    cursor: 'pointer',
+                    outline: 'none',
+                    '&:hover': {
+                      boxShadow: `0 4px 12px ${alpha(colors.dashboard?.childHeader?.finishProfileAccent || colors.brand.deep, 0.12)}`,
+                    },
+                    '&:focus-visible': {
+                      outline: `2px solid ${colors.brand.ink}`,
+                      outlineOffset: 2,
+                    },
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 26,
+                      height: 26,
+                      borderRadius: '50%',
+                      display: 'grid',
+                      placeItems: 'center',
+                      bgcolor: colors.landing.surface,
+                      color: colors.dashboard?.childHeader?.finishProfileAccent || colors.brand.deep,
+                      fontSize: '0.6rem',
+                      fontWeight: 800,
+                      lineHeight: 1,
+                    }}
+                  >
+                    {completionPercent}%
+                  </Box>
+                </Box>
+              ) : null}
+            </Box>
+
+            {showRole ? (
+              <Typography
+                component="span"
+                sx={{
+                  fontFamily: "'Outfit', sans-serif",
+                  fontSize: '0.76rem',
+                  fontWeight: 500,
+                  color: colors.landing.textMuted,
+                  letterSpacing: '-0.01em',
+                  lineHeight: 1.05,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  maxWidth: '100%',
+                }}
+              >
+                Your role: {roleLabel || 'Care Owner'}
+              </Typography>
+            ) : null}
+        </Stack>
+        </Stack>
+      </ButtonBase>
+    </Box>
   );
 };
 
@@ -148,10 +242,14 @@ export const ChildSwitcherPanel = ({
   addChildLabel = 'Add Child',
   currentLabel = 'Current',
   switchLabel = 'Switch',
+  activeChild = null,
 }) => {
   const canAddChild = typeof onAddChild === 'function'
     && (showAddChild === null ? true : Boolean(showAddChild));
   const renderRoleLabel = (childId) => getRoleLabel(getUserRoleForChild?.(childId));
+  const activeProfileChild = activeChild || children.find((child) => child.id === activeChildId) || children[0] || null;
+  const activeProfileId = activeChildId || activeProfileChild?.id || null;
+  const switchableChildren = children.filter((child) => child.id && child.id !== activeProfileId);
 
   return (
     <Stack spacing={1}>
@@ -176,8 +274,14 @@ export const ChildSwitcherPanel = ({
         ) : null}
       </Box>
 
+      <Box sx={{ px: 0.75, pb: 0.25 }}>
+        <Typography sx={{ fontSize: '0.72rem', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: colors.landing.textMuted }}>
+          Switch Profile
+        </Typography>
+      </Box>
+
       <Stack spacing={1}>
-        {children.map((child) => {
+        {switchableChildren.map((child) => {
           const isSelected = child.id === activeChildId;
           const childPhoto = child.profilePhoto || child.photoURL || child.avatarUrl || '';
           const careTeamMembers = careTeamsByChildId[child.id] || [];
@@ -273,6 +377,14 @@ export const ChildSwitcherPanel = ({
             </Button>
           );
         })}
+
+        {switchableChildren.length === 0 ? (
+          <Box sx={{ px: 0.75, py: 0.5 }}>
+            <Typography sx={{ fontSize: '0.88rem', color: colors.landing.textMuted }}>
+              No other profiles yet.
+            </Typography>
+          </Box>
+        ) : null}
 
         {canAddChild ? (
           <Button

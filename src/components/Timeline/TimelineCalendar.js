@@ -25,6 +25,7 @@ import { alpha, useTheme } from '@mui/material/styles';
 import { TIMELINE_TYPES, getTimelineEntryGroup } from '../../services/timelineService';
 import { getTypeColor } from './utils/colors';
 import { getCalendarDateKey } from '../../utils/calendarDateKey';
+import { getTimelineEntryDate } from '../../services/timeline/dateUtils';
 
 const TimelineCalendar = ({ entries, onDayClick, filters }) => {
   const theme = useTheme();
@@ -44,7 +45,7 @@ const TimelineCalendar = ({ entries, onDayClick, filters }) => {
     
     // Group entries by date
     entries.forEach(entry => {
-      const entryDate = entry.timestamp?.toDate ? entry.timestamp.toDate() : new Date(entry.timestamp);
+      const entryDate = getTimelineEntryDate(entry) || (entry.timestamp?.toDate ? entry.timestamp.toDate() : new Date(entry.timestamp));
       const dateKey = getCalendarDateKey(entryDate);
       if (!dateKey) {
         return;

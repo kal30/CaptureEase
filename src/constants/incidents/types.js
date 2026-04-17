@@ -55,7 +55,7 @@ export const INCIDENT_TYPES = {
   },
   BEHAVIORAL: {
     id: "behavioral",
-    label: "Behavioral",
+    label: "Behavior",
     color: "#EF4444", // Red
     emoji: "⚡",
     remedies: [
@@ -112,4 +112,3 @@ export const INCIDENT_TYPES = {
     remedies: [], // Dynamic remedies based on custom incident name
   },
 };
-

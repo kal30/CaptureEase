@@ -18,6 +18,7 @@ import {
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import { TIMELINE_TYPES } from '../../services/timelineService';
+import { getTimelineEntryDate } from '../../services/timeline/dateUtils';
 
 const PrintableTimelineCalendar = ({ entries, onDayClick, filters }) => {
   const theme = useTheme();
@@ -35,7 +36,7 @@ const PrintableTimelineCalendar = ({ entries, onDayClick, filters }) => {
     
     // Group entries by date
     entries.forEach(entry => {
-      const entryDate = entry.timestamp?.toDate ? entry.timestamp.toDate() : new Date(entry.timestamp);
+      const entryDate = getTimelineEntryDate(entry) || (entry.timestamp?.toDate ? entry.timestamp.toDate() : new Date(entry.timestamp));
       const dateKey = entryDate.toDateString();
       
       if (!data[dateKey]) {

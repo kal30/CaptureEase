@@ -16,7 +16,9 @@ jest.mock('firebase/storage', () => ({
 
 jest.mock('firebase/firestore', () => ({
   addDoc: jest.fn(() => Promise.resolve({ id: 'mock-id' })),
-  collection: jest.fn()
+  collection: jest.fn(),
+  doc: jest.fn(),
+  updateDoc: jest.fn(() => Promise.resolve())
 }));
 
 jest.mock('firebase/auth', () => ({
@@ -25,9 +27,36 @@ jest.mock('firebase/auth', () => ({
   }))
 }));
 
+const { getAuth } = require('firebase/auth');
+
 jest.mock('../../../services/firebase', () => ({
   db: {}
 }));
+
+jest.mock('../../../components/Dashboard/ChildPhotoUploader', () => ({
+  __esModule: true,
+  default: ({ label }) => <div>{label || 'Profile photo'}</div>,
+}));
+
+jest.mock('../../../components/UI', () => {
+  return {
+    ThemeSpacing: ({ children }) => <div>{children}</div>,
+    CustomizableAutocomplete: ({ label }) => <div>{label}</div>,
+    LogFormShell: ({ title, children, footer, onClose }) => (
+      <div>
+        <h1>{title}</h1>
+        <button type="button" aria-label="close" onClick={onClose}>close</button>
+        <div>{children}</div>
+        <div>{footer}</div>
+      </div>
+    ),
+    EnhancedLoadingButton: ({ children, onClick, ...props }) => (
+      <button type={props.type || 'button'} onClick={onClick}>
+        {children}
+      </button>
+    ),
+  };
+});
 
 const theme = createTheme();
 
@@ -50,6 +79,9 @@ describe('AddChildModal', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    getAuth.mockReturnValue({
+      currentUser: { uid: 'test-user-id' },
+    });
   });
 
   it('renders modal with correct title', () => {
@@ -57,18 +89,18 @@ describe('AddChildModal', () => {
     expect(screen.getByText('Add New profile')).toBeInTheDocument();
   });
 
-  it('renders profile name and age fields', () => {
+  it('renders the fast intake fields', () => {
     renderWithProviders(<AddChildModal {...defaultProps} />);
     expect(screen.getByLabelText('Profile Name')).toBeInTheDocument();
-    expect(screen.getByLabelText('Profile Age')).toBeInTheDocument();
+    expect(screen.getByLabelText('Profile Age / DOB')).toBeInTheDocument();
+    expect(screen.getByText('Create & Start Logging')).toBeInTheDocument();
   });
 
   it('shows validation error for empty name', async () => {
-    const user = userEvent.setup();
     renderWithProviders(<AddChildModal {...defaultProps} />);
     
-    const submitButton = screen.getByText('Add profile');
-    await user.click(submitButton);
+    const submitButton = screen.getByText('Create & Start Logging');
+    await userEvent.click(submitButton);
     
     await waitFor(() => {
       expect(screen.getByText(/please enter the profile name/i)).toBeInTheDocument();
@@ -76,14 +108,13 @@ describe('AddChildModal', () => {
   });
 
   it('shows validation error for empty age', async () => {
-    const user = userEvent.setup();
     renderWithProviders(<AddChildModal {...defaultProps} />);
     
     const nameField = screen.getByLabelText('Profile Name');
-    await user.type(nameField, 'Test Child');
+    await userEvent.type(nameField, 'Test Child');
     
-    const submitButton = screen.getByText('Add profile');
-    await user.click(submitButton);
+    const submitButton = screen.getByText('Create & Start Logging');
+    await userEvent.click(submitButton);
     
     await waitFor(() => {
       expect(screen.getByText(/please enter the profile age/i)).toBeInTheDocument();
@@ -91,28 +122,24 @@ describe('AddChildModal', () => {
   });
 
   it('calls onClose when close button is clicked', async () => {
-    const user = userEvent.setup();
     renderWithProviders(<AddChildModal {...defaultProps} />);
     
     const closeButton = screen.getByRole('button', { name: /close/i });
-    await user.click(closeButton);
+    await userEvent.click(closeButton);
     
     expect(defaultProps.onClose).toHaveBeenCalledTimes(1);
   });
 
-  it('renders medical profile section', () => {
+  it('transitions to the setup panel after creating a profile', async () => {
     renderWithProviders(<AddChildModal {...defaultProps} />);
-    expect(screen.getByText('📋 Medical & Behavioral Profile')).toBeInTheDocument();
-  });
+    
+    await userEvent.type(screen.getByLabelText('Profile Name'), 'Test Child');
+    await userEvent.type(screen.getByLabelText('Profile Age / DOB'), '7');
+    await userEvent.click(screen.getByText('Create & Start Logging'));
 
-  it('allows adding conditions', async () => {
-    const user = userEvent.setup();
-    renderWithProviders(<AddChildModal {...defaultProps} />);
-    
-    const conditionsField = screen.getByRole('combobox', { name: /primary concerns/i });
-    await user.type(conditionsField, 'ADHD');
-    
-    // This tests the autocomplete functionality
-    expect(conditionsField).toHaveValue('ADHD');
+    await waitFor(() => {
+      expect(screen.getByText('Profile Created!')).toBeInTheDocument();
+      expect(screen.getByText('Skip to Dashboard')).toBeInTheDocument();
+    });
   });
 });

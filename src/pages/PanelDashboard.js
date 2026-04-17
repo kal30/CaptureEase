@@ -1,14 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Box,
   Container,
   Typography,
   Modal,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  IconButton,
-  Drawer,
+  SwipeableDrawer,
   CircularProgress,
   Fade,
   Button,
@@ -17,8 +13,7 @@ import {
   Alert,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import { useNavigate } from "react-router-dom";
-import CloseIcon from "@mui/icons-material/Close";
+import { useLocation, useNavigate } from "react-router-dom";
 
 // Hooks and Services
 import { usePanelDashboard } from "../hooks/usePanelDashboard";
@@ -37,13 +32,13 @@ import BathroomLogSheet from "../components/Dashboard/BathroomLogSheet";
 import { IncidentLoggingModal, IncidentFollowUpModal } from "../components/Dashboard/Incidents";
 import PatternSuggestionModal from "../components/Dashboard/PatternSuggestionModal";
 import DailyHabitsModal from "../components/Dashboard/DailyHabitsModal";
-import MedicationsLogTab from "./MedicalLog/MedicationsLogTab";
 import {
   ImportLogsModal,
   MAX_IMPORT_TEXT_LENGTH,
   extractTextFromImportFile,
   parseImportedLogs,
 } from "../components/Dashboard/ImportLogs";
+import BulkMedicationLogDialog from "./MedicalLog/components/BulkMedicationLogDialog";
 import DailyCareReport from "../components/Reports/DailyCareReport";
 import { DashboardViewProvider } from "../components/Dashboard/shared/DashboardViewContext";
 import RenderDebugOverlay from "../components/Dashboard/shared/RenderDebugOverlay";
@@ -53,11 +48,22 @@ import { PRODUCT_NAME_TITLE } from "../constants/config";
 
 const PanelDashboard = () => {
   const theme = useTheme();
+  const location = useLocation();
   const navigate = useNavigate();
   const isMobile = useMediaQuery('(max-width:1023.95px)');
   const isDesktop = !isMobile;
   const hook = usePanelDashboard({ activeChildOnly: isMobile });
+  const dashboardChildren = hook.children;
+  const dashboardSelectedChild = hook.selectedChild;
+  const dashboardSetCurrentChildId = hook.setCurrentChildId;
+  const dashboardHandleEditChild = hook.handleEditChild;
+  const dashboardHandleDeleteChild = hook.handleDeleteChild;
+  const dashboardHandleInviteTeamMember = hook.handleInviteTeamMember;
+  const dashboardHandleMessages = hook.handleMessages;
+  const dashboardHandleShowCareReport = hook.handleShowCareReport;
+  const dashboardSetShowAddChildModal = hook.setShowAddChildModal;
   const importFileInputRef = useRef(null);
+  const [showImportStartModal, setShowImportStartModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [importRows, setImportRows] = useState([]);
   const [importInitialChildId, setImportInitialChildId] = useState('');
@@ -65,6 +71,9 @@ const PanelDashboard = () => {
   const [importError, setImportError] = useState('');
   const [showMedicalLogPanel, setShowMedicalLogPanel] = useState(false);
   const [medicalLogChild, setMedicalLogChild] = useState(null);
+  const [editChildInitialStep, setEditChildInitialStep] = useState(1);
+  const [careToastOpen, setCareToastOpen] = useState(false);
+  const [careToastMessage, setCareToastMessage] = useState('');
   useMountDebug('PanelDashboard');
   trackRenderDebug('PanelDashboard', {
     isMobile,
@@ -74,13 +83,17 @@ const PanelDashboard = () => {
     currentChildId: hook.currentChildId || 'none',
   });
 
-  const handleImportLogsClick = (child) => {
+  const handleImportLogsClick = useCallback((child) => {
     setImportInitialChildId(child?.id || hook.currentChildId || hook.children[0]?.id || '');
+    setShowImportStartModal(true);
+  }, [hook.children, hook.currentChildId]);
+
+  const handleLaunchImportPicker = useCallback(() => {
     if (importFileInputRef.current) {
       importFileInputRef.current.value = '';
       importFileInputRef.current.click();
     }
-  };
+  }, []);
 
   const handleViewImportedCalendar = (child) => {
     const childId = child?.id || importInitialChildId;
@@ -114,10 +127,35 @@ const PanelDashboard = () => {
   };
 
   useEffect(() => {
+    const requestedChildId = location.state?.openChildMedicationManager?.childId;
+    if (!requestedChildId || !dashboardChildren.length) {
+      return;
+    }
+
+    const requestedChild = dashboardChildren.find((child) => child.id === requestedChildId);
+    if (!requestedChild) {
+      return;
+    }
+
+    dashboardSetCurrentChildId(requestedChild.id);
+    setEditChildInitialStep(3);
+    dashboardHandleEditChild(requestedChild);
+
+    navigate(location.pathname, { replace: true, state: null });
+  }, [
+    dashboardChildren,
+    dashboardSetCurrentChildId,
+    dashboardHandleEditChild,
+    location.pathname,
+    location.state,
+    navigate,
+  ]);
+
+  useEffect(() => {
     const handleDashboardAction = (event) => {
       const action = event?.detail?.action;
       const childId = event?.detail?.childId;
-      const child = hook.children.find((item) => item.id === childId) || hook.selectedChild || hook.children[0] || null;
+      const child = dashboardChildren.find((item) => item.id === childId) || dashboardSelectedChild || dashboardChildren[0] || null;
 
       if (!action) {
         return;
@@ -125,24 +163,24 @@ const PanelDashboard = () => {
 
       switch (action) {
         case "add-child":
-          hook.setShowAddChildModal(true);
+          dashboardSetShowAddChildModal(true);
           break;
         case "view-care-team":
           navigate('/care-team');
           break;
         case "invite-caregiver":
           if (child) {
-            hook.handleInviteTeamMember(child.id);
+            dashboardHandleInviteTeamMember(child.id);
           }
           break;
         case "start-chat":
           if (child) {
-            hook.handleMessages(child);
+            dashboardHandleMessages(child);
           }
           break;
         case "prep-for-therapy":
           if (child) {
-            hook.handleShowCareReport(child);
+            dashboardHandleShowCareReport(child);
           }
           break;
         case "import-logs":
@@ -150,12 +188,12 @@ const PanelDashboard = () => {
           break;
         case "edit-child":
           if (child) {
-            hook.handleEditChild(child);
+            dashboardHandleEditChild(child);
           }
           break;
         case "delete-child":
           if (child) {
-            hook.handleDeleteChild(child);
+            dashboardHandleDeleteChild(child);
           }
           break;
         default:
@@ -169,17 +207,35 @@ const PanelDashboard = () => {
       window.removeEventListener("captureez:dashboard-action", handleDashboardAction);
     };
   }, [
-    hook.children,
-    hook.handleDeleteChild,
-    hook.handleEditChild,
-    hook.handleInviteTeamMember,
-    hook.handleMessages,
-    hook.handleShowCareReport,
-    hook.selectedChild,
-    hook.setShowAddChildModal,
+    dashboardChildren,
+    dashboardHandleDeleteChild,
+    dashboardHandleEditChild,
+    dashboardHandleInviteTeamMember,
+    dashboardHandleMessages,
+    dashboardHandleShowCareReport,
+    dashboardSelectedChild,
+    dashboardSetShowAddChildModal,
     navigate,
     handleImportLogsClick,
   ]);
+
+  useEffect(() => {
+    const handleDailyCareSaved = (event) => {
+      const message = event?.detail?.message;
+      if (!message) {
+        return;
+      }
+
+      setCareToastMessage(message);
+      setCareToastOpen(true);
+    };
+
+    window.addEventListener('captureez:daily-care-saved', handleDailyCareSaved);
+
+    return () => {
+      window.removeEventListener('captureez:daily-care-saved', handleDailyCareSaved);
+    };
+  }, []);
 
   const handleImportFileChange = async (event) => {
     const file = event.target.files?.[0];
@@ -188,6 +244,8 @@ const PanelDashboard = () => {
     if (!file) {
       return;
     }
+
+    setShowImportStartModal(false);
 
     try {
       setImportLoading(true);
@@ -446,31 +504,84 @@ const PanelDashboard = () => {
       />
 
       {/* Modals */}
-      <Modal
-        open={hook.showQuickEntry}
-        onClose={hook.handleQuickEntrySkip}
-        sx={{ display: "flex", alignItems: "center", justifyContent: "center", p: 2 }}
-      >
-        <Box sx={{ maxWidth: 600, width: "100%", maxHeight: "90vh", overflow: "auto" }}>
-          {hook.selectedChild && hook.entryType === "micro" && (
-            <div>Micro data collection not available</div>
-          )}
-          {hook.selectedChild && hook.entryType === "full" && (
-            <QuickCheckIn
-              child={hook.selectedChild}
-              onComplete={hook.handleQuickEntryComplete}
-              onSkip={hook.handleQuickEntrySkip}
-              initialStep={hook.quickEntryStep}
-              initialDate={hook.quickEntryDate}
-            />
-          )}
-        </Box>
-      </Modal>
+      {isMobile ? (
+        <SwipeableDrawer
+          anchor="bottom"
+          open={hook.showQuickEntry}
+          onOpen={() => {}}
+          onClose={hook.handleQuickEntrySkip}
+          disableBackdropTransition
+          disableDiscovery
+          PaperProps={{
+            sx: {
+              borderRadius: '20px 20px 0 0',
+              bgcolor: colors.landing.surface,
+              borderTop: `1px solid ${colors.landing.borderLight}`,
+              boxShadow: `0 -18px 48px ${colors.landing.shadowPanel}`,
+              maxHeight: '92vh',
+              pb: 'env(safe-area-inset-bottom)',
+              overflow: 'hidden',
+            },
+          }}
+        >
+          <Box sx={{ px: 1.25, pt: 0.75, pb: 1.25, overflow: 'auto' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
+              <Box
+                sx={{
+                  width: 36,
+                  height: 4,
+                  borderRadius: 9999,
+                  bgcolor: colors.landing.borderLight,
+                }}
+              />
+            </Box>
+            {hook.selectedChild && hook.entryType === "micro" && (
+              <div>Micro data collection not available</div>
+            )}
+            {hook.selectedChild && hook.entryType === "full" && (
+              <QuickCheckIn
+                child={hook.selectedChild}
+                onComplete={hook.handleQuickEntryComplete}
+                onSkip={hook.handleQuickEntrySkip}
+                initialStep={hook.quickEntryStep}
+                initialDate={hook.quickEntryDate}
+              />
+            )}
+          </Box>
+        </SwipeableDrawer>
+      ) : (
+        <Modal
+          open={hook.showQuickEntry}
+          onClose={hook.handleQuickEntrySkip}
+          sx={{ display: "flex", alignItems: "center", justifyContent: "center", p: 2 }}
+        >
+          <Box sx={{ maxWidth: 600, width: "100%", maxHeight: "90vh", overflow: "auto" }}>
+            {hook.selectedChild && hook.entryType === "micro" && (
+              <div>Micro data collection not available</div>
+            )}
+            {hook.selectedChild && hook.entryType === "full" && (
+              <QuickCheckIn
+                child={hook.selectedChild}
+                onComplete={hook.handleQuickEntryComplete}
+                onSkip={hook.handleQuickEntrySkip}
+                initialStep={hook.quickEntryStep}
+                initialDate={hook.quickEntryDate}
+              />
+            )}
+          </Box>
+        </Modal>
+      )}
 
 
       <AddChildModal
         open={hook.showAddChildModal}
         onClose={() => hook.setShowAddChildModal(false)}
+        onViewTodayMedications={(childId) => {
+          hook.setShowAddChildModal(false);
+          if (childId) {
+            handleOpenMedicalLog({ id: childId });
+          }
+        }}
         onSuccess={hook.handleAddChildSuccess}
       />
 
@@ -478,11 +589,23 @@ const PanelDashboard = () => {
         open={hook.showEditChildModal}
         child={hook.selectedChildForEdit}
         userRole={hook.selectedChildForEdit ? hook.getUserRoleForChild?.(hook.selectedChildForEdit.id) : null}
+        initialStep={editChildInitialStep}
+        onViewTodayMedications={(child) => {
+          hook.setShowEditChildModal(false);
+          hook.setSelectedChildForEdit(null);
+          if (child) {
+            handleOpenMedicalLog(child);
+          }
+        }}
         onClose={() => {
+          setEditChildInitialStep(1);
           hook.setShowEditChildModal(false);
           hook.setSelectedChildForEdit(null);
         }}
-        onSuccess={hook.handleEditChildSuccess}
+        onSuccess={() => {
+          setEditChildInitialStep(1);
+          hook.handleEditChildSuccess();
+        }}
       />
 
       <DailyCareModal
@@ -583,71 +706,56 @@ const PanelDashboard = () => {
         }}
       />
 
-      {isMobile ? (
-        <Drawer
-          anchor="bottom"
-          open={showMedicalLogPanel}
-          onClose={handleCloseMedicalLog}
-          PaperProps={{
-            sx: {
-              borderTopLeftRadius: 4,
-              borderTopRightRadius: 4,
-              maxHeight: '92vh',
-            },
+      <Modal
+        open={showImportStartModal}
+        onClose={() => setShowImportStartModal(false)}
+        sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', p: 2 }}
+      >
+        <Box
+          sx={{
+            width: '100%',
+            maxWidth: 420,
+            bgcolor: 'background.paper',
+            border: '1px solid',
+            borderColor: 'divider',
+            borderRadius: 3,
+            px: 3,
+            py: 3,
+            boxShadow: '0 24px 60px rgba(15, 23, 42, 0.14)',
+            textAlign: 'left',
           }}
         >
-          <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Box>
-              <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                {medicalLogChild?.name ? `${medicalLogChild.name}'s Medications` : 'Medications'}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Child-specific medication list and dose logging
-              </Typography>
-            </Box>
-            <IconButton onClick={handleCloseMedicalLog} aria-label="close medical log">
-              <CloseIcon />
-            </IconButton>
-          </Box>
-          <Box sx={{ p: 2, overflowY: 'auto' }}>
-            <MedicationsLogTab childId={medicalLogChild?.id || hook.currentChildId} />
-          </Box>
-        </Drawer>
-      ) : (
-        <Dialog
-          open={showMedicalLogPanel}
-          onClose={handleCloseMedicalLog}
-          fullWidth
-          maxWidth="lg"
-          PaperProps={{
-            sx: {
-              borderRadius: 3,
-              minHeight: '70vh',
-            },
-          }}
-        >
-          <DialogTitle sx={{ pr: 6 }}>
-            <Box>
-              <Typography variant="h5" sx={{ fontWeight: 700 }}>
-                {medicalLogChild?.name ? `${medicalLogChild.name}'s Medications` : 'Medications'}
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                Child-specific medication list and dose logging
-              </Typography>
-            </Box>
-            <IconButton
-              onClick={handleCloseMedicalLog}
-              aria-label="close medical log"
-              sx={{ position: 'absolute', right: 16, top: 16 }}
+          <Typography sx={{ fontSize: '1.15rem', fontWeight: 800, color: colors.landing.heroText, mb: 0.75 }}>
+            Import Past Data
+          </Typography>
+          <Typography sx={{ fontSize: '0.92rem', lineHeight: 1.6, color: colors.landing.textMuted, mb: 2.5 }}>
+            Upload logs from Excel or documents to get started.
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 1.25, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+            <Button
+              variant="text"
+              onClick={() => setShowImportStartModal(false)}
+              sx={{ px: 1.5 }}
             >
-              <CloseIcon />
-            </IconButton>
-          </DialogTitle>
-          <DialogContent sx={{ pt: 0, pb: 3 }}>
-            <MedicationsLogTab childId={medicalLogChild?.id || hook.currentChildId} />
-          </DialogContent>
-        </Dialog>
-      )}
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              onClick={handleLaunchImportPicker}
+              sx={{ px: 2.2 }}
+            >
+              Upload File
+            </Button>
+          </Box>
+        </Box>
+      </Modal>
+
+      <BulkMedicationLogDialog
+        open={showMedicalLogPanel}
+        childId={medicalLogChild?.id || hook.currentChildId}
+        childName={medicalLogChild?.name || ''}
+        onClose={handleCloseMedicalLog}
+      />
 
       <Modal
         open={importLoading}
@@ -692,6 +800,22 @@ const PanelDashboard = () => {
           }}
         >
           {importError}
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={careToastOpen}
+        autoHideDuration={1800}
+        onClose={() => setCareToastOpen(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={() => setCareToastOpen(false)}
+          severity="success"
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {careToastMessage}
         </Alert>
       </Snackbar>
     </Container>

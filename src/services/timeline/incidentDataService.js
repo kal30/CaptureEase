@@ -8,6 +8,25 @@ import {
 import { db } from '../firebase';
 import { getDayDateRange, isWithinDateRange } from './dateUtils';
 import { calculateTimeElapsed } from '../../utils/incidentGrouping';
+import { getSeverityScale } from '../incidentService';
+
+const buildIncidentSummary = (incident) => {
+  const severityScale = getSeverityScale(incident.type || 'other');
+  const severityInfo = severityScale[incident.severity] || { label: 'Unknown', description: '' };
+  const parts = [
+    `Severity: ${severityInfo.label} (${incident.severity}/10)`,
+  ];
+
+  if (incident.notes) {
+    parts.push(`Notes: ${incident.notes}`);
+  }
+
+  if (incident.triggerSummary || incident.remedy) {
+    parts.push(`Triggers: ${incident.triggerSummary || incident.remedy}`);
+  }
+
+  return parts.join(' • ');
+};
 
 /**
  * Get incidents for a specific child and date
@@ -34,6 +53,9 @@ export const getIncidents = async (childId, selectedDate) => {
         id: doc.id,
         ...doc.data(),
         timestamp: doc.data().timestamp?.toDate() || new Date(doc.data().createdAt),
+        content: buildIncidentSummary(doc.data()),
+        notes: doc.data().notes || '',
+        triggerSummary: doc.data().triggerSummary || doc.data().remedy || '',
         timelineType: 'incident', // Keep timeline type separate from incident type
         collection: 'incidents'
       }));
@@ -42,11 +64,10 @@ export const getIncidents = async (childId, selectedDate) => {
       if (indexError.message.includes('index')) {
         console.warn('🔥 Index missing for incidents, using fallback query');
         
-        // Fallback: get all incidents for child and filter by date
+        // Fallback: get all incidents for child and filter by date in memory
         const fallbackQuery = query(
           collection(db, 'incidents'),
-          where('childId', '==', childId),
-          orderBy('timestamp', 'desc')
+          where('childId', '==', childId)
         );
         
         const snapshot = await getDocs(fallbackQuery);
@@ -55,10 +76,14 @@ export const getIncidents = async (childId, selectedDate) => {
             id: doc.id,
             ...doc.data(),
             timestamp: doc.data().timestamp?.toDate() || new Date(doc.data().createdAt),
+            content: buildIncidentSummary(doc.data()),
+            notes: doc.data().notes || '',
+            triggerSummary: doc.data().triggerSummary || doc.data().remedy || '',
             timelineType: 'incident', // Keep timeline type separate from incident type
             collection: 'incidents'
           }))
-          .filter(incident => isWithinDateRange(incident.timestamp, start, end));
+          .filter(incident => isWithinDateRange(incident.timestamp, start, end))
+          .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
       } else {
         throw indexError;
       }
@@ -116,4 +141,3 @@ export const getGroupedIncidents = async (childId, selectedDate) => {
     return [];
   }
 };
-

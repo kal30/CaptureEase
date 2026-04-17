@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 import { getIncidentDisplayInfo } from '../constants/uiDisplayConstants';
-import { getLogTypeByCategory, getLogTypeByEntry } from '../constants/logTypeRegistry';
+import { getLogTypeByCategory, getLogTypeByEntry, isBehaviorIncidentEntry } from '../constants/logTypeRegistry';
 import { getIncidentTypeConfig, getSeverityScale } from '../services/incidentService';
+import { getTimelineEntryDate } from '../services/timeline/dateUtils';
 
 /**
  * Enhanced hook for creating a unified daily log view
@@ -21,13 +22,13 @@ export const useUnifiedDailyLog = (timelineEntries = [], incidents = [], selecte
     
     // Filter timeline entries for selected date
     const dayTimelineEntries = timelineEntries.filter(entry => {
-      const entryDate = entry.timestamp?.toDate?.() || new Date(entry.timestamp);
+      const entryDate = getTimelineEntryDate(entry) || entry.timestamp?.toDate?.() || new Date(entry.timestamp);
       return entryDate >= dayStart && entryDate < dayEnd;
     });
     
     // Filter incidents for selected date
     const dayIncidents = incidents.filter(incident => {
-      const incidentDate = incident.timestamp?.toDate?.() || new Date(incident.timestamp);
+      const incidentDate = getTimelineEntryDate(incident) || incident.timestamp?.toDate?.() || new Date(incident.timestamp);
       return incidentDate >= dayStart && incidentDate < dayEnd;
     });
     
@@ -73,15 +74,18 @@ export const useUnifiedDailyLog = (timelineEntries = [], incidents = [], selecte
         const inferredCategory = getLogTypeByEntry(entry).category;
         const categoryMeta = inferredCategory ? getLogTypeByCategory(inferredCategory) : null;
         const displayLabel = categoryMeta?.trackLabel || categoryMeta?.displayLabel || entry.label || entry.titlePrefix || entry.type;
+        const isBehaviorIncident = isBehaviorIncidentEntry(entry);
 
         return {
           ...entry,
+          logCategory: entry.logCategory || inferredCategory || entry.category,
           category: inferredCategory || entry.category,
-          entryType: entry.type, // Keep original type (daily_note, mood_log, etc.)
+          entryType: isBehaviorIncident ? 'incident' : entry.type, // Keep original type (daily_note, mood_log, etc.)
           label: entry.label || displayLabel,
           titlePrefix: entry.titlePrefix || categoryMeta?.displayLabel || null,
           content: entry.content || entry.notes || entry.sleepDetails?.notes || entry.bathroomDetails?.notes || entry.description || entry.summary || entry.text || null,
           notes: entry.notes || entry.sleepDetails?.notes || entry.bathroomDetails?.notes || null,
+          incidentStyle: isBehaviorIncident,
           isTimelineEntry: true
         };
       }),
@@ -278,7 +282,7 @@ const calculateDayStats = (allEntries, incidents, timelineEntries) => {
     medicalEntries: timelineEntries.filter(entry => ['medical_event', 'medication_log'].includes(entry.type)).length,
     behaviorEntries: allEntries.filter(entry => 
       entry.type === 'behavior' || 
-      (entry.entryType === 'incident' && ['behavioral', 'sensory', 'mood'].includes(entry.originalData?.type))
+      (isBehaviorIncidentEntry(entry) || (entry.entryType === 'incident' && ['behavioral', 'sensory', 'mood'].includes(entry.originalData?.type)))
     ).length,
     
     // Incident severity breakdown

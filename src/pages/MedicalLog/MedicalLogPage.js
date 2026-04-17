@@ -1,14 +1,17 @@
 import React from "react";
 import { Container, Typography, Box, Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { useChildContext } from "../../contexts/ChildContext";
 import useChildName from "../../hooks/useChildName";
 import MedicationsLogTab from "./MedicationsLogTab";
 
 const MedicalLogPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { currentChildId } = useChildContext();
   const { childName, loading, error } = useChildName(currentChildId);
+  const initialShowArchived = Boolean(location.state?.showArchived);
 
   if (loading) return <Typography>Loading...</Typography>;
   if (error) return <Typography>Error: {error.message}</Typography>;
@@ -36,7 +39,11 @@ const MedicalLogPage = () => {
       </Typography>
 
       <Box sx={{ pt: 3 }}>
-        <MedicationsLogTab childId={currentChildId} childName={childName} />
+        <MedicationsLogTab
+          childId={currentChildId}
+          childName={childName}
+          initialShowArchived={initialShowArchived}
+        />
       </Box>
     </Container>
   );

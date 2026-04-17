@@ -22,7 +22,7 @@ import BulkMedicationLogDialog from './components/BulkMedicationLogDialog';
 import MedicationSideEffectDialog from './components/MedicationSideEffectDialog';
 import { uploadIncidentMedia } from '../../components/Dashboard/Incidents/Media/mediaUploadService';
 
-const MedicationsLogTab = ({ childId, childName }) => {
+const MedicationsLogTab = ({ childId, childName, initialShowArchived = false }) => {
   const theme = useTheme(); // Get theme object
   const [user] = useAuthState(auth);
   const [medications, setMedications] = useState([]);
@@ -60,8 +60,12 @@ const MedicationsLogTab = ({ childId, childName }) => {
 
   
 
-  const [showArchived, setShowArchived] = useState(false);
+  const [showArchived, setShowArchived] = useState(Boolean(initialShowArchived));
   const activeMedications = medications.filter((med) => !med.isArchived);
+
+  useEffect(() => {
+    setShowArchived(Boolean(initialShowArchived));
+  }, [initialShowArchived]);
 
   useEffect(() => {
     const loadMedications = async () => {
@@ -519,7 +523,7 @@ const MedicationsLogTab = ({ childId, childName }) => {
             startIcon={<MedicationOutlinedIcon />}
             onClick={handleOpenBulkLogDialog}
           >
-            Log all medications for today
+            Log today&apos;s doses
           </Button>
         ) : null}
         <Button
@@ -534,6 +538,7 @@ const MedicationsLogTab = ({ childId, childName }) => {
       <AddEditMedicationModal
         open={Boolean(showForm)}
         onClose={handleCloseMedicationForm}
+        childName={childName}
         medicationForm={medicationForm}
         medicationNotesData={medicationNotesData}
         handleMedicationFormChange={handleMedicationFormChange}
@@ -800,8 +805,13 @@ const MedicationsLogTab = ({ childId, childName }) => {
         medications={activeMedications}
         user={user}
         onClose={handleCloseBulkLogDialog}
-        onSaved={() => {
-          handleCloseBulkLogDialog();
+        onSaved={({ medicationName, time }) => {
+          setSnackbarMessage(
+            medicationName
+              ? `${medicationName}${time ? ` logged for ${time}` : ' logged'}`
+              : 'Medication dose logged'
+          );
+          setShowSnackbar(true);
         }}
       />
 
