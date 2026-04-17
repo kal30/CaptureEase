@@ -28,7 +28,8 @@ import { useTimelineProgress } from '../../hooks/useTimelineProgress';
 import { trackRenderDebug, useMountDebug } from '../../utils/renderDebug';
 import { CATEGORY_COLORS } from '../../constants/categoryColors';
 import { getCanonicalEntryDisplayInfo, getLogTypeByCategory, getLogTypeByEntry } from '../../constants/logTypeRegistry';
-import { getTimelineEntryDate } from '../../services/timeline/dateUtils';
+import { getTimelineEntryDate, isTimelineEntryOnDate } from '../../services/timeline/dateUtils';
+import { buildDailyInsight } from '../Timeline/utils/dailyInsight';
 
 /**
  * TimelineWidget - Self-contained timeline component with progress visualization and unified daily log
@@ -66,6 +67,14 @@ const TimelineWidget = ({
   
   const childSpecificEntries = entries;
   const searchText = timelineFilters.searchText?.trim() || '';
+  const selectedDayEntries = React.useMemo(
+    () => childSpecificEntries.filter((entry) => isTimelineEntryOnDate(entry, selectedDate)),
+    [childSpecificEntries, selectedDate]
+  );
+  const selectedDayInsight = React.useMemo(
+    () => buildDailyInsight(selectedDayEntries),
+    [selectedDayEntries]
+  );
   
   const timeline = useTimelineProgress(childSpecificEntries, dailyCareStatus);
   trackRenderDebug('TimelineWidget', {
@@ -258,7 +267,10 @@ const TimelineWidget = ({
       byDate.get(dateKey).entries.push(entry);
     });
 
-    return grouped;
+    return grouped.map((group) => ({
+      ...group,
+      insight: buildDailyInsight(group.entries),
+    }));
   }, [childSpecificEntries, searchText, timelineFilters.entryTypes, timelineFilters.userRoles]);
 
   const searchResultStats = React.useMemo(() => {
@@ -323,6 +335,37 @@ const TimelineWidget = ({
                   year: 'numeric',
                 })}
               </Typography>
+
+              {group.insight?.bullets?.length ? (
+                <Box
+                  sx={{
+                    mb: 1,
+                    p: 1,
+                    borderRadius: 0.35,
+                    bgcolor: 'rgba(255, 255, 255, 0.88)',
+                    border: '1px solid rgba(148, 163, 184, 0.14)',
+                  }}
+                >
+                  <Typography sx={{ fontSize: '0.68rem', fontWeight: 900, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'text.secondary', mb: 0.55 }}>
+                    Quick take
+                  </Typography>
+                  <Stack component="ul" spacing={0.4} sx={{ m: 0, pl: 2, color: 'text.secondary' }}>
+                    {group.insight.bullets.map((bullet) => (
+                      <Box
+                        key={bullet.text}
+                        component="li"
+                        sx={{
+                          fontSize: '0.8rem',
+                          lineHeight: 1.4,
+                          fontWeight: 600,
+                        }}
+                      >
+                        {bullet.text}
+                      </Box>
+                    ))}
+                  </Stack>
+                </Box>
+              ) : null}
 
               <Stack spacing={0.75}>
                 {group.entries.map((entry) => (
@@ -598,6 +641,36 @@ const TimelineWidget = ({
           </IconButton>
         </Box>
       </Box>
+
+      {selectedDayInsight?.bullets?.length ? (
+        <Box
+          sx={{
+            p: 1,
+            borderRadius: 0.35,
+            bgcolor: 'rgba(248, 250, 252, 0.92)',
+            border: '1px solid rgba(148, 163, 184, 0.16)',
+          }}
+        >
+          <Typography sx={{ fontSize: '0.66rem', fontWeight: 900, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'text.secondary', mb: 0.55 }}>
+            Quick take
+          </Typography>
+          <Stack component="ul" spacing={0.4} sx={{ m: 0, pl: 2, color: 'text.secondary' }}>
+            {selectedDayInsight.bullets.map((bullet) => (
+              <Box
+                key={bullet.text}
+                component="li"
+                sx={{
+                  fontSize: '0.8rem',
+                  lineHeight: 1.4,
+                  fontWeight: 600,
+                }}
+              >
+                {bullet.text}
+              </Box>
+            ))}
+          </Stack>
+        </Box>
+      ) : null}
 
       {renderSearchResults()}
 

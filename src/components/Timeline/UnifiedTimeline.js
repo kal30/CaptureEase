@@ -21,6 +21,7 @@ import { CATEGORY_COLORS } from "../../constants/categoryColors";
 import { trackRenderDebug, useMountDebug } from "../../utils/renderDebug";
 import { auth, db } from "../../services/firebase";
 import { getTimelineEntryDate } from "../../services/timeline/dateUtils";
+import { buildDailyInsight } from "./utils/dailyInsight";
 import colors from "../../assets/theme/colors";
 
 const TEXT_PRIMARY = '#1F2937';
@@ -151,34 +152,6 @@ const UnifiedTimeline = ({
   const [actionLoadingId, setActionLoadingId] = React.useState(null);
   const [localEntryUpdates, setLocalEntryUpdates] = React.useState({});
   const [deletedEntryIds, setDeletedEntryIds] = React.useState({});
-  const summarizeMoodLabel = React.useCallback((moodValue, moodEmoji = null) => {
-    const normalizedMood = String(moodValue || '').trim().toLowerCase();
-    if (!normalizedMood) {
-      return null;
-    }
-
-    const moodPatterns = [
-      { terms: ['frustrated', 'angry', 'mad', 'annoyed', 'stressed'], emoji: '😡', label: 'Frustrated' },
-      { terms: ['sad', 'down', 'upset', 'cry', 'tired'], emoji: '😢', label: 'Down' },
-      { terms: ['neutral', 'okay', 'ok', 'fine', 'meh'], emoji: '😐', label: 'Mostly neutral' },
-      { terms: ['calm', 'relaxed', 'peaceful', 'content'], emoji: '🙂', label: 'Mostly calm' },
-      { terms: ['happy', 'great', 'joyful', 'smiling', 'good'], emoji: '😄', label: 'Happy' },
-    ];
-
-    const matchedMood = moodPatterns.find((pattern) => pattern.terms.some((term) => normalizedMood.includes(term)));
-    if (matchedMood) {
-      return {
-        emoji: moodEmoji || matchedMood.emoji,
-        label: matchedMood.label,
-      };
-    }
-
-    return {
-      emoji: moodEmoji || LOG_TYPES.mood.icon,
-      label: moodValue,
-    };
-  }, []);
-
   const extractTags = React.useCallback((inputText = '') => {
     const tagRegex = /#(\w+)/g;
     const matches = [...inputText.matchAll(tagRegex)];
@@ -422,78 +395,10 @@ const UnifiedTimeline = ({
     return blocks;
   }, [formatTimelineTime, getEntryDate, getEntryPresentation, getMinuteKey, visibleEntries]);
 
-  const todaySummary = React.useMemo(() => {
-    if (!visibleEntries.length) {
-      return null;
-    }
-
-    const sortedEntries = [...visibleEntries].sort((a, b) => {
-      const aDate = getEntryDate(a) || new Date(a.timestamp);
-      const bDate = getEntryDate(b) || new Date(b.timestamp);
-      return bDate - aDate;
-    });
-
-    let latestMood = null;
-    let medsCount = 0;
-    let activityCount = 0;
-    let incidentCount = 0;
-
-    sortedEntries.forEach((entry) => {
-      const presentation = getEntryPresentation(entry);
-
-      if (presentation.kind === 'mood' && !latestMood) {
-        latestMood = {
-          moodValue: presentation.entryLabel || entry.moodValue || entry.value || entry.title || '',
-          moodEmoji: entry.moodEmoji || presentation.entryIcon || LOG_TYPES.mood.icon,
-        };
-      }
-
-      if (presentation.kind === 'meds') {
-        medsCount += 1;
-      } else if (presentation.kind === 'activity') {
-        activityCount += 1;
-      } else if (
-        presentation.kind === 'behavior'
-        || entry.collection === 'incidents'
-        || entry.entryType === 'incident'
-        || entry.incidentStyle
-      ) {
-        incidentCount += 1;
-      }
-    });
-
-    const moodSummary = latestMood
-      ? summarizeMoodLabel(latestMood.moodValue, latestMood.moodEmoji)
-      : null;
-
-    const summaryItems = [];
-    if (moodSummary) {
-      summaryItems.push({
-        icon: moodSummary.emoji,
-        label: moodSummary.label,
-      });
-    }
-    if (medsCount > 0) {
-      summaryItems.push({
-        icon: LOG_TYPES.medication.icon,
-        label: `${medsCount} med${medsCount === 1 ? '' : 's'}`,
-      });
-    }
-    if (activityCount > 0) {
-      summaryItems.push({
-        icon: '🎯',
-        label: `${activityCount} activit${activityCount === 1 ? 'y' : 'ies'}`,
-      });
-    }
-    if (incidentCount > 0) {
-      summaryItems.push({
-        icon: LOG_TYPES.behavior.icon,
-        label: `${incidentCount} incident${incidentCount === 1 ? '' : 's'}`,
-      });
-    }
-
-    return summaryItems.length > 0 ? summaryItems : null;
-  }, [getEntryDate, getEntryPresentation, summarizeMoodLabel, visibleEntries]);
+  const todaySummary = React.useMemo(
+    () => buildDailyInsight(visibleEntries),
+    [visibleEntries]
+  );
 
   // Note: entries are already pre-filtered; grouping by period is optional and not used here.
 
@@ -616,7 +521,7 @@ const UnifiedTimeline = ({
         </Box>
       )}
 
-      {showDaySummary && todaySummary && visibleEntries.length > 0 ? (
+      {showDaySummary && todaySummary?.bullets?.length > 0 && visibleEntries.length > 0 ? (
         <Box
           sx={{
             mt: 1.25,
@@ -636,48 +541,100 @@ const UnifiedTimeline = ({
               color: TEXT_MUTED,
             }}
           >
-            Today Summary
+            {todaySummary.title}
           </Typography>
 
           <Box
             sx={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              alignItems: 'center',
-              gap: 0.85,
-              fontSize: '0.84rem',
-              lineHeight: 1.4,
-              color: TEXT_PRIMARY,
+              p: { xs: 1.25, md: 1.5 },
+              borderRadius: '14px',
+              bgcolor: 'rgba(248, 250, 252, 0.92)',
+              border: '1px solid rgba(148, 163, 184, 0.16)',
             }}
           >
-            {todaySummary.map((item, index) => (
-              <Box
-                key={`${item.label}-${index}`}
-                component="span"
-                sx={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 0.45,
-                  whiteSpace: 'nowrap',
-                  flexShrink: 0,
-                }}
-              >
-                <Typography component="span" sx={{ fontSize: '0.92rem', lineHeight: 1 }}>
-                  {item.icon}
-                </Typography>
-                <Typography
-                  component="span"
+            <Stack
+              component="ul"
+              spacing={0.55}
+              sx={{
+                m: 0,
+                pl: 2,
+                color: TEXT_PRIMARY,
+              }}
+            >
+              {todaySummary.bullets.map((item, index) => (
+                <Box
+                  key={`${item.text}-${index}`}
+                  component="li"
                   sx={{
                     fontSize: '0.84rem',
-                    fontWeight: 700,
-                    lineHeight: 1.15,
+                    lineHeight: 1.45,
                     color: TEXT_SECONDARY,
+                    fontWeight: 600,
                   }}
                 >
-                  {item.label}
-                </Typography>
-              </Box>
-            ))}
+                  {item.text}
+                </Box>
+              ))}
+            </Stack>
+          </Box>
+        </Box>
+      ) : null}
+
+      {todaySummary?.bullets?.length > 0 && visibleEntries.length > 0 ? (
+        <Box
+          sx={{
+            mt: showDaySummary ? 0 : 1.1,
+            mb: 1.1,
+            px: { xs: 0.25, md: 0.5 },
+          }}
+        >
+          <Typography
+            variant="caption"
+            sx={{
+              display: 'block',
+              mb: 0.55,
+              fontSize: '0.66rem',
+              fontWeight: 900,
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              color: TEXT_MUTED,
+            }}
+          >
+            Quick take
+          </Typography>
+
+          <Box
+            sx={{
+              p: { xs: 1.25, md: 1.5 },
+              borderRadius: '14px',
+              bgcolor: 'rgba(248, 250, 252, 0.92)',
+              border: '1px solid rgba(148, 163, 184, 0.16)',
+            }}
+          >
+            <Stack
+              component="ul"
+              spacing={0.55}
+              sx={{
+                m: 0,
+                pl: 2,
+                color: TEXT_PRIMARY,
+              }}
+            >
+              {todaySummary.bullets.map((item, index) => (
+                <Box
+                  key={`${item.text}-${index}`}
+                  component="li"
+                  sx={{
+                    fontSize: '0.84rem',
+                    lineHeight: 1.45,
+                    color: TEXT_SECONDARY,
+                    fontWeight: 600,
+                  }}
+                >
+                  {item.text}
+                </Box>
+              ))}
+            </Stack>
           </Box>
         </Box>
       ) : null}

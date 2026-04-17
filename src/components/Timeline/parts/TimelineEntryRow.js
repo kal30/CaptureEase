@@ -14,6 +14,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
+import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded';
 import { alpha } from '@mui/material/styles';
 
 const buildContextSignals = (contextSignals = []) => {
@@ -50,6 +51,8 @@ const TimelineEntryRow = ({
     initials = '',
     accentColor = '#64748B',
     metaBadge = null,
+    severityMeta = null,
+    severityLevel = null,
     kind = 'generic',
   } = entryConfig;
 
@@ -59,6 +62,15 @@ const TimelineEntryRow = ({
   const visibleSignals = buildContextSignals(contextSignals);
   const hasInitials = Boolean(initials);
   const hasMetaBadge = Boolean(metaBadge);
+  const hasSeverity = Boolean(severityMeta || Number.isFinite(Number(severityLevel)));
+  const numericSeverity = Number(severityLevel);
+  const isHighSeverity = Number.isFinite(numericSeverity) && numericSeverity >= 7;
+  const isMediumSeverity = Number.isFinite(numericSeverity) && numericSeverity >= 4 && numericSeverity < 7;
+  const severityTone = severityMeta?.color || accentColor;
+  const rootBorderLeftWidth = isHighSeverity ? 5 : hasSeverity ? 4 : 3;
+  const rootShadow = isHighSeverity
+    ? `0 0 0 1px ${alpha(severityTone, 0.06)}, 0 4px 14px ${alpha(severityTone, 0.08)}`
+    : 'none';
 
   const renderMetaBadge = () => {
     if (!hasMetaBadge) {
@@ -66,21 +78,26 @@ const TimelineEntryRow = ({
     }
 
     const badgeColor = metaBadge.color || accentColor;
-    const badgeBg = metaBadge.bg || alpha(badgeColor, 0.12);
+    const badgeBg = metaBadge.bg || alpha(badgeColor, isHighSeverity ? 0.22 : (isMediumSeverity ? 0.16 : 0.14));
     const badgeText = metaBadge.textColor || badgeColor;
+    const badgeBorder = metaBadge.border || alpha(badgeColor, isHighSeverity ? 0.32 : (isMediumSeverity ? 0.26 : 0.24));
+    const badgeLabel = metaBadge.icon ? `${metaBadge.icon} ${metaBadge.label}` : metaBadge.label;
 
     return (
       <Chip
-        label={metaBadge.label}
+        label={badgeLabel}
         size="small"
         sx={{
-          height: 22,
-          fontSize: '0.62rem',
+          height: 24,
+          fontSize: '0.65rem',
           fontWeight: 800,
           bgcolor: badgeBg,
           color: badgeText,
-          border: `1px solid ${alpha(badgeColor, 0.24)}`,
+          border: `1px solid ${badgeBorder}`,
           maxWidth: 120,
+          '& .MuiChip-label': {
+            px: 0.9,
+          },
         }}
       />
     );
@@ -103,11 +120,12 @@ const TimelineEntryRow = ({
         mb: 0.1,
         backgroundColor: '#FFFFFF',
         borderBottom: isLast ? 'none' : '1px solid rgba(226, 232, 240, 0.95)',
-        borderLeft: `3px solid ${accentColor}`,
-        borderTop: `1px solid ${alpha(accentColor, 0.08)}`,
-        borderRight: `1px solid ${alpha(accentColor, 0.08)}`,
+        borderLeft: `${rootBorderLeftWidth}px solid ${severityTone}`,
+        borderTop: `1px solid ${alpha(severityTone, hasSeverity ? 0.16 : 0.08)}`,
+        borderRight: `1px solid ${alpha(severityTone, hasSeverity ? 0.12 : 0.08)}`,
         borderRadius: '18px',
         overflow: 'hidden',
+        boxShadow: rootShadow,
       }}
     >
       <Box
@@ -131,7 +149,7 @@ const TimelineEntryRow = ({
             bottom: 0,
             width: 2,
             transform: 'translateX(-50%)',
-            bgcolor: alpha(accentColor, 0.2),
+            bgcolor: alpha(severityTone, hasSeverity ? 0.28 : 0.2),
             borderRadius: 999,
           }}
         />
@@ -155,15 +173,15 @@ const TimelineEntryRow = ({
             height: { xs: 24, sm: 26 },
             borderRadius: '9999px',
             border: '2px solid',
-            borderColor: accentColor,
-            color: accentColor,
+            borderColor: severityTone,
+            color: severityTone,
             bgcolor: '#FFFFFF',
             display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: { xs: '0.76rem', sm: '0.82rem' },
             lineHeight: 1,
-            boxShadow: `0 1px 2px ${alpha(accentColor, 0.1)}`,
+            boxShadow: `0 1px 2px ${alpha(severityTone, 0.1)}`,
           }}
         >
           {icon}
@@ -214,23 +232,31 @@ const TimelineEntryRow = ({
                     height: 24,
                     fontSize: '0.68rem',
                     fontWeight: 900,
-                    bgcolor: alpha(accentColor, 0.12),
-                    color: accentColor,
-                    border: `1px solid ${alpha(accentColor, 0.18)}`,
+                    bgcolor: hasSeverity
+                      ? alpha(severityTone, isHighSeverity ? 0.18 : 0.14)
+                      : alpha('#64748B', 0.08),
+                    color: hasSeverity ? severityTone : '#475569',
+                    border: `1px solid ${hasSeverity ? alpha(severityTone, isHighSeverity ? 0.34 : 0.24) : alpha('#64748B', 0.16)}`,
                   }}
                 />
                 {headlineText ? (
                   <Typography
                     component="span"
                     sx={{
-                      fontWeight: 900,
+                      fontWeight: isHighSeverity ? 950 : 900,
                       fontSize: { xs: '0.9rem', sm: '0.96rem' },
                       lineHeight: 1.15,
                       color: '#0F172A',
                       minWidth: 0,
                       wordBreak: 'break-word',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 0.45,
                     }}
                   >
+                    {isHighSeverity ? (
+                      <WarningAmberRoundedIcon sx={{ fontSize: 15, color: severityTone, flexShrink: 0 }} />
+                    ) : null}
                     {headlineText}
                   </Typography>
                 ) : null}

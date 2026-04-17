@@ -38,6 +38,7 @@ import { PickersDay } from '@mui/x-date-pickers/PickersDay';
 import { ACTIVE_TIMELINE_DATE_STORAGE_KEY, useDashboardView } from '../shared/DashboardViewContext';
 import { ChildSwitcherPanel } from '../shared/ChildSwitcher';
 import { getTimelineEntryDate } from '../../../services/timeline/dateUtils';
+import { buildCalendarDayStatusMap, getCalendarDayStatus } from '../../Timeline/utils/calendarDayStatus';
 import ChildActionsMenuContent from '../shared/ChildActionsMenuContent';
 import { USER_ROLES } from '../../../constants/roles';
 import { LOG_TYPES } from '../../../constants/logTypeRegistry';
@@ -51,7 +52,31 @@ import DashboardActionBoard from '../DashboardActionBoard';
 import { getE2EMockData, isE2EMockEnabled } from '../../../services/e2eMock';
 import { getChildProfileCompletion } from '../../../utils/profileCompletion';
 import { buildMoodDocId, logMood } from '../../../services/moodService';
-import { isBehaviorIncidentEntry } from '../../../constants/logTypeRegistry';
+
+const formatMobileTimelineHeaderLabel = (date = new Date()) => {
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+
+  const isSameDay = (a, b) => (
+    a.getFullYear() === b.getFullYear()
+    && a.getMonth() === b.getMonth()
+    && a.getDate() === b.getDate()
+  );
+
+  if (isSameDay(date, today)) {
+    return 'Today';
+  }
+
+  if (isSameDay(date, yesterday)) {
+    return 'Yesterday';
+  }
+
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+  });
+};
 
 const timelineUserRoleOptions = [
   { value: USER_ROLES.CARE_OWNER, label: 'Care Owner' },
@@ -258,47 +283,10 @@ const MobileCaptureDashboard = ({
       ? MOOD_OPTIONS.find((option) => option.key === pendingMoodKey) || snapshotMood
       : snapshotMood
   ), [pendingMoodKey, snapshotMood]);
-  const calendarIndicators = useMemo(() => {
-    const indicatorMap = new Map();
-
-    activeChildEntries.forEach((entry) => {
-      if (!entry) return;
-      const entryDate = getTimelineEntryDate(entry) || (entry.timestamp?.toDate?.() ? entry.timestamp.toDate() : new Date(entry.timestamp));
-      if (Number.isNaN(entryDate.getTime())) return;
-
-      const calendarKey = getCalendarDateKey(entryDate);
-      if (!calendarKey) {
-        return;
-      }
-
-      const category = String(
-        entry.collection
-        || entry.category
-        || entry.type
-        || entry.timelineType
-        || entry.actionType
-        || entry.logCategory
-        || ''
-      ).toLowerCase();
-
-      const hasActivity = category === 'activity'
-        || (entry.collection === 'dailyCare' && entry.actionType === 'activity');
-
-      const hasIncident = category === 'incident'
-        || category === 'behavior'
-        || entry.entryType === 'incident'
-        || Boolean(entry.incidentStyle)
-        || isBehaviorIncidentEntry(entry)
-        || entry.collection === 'incidents';
-
-      const nextValue = indicatorMap.get(calendarKey) || { hasActivity: false, hasIncident: false };
-      nextValue.hasActivity = nextValue.hasActivity || hasActivity;
-      nextValue.hasIncident = nextValue.hasIncident || hasIncident;
-      indicatorMap.set(calendarKey, nextValue);
-    });
-
-    return indicatorMap;
-  }, [activeChildEntries]);
+  const calendarIndicators = useMemo(
+    () => buildCalendarDayStatusMap(activeChildEntries),
+    [activeChildEntries]
+  );
   const activeChildCareTeam = useMemo(
     () => careTeamsByChildId[activeChild?.id] || [],
     [activeChild?.id, careTeamsByChildId]
@@ -319,7 +307,7 @@ const MobileCaptureDashboard = ({
     return `How is ${firstName}?`;
   }, [activeChild?.name]);
   const profileProgress = Math.max(0, Math.min(100, activeChildProfileCompletion || 0));
-  const todayLabel = 'Today';
+  const timelineHeaderLabel = useMemo(() => formatMobileTimelineHeaderLabel(selectedDate), [selectedDate]);
   const searchPlaceholder = `Search ${activeChild?.name || 'today'}...`;
   const handleEditActiveChild = () => {
     if (!activeChild || !onEditChild) {
@@ -602,49 +590,46 @@ const MobileCaptureDashboard = ({
   const MobileCalendarDay = (props) => {
     const { day, outsideCurrentMonth, ...other } = props;
     const dayKey = getCalendarDateKey(day);
-    const indicators = dayKey ? calendarIndicators.get(dayKey) : null;
+    const indicators = dayKey ? getCalendarDayStatus(calendarIndicators.get(dayKey) || {}) : null;
 
     return (
       <Box sx={{ position: 'relative' }}>
         <PickersDay {...other} day={day} outsideCurrentMonth={outsideCurrentMonth} />
-        {(indicators?.hasActivity || indicators?.hasIncident) ? (
+        {(indicators?.hasLogs || indicators?.hasIncident) ? (
           <Box
             sx={{
               position: 'absolute',
               bottom: 4,
               left: '50%',
               transform: 'translateX(-50%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 0.35,
               pointerEvents: 'none',
+              zIndex: 1,
             }}
           >
-            {indicators?.hasActivity ? (
-              <Box
-                sx={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: '50%',
-                  bgcolor: '#5FB6B2',
-                  border: `1px solid ${colors.landing.surface}`,
-                  boxShadow: `0 0 0 1px ${colors.landing.surface}`,
-                }}
-              />
-            ) : null}
             {indicators?.hasIncident ? (
               <Box
                 sx={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: '50%',
+                  width: 7,
+                  height: 7,
+                  borderRadius: '2px',
                   bgcolor: '#D14343',
                   border: `1px solid ${colors.landing.surface}`,
-                  boxShadow: `0 0 0 1px ${colors.landing.surface}`,
+                  boxShadow: `0 0 0 1px ${colors.landing.surface}, 0 1px 2px rgba(15, 23, 42, 0.14)`,
+                  transform: 'rotate(45deg)',
                 }}
               />
-            ) : null}
+            ) : (
+              <Box
+                sx={{
+                  width: 7,
+                  height: 7,
+                  borderRadius: '50%',
+                  bgcolor: '#2BA7A0',
+                  border: `1px solid ${colors.landing.surface}`,
+                  boxShadow: `0 0 0 1px ${colors.landing.surface}, 0 1px 2px rgba(15, 23, 42, 0.14)`,
+                }}
+              />
+            )}
           </Box>
         ) : null}
       </Box>
@@ -1060,7 +1045,7 @@ const MobileCaptureDashboard = ({
               }}
             >
               <Typography sx={{ fontSize: '0.92rem', fontWeight: 900, color: TEXT_PRIMARY, lineHeight: 1 }}>
-                {todayLabel}
+                {timelineHeaderLabel}
               </Typography>
               <KeyboardArrowDownIcon sx={{ fontSize: 18, color: TEXT_SECONDARY }} />
             </ButtonBase>

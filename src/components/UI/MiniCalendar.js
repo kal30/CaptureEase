@@ -4,6 +4,7 @@ import MonthNavigationControls from './MonthNavigationControls';
 import { useSwipeGesture } from '../../hooks/useSwipeGesture';
 import colors from '../../assets/theme/colors';
 import { getCalendarDateKey, getCalendarEntryDateKey, getCalendarDateKeys } from '../../utils/calendarDateKey';
+import { buildCalendarDayStatusMap, getCalendarDayStatus } from '../Timeline/utils/calendarDayStatus';
 
 const toMonthStart = (date) => new Date(date.getFullYear(), date.getMonth(), 1);
 const getMonthKey = (date) => `${date.getFullYear()}-${date.getMonth()}`;
@@ -87,6 +88,7 @@ const MiniCalendar = ({
     const activityKeys = activityDateKeys.length > 0
       ? new Set(activityDateKeys)
       : getCalendarDateKeys(entries);
+    const dayStatusMap = buildCalendarDayStatusMap(entries, Array.from(activityKeys));
     
     // Group entries by day
     entries.forEach(entry => {
@@ -113,13 +115,14 @@ const MiniCalendar = ({
       const isFuture = currentDateOnly > todayDateOnly;
       const isCurrentMonth = currentDate.getMonth() === monthToDisplay.getMonth();
       const isSelected = selectedDate && getCalendarDateKey(currentDate) === getCalendarDateKey(selectedDate);
+      const dayStatus = getCalendarDayStatus(dayStatusMap.get(dateKey) || {});
       
       days.push({
         date: currentDate,
         day: currentDate.getDate(),
         dateKey,
         entries: dayEntries,
-        hasActivity: activityKeys.has(dateKey) || dayEntries.length > 0,
+        ...dayStatus,
         isToday,
         isFuture,
         isCurrentMonth,
@@ -189,17 +192,35 @@ const MiniCalendar = ({
     } : {}
   });
 
-  const activityDotStyles = {
-    color: colors.app.timeline.dailyLog,
-    fontSize: { xs: 13, md: 12 },
-    lineHeight: 1,
-    fontWeight: 900,
+  const logMarkerStyles = {
     position: 'absolute',
-    bottom: { xs: 2, md: 1 },
+    bottom: { xs: 3, md: 2 },
     left: '50%',
     transform: 'translateX(-50%)',
     zIndex: 2,
     pointerEvents: 'none',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  };
+
+  const regularLogMarkerStyles = {
+    width: { xs: 7, md: 6 },
+    height: { xs: 7, md: 6 },
+    borderRadius: '9999px',
+    bgcolor: '#2BA7A0',
+    border: '1px solid #FFFFFF',
+    boxShadow: '0 1px 2px rgba(15, 23, 42, 0.18)',
+  };
+
+  const incidentMarkerStyles = {
+    width: { xs: 8, md: 7 },
+    height: { xs: 8, md: 7 },
+    borderRadius: '2px',
+    bgcolor: '#D14343',
+    border: '1px solid #FFFFFF',
+    boxShadow: '0 1px 2px rgba(15, 23, 42, 0.18)',
+    transform: 'rotate(45deg)',
   };
 
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -251,7 +272,7 @@ const MiniCalendar = ({
             key={dayData.dateKey}
             sx={dayStyles(dayData)}
             onClick={(e) => handleDayClick(e, dayData)}
-            className={`mini-calendar__day ${dayData.hasActivity ? 'mini-calendar__day--active' : ''} ${dayData.isToday ? 'mini-calendar__day--today' : ''} ${!dayData.isCurrentMonth ? 'mini-calendar__day--other-month' : ''}`}
+            className={`mini-calendar__day ${(dayData.hasLogs || dayData.hasIncident) ? 'mini-calendar__day--active' : ''} ${dayData.isToday ? 'mini-calendar__day--today' : ''} ${!dayData.isCurrentMonth ? 'mini-calendar__day--other-month' : ''}`}
           >
             <Typography
               variant="caption"
@@ -266,38 +287,82 @@ const MiniCalendar = ({
           >
             {dayData.day}
           </Typography>
-          {/* Activity dot */}
-          {dayData.hasActivity && dayData.isCurrentMonth && (
-            <Typography
+          {/* Day status marker */}
+          {dayData.isCurrentMonth && (dayData.hasLogs || dayData.hasIncident) ? (
+            <Box
               aria-hidden="true"
               sx={{
-                ...activityDotStyles,
+                ...logMarkerStyles,
+                ...(dayData.isToday || dayData.isSelected
+                  ? {
+                      bottom: { xs: 7, md: 5 },
+                      top: 'auto',
+                    }
+                  : {
+                      bottom: { xs: 3, md: 2 },
+                    }),
               }}
             >
-              •
-            </Typography>
-          )}
+              {dayData.hasIncident ? (
+                <Box
+                  sx={{
+                    ...(dayData.isToday || dayData.isSelected
+                      ? {
+                          width: 6.5,
+                          height: 6.5,
+                          borderRadius: '2px',
+                          bgcolor: '#FFFFFF',
+                          border: '1px solid rgba(255, 255, 255, 0.95)',
+                          boxShadow: '0 1px 2px rgba(15, 23, 42, 0.25)',
+                          transform: 'rotate(45deg)',
+                        }
+                      : incidentMarkerStyles),
+                  }}
+                />
+              ) : (
+                <Box
+                  sx={{
+                    ...(dayData.isToday || dayData.isSelected
+                      ? {
+                          width: 6,
+                          height: 6,
+                          borderRadius: '9999px',
+                          bgcolor: '#FFFFFF',
+                          border: '1px solid rgba(255, 255, 255, 0.95)',
+                          boxShadow: '0 1px 2px rgba(15, 23, 42, 0.25)',
+                        }
+                      : regularLogMarkerStyles),
+                  }}
+                />
+              )}
+            </Box>
+          ) : null}
           </Box>
         ))}
       </Box>
       
-      {/* Legend - only show on mobile */}
-      <Box sx={{ 
-        display: 'flex',
-        alignItems: 'center', 
-        justifyContent: 'center',
-        gap: 0.5, 
-        mt: 1 
-      }}>
-        <Box sx={{
-          width: 8,
-          height: 8,
-          borderRadius: '50%',
-          bgcolor: colors.brand.deep,
-        }} />
-        <Typography variant="caption" sx={{ fontSize: '0.7rem', color: 'text.secondary' }}>
-          Has activity
-        </Typography>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 1.25,
+          mt: 1,
+          flexWrap: 'wrap',
+        }}
+      >
+        <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.45 }}>
+          <Box sx={{ width: 7, height: 7, borderRadius: '9999px', bgcolor: '#2BA7A0' }} />
+          <Typography variant="caption" sx={{ fontSize: '0.68rem', color: 'text.secondary' }}>
+            Logs
+          </Typography>
+        </Box>
+        <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.45 }}>
+          <Box sx={{ width: 7, height: 7, borderRadius: '2px', bgcolor: '#D14343', transform: 'rotate(45deg)' }} />
+          <Typography variant="caption" sx={{ fontSize: '0.68rem', color: 'text.secondary' }}>
+            Incident
+          </Typography>
+        </Box>
       </Box>
     </Box>
   );

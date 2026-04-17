@@ -362,11 +362,7 @@ export const transformTimelineEntry = (entry = {}, presentation = {}, timeString
       ? (activityMeta?.icon || LOG_TYPES.activity.icon)
       : (presentation.entryIcon || categoryDisplay.icon || '•');
 
-  const accentColor = isBehaviorIncident
-    ? (entry.incidentCategoryColor || LOG_TYPES.behavior.palette.dot)
-    : isDailyCareActivity
-      ? (activityMeta?.color || activityMeta?.border || LOG_TYPES.activity.palette.dot)
-      : (presentation.entryColor || categoryDisplay.palette?.dot || LOG_TYPES.log.palette.dot);
+  const accentColor = severityMeta?.color || '#64748B';
 
   const primaryText = isBehaviorIncident
     ? normalizeText(
@@ -439,6 +435,7 @@ export const transformTimelineEntry = (entry = {}, presentation = {}, timeString
           textColor: severityMeta.textColor,
           bg: severityMeta.bg,
           border: severityMeta.border,
+          icon: severityMeta.value >= 7 ? '⚠️' : null,
         }
       : null)
     : isDailyCareActivity
@@ -452,12 +449,13 @@ export const transformTimelineEntry = (entry = {}, presentation = {}, timeString
           }
         : null)
       : (severityMeta
-        ? {
+      ? {
             label: severityMeta.displayLabel,
             color: severityMeta.color,
             textColor: severityMeta.textColor,
             bg: severityMeta.bg,
             border: severityMeta.border,
+            icon: severityMeta.value >= 7 ? '⚠️' : null,
           }
         : null);
 
@@ -494,6 +492,8 @@ export const transformTimelineEntry = (entry = {}, presentation = {}, timeString
     initials,
     accentColor,
     metaBadge,
+    severityMeta,
+    severityLevel: severityMeta?.value ?? (Number.isFinite(Number(entry.severity ?? entry.incidentData?.severity)) ? Number(entry.severity ?? entry.incidentData?.severity) : null),
     detailRows,
     activityTheme: activityMeta,
   };
