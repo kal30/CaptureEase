@@ -141,8 +141,6 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
   const [showDailyHabitsModal, setShowDailyHabitsModal] = useState(false);
   const [dailyHabitsChild, setDailyHabitsChild] = useState(null);
   const [dailyHabitsInitialCategoryId, setDailyHabitsInitialCategoryId] = useState(null);
-  const [showCareReportModal, setShowCareReportModal] = useState(false);
-  const [careReportChild, setCareReportChild] = useState(null);
   const childrenAccessKey = (childrenWithAccess || []).map((child) => child.id).join('|');
   const childIdsKey = (children || []).map((child) => child.id).join('|');
 
@@ -791,13 +789,12 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
   };
 
   const handleShowCareReport = (child) => {
-    setCareReportChild(child);
-    setShowCareReportModal(true);
-  };
+    if (!child?.id) {
+      return;
+    }
 
-  const handleCloseCareReportModal = () => {
-    setShowCareReportModal(false);
-    setCareReportChild(null);
+    setCurrentChildId(child.id);
+    navigate(`/children/${child.id}/therapy-prep`);
   };
 
   const handleCreateCustomCategories = (categories) => {
@@ -811,8 +808,7 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
   };
 
   const handleDailyReport = (child) => {
-    setCareReportChild(child);
-    setShowCareReportModal(true);
+    handleShowCareReport(child);
   };
 
   const handleOpenMedicalLog = (child) => {
@@ -1076,9 +1072,6 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
     handleOpenBathroomLog,
     handleOpenMedicalLog,
     handleShowCareReport,
-    handleCloseCareReportModal,
-    showCareReportModal,
-    careReportChild,
     checkForPatterns,
     handleQuickEntryComplete,
     handleQuickEntrySkip,

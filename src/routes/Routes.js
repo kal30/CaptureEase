@@ -28,6 +28,7 @@ import InviteRoleSelectionPage from "../pages/InviteRoleSelectionPage";
 import InviteSuccessPage from "../pages/InviteSuccessPage";
 import AddChildPage from "../pages/Children/AddChildPage";
 import EditChildPage from "../pages/Children/EditChildPage";
+import TherapyPrepPage from "../pages/Children/TherapyPrepPage";
 
 //When you update here update breadcrumbscomponent.js
 
@@ -70,6 +71,7 @@ const AppRoutes = () => {
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/children/new" element={<AddChildPage />} />
         <Route path="/children/:childId/edit" element={<EditChildPage />} />
+        <Route path="/children/:childId/therapy-prep" element={<TherapyPrepPage />} />
         <Route path="/messages" element={<MessagesPage />} />
         <Route path="/admin" element={<AdminPage />} />
         <Route path="/invitation/:invitationId" element={<InvitationPage />} />

@@ -37,7 +37,6 @@ import {
   parseImportedLogs,
 } from "../components/Dashboard/ImportLogs";
 import BulkMedicationLogDialog from "./MedicalLog/components/BulkMedicationLogDialog";
-import DailyCareReport from "../components/Reports/DailyCareReport";
 import { DashboardViewProvider } from "../components/Dashboard/shared/DashboardViewContext";
 import RenderDebugOverlay from "../components/Dashboard/shared/RenderDebugOverlay";
 import { trackRenderDebug, useMountDebug } from "../utils/renderDebug";
@@ -630,18 +629,6 @@ const PanelDashboard = () => {
         childName={hook.dailyHabitsChild?.name}
         initialCategoryId={hook.dailyHabitsInitialCategoryId}
         onHabitSaved={hook.refreshDailyCareStatus}
-      />
-
-      <DailyCareReport
-        open={hook.showCareReportModal}
-        onClose={hook.handleCloseCareReportModal}
-        child={hook.careReportChild}
-        childId={hook.careReportChild?.id}
-        childName={hook.careReportChild?.name}
-        onLogSomething={(child) => {
-          hook.handleCloseCareReportModal();
-          hook.handleQuickDataEntry(child, "quick_note");
-        }}
       />
 
       <ImportLogsModal
