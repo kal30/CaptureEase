@@ -14,6 +14,7 @@ const ChildCard = ({
   groupType,
   status = {},
   recentEntries = [],
+  calendarEntries = [],
   timelineSummary = {},
   incidents = [],
   isExpanded,
@@ -123,6 +124,7 @@ const ChildCard = ({
           isExpanded={isExpanded}
           disableCollapse={disableCollapse}
           recentEntries={recentEntries}
+          calendarEntries={calendarEntries}
           incidents={incidents}
           status={status}
           onQuickEntry={onQuickEntry}

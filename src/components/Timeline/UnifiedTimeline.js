@@ -137,8 +137,8 @@ const UnifiedTimeline = ({
     filters
   );
   const sharedCalendarEntries = React.useMemo(
-    () => (calendarEntries.length > 0 ? calendarEntries : entries),
-    [calendarEntries, entries]
+    () => calendarEntries,
+    [calendarEntries]
   );
   trackRenderDebug('UnifiedTimeline', {
     childId: child?.id || 'none',

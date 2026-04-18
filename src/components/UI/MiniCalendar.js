@@ -25,7 +25,7 @@ const MiniCalendar = ({
   activityDateKeys = [],
   onDayClick,
   currentMonth,
-  selectedDate = null
+  selectedDate = null,
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));

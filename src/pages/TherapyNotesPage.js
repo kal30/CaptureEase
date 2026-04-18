@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Typography,
   Box,
@@ -23,6 +23,8 @@ import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
 import { useChildContext } from "../contexts/ChildContext";
 import { useRole } from "../contexts/RoleContext";
+import { getTimelineEntries } from "../services/timelineService";
+import { getCalendarDateKey, getCalendarEntryDateKey } from "../utils/calendarDateKey";
 import useChildName from "../hooks/useChildName";
 import { therapyTheme, createTherapyStyles } from "../assets/theme/therapyTheme";
 import ResponsiveLayout from "../components/Layout/ResponsiveLayout";
@@ -42,7 +44,7 @@ const TherapyNotesPage = () => {
 
   const [calendarAnchor, setCalendarAnchor] = useState(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [datesWithEntries, setDatesWithEntries] = useState([]);
+  const [calendarEntries, setCalendarEntries] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   
   const therapyStyles = createTherapyStyles(theme);
@@ -52,13 +54,40 @@ const TherapyNotesPage = () => {
   const isTherapist = userRole === USER_ROLES.THERAPIST;
 
   const pageTitle = childName ? `Therapy Notes - ${childName}` : "Therapy Notes";
+  const datesWithEntries = useMemo(() => {
+    const keys = new Set();
+    calendarEntries.forEach((entry) => {
+      const key = getCalendarEntryDateKey(entry);
+      if (key) {
+        keys.add(key);
+      }
+    });
+    return keys;
+  }, [calendarEntries]);
+
+  useEffect(() => {
+    if (!currentChildId) {
+      setCalendarEntries([]);
+      return undefined;
+    }
+
+    const unsubscribe = getTimelineEntries(currentChildId, (entries) => {
+      setCalendarEntries(Array.isArray(entries) ? entries : []);
+    });
+
+    return () => {
+      if (typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
+    };
+  }, [currentChildId]);
 
 
   // Custom Day component with entry indicator
   const CustomDay = (props) => {
     const { day, outsideCurrentMonth, ...other } = props;
-    const dayString = day.toDateString();
-    const hasEntries = datesWithEntries.includes(dayString);
+    const dayString = getCalendarDateKey(day);
+    const hasEntries = dayString ? datesWithEntries.has(dayString) : false;
 
     return (
       <Box sx={{ position: 'relative' }}>
@@ -277,6 +306,7 @@ const TherapyNotesPage = () => {
           selectedDate={selectedDate}
           filters={timelineFilters}
           showFilters={false}
+          calendarEntries={calendarEntries}
         />
       </Box>
 

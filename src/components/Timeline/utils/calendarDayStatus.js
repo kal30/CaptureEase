@@ -1,5 +1,4 @@
 import { getCalendarEntryDateKey } from '../../../utils/calendarDateKey';
-import { getTimelineEntryDate } from '../../../services/timeline/dateUtils';
 import { isBehaviorIncidentEntry } from '../../../constants/logTypeRegistry';
 
 const normalizeText = (value = '') => String(value ?? '').trim().toLowerCase();
@@ -136,24 +135,11 @@ const isIncidentOrImportantEntry = (entry = {}) => {
   );
 };
 
-const getEntryDate = (entry = {}) => (
-  getTimelineEntryDate(entry)
-  || (typeof entry?.timestamp?.toDate === 'function' ? entry.timestamp.toDate() : null)
-  || new Date(entry?.timestamp)
-);
-
-const isValidDate = (date) => date instanceof Date && !Number.isNaN(date.getTime());
-
 export const buildCalendarDayStatusMap = (entries = [], activityDateKeys = []) => {
   const dayStatusMap = new Map();
   const fallbackActivityKeys = new Set((activityDateKeys || []).filter(Boolean));
 
   entries.forEach((entry) => {
-    const date = getEntryDate(entry);
-    if (!isValidDate(date)) {
-      return;
-    }
-
     const dateKey = getCalendarEntryDateKey(entry);
     if (!dateKey) {
       return;

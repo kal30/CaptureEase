@@ -46,6 +46,7 @@ import { buildDailyInsight } from '../Timeline/utils/dailyInsight';
 const TimelineWidget = ({
   child,
   entries = [],
+  calendarEntries = [],
   dailyCareStatus = {},
   onQuickEntry,
   defaultExpanded = false,
@@ -66,6 +67,7 @@ const TimelineWidget = ({
   const [timelineFilters, setTimelineFilters] = useState({}); // Unified timeline filters
   
   const childSpecificEntries = entries;
+  const calendarSourceEntries = calendarEntries;
   const searchText = timelineFilters.searchText?.trim() || '';
   const selectedDayEntries = React.useMemo(
     () => childSpecificEntries.filter((entry) => isTimelineEntryOnDate(entry, selectedDate)),
@@ -584,7 +586,7 @@ const TimelineWidget = ({
             selectedDate={selectedDate}
             onDateChange={(date) => setSelectedDate(date)}
             summary={{}}
-            calendarEntries={entries}
+            calendarEntries={calendarSourceEntries}
             compact={true}
             mobileLayout={true}
             hideDateFilter={true}
@@ -684,6 +686,7 @@ const TimelineWidget = ({
         showDaySummary={false}
         mobileTimeLayout={true}
         focusEntryId={focusedEntryId}
+        calendarEntries={calendarSourceEntries}
       />
 
       <Popover
@@ -697,7 +700,7 @@ const TimelineWidget = ({
       >
         <Box sx={{ p: 1 }}>
           <MiniCalendar
-            entries={childSpecificEntries}
+            entries={calendarSourceEntries}
             onDayClick={(day, dayEntries, date) => handleMobileDateChange(date)}
             currentMonth={selectedDate}
             selectedDate={selectedDate}
@@ -727,7 +730,7 @@ const TimelineWidget = ({
             justifyContent: { xs: 'center', md: 'flex-start' }
           }}>
             <MiniCalendar
-              entries={childSpecificEntries}
+              entries={calendarSourceEntries}
               onDayClick={handleDayClick}
               currentMonth={selectedDate}
             />
@@ -815,6 +818,7 @@ const TimelineWidget = ({
                       onDateChange={(date) => setSelectedDate(date)}
                       summary={{}}
                       compact={true}
+                      calendarEntries={calendarSourceEntries}
                     />
                   </Box>
                 )}
@@ -860,7 +864,7 @@ const TimelineWidget = ({
                     justifyContent: { xs: 'center', md: 'flex-start' }
                   }}>
                     <MiniCalendar
-                      entries={childSpecificEntries}
+                      entries={calendarSourceEntries}
                       onDayClick={handleDayClick}
                       currentMonth={selectedDate}
                       selectedDate={selectedDate}
@@ -881,7 +885,7 @@ const TimelineWidget = ({
                       onEmptyStateClick={handleEmptyStateClick}
                       showFilters={false}
                       showDaySummary={false}
-                      calendarEntries={childSpecificEntries}
+                      calendarEntries={calendarSourceEntries}
                     />
                   </Box>
                 </Box>

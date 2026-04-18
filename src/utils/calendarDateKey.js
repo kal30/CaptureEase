@@ -84,6 +84,16 @@ export const getCalendarDateKey = (value) => {
 export const getCalendarEntryDateKey = (entry) => {
   const source = entry?.originalData || entry?.rawData || entry;
   const candidates = [
+    source?.incidentDayKey,
+    source?.entryDayKey,
+    source?.dayKey,
+    source?.localDayKey,
+    source?.dateKey,
+    entry?.incidentDayKey,
+    entry?.entryDayKey,
+    entry?.dayKey,
+    entry?.localDayKey,
+    entry?.dateKey,
     source?.entryDate?.toDate?.(),
     source?.entryDate,
     source?.date?.toDate?.(),

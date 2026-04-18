@@ -10,6 +10,7 @@ const ChildGroup = ({
   children: childItems,
   quickDataStatus,
   recentEntries,
+  allEntries,
   timelineSummary,
   incidents = {},
   isCardExpanded,
@@ -41,12 +42,13 @@ const ChildGroup = ({
         {childItems.map((child) => (
           <ChildCard
             key={child.id}
-            child={child}
-            groupType={groupType}
-            status={quickDataStatus[child.id] || {}}
-            recentEntries={(recentEntries && recentEntries[child.id]) || []}
-            timelineSummary={(timelineSummary && timelineSummary[child.id]) || {}}
-            incidents={(incidents && incidents[child.id]) || []}
+          child={child}
+          groupType={groupType}
+          status={quickDataStatus[child.id] || {}}
+          recentEntries={(recentEntries && recentEntries[child.id]) || []}
+          calendarEntries={(allEntries && allEntries[child.id]) || []}
+          timelineSummary={(timelineSummary && timelineSummary[child.id]) || {}}
+          incidents={(incidents && incidents[child.id]) || []}
             isExpanded={isCardExpanded(child.id)}
             onToggleExpanded={() => onToggleExpanded(child.id)}
             onQuickEntry={onQuickEntry}

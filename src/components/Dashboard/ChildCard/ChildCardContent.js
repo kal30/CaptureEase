@@ -12,6 +12,7 @@ import { TimelineWidget } from '../../UI';
  * @param {string} props.groupType - Group type for styling
  * @param {boolean} props.isExpanded - Whether content is expanded
  * @param {Array} props.recentEntries - Recent activity entries
+ * @param {Array} props.calendarEntries - Full child history entries used for calendar markers
  * @param {Array} props.incidents - Incident entries
  * @param {Object} props.status - Daily care status
  * @param {function} props.onQuickEntry - Handler for quick entry actions
@@ -22,6 +23,7 @@ const ChildCardContent = ({
   isExpanded,
   disableCollapse = false,
   recentEntries = [],
+  calendarEntries = [],
   incidents = [],
   status = {},
   onQuickEntry,
@@ -38,6 +40,7 @@ const ChildCardContent = ({
       <TimelineWidget
         child={child}
         entries={recentEntries}
+        calendarEntries={calendarEntries}
         incidents={incidents}
         dailyCareStatus={status}
         onQuickEntry={onQuickEntry}

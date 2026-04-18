@@ -162,6 +162,7 @@ const ChildDashboard = ({
   const hasSupportArea = Boolean(supportArea);
   const streak = timelineSummary[child.id]?.activityStreak || timelineSummary.activityStreak || 0;
   const childEntries = allEntries[child.id] || recentEntries[child.id] || [];
+  const childCalendarEntries = allEntries[child.id] || [];
   const childIncidents = incidents[child.id] || [];
   const childStatus = quickDataStatus[child.id] || {};
   const userRole = getUserRoleForChild?.(child.id) || null;
@@ -771,6 +772,7 @@ const ChildDashboard = ({
       <TimelineWidget
         child={child}
         entries={childEntries}
+        calendarEntries={childCalendarEntries}
         incidents={childIncidents}
         dailyCareStatus={childStatus}
         onQuickEntry={(_child, type, event) => onQuickEntry(child, type, event)}

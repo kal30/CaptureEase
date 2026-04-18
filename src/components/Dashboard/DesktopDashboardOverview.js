@@ -15,6 +15,7 @@ const DesktopDashboardOverview = ({
   const commonChildGroupProps = {
     quickDataStatus: hook.quickDataStatus,
     recentEntries: hook.recentEntries,
+    allEntries: hook.allEntries,
     timelineSummary: hook.timelineSummary,
     incidents: hook.incidents,
     isCardExpanded: hook.isCardExpanded,
