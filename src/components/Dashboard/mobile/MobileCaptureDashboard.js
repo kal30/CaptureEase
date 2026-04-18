@@ -46,7 +46,7 @@ import UnifiedTimeline from '../../Timeline/UnifiedTimeline';
 import { getChildCareTeam } from '../../../services/childAccessService';
 import { auth } from '../../../services/firebase';
 import { getAllQuickTagOptions, getQuickTagDisplay, loadCustomQuickTags } from '../../../utils/quickTags';
-import { getCalendarDateKey, getCalendarEntryDateKey } from '../../../utils/calendarDateKey';
+import { getCalendarDateKey } from '../../../utils/calendarDateKey';
 import colors from '../../../assets/theme/colors';
 import DashboardActionBoard from '../DashboardActionBoard';
 import { getE2EMockData, isE2EMockEnabled } from '../../../services/e2eMock';
@@ -214,25 +214,6 @@ const getMoodSnapshot = (entries = []) => {
   };
 };
 
-const parseDebugCalendarDate = (value) => {
-  if (typeof value !== 'string' || !value.trim()) {
-    return null;
-  }
-
-  const trimmed = value.trim();
-  const isoDateOnly = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (isoDateOnly) {
-    const year = Number(isoDateOnly[1]);
-    const month = Number(isoDateOnly[2]) - 1;
-    const day = Number(isoDateOnly[3]);
-    const date = new Date(year, month, day);
-    return Number.isNaN(date.getTime()) ? null : date;
-  }
-
-  const parsed = new Date(trimmed);
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
-};
-
 const MobileCaptureDashboard = ({
   children = [],
   allEntries = {},
@@ -306,80 +287,6 @@ const MobileCaptureDashboard = ({
     () => buildCalendarDayStatusMap(activeChildEntries),
     [activeChildEntries]
   );
-  const isCalendarDebugEnabled = useMemo(() => {
-    if (typeof window === 'undefined') {
-      return false;
-    }
-
-    return window.location.hostname === 'localhost'
-      || window.location.search.includes('debugCalendar=1');
-  }, []);
-  const calendarDebugTargetDate = useMemo(() => {
-    if (typeof window === 'undefined') {
-      return selectedDate;
-    }
-
-    const params = new URLSearchParams(window.location.search);
-    return parseDebugCalendarDate(params.get('debugCalendarDate')) || selectedDate;
-  }, [selectedDate]);
-  const calendarDebugTargetDateKey = useMemo(
-    () => getCalendarDateKey(calendarDebugTargetDate),
-    [calendarDebugTargetDate]
-  );
-  const calendarDebugInfo = useMemo(() => {
-    if (!isCalendarDebugEnabled) {
-      return null;
-    }
-
-    const normalizedKeys = [];
-    const seenKeys = new Set();
-    activeChildEntries.forEach((entry) => {
-      const key = getCalendarEntryDateKey(entry);
-      if (key && !seenKeys.has(key)) {
-        seenKeys.add(key);
-        normalizedKeys.push(key);
-      }
-    });
-
-    const targetStatus = calendarDebugTargetDateKey
-      ? getCalendarDayStatus(calendarIndicators.get(calendarDebugTargetDateKey) || {})
-      : 'none';
-    const targetExistsInEntries = calendarDebugTargetDateKey
-      ? activeChildEntries.some((entry) => getCalendarEntryDateKey(entry) === calendarDebugTargetDateKey)
-      : false;
-    const selectedDateKey = getCalendarDateKey(selectedDate);
-    const targetIsSelected = Boolean(calendarDebugTargetDateKey && selectedDateKey === calendarDebugTargetDateKey);
-    const todayKey = getCalendarDateKey(new Date());
-    const targetIsToday = Boolean(calendarDebugTargetDateKey && todayKey === calendarDebugTargetDateKey);
-
-    return {
-      activeChildId: activeChild?.id || 'none',
-      entryCount: activeChildEntries.length,
-      normalizedKeys: normalizedKeys.slice(0, 5),
-      selectedDateKey,
-      targetDateKey: calendarDebugTargetDateKey,
-      targetExistsInEntries,
-      targetStatus,
-      targetDayStatus: targetStatus?.dayStatus || 'none',
-      targetIsSelected,
-      targetIsToday,
-      hasMapEntry: calendarDebugTargetDateKey ? calendarIndicators.has(calendarDebugTargetDateKey) : false,
-    };
-  }, [
-    activeChild?.id,
-    activeChildEntries,
-    calendarDebugTargetDateKey,
-    calendarIndicators,
-    isCalendarDebugEnabled,
-    selectedDate,
-  ]);
-  useEffect(() => {
-    if (!calendarDebugInfo) {
-      return;
-    }
-
-    console.debug('[MobileCaptureDashboard calendar debug]', calendarDebugInfo);
-  }, [calendarDebugInfo]);
   const activeChildCareTeam = useMemo(
     () => careTeamsByChildId[activeChild?.id] || [],
     [activeChild?.id, careTeamsByChildId]
@@ -684,7 +591,6 @@ const MobileCaptureDashboard = ({
     const { day, outsideCurrentMonth, selected, today, ...other } = props;
     const dayKey = getCalendarDateKey(day);
     const indicators = dayKey ? getCalendarDayStatus(calendarIndicators.get(dayKey) || {}) : null;
-    const isDebugTargetDay = Boolean(isCalendarDebugEnabled && calendarDebugTargetDateKey && dayKey === calendarDebugTargetDateKey);
     const hasMarker = Boolean(indicators?.hasLogs || indicators?.hasIncident);
     const isSelectedOrToday = Boolean(selected || today);
     const markerBaseSx = {
@@ -699,21 +605,19 @@ const MobileCaptureDashboard = ({
     };
     const markerStyle = indicators?.hasIncident
       ? {
-          width: isDebugTargetDay ? 14 : 8,
-          height: isDebugTargetDay ? 14 : 8,
+          width: 8,
+          height: 8,
           borderRadius: '2px',
-          bgcolor: isDebugTargetDay ? '#B91C1C' : '#D14343',
+          bgcolor: '#D14343',
           border: '1px solid #FFFFFF',
           boxShadow: '0 0 0 1px rgba(255,255,255,0.98), 0 2px 4px rgba(15, 23, 42, 0.24)',
-          transform: isDebugTargetDay
-            ? 'translateX(-50%) rotate(45deg) scale(1.15)'
-            : 'translateX(-50%) rotate(45deg)',
+          transform: 'translateX(-50%) rotate(45deg)',
         }
       : {
-          width: isDebugTargetDay ? 14 : 7,
-          height: isDebugTargetDay ? 14 : 7,
+          width: 7,
+          height: 7,
           borderRadius: '9999px',
-          bgcolor: isDebugTargetDay ? '#0F766E' : '#2BA7A0',
+          bgcolor: '#2BA7A0',
           border: '1px solid #FFFFFF',
           boxShadow: '0 0 0 1px rgba(255,255,255,0.98), 0 2px 4px rgba(15, 23, 42, 0.24)',
         };
@@ -752,32 +656,6 @@ const MobileCaptureDashboard = ({
           >
             <Box sx={markerStyle} />
           </Box>
-        ) : null}
-        {isDebugTargetDay ? (
-          <Typography
-            component="span"
-            sx={{
-              position: 'absolute',
-              top: 1,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              zIndex: 5,
-              fontSize: '0.46rem',
-              lineHeight: 1,
-              fontWeight: 900,
-              letterSpacing: '0.02em',
-              textTransform: 'uppercase',
-              color: indicators?.hasIncident ? '#991B1B' : indicators?.hasLogs ? '#065F46' : colors.landing.textMuted,
-              bgcolor: 'rgba(255,255,255,0.96)',
-              px: 0.35,
-              py: 0.12,
-              borderRadius: 999,
-              border: '1px solid rgba(148, 163, 184, 0.36)',
-              pointerEvents: 'none',
-            }}
-          >
-            {indicators?.hasIncident ? 'INCIDENT' : indicators?.hasLogs ? 'LOG' : 'NONE'}
-          </Typography>
         ) : null}
       </Box>
     );
@@ -1609,24 +1487,6 @@ const MobileCaptureDashboard = ({
         }}
       >
         <LocalizationProvider dateAdapter={AdapterDateFns}>
-          {isCalendarDebugEnabled && calendarDebugInfo ? (
-            <Box
-              sx={{
-                px: 1.25,
-                pt: 1.1,
-                pb: 0.8,
-                borderBottom: `1px solid ${colors.landing.borderLight}`,
-                bgcolor: colors.landing.surface,
-              }}
-            >
-              <Typography sx={{ fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: colors.landing.textMuted, mb: 0.3 }}>
-                Calendar Debug
-              </Typography>
-              <Typography sx={{ fontSize: '0.74rem', lineHeight: 1.45, color: TEXT_SECONDARY }}>
-                child={calendarDebugInfo.activeChildId} | selected={calendarDebugInfo.selectedDateKey || 'n/a'} | target={calendarDebugInfo.targetDateKey || 'n/a'} | entries={calendarDebugInfo.entryCount} | targetInEntries={calendarDebugInfo.targetExistsInEntries ? 'yes' : 'no'} | status={calendarDebugInfo.targetDayStatus} | selectedCell={calendarDebugInfo.targetIsSelected ? 'true' : 'false'} | todayCell={calendarDebugInfo.targetIsToday ? 'true' : 'false'} | mapHasTarget={calendarDebugInfo.hasMapEntry ? 'yes' : 'no'}
-              </Typography>
-            </Box>
-          ) : null}
           <DateCalendar
             value={selectedDate}
             onChange={(newDate) => {

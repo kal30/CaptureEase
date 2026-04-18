@@ -281,6 +281,7 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
           const childIncidents = await getIncidents(child.id);
           incidentsByChild[child.id] = childIncidents;
           setIncidents({ ...incidentsByChild });
+
           allEntriesByChild[child.id] = mergeEntriesForChild(
             allEntriesByChild[child.id] || [],
             childIncidents || []
