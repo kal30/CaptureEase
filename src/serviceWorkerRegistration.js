@@ -2,6 +2,8 @@
 
 const UPDATE_CHECK_INTERVAL_MS = 5 * 60 * 1000;
 const UPDATE_AVAILABLE_EVENT = 'lifelog:sw-update-available';
+let registrationStarted = false;
+let loadListenerAttached = false;
 
 function announceServiceWorkerUpdate(registration) {
   if (typeof window === 'undefined' || !registration?.waiting) return;
@@ -13,47 +15,65 @@ function announceServiceWorkerUpdate(registration) {
   );
 }
 
-// Register the service worker
 export function register() {
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      const swUrl = `${process.env.PUBLIC_URL}/sw.js`;
-      navigator.serviceWorker.register(swUrl).then((registration) => {
-        console.log('Service Worker registered with scope:', registration.scope);
+  if (!('serviceWorker' in navigator) || registrationStarted) {
+    return;
+  }
 
-        registration.update();
-        announceServiceWorkerUpdate(registration);
+  const startRegistration = () => {
+    if (registrationStarted) {
+      return;
+    }
 
-        const updateCheck = window.setInterval(() => {
-          registration.update().catch((error) => {
-            console.error('Service Worker update check failed:', error);
-          });
-        }, UPDATE_CHECK_INTERVAL_MS);
+    registrationStarted = true;
+    const swUrl = `${process.env.PUBLIC_URL}/sw.js`;
 
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-          window.location.reload();
+    navigator.serviceWorker.register(swUrl).then((registration) => {
+      console.log('Service Worker registered with scope:', registration.scope);
+
+      registration.update();
+      announceServiceWorkerUpdate(registration);
+
+      const updateCheck = window.setInterval(() => {
+        registration.update().catch((error) => {
+          console.error('Service Worker update check failed:', error);
         });
+      }, UPDATE_CHECK_INTERVAL_MS);
 
-        registration.addEventListener('updatefound', () => {
-          const installingWorker = registration.installing;
-          if (!installingWorker) {
-            return;
-          }
-
-          installingWorker.addEventListener('statechange', () => {
-            if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              announceServiceWorkerUpdate(registration);
-            }
-          });
-        });
-
-        window.addEventListener('beforeunload', () => {
-          window.clearInterval(updateCheck);
-        });
-      }).catch((error) => {
-        console.error('Service Worker registration failed:', error);
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        window.location.reload();
       });
+
+      registration.addEventListener('updatefound', () => {
+        const installingWorker = registration.installing;
+        if (!installingWorker) {
+          return;
+        }
+
+        installingWorker.addEventListener('statechange', () => {
+          if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            announceServiceWorkerUpdate(registration);
+          }
+        });
+      });
+
+      window.addEventListener('beforeunload', () => {
+        window.clearInterval(updateCheck);
+      });
+    }).catch((error) => {
+      registrationStarted = false;
+      console.error('Service Worker registration failed:', error);
     });
+  };
+
+  if (typeof document !== 'undefined' && document.readyState === 'complete') {
+    startRegistration();
+    return;
+  }
+
+  if (!loadListenerAttached) {
+    loadListenerAttached = true;
+    window.addEventListener('load', startRegistration, { once: true });
   }
 }
 

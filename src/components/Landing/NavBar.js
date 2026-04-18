@@ -11,7 +11,6 @@ import {
   Typography,
   Avatar,
   Tooltip,
-  IconButton,
   Menu,
   MenuItem,
   ListItemIcon,
@@ -29,6 +28,7 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import AddToHomeScreenIcon from "@mui/icons-material/AddToHomeScreen";
 import PhoneIphoneIcon from "@mui/icons-material/PhoneIphone";
 import usePWAInstallPrompt from "../../hooks/usePWAInstallPrompt";
+import { isInstallContext } from "../../utils/installDetection";
 import colors from "../../assets/theme/colors";
 import { ACTIVE_CHILD_STORAGE_KEY } from "../Dashboard/shared/DashboardViewContext";
 import ChildActionsMenuContent from "../Dashboard/shared/ChildActionsMenuContent";
@@ -57,7 +57,10 @@ const Navbar = () => {
   const isMobileDashboardHeader = isDashboardRoute && !isDesktopDashboard;
   const useCompactDashboardHeader = isDashboardRoute && isDesktopDashboard;
   const canSeeSwitchChild = isLoggedIn && (childrenWithAccess?.length || 0) > 1;
-  const showInstallAction = !isDashboardRoute && !isInstallRoute && !pwaInstallPrompt.isInstalled && (pwaInstallPrompt.canInstall || pwaInstallPrompt.isIOS);
+  const showInstallAction =
+    !isInstallRoute &&
+    !pwaInstallPrompt.isInstalled &&
+    (pwaInstallPrompt.canInstall || pwaInstallPrompt.isIOS || isInstallContext());
   const dashboardActiveChild = useMemo(
     () => childrenWithAccess.find((child) => child.id === dashboardActiveChildId) || childrenWithAccess[0] || null,
     [childrenWithAccess, dashboardActiveChildId]
@@ -135,9 +138,8 @@ const Navbar = () => {
       return;
     }
 
-    if (pwaInstallPrompt.isIOS) {
-      window.alert("On iPhone or iPad, tap Share, then choose Add to Home Screen.");
-    }
+    const nextPath = `${location.pathname}${location.search}${location.hash}`;
+    navigate(`/install?next=${encodeURIComponent(nextPath || "/dashboard")}`);
   };
 
   const handleUserMenuOpen = (event) => {
@@ -254,20 +256,24 @@ const Navbar = () => {
             {authReady ? (
               isLoggedIn ? (
                 <>
-                  {isDashboardRoute && isDesktopDashboard ? null : showInstallAction ? (
+                  {showInstallAction ? (
                     <Tooltip title={pwaInstallPrompt.isIOS ? "Add to Home Screen" : "Install app"}>
-                      <IconButton
+                      <Button
                         onClick={handleInstall}
-                        aria-label={pwaInstallPrompt.isIOS ? "Add to Home Screen" : "Install app"}
+                        variant="outlined"
                         size="small"
+                        startIcon={pwaInstallPrompt.isIOS ? <PhoneIphoneIcon sx={{ fontSize: 18 }} /> : <AddToHomeScreenIcon sx={{ fontSize: 18 }} />}
                         sx={{
-                          width: 32,
-                          height: 32,
+                          minHeight: 32,
+                          px: 1.5,
                           borderRadius: "9999px",
-                          border: `1px solid ${colors.landing.borderLight}`,
-                          color: colors.landing.textMuted,
+                          textTransform: "none",
+                          fontWeight: 700,
+                          borderColor: colors.landing.borderLight,
+                          color: colors.brand.ink,
                           bgcolor: colors.landing.surface,
                           boxShadow: "none",
+                          whiteSpace: "nowrap",
                           "&:hover": {
                             bgcolor: colors.landing.surfaceSoft,
                             borderColor: colors.landing.borderMedium,
@@ -275,12 +281,8 @@ const Navbar = () => {
                           },
                         }}
                       >
-                        {pwaInstallPrompt.isIOS ? (
-                          <PhoneIphoneIcon sx={{ fontSize: 18 }} />
-                        ) : (
-                          <AddToHomeScreenIcon sx={{ fontSize: 18 }} />
-                        )}
-                      </IconButton>
+                        {pwaInstallPrompt.isIOS ? "Add to Home Screen" : "Install app"}
+                      </Button>
                     </Tooltip>
                   ) : null}
                   {isLoggedIn ? (

@@ -4,19 +4,6 @@
  */
 
 import { AUTH_STORAGE_KEYS, DEFAULT_ROUTES, AUTH_ERRORS } from './constants';
-import { isInstallContext } from '../../utils/installDetection';
-
-const shouldUseInstallGate = (returnUrl) => {
-  if (!returnUrl) return true;
-  if (returnUrl.startsWith(DEFAULT_ROUTES.INSTALL)) return false;
-  if (returnUrl.startsWith('/accept-invite') || returnUrl.startsWith('/invitation/')) return false;
-  if (returnUrl === DEFAULT_ROUTES.LOGIN || returnUrl === '/register') return false;
-  if (!isInstallContext()) return false;
-  // Always route normal app logins through the install screen first.
-  // The install page itself will immediately continue into the app if the
-  // current browser session is already installed.
-  return true;
-};
 
 /**
  * Stores the current invitation URL for later redirect after authentication
@@ -69,13 +56,6 @@ export const handlePostAuthRedirect = (navigate, location = null, user = null) =
   
   // Clear stored context before redirecting
   clearAuthContext();
-  
-  // Route first-time app logins through the install gate so mobile users
-  // get a clean home-screen install path before landing in the app.
-  if (shouldUseInstallGate(returnUrl)) {
-    navigate(`${DEFAULT_ROUTES.INSTALL}?next=${encodeURIComponent(returnUrl)}`);
-    return;
-  }
 
   // Redirect to the appropriate URL
   navigate(returnUrl);

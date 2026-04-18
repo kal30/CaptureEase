@@ -10,6 +10,7 @@ import { ChildProvider } from "./contexts/ChildContext";
 import { RoleProvider } from "./contexts/RoleContext";
 import { ErrorBoundary } from "./contexts/ErrorContext";
 import "./services/messaging/setupTests";
+import { register as registerServiceWorker } from "./serviceWorkerRegistration";
 
 const App = () => {
   useEffect(() => {
@@ -21,6 +22,22 @@ const App = () => {
       }
     });
     return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+
+    const scheduleRegistration = () => {
+      registerServiceWorker();
+    };
+
+    if ("requestIdleCallback" in window) {
+      const idleId = window.requestIdleCallback(scheduleRegistration, { timeout: 3000 });
+      return () => window.cancelIdleCallback(idleId);
+    }
+
+    const timeoutId = window.setTimeout(scheduleRegistration, 1500);
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   return (
