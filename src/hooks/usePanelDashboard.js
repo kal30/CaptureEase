@@ -83,6 +83,20 @@ const serializeSummaryByChild = (summaryByChild = {}) => {
   return JSON.stringify(normalized);
 };
 
+const mergeEntriesForChild = (timelineEntries = [], incidentEntries = []) => {
+  const mergedById = new Map();
+
+  [...timelineEntries, ...incidentEntries].forEach((entry) => {
+    if (!entry?.id) {
+      return;
+    }
+
+    mergedById.set(entry.id, entry);
+  });
+
+  return Array.from(mergedById.values()).sort((a, b) => toEntryDate(b.timestamp) - toEntryDate(a.timestamp));
+};
+
 export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
   const theme = useTheme();
   const navigate = useNavigate();
@@ -238,7 +252,7 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
           .sort((a, b) => toEntryDate(b.timestamp) - toEntryDate(a.timestamp))
           .slice(0, 5);
 
-        allEntriesByChild[child.id] = fullTimelineEntries;
+        allEntriesByChild[child.id] = mergeEntriesForChild(fullTimelineEntries, incidentsByChild[child.id] || []);
         entriesByChild[child.id] = recentTimelineEntries;
         timelineSummaryByChild[child.id] = {
           totalEntries: todaysEntries.length,
@@ -267,6 +281,14 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
           const childIncidents = await getIncidents(child.id);
           incidentsByChild[child.id] = childIncidents;
           setIncidents({ ...incidentsByChild });
+          allEntriesByChild[child.id] = mergeEntriesForChild(
+            allEntriesByChild[child.id] || [],
+            childIncidents || []
+          );
+          setAllEntries((current) => {
+            const next = { ...allEntriesByChild };
+            return serializeEntriesByChild(current) === serializeEntriesByChild(next) ? current : next;
+          });
         } catch (error) {
           console.error(`Error fetching incidents for child ${child.id}:`, error);
           incidentsByChild[child.id] = [];
@@ -337,6 +359,15 @@ export const usePanelDashboard = ({ activeChildOnly = false } = {}) => {
             ...((current[entry.childId] || []).filter((item) => item.id !== optimisticIncident.id)),
           ],
         }));
+        setAllEntries((current) => {
+          const currentEntries = current[entry.childId] || [];
+          const nextEntries = mergeEntriesForChild([optimisticIncident], currentEntries);
+
+          return {
+            ...current,
+            [entry.childId]: nextEntries,
+          };
+        });
         return;
       }
 
