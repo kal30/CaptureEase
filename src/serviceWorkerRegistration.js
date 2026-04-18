@@ -2,6 +2,7 @@
 
 const UPDATE_CHECK_INTERVAL_MS = 5 * 60 * 1000;
 const UPDATE_AVAILABLE_EVENT = 'lifelog:sw-update-available';
+const RELOAD_REQUESTED_KEY = 'lifelog:sw-update-reload-requested';
 let registrationStarted = false;
 let loadListenerAttached = false;
 
@@ -41,6 +42,12 @@ export function register() {
       }, UPDATE_CHECK_INTERVAL_MS);
 
       navigator.serviceWorker.addEventListener('controllerchange', () => {
+        const shouldReload = window.sessionStorage.getItem(RELOAD_REQUESTED_KEY) === '1';
+        if (!shouldReload) {
+          return;
+        }
+
+        window.sessionStorage.removeItem(RELOAD_REQUESTED_KEY);
         window.location.reload();
       });
 
@@ -75,6 +82,11 @@ export function register() {
     loadListenerAttached = true;
     window.addEventListener('load', startRegistration, { once: true });
   }
+}
+
+export function requestServiceWorkerReload() {
+  if (typeof window === 'undefined') return;
+  window.sessionStorage.setItem(RELOAD_REQUESTED_KEY, '1');
 }
 
 // Unregister the service worker (optional, for testing or disabling the PWA)

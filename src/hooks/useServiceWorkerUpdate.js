@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { requestServiceWorkerReload } from '../serviceWorkerRegistration';
 
 const UPDATE_EVENT = 'lifelog:sw-update-available';
 const CLEAR_EVENT = 'lifelog:sw-update-cleared';
@@ -31,6 +32,7 @@ const useServiceWorkerUpdate = () => {
 
   const applyUpdate = () => {
     if (registration?.waiting) {
+      requestServiceWorkerReload();
       registration.waiting.postMessage({ type: 'SKIP_WAITING' });
     }
   };
